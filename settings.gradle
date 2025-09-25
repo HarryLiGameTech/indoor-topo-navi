@@ -1,0 +1,3 @@
+rootProject.name = 'TopoNavi'
+include 'toponavi-dsl'
+
