@@ -1,0 +1,28 @@
+vehicle OP1 is Elevator{
+    // Params
+    DefaultAccess(TenantsOnly) // All floors secured by keycard by default
+    MaxSpeed(4) // 4m/s velocity
+    Acceleration(0.9) // 0.9m/s^2 accel
+    Cars([OP1_1, OP1_2, OP1_3, OP1_4, OP1_5, OP1_6])
+
+
+    // Topo directions
+    TODO
+
+    // Stations
+    Station(Lobby, Lobby.OP1_hall, 0.0, nil) // Lobby is selectable by any passengers, located at 0.0m
+    Station(Floor4, FloorZ1.OP1_hall, 17.5)
+    Station(Floor5, FloorZ1.OP1_hall, 22.0)
+    Station(Floor6, FloorZ1.OP1_hall, 26.5)
+    Station(Floor7, FloorZ1.OP1_hall, 31.0)
+    Station(Floor8, FloorZ1.OP1_hall, 35.5)
+    Station(Floor9, FloorZ1.OP1_hall, 40.0)
+    Station(Floor10, FloorZ1.OP1_hall, 44.5)
+    Station(Floor11, FloorZ1.OP1_hall, 49.0)
+    Station(Floor12, FloorZ1.OP1_hall, 53.5)
+    Station(Floor13, FloorZ1.OP1_hall, 58.0)
+    Station(Floor14, FloorZ1.OP1_hall, 62.5)
+    Station(Floor15, FloorZ1.OP1_hall, 67.0)
+    Station(Floor16, FloorZ1.OP1_hall, 71.5)
+    Station(Floor17, FloorZ1.OP1_hall, 76.0)
+}

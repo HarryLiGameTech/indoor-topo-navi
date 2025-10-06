@@ -1,0 +1,108 @@
+TopoMap Lobby is TransHub{ // Lobby
+    // Params
+    PermResident(5) // 5 people always live here
+    RushHour(7:45~9:45, EXPONENTIAL, DEPART) // In this period of time, people exponentially leaves this floor
+    RushHour(16:30~19:15, LINEAR, DEPART) // In this period of time, people linearly reaches this floor
+    
+    TopoNode(NW_corner) 
+    TopoNode(NE_corner) 
+    TopoNode(SW_corner) 
+    TopoNode(SE_corner) 
+
+    TopoNode(SouthExitOutside)
+    TopoNode(SouthExitInside)
+    TopoNode(WestExitOutside)
+    TopoNode(WestExitInside)
+    TopoNode(EastExitOutside)
+    TopoNode(EastExitInside) // == OS_hall_outside
+    TopoNode(hankyu_exit_outside)
+    TopoNode(hankyu_exit_inside)
+
+    TopoNode(OP1_hall)
+    TopoNode(OP1_hall_outside)
+    TopoNode(OP2_hall)
+    TopoNode(OP2_hall_outside)
+    TopoNode(OEX_hall_low)
+    TopoNode(OEX_hall_upp)
+    TopoNode(OEX_hall_upp_outside)
+    TopoNode(OPS_hall_1)
+    TopoNode(OPS_hall_1M)
+    TopoNode(OS_hall)
+
+    // TopoNode(escalator_low) // == OP1_hall_outside
+    TopoNode(escalator_high) // 1M escalator landing
+
+    TopoNode(staircase_A_1)
+    TopoNode(staircase_A_1M)
+    TopoNode(staircase_B)
+    TopoNode(staircase_C)
+    TopoNode(staircase_D)
+    TopoNode(staircase_E)
+    TopoNode(staircase_E_outside)
+
+    TopoNode(west_intersact_1) // Near OPS and OEX
+    TopoNode(west_intersact_2) // Near entrance to ST-D
+    TopoNode(east_intersact_1) // Near entrance to ST-B
+
+    // Define Relationships 
+    // NTPP(toilet_hall, this) // Toilet hall is strictly inside this floor 
+    // TPP(male_toilet, toilet_hall) 
+    // TPP(female_toilet, toilet_hall) 
+    // EC(toilet_hall, staircase_1) // Toilets and staircase externally touches 
+    // DC(male_toilet, female_toilet) 
+    // DC(room_xx01, room_xx03) // These 2 rooms are on different side 
+    // DC(room_xx02, room_xx03) // These 2 rooms are on different side 
+    // EC(room_xx01, room_xx02) // Rooms next door 
+    // Rest to be discussed in later sections....
+
+
+    // Normal paths on the south
+    AtomicPath(south_exit_outside <-> south_exit_inside, 5) 
+    AtomicPath(SW_corner <-> south_exit_inside, 8) 
+    AtomicPath(SE_corner <-> south_exit_inside, 8)
+    
+
+    // Normal paths on the west
+    AtomicPath(west_exit_outside <-> west_exit_inside, 5)
+    AtomicPath(SW_corner <-> OP1_hall_outside, 5)
+    AtomicPath(escalator_high <-> OP1_hall_outside, 15) // Take the escalator
+    AtomicPath(west_intersact_1 <-> OPS_hall_1, 3)
+    AtomicPath(west_intersact_1 <-> west_exit_inside, 3)
+    AtomicPath(OP1_hall_outside <-> west_exit_inside, 3)
+    AtomicPath(OP1_hall_outside <-> west_intersact_2, 3)
+
+    // Normal paths on the east
+    AtomicPath(east_exit_outside <-> east_exit_inside, 5)
+    AtomicPath(east_exit_outside <-> OP2_hall_outside, 6)
+    AtomicPath(SE_corner <-> OP2_hall_outside, 5)
+    AtomicPath(east_exit_inside <-> OP2_hall_outside, 5)
+    AtomicPath(east_exit_inside <-> east_intersact_1, 7)
+    AtomicPath(hankyu_exit_inside <-> east_intersact_1, 4)
+    AtomicPath(hankyu_exit_inside <-> hankyu_exit_outside, 3)
+    AtomicPath(east_exit_outside <-> staircase_E_outside, 12)
+
+    // Stange stuff
+    AtomicPath(OEX_hall_high <-> staircase_A_1M, 8)
+    AtomicPath(OS_hall <-> staircase_A_1, 5)
+
+
+    // Restricted paths
+    AtomicPath(OP1_hall_outside <-> OP1_hall, 5, TenantsOnly)
+    AtomicPath(OP2_hall_outside <-> OP2_hall, 5, TenantsOnly)
+    AtomicPath(east_exit_inside -> OPS_hall, 5, TenantsOnly)
+    AtomicPath(OS_hall -> east_exit_inside, 4) // Door opens outward, no restriction
+    AtomicPath(OEX_hall_low <-> west_intersact_1, 5, TenantsOnly)
+    AtomicPath(OEX_hall_high <-> OEX_hall_high_outside, 5, TenantsOnly)
+    AtomicPath(west_intersact_2 <-> OEX_hall_low_outside, 6, TenantsOnly)
+    AtomicPath(west_intersact_2 -> staircase_D, 10, TenantsOnly)
+    AtomicPath(east_intersact_1 -> staircase_B, 7, TenantsOnly)
+    AtomicPath(staircase_B -> east_intersact_1, 5)
+    AtomicPath(staircase_C -> south_exit_inside, 5)
+    AtomicPath(south_exit_inside -> staircase_C, 6, TenantsOnly)
+    AtomicPath(staircase_D -> west_intersact_2, 8)
+    AtomicPath(staircase_E_outside -> staircase_E, 3, TenantsOnly)
+
+    // Passengers' elevator hall is on the RHS of the peh_crossing when heading to the north-west corner 
+    // Direction(passenger_elevator_hall, passenger_elevator_hall_crossing, NW_corner, RIGHT) 
+} 
+    
