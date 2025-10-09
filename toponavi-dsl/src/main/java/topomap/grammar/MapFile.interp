@@ -81,7 +81,7 @@ relationshipDeclaration
 pathDeclaration
 directionDeclaration
 modifierDeclaration
-modifierContent
+modifierText
 expr
 primitive
 

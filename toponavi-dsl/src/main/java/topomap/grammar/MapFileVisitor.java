@@ -23,11 +23,47 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitTopoMap(MapFileParser.TopoMapContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#topoMapContent}.
+	 * Visit a parse tree produced by the {@code nodeContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTopoMapContent(MapFileParser.TopoMapContentContext ctx);
+	T visitNodeContent(MapFileParser.NodeContentContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code relationshipContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRelationshipContent(MapFileParser.RelationshipContentContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code pathContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPathContent(MapFileParser.PathContentContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code directionContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDirectionContent(MapFileParser.DirectionContentContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code modifierContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitModifierContent(MapFileParser.ModifierContentContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code commentContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCommentContent(MapFileParser.CommentContentContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MapFileParser#topoNodeDeclaration}.
 	 * @param ctx the parse tree
@@ -59,11 +95,11 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitModifierDeclaration(MapFileParser.ModifierDeclarationContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#modifierContent}.
+	 * Visit a parse tree produced by {@link MapFileParser#modifierText}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitModifierContent(MapFileParser.ModifierContentContext ctx);
+	T visitModifierText(MapFileParser.ModifierTextContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code exprFnCall}
 	 * labeled alternative in {@link MapFileParser#expr}.

@@ -6,12 +6,12 @@ program : topoMap* EOF;
 topoMap : 'TopoMap' name=Identifier '{' topoMapContent* '}';
 
 topoMapContent
-    :   topoNodeDeclaration
-    |   relationshipDeclaration
-    |   pathDeclaration
-    |   directionDeclaration
-    |   modifierDeclaration
-    |   LineComment
+    :   topoNodeDeclaration             # nodeContent
+    |   relationshipDeclaration         # relationshipContent
+    |   pathDeclaration                 # pathContent
+    |   directionDeclaration            # directionContent
+    |   modifierDeclaration             # modifierContent
+    |   LineComment                     # commentContent
     ;
 
 // Declaration rules
@@ -25,10 +25,10 @@ pathDeclaration : 'AtomicPath' '(' from=Identifier ',' to=Identifier ','
 directionDeclaration : 'Direction' '(' from=Identifier ',' via=Identifier ','
     to=Identifier ',' direction=TPCC ')';
 
-modifierDeclaration : 'modifier' name=Identifier '{' modifierContent* '}';
+modifierDeclaration : 'modifier' name=Identifier '{' modifierText* '}';
 
 // TODO
-modifierContent : 'TODO';
+modifierText : 'TODO';
 
 expr
     :   primitive                                                       # exprPrimitive

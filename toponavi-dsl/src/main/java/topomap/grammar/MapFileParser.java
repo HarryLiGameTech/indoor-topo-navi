@@ -25,12 +25,11 @@ public class MapFileParser extends Parser {
 	public static final int
 		RULE_program = 0, RULE_topoMap = 1, RULE_topoMapContent = 2, RULE_topoNodeDeclaration = 3, 
 		RULE_relationshipDeclaration = 4, RULE_pathDeclaration = 5, RULE_directionDeclaration = 6, 
-		RULE_modifierDeclaration = 7, RULE_modifierContent = 8, RULE_expr = 9, 
-		RULE_primitive = 10;
+		RULE_modifierDeclaration = 7, RULE_modifierText = 8, RULE_expr = 9, RULE_primitive = 10;
 	private static String[] makeRuleNames() {
 		return new String[] {
 			"program", "topoMap", "topoMapContent", "topoNodeDeclaration", "relationshipDeclaration", 
-			"pathDeclaration", "directionDeclaration", "modifierDeclaration", "modifierContent", 
+			"pathDeclaration", "directionDeclaration", "modifierDeclaration", "modifierText", 
 			"expr", "primitive"
 		};
 	}
@@ -240,37 +239,131 @@ public class MapFileParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class TopoMapContentContext extends ParserRuleContext {
-		public TopoNodeDeclarationContext topoNodeDeclaration() {
-			return getRuleContext(TopoNodeDeclarationContext.class,0);
-		}
-		public RelationshipDeclarationContext relationshipDeclaration() {
-			return getRuleContext(RelationshipDeclarationContext.class,0);
-		}
-		public PathDeclarationContext pathDeclaration() {
-			return getRuleContext(PathDeclarationContext.class,0);
-		}
-		public DirectionDeclarationContext directionDeclaration() {
-			return getRuleContext(DirectionDeclarationContext.class,0);
-		}
-		public ModifierDeclarationContext modifierDeclaration() {
-			return getRuleContext(ModifierDeclarationContext.class,0);
-		}
-		public TerminalNode LineComment() { return getToken(MapFileParser.LineComment, 0); }
 		public TopoMapContentContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_topoMapContent; }
+	 
+		public TopoMapContentContext() { }
+		public void copyFrom(TopoMapContentContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class ModifierContentContext extends TopoMapContentContext {
+		public ModifierDeclarationContext modifierDeclaration() {
+			return getRuleContext(ModifierDeclarationContext.class,0);
+		}
+		public ModifierContentContext(TopoMapContentContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).enterTopoMapContent(this);
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).enterModifierContent(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).exitTopoMapContent(this);
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).exitModifierContent(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof MapFileVisitor ) return ((MapFileVisitor<? extends T>)visitor).visitTopoMapContent(this);
+			if ( visitor instanceof MapFileVisitor ) return ((MapFileVisitor<? extends T>)visitor).visitModifierContent(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class DirectionContentContext extends TopoMapContentContext {
+		public DirectionDeclarationContext directionDeclaration() {
+			return getRuleContext(DirectionDeclarationContext.class,0);
+		}
+		public DirectionContentContext(TopoMapContentContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).enterDirectionContent(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).exitDirectionContent(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MapFileVisitor ) return ((MapFileVisitor<? extends T>)visitor).visitDirectionContent(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class NodeContentContext extends TopoMapContentContext {
+		public TopoNodeDeclarationContext topoNodeDeclaration() {
+			return getRuleContext(TopoNodeDeclarationContext.class,0);
+		}
+		public NodeContentContext(TopoMapContentContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).enterNodeContent(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).exitNodeContent(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MapFileVisitor ) return ((MapFileVisitor<? extends T>)visitor).visitNodeContent(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class PathContentContext extends TopoMapContentContext {
+		public PathDeclarationContext pathDeclaration() {
+			return getRuleContext(PathDeclarationContext.class,0);
+		}
+		public PathContentContext(TopoMapContentContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).enterPathContent(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).exitPathContent(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MapFileVisitor ) return ((MapFileVisitor<? extends T>)visitor).visitPathContent(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class CommentContentContext extends TopoMapContentContext {
+		public TerminalNode LineComment() { return getToken(MapFileParser.LineComment, 0); }
+		public CommentContentContext(TopoMapContentContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).enterCommentContent(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).exitCommentContent(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MapFileVisitor ) return ((MapFileVisitor<? extends T>)visitor).visitCommentContent(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class RelationshipContentContext extends TopoMapContentContext {
+		public RelationshipDeclarationContext relationshipDeclaration() {
+			return getRuleContext(RelationshipDeclarationContext.class,0);
+		}
+		public RelationshipContentContext(TopoMapContentContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).enterRelationshipContent(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).exitRelationshipContent(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MapFileVisitor ) return ((MapFileVisitor<? extends T>)visitor).visitRelationshipContent(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -283,6 +376,7 @@ public class MapFileParser extends Parser {
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__3:
+				_localctx = new NodeContentContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(41);
@@ -290,6 +384,7 @@ public class MapFileParser extends Parser {
 				}
 				break;
 			case RCC:
+				_localctx = new RelationshipContentContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(42);
@@ -297,6 +392,7 @@ public class MapFileParser extends Parser {
 				}
 				break;
 			case T__7:
+				_localctx = new PathContentContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(43);
@@ -304,6 +400,7 @@ public class MapFileParser extends Parser {
 				}
 				break;
 			case T__8:
+				_localctx = new DirectionContentContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(44);
@@ -311,6 +408,7 @@ public class MapFileParser extends Parser {
 				}
 				break;
 			case T__9:
+				_localctx = new ModifierContentContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
 				setState(45);
@@ -318,6 +416,7 @@ public class MapFileParser extends Parser {
 				}
 				break;
 			case LineComment:
+				_localctx = new CommentContentContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
 				setState(46);
@@ -615,11 +714,11 @@ public class MapFileParser extends Parser {
 	public static class ModifierDeclarationContext extends ParserRuleContext {
 		public Token name;
 		public TerminalNode Identifier() { return getToken(MapFileParser.Identifier, 0); }
-		public List<ModifierContentContext> modifierContent() {
-			return getRuleContexts(ModifierContentContext.class);
+		public List<ModifierTextContext> modifierText() {
+			return getRuleContexts(ModifierTextContext.class);
 		}
-		public ModifierContentContext modifierContent(int i) {
-			return getRuleContext(ModifierContentContext.class,i);
+		public ModifierTextContext modifierText(int i) {
+			return getRuleContext(ModifierTextContext.class,i);
 		}
 		public ModifierDeclarationContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -660,7 +759,7 @@ public class MapFileParser extends Parser {
 				{
 				{
 				setState(90);
-				modifierContent();
+				modifierText();
 				}
 				}
 				setState(95);
@@ -683,29 +782,29 @@ public class MapFileParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class ModifierContentContext extends ParserRuleContext {
-		public ModifierContentContext(ParserRuleContext parent, int invokingState) {
+	public static class ModifierTextContext extends ParserRuleContext {
+		public ModifierTextContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_modifierContent; }
+		@Override public int getRuleIndex() { return RULE_modifierText; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).enterModifierContent(this);
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).enterModifierText(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).exitModifierContent(this);
+			if ( listener instanceof MapFileListener ) ((MapFileListener)listener).exitModifierText(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof MapFileVisitor ) return ((MapFileVisitor<? extends T>)visitor).visitModifierContent(this);
+			if ( visitor instanceof MapFileVisitor ) return ((MapFileVisitor<? extends T>)visitor).visitModifierText(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final ModifierContentContext modifierContent() throws RecognitionException {
-		ModifierContentContext _localctx = new ModifierContentContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_modifierContent);
+	public final ModifierTextContext modifierText() throws RecognitionException {
+		ModifierTextContext _localctx = new ModifierTextContext(_ctx, getState());
+		enterRule(_localctx, 16, RULE_modifierText);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{

@@ -41,13 +41,73 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTopoMapContent(MapFileParser.TopoMapContentContext ctx) { }
+	@Override public void enterNodeContent(MapFileParser.NodeContentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTopoMapContent(MapFileParser.TopoMapContentContext ctx) { }
+	@Override public void exitNodeContent(MapFileParser.NodeContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterRelationshipContent(MapFileParser.RelationshipContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRelationshipContent(MapFileParser.RelationshipContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterPathContent(MapFileParser.PathContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitPathContent(MapFileParser.PathContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDirectionContent(MapFileParser.DirectionContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDirectionContent(MapFileParser.DirectionContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterModifierContent(MapFileParser.ModifierContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitModifierContent(MapFileParser.ModifierContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCommentContent(MapFileParser.CommentContentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCommentContent(MapFileParser.CommentContentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -113,13 +173,13 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterModifierContent(MapFileParser.ModifierContentContext ctx) { }
+	@Override public void enterModifierText(MapFileParser.ModifierTextContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitModifierContent(MapFileParser.ModifierContentContext ctx) { }
+	@Override public void exitModifierText(MapFileParser.ModifierTextContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

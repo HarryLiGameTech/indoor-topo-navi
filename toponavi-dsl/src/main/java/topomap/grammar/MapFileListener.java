@@ -28,15 +28,77 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitTopoMap(MapFileParser.TopoMapContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#topoMapContent}.
+	 * Enter a parse tree produced by the {@code nodeContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
 	 * @param ctx the parse tree
 	 */
-	void enterTopoMapContent(MapFileParser.TopoMapContentContext ctx);
+	void enterNodeContent(MapFileParser.NodeContentContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#topoMapContent}.
+	 * Exit a parse tree produced by the {@code nodeContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
 	 * @param ctx the parse tree
 	 */
-	void exitTopoMapContent(MapFileParser.TopoMapContentContext ctx);
+	void exitNodeContent(MapFileParser.NodeContentContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code relationshipContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void enterRelationshipContent(MapFileParser.RelationshipContentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code relationshipContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void exitRelationshipContent(MapFileParser.RelationshipContentContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code pathContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void enterPathContent(MapFileParser.PathContentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code pathContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void exitPathContent(MapFileParser.PathContentContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code directionContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void enterDirectionContent(MapFileParser.DirectionContentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code directionContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void exitDirectionContent(MapFileParser.DirectionContentContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code modifierContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void enterModifierContent(MapFileParser.ModifierContentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code modifierContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void exitModifierContent(MapFileParser.ModifierContentContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code commentContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void enterCommentContent(MapFileParser.CommentContentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code commentContent}
+	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * @param ctx the parse tree
+	 */
+	void exitCommentContent(MapFileParser.CommentContentContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MapFileParser#topoNodeDeclaration}.
 	 * @param ctx the parse tree
@@ -88,15 +150,15 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitModifierDeclaration(MapFileParser.ModifierDeclarationContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#modifierContent}.
+	 * Enter a parse tree produced by {@link MapFileParser#modifierText}.
 	 * @param ctx the parse tree
 	 */
-	void enterModifierContent(MapFileParser.ModifierContentContext ctx);
+	void enterModifierText(MapFileParser.ModifierTextContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#modifierContent}.
+	 * Exit a parse tree produced by {@link MapFileParser#modifierText}.
 	 * @param ctx the parse tree
 	 */
-	void exitModifierContent(MapFileParser.ModifierContentContext ctx);
+	void exitModifierText(MapFileParser.ModifierTextContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code exprFnCall}
 	 * labeled alternative in {@link MapFileParser#expr}.
