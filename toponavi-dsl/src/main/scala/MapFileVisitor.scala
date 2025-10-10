@@ -1,5 +1,8 @@
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser}
-import scala.jdk.CollectionConverters._
+
+import scala.jdk.CollectionConverters.*
+
+
 
 class MapFileVisitor extends MapFileBaseVisitor[Any]{
   override def visitProgram(ctx: MapFileParser.ProgramContext): Any = {
@@ -22,7 +25,7 @@ class MapFileVisitor extends MapFileBaseVisitor[Any]{
           val origin = path.from.getText
           val destination = path.to.getText
           val cost = visitExpr(path.cost)
-//          val modifier = visitModifierContent(path.modifier)
+//          val modifier = visitModifierContent(path.modifier) // TODO: Type correction
         case directionCtx: MapFileParser.DirectionContentContext =>
         case _ => -1
       }
@@ -38,7 +41,17 @@ class MapFileVisitor extends MapFileBaseVisitor[Any]{
   }
 
   def visitExpr(ctx: MapFileParser.ExprContext): Any = {
-
+    ctx match  {
+      case identCtx: MapFileParser.ExprIdentifierContext =>
+      case primitiveCtx: MapFileParser.ExprPrimitiveContext =>
+      case functionCtx: MapFileParser.ExprFnCallContext =>
+      case paranCtx: MapFileParser.ExprParanContext =>
+      case addCtx: MapFileParser.ExprAddContext =>
+      case mulCtx: MapFileParser.ExprMulContext =>
+      case powCtx: MapFileParser.ExprPowContext =>
+      case ifCtx: MapFileParser.ExprIfContext =>
+      case _: Any => throw IllegalStateException("")
+    }
   }
 
   override def visitExprIdentifier(ctx: MapFileParser.ExprIdentifierContext): Any = {
@@ -58,7 +71,11 @@ class MapFileVisitor extends MapFileBaseVisitor[Any]{
   }
 
   override def visitExprAdd(ctx: MapFileParser.ExprAddContext): Any = {
-
+    val operator = ctx.op.getText match{
+      case "+" => BinaryOperator.Add
+      case "-" => BinaryOperator.Sub
+    }
+    // TODO
   }
 
   override def visitExprMul(ctx: MapFileParser.ExprMulContext): Any = {
