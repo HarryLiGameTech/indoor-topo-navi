@@ -12,6 +12,12 @@ enum PathType:
   case Accessibility
   case Restricted
   case EmergencyOnly
+  
+enum ElevatorServicePermission:
+  case Locked // Can neither arrive nor depart
+  case ArriveOnly
+  case DepartOnly
+  case FullyGranted // Both arriving and departing is allowed
 
 enum AttributeValue:
   case IntValue(value: Int)
