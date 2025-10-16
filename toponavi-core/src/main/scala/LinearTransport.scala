@@ -1,6 +1,6 @@
-import enums.ElevatorServicePermission
+import enums.TransportServicePermission
 
-trait VehicleLine {
+trait LinearTransport {
   def identifier: String
   def stationNodes: Map[NavigationGraph, TopoNode]
   def stationLocations: Map[NavigationGraph, Double]
@@ -21,13 +21,13 @@ case class ElevatorBank(
   identifier: String,
   stationNodes: Map[NavigationGraph, TopoNode],
   stationLocations: Map[NavigationGraph, Double],
-  stationPermissions: Map[NavigationGraph, ElevatorServicePermission],
+  stationPermissions: Map[NavigationGraph, TransportServicePermission],
   maxVelocity: Double,
   acceleration: Double
-) extends VehicleLine {
+) extends LinearTransport {
 
   override def canArriveAt(target: NavigationGraph): Boolean = {
-    if (stationNodes.contains(target) && (stationPermissions(target) == ElevatorServicePermission.FullyGranted || (stationPermissions(target) == ElevatorServicePermission.ArriveOnly))){
+    if (stationNodes.contains(target) && (stationPermissions(target) == TransportServicePermission.FullyGranted || (stationPermissions(target) == TransportServicePermission.ArriveOnly))){
       true
     }
     else{
@@ -36,7 +36,7 @@ case class ElevatorBank(
   }
 
   override def canDepartFrom(target: NavigationGraph): Boolean = {
-    if (stationNodes.contains(target) && (stationPermissions(target) == ElevatorServicePermission.FullyGranted || (stationPermissions(target) == ElevatorServicePermission.DepartOnly))) {
+    if (stationNodes.contains(target) && (stationPermissions(target) == TransportServicePermission.FullyGranted || (stationPermissions(target) == TransportServicePermission.DepartOnly))) {
       true
     }
     else {

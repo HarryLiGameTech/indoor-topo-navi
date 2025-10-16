@@ -13,7 +13,7 @@ enum PathType:
   case Restricted
   case EmergencyOnly
   
-enum ElevatorServicePermission:
+enum TransportServicePermission:
   case Locked // Can neither arrive nor depart
   case ArriveOnly
   case DepartOnly

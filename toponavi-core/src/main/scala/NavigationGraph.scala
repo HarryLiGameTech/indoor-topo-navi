@@ -1,9 +1,10 @@
 class NavigationGraph private(
+  val identifier: String,
   val nodes: Map[String, TopoNode],
   val adjacencyList: Map[String, List[Edge]], // Single direction!
   val reverseAdjacency: Map[String, List[Edge]]
 ) {
-
+  
   private def getOutgoingEdges(originEdgeId: String): List[Edge] = {
     adjacencyList.getOrElse(originEdgeId, List.empty)
   }
