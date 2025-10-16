@@ -1,0 +1,152 @@
+TopoMap FloorZ2 { // Each floor in Zone 2
+
+    // TODO: Sparate UpperLobby and Lobby
+
+    params {
+        permResident = 120, // 120 people always live here
+        rushHour = {
+            timePeriod = 7:45~9:45, 
+            gradient = LINEAR, 
+            category = ARRIVE
+        }
+    }
+
+    topo-node inside_room_01F {description = "inside the front door of room 01"}
+    topo-node inside_room_01R
+    topo-node outside_room_01F
+    topo-node outside_room_01R {description = "outside the rear door of room 01"}
+    topo-node inside_room_02F
+    topo-node inside_room_02R
+    topo-node outside_room_02F // == NE_corridor_corner
+    topo-node outside_room_02R
+    topo-node inside_room_03F
+    topo-node inside_room_03R
+    topo-node outside_room_03F
+    topo-node outside_room_03R
+    topo-node inside_room_04F
+    topo-node inside_room_04R 
+    topo-node outside_room_04F
+    topo-node outside_room_04R // == SE_corridor_corner
+    topo-node inside_room_05F
+    topo-node inside_room_05R
+    topo-node outside_room_05F
+    topo-node outside_room_05R
+    topo-node inside_room_06F 
+    topo-node inside_room_06R
+    topo-node outside_room_06F // == SW_corridor_corner
+    topo-node outside_room_06R
+    topo-node inside_room_07F
+    topo-node inside_room_07R
+    topo-node outside_room_07F
+    topo-node outside_room_07R
+    topo-node inside_room_08F
+    topo-node inside_room_08R 
+    topo-node outside_room_08F
+    topo-node outside_room_08R // == NW_corridor_corner
+
+    topo-node OP2_hall
+    topo-node OP2_hall_outside
+    topo-node OS_hall
+    topo-node OS_hall_outside
+
+    topo-node staircase_A
+    topo-node staircase_B
+    topo-node staircase_C
+    topo-node staircase_C_outside
+    topo-node staircase_D
+
+    topo-node west_intersact_1 // Near entrance to ST-D
+    topo-node west_intersact_2 // Near entrance to util_room
+    topo-node north_intersact_1 // Near entrance to pantry
+
+    // Functional Rooms
+    topo-node pantry
+    topo-node util_room
+    topo-node male_toilet
+    topo-node female_toilet
+    topo-node male_toilet_outside
+    topo-node female_toilet_outside
+
+    // Define Relationships 
+    // NTPP(toilet_hall, this) // Toilet hall is strictly inside this floor 
+    // TPP(male_toilet, toilet_hall) 
+    // TPP(female_toilet, toilet_hall) 
+    // EC(toilet_hall, staircase_1) // Toilets and staircase externally touches 
+    // DC(male_toilet, female_toilet) 
+    // DC(room_xx01, room_xx03) // These 2 rooms are on different side 
+    // DC(room_xx02, room_xx03) // These 2 rooms are on different side 
+    // EC(room_xx01, room_xx02) // Rooms next door 
+    // Rest to be discussed in later sections....
+
+
+    // In/Out rooms
+    atomic-path [outside_room_01F <-> inside_room_01F] {cost = 2}
+    atomic-path [outside_room_01R <-> inside_room_01R] {cost = 2}
+    atomic-path [outside_room_02F <-> inside_room_02F] {cost = 2}
+    atomic-path [outside_room_02R <-> inside_room_02R] {cost = 2}
+    atomic-path [outside_room_03F <-> inside_room_03F] {cost = 2}
+    atomic-path [outside_room_03R <-> inside_room_03R] {cost = 2}
+    atomic-path [outside_room_04F <-> inside_room_04F] {cost = 2}
+    atomic-path [outside_room_04R <-> inside_room_04R] {cost = 2}
+    atomic-path [outside_room_05F <-> inside_room_05F] {cost = 2}
+    atomic-path [outside_room_05R <-> inside_room_05R] {cost = 2}
+    atomic-path [outside_room_06F <-> inside_room_06F] {cost = 2}
+    atomic-path [outside_room_06R <-> inside_room_06R] {cost = 2}
+    atomic-path [outside_room_07F <-> inside_room_07F] {cost = 2}
+    atomic-path [outside_room_07R <-> inside_room_07R] {cost = 2}
+    atomic-path [outside_room_08F <-> inside_room_08F] {cost = 2}
+    atomic-path [outside_room_08R <-> inside_room_08R] {cost = 2}
+
+
+    // The ring-like corridor around the core
+    atomic-path [outside_room_08R <-> outside_room_08F] {cost = 2}
+    atomic-path [outside_room_08F <-> outside_room_01R] {cost = 1}
+    atomic-path [outside_room_01R <-> north_intersact_1] {cost = 4}
+    atomic-path [north_intersact_1 <-> outside_room_01F] {cost = 1}
+    atomic-path [outside_room_01F <-> inside_room_02R] {cost = 1}
+    atomic-path [outside_room_02R <-> outside_room_02F] {cost = 2}
+
+    atomic-path [outside_room_02F <-> outside_room_03R] {cost = 1}
+    atomic-path [outside_room_03R <-> OS_hall_outside] {cost = 3}
+    atomic-path [OS_hall_outside <-> OP2_hall_outside] {cost = 4}
+    atomic-path [OP2_hall_outside <-> outside_room_03F] {cost = 2}
+    atomic-path [outside_room_03F <-> inside_room_04R] {cost = 1}
+
+    atomic-path [outside_room_04R <-> inside_room_04F] {cost = 2}
+    atomic-path [outside_room_04F <-> inside_room_05R] {cost = 1}
+    atomic-path [outside_room_05R <-> staircase_C_outside] {cost = 3}
+    atomic-path [staircase_C_outside <-> female_toilet_outside] {cost = 2}
+    atomic-path [female_toilet_outside <-> outside_room_05F] {cost = 2}
+    atomic-path [outside_room_05F <-> outside_room_06R] {cost = 1}
+    atomic-path [outside_room_06R <-> outside_room_06F] {cost = 2}
+
+    atomic-path [outside_room_06F <-> outside_room_07R] {cost = 1}
+    atomic-path [outside_room_07R <-> west_intersact_2] {cost = 1}
+    atomic-path [west_intersact_2 <-> west_intersact_1] {cost = 3}
+    atomic-path [west_intersact_1 <-> male_toilet_outside] {cost = 3}
+    atomic-path [male_toilet_outside <-> outside_room_07F] {cost = 2}
+    atomic-path [outside_room_07F <-> outside_room_08R] {cost = 1}
+
+    // In/Out staircases or elevators
+    atomic-path [staircase_C_outside -> staircase_C] {cost = 3}
+    atomic-path [staircase_C -> staircase_C_outside] {cost = 5} requires TenantsOnly
+
+    atomic-path [west_intersact_1 -> staircase_D] {cost = 8}
+    atomic-path [staircase_D -> west_intersact_1] {cost = 10} requires TenantsOnly
+
+    atomic-path [outside_room_01F -> staircase_B] {cost = 3}
+    atomic-path [staircase_B -> outside_room_01F] {cost = 5} requires TenantsOnly
+
+    atomic-path [OS_hall -> staircase_A] {cost = 3}
+    atomic-path [staircase_A -> OS_hall] {cost = 5} requires TenantsOnly
+
+    atomic-path [OS_hall <-> OS_hall_outside] {cost = 2}
+    atomic-path [OP2_hall <-> OP2_hall_outside] {cost = 2}
+
+
+    atomic-path [north_intersact_1 <-> pantry] {cost = 1}
+    atomic-path [west_intersact_2 <-> util_room] {cost = 1}
+    
+    // Passengers' elevator hall is on the RHS of the peh_crossing when heading to the north-west corner 
+    // Direction(passenger_elevator_hall, passenger_elevator_hall_crossing, NW_corner, RIGHT) 
+}

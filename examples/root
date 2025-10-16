@@ -1,39 +1,51 @@
 root TopoMap NBC4 is PureOffice{
+
+
+    input{
+        bool haveStaffCard,
+        bool haveManagementCard,
+        string[] keys 
+    }
     
-    include "FloorZ1"
-    include "FloorZ2"
-    include "FloorZ3"
-    include "FloorZ4"
-    include "Lobby"
-    include "Floor3"
-    include "Floor29"
-    include "Floor30"
+    submap FloorZ1
+    submap FloorZ2
+    submap FloorZ3
+    submap FloorZ4
+    submap Lobby
+    submap Floor3
+    submap Floor29
+    submap Floor30
 
-    include "OP1"
-    include "OP2"
-    include "OP3"
-    include "OP4"
-    include "OEX" // Express
-    include "OFR" // 29/30
-    include "OS"
+    submap OP1
+    submap OP2
+    submap OP3
+    submap OP4
+    submap OEX // Express
+    submap OFR // 29/30
+    submap OS
 
+    // TODO: Change syntax
     EQ_ALL("Floor" + p"4~17", FloorZ1)
     EQ_ALL("Floor" + p"19~27", FloorZ2)
     EQ_ALL("Floor" + p"31~46", FloorZ3)
     EQ_ALL("Floor" + p"47~59", FloorZ4)
 
     // Define what means "TenantsOnly" 
-    modifier TenantsOnly{ 
-        require(haveStaffCard == true, UnauthorizedVisitException) 
+    constraint TenantsOnly{ 
+        require(haveStaffCard == true, UNAUTHORIZED)
     } 
 
     // Define what means ManagementOnly 
-    modifier ManagementOnly{ 
-        require(haveManagementCard == true, UnauthorizedVisitException) 
+    constraint ManagementOnly{ 
+        require(haveManagementCard == true, UnauthorizedVisitException)
     } 
 
     // Define what means EmergencyEgress 
-    modifier EmergencyEgress{ 
-        require(circumstance == Emergency, PathUnavailableException) 
-    } 
+    constraint EmergencyEgress{ 
+        require(circumstance == "Emergency", PathUnavailableException) 
+    }
+
+    constraint HasRoomKey(string roomName){
+        require(keys.contains(roomName), UNAUTHORIZED)
+    }
 }

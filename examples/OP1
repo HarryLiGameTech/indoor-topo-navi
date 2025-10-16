@@ -1,28 +1,30 @@
-vehicle OP1 is Elevator{
-    // Params
-    DefaultAccess(TenantsOnly) // All floors secured by keycard by default
-    MaxSpeed(4) // 4m/s velocity
-    Acceleration(0.9) // 0.9m/s^2 accel
-    Cars([OP1_1, OP1_2, OP1_3, OP1_4, OP1_5, OP1_6])
+transport OP1 is Elevator{
+    default-access = TenantsOnly
 
+    // Params
+    params {
+        maxSpeed = 4.0, // 4 meters a second
+        acceleration = 0.9, // 0.9m/s2
+        cars = [OP1_1, OP1_2, OP1_3, OP1_4, OP1_5, OP1_6]
+    }
 
     // Topo directions
-    TODO
+    // TODO
 
     // Stations
-    Station(Lobby, Lobby.OP1_hall, 0.0, nil) // Lobby is selectable by any passengers, located at 0.0m
-    Station(Floor4, FloorZ1.OP1_hall, 17.5, TenantsOnly)
-    Station(Floor5, FloorZ1.OP1_hall, 22.0, TenantsOnly)
-    Station(Floor6, FloorZ1.OP1_hall, 26.5, TenantsOnly)
-    Station(Floor7, FloorZ1.OP1_hall, 31.0, TenantsOnly)
-    Station(Floor8, FloorZ1.OP1_hall, 35.5, TenantsOnly)
-    Station(Floor9, FloorZ1.OP1_hall, 40.0, TenantsOnly)
-    Station(Floor10, FloorZ1.OP1_hall, 44.5, TenantsOnly)
-    Station(Floor11, FloorZ1.OP1_hall, 49.0, TenantsOnly)
-    Station(Floor12, FloorZ1.OP1_hall, 53.5, TenantsOnly)
-    Station(Floor13, FloorZ1.OP1_hall, 58.0, TenantsOnly)
-    Station(Floor14, FloorZ1.OP1_hall, 62.5, TenantsOnly)
-    Station(Floor15, FloorZ1.OP1_hall, 67.0, TenantsOnly)
-    Station(Floor16, FloorZ1.OP1_hall, 71.5, TenantsOnly)
-    Station(Floor17, FloorZ1.OP1_hall, 76.0, TenantsOnly)
+    station Lobby at Lobby.OP1_hall {relativeLocation = 0.0} requires null // REFER TO THIS
+    station Floor4 at FloorZ1.OP1_hall {relativeLocation = 17.5}
+    station Floor5 at FloorZ1.OP1_hall {relativeLocation = 22.0}
+    station Floor6 at FloorZ1.OP1_hall {relativeLocation = 26.5}
+    station Floor7 at FloorZ1.OP1_hall {relativeLocation = 31.0}
+    station Floor8 at FloorZ1.OP1_hall {relativeLocation = 35.5}
+    station Floor9 at FloorZ1.OP1_hall {relativeLocation = 40.0}
+    station Floor10 at FloorZ1.OP1_hall {relativeLocation = 44.5}
+    station Floor11 at FloorZ1.OP1_hall {relativeLocation = 49.0}
+    station Floor12 at FloorZ1.OP1_hall {relativeLocation = 53.5}
+    station Floor13 at FloorZ1.OP1_hall {relativeLocation = 58.0}
+    station Floor14 at FloorZ1.OP1_hall {relativeLocation = 62.5}
+    station Floor15 at FloorZ1.OP1_hall {relativeLocation = 67.0}
+    station Floor16 at FloorZ1.OP1_hall {relativeLocation = 71.5}
+    station Floor17 at FloorZ1.OP1_hall {relativeLocation = 76.0}
 }
