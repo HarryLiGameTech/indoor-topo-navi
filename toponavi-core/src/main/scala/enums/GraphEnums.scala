@@ -6,7 +6,7 @@ enum VisitingMode:
   case Prioritized
   case Emergency
 
-// TODO: Modify to modifiers
+// TODO: Consider delete these
 enum PathType:
   case General
   case Accessibility
@@ -14,7 +14,7 @@ enum PathType:
   case EmergencyOnly
   
 enum TransportServicePermission:
-  case Locked // Can neither arrive nor depart
+  case NoAccess // Can neither arrive nor depart
   case ArriveOnly
   case DepartOnly
   case FullyGranted // Both arriving and departing is allowed

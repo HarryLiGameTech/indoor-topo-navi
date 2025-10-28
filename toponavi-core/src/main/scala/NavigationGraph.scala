@@ -1,11 +1,15 @@
+import cats.effect.IO
+
+import scala.collection.mutable
+
 class NavigationGraph private(
   val identifier: String,
   val nodes: Map[String, TopoNode],
-  val adjacencyList: Map[String, List[Edge]], // Single direction!
-  val reverseAdjacency: Map[String, List[Edge]]
+  val adjacencyList: Map[String, List[AtomicPath]], // Single direction!
+  val reverseAdjacency: Map[String, List[AtomicPath]]
 ) {
   
-  private def getOutgoingEdges(originEdgeId: String): List[Edge] = {
+  private def getOutgoingEdges(originEdgeId: String): List[AtomicPath] = {
     adjacencyList.getOrElse(originEdgeId, List.empty)
   }
 
@@ -18,8 +22,6 @@ class NavigationGraph private(
   def findPath(
     start: TopoNode,
     goal: TopoNode,
-    mode: RoutingMode,
-    constraints: NavigationConstraints = NavigationConstraints.default
   ): IO[Option[Path]] = IO {
 
     case class SearchNode(
@@ -33,25 +35,24 @@ class NavigationGraph private(
     val openSet = mutable.PriorityQueue[SearchNode]() 
     val gScore = mutable.Map(start -> 0.0)
 
-    openSet.enqueue(SearchNode(start, 0, heuristic(start, goal), None))
+    openSet.enqueue(SearchNode(start.toString, 0, heuristic(start, goal), None))
 
     while (openSet.nonEmpty) {
       val current = openSet.dequeue()
 
-      if (current.id == goal) {
+      if (current.id == goal.identifier) {
         return Some(reconstructPath(current))
       }
 
       for {
         edge <- getOutgoingEdges(current.id) // Iterate over the neighbors of current node
-        if constraints.satisfies(edge)
         neighbor = edge.target
-        tentativeGScore = gScore(current.id) + edge.weights(mode)
+        tentativeGScore: Double = gScore(current) + edge.weights(mode)
         if tentativeGScore < gScore.getOrElse(neighbor, Double.MaxValue)
       } yield { // When the 2 ifs passes, exec the things below
         gScore(neighbor) = tentativeGScore
         val fScore = tentativeGScore + heuristic(neighbor, goal)
-        openSet.enqueue(SearchNode(neighbor, tentativeGScore, fScore, Some(current.id)))
+        openSet.enqueue(SearchNode(neighbor.identifier, tentativeGScore, fScore, Some(current.id)))
       }
     }
 

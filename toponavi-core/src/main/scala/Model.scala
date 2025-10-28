@@ -7,8 +7,7 @@ case class TopoNodeAttribute(
 )
 
 case class TopoNode(
-  id: String,
-  regionType: RegionType,
+  identifier: String,
   attributes: Map[String, AttributeValue]
 )
 
@@ -17,4 +16,8 @@ case class AtomicPath(
   target: TopoNode,
   costs: Map[VisitingMode, Int],
   pathType: PathType // Temporary, to-be-modified to "modifiers"
+)
+
+case class Path(
+  routeNodes: List[TopoNode]
 )

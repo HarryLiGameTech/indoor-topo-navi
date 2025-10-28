@@ -1,15 +1,17 @@
+import cats.effect.IO
 import enums.TransportServicePermission
 
+import scala.collection.mutable
+
 // The RailNetwork shall be generated after all the modifiers are applied. i.e. locked and ineligible floor/elevator pair shall not appear here
-class TransportGraph private(
+private class TransportGraph private(
   val nodes: List[StationNode],
   val adjacencyList: Map[StationNode, List[StationNode]]
 ){
   def findPath(
     start: StationNode,
     goal: StationNode,
-    constraints: NavigationConstraints = NavigationConstraints.default
-  ): IO[Option[Path]] = IO {
+  ): Option[Path] = {
     // Priority queue for open set (min-heap based on fScore)
     implicit val nodeOrdering: Ordering[(StationNode, Double)] =
       Ordering.by[(StationNode, Double), Double](_._2).reverse
@@ -21,7 +23,7 @@ class TransportGraph private(
 
     // Initialize starting node
     gScore(start) = 0.0
-    fScore(start) = heuristic(start, goal, constraints)
+    fScore(start) = heuristic(start, goal)
     openSet.enqueue((start, fScore(start)))
 
     while (openSet.nonEmpty) {
@@ -40,20 +42,18 @@ class TransportGraph private(
       } else {
         // Explore neighbors
         for (neighbor <- adjacencyList.getOrElse(current, Nil)) {
-          if (constraints.isAccessible(neighbor)) {
-            // Tentative gScore is distance from start to neighbor through current
-            val tentativeGScore = gScore(current) + distanceBetween(current, neighbor, constraints)
+          // Tentative gScore is distance from start to neighbor through current
+          val tentativeGScore = gScore(current) + distanceBetween(current, neighbor)
 
-            // If we found a better path to neighbor
-            if (tentativeGScore < gScore(neighbor)) {
-              // This path to neighbor is better than any previous one
-              cameFrom(neighbor) = current
-              gScore(neighbor) = tentativeGScore
-              fScore(neighbor) = tentativeGScore + heuristic(neighbor, goal, constraints)
+          // If we found a better path to neighbor
+          if (tentativeGScore < gScore(neighbor)) {
+            // This path to neighbor is better than any previous one
+            cameFrom(neighbor) = current
+            gScore(neighbor) = tentativeGScore
+            fScore(neighbor) = tentativeGScore + heuristic(neighbor, goal)
 
-              // Add to open set (we don't have decrease-key, so we allow duplicates)
-              openSet.enqueue((neighbor, fScore(neighbor)))
-            }
+            // Add to open set (we don't have decrease-key, so we allow duplicates)
+            openSet.enqueue((neighbor, fScore(neighbor)))
           }
         }
       }
@@ -62,6 +62,38 @@ class TransportGraph private(
     // No path found
     None
   }
+
+  // TODO
+  private def heuristic(from: StationNode, to: StationNode): Double = {
+    0
+  }
+
+  private def distanceBetween(from: StationNode, to: StationNode): Double = {
+    // Use the line's travel time
+    from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
+  }
+
+  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode): Path = {
+    val totalPath = mutable.ListBuffer[StationNode]()
+    var node = current
+
+    while (cameFrom.contains(node)) {
+      totalPath.prepend(node)
+      node = cameFrom(node)
+    }
+    totalPath.prepend(node)
+
+    // Safe conversion with error handling
+    val topoNodes = totalPath.map { stationNode =>
+      stationNode.ownerLine.stationNodes.get(stationNode.ownerGraph) match {
+        case Some(topoNode) => topoNode
+        case None => throw new IllegalStateException(s"No TopoNode found for StationNode: ${stationNode.identifier}")
+      }
+    }.toList
+
+    Path(topoNodes)
+  }
+  
 }
 
 
@@ -78,14 +110,15 @@ object TransportGraph {
   }
 
   private def generateTransGraphEdges(lines: List[LinearTransport]): (List[StationNode], List[TransportEdge]) = {
-    val edges = new List[TransportEdge]
+    val edges = mutable.ListBuffer[TransportEdge]()
+    val allNodes = mutable.ListBuffer[StationNode]()
 
     // Iterate over each line
     for (line: LinearTransport <- lines: List[LinearTransport]) {
       // Get all station nodes for this line
       val stationNodes = createStationNodesForLine(line)
       allNodes ++= stationNodes
-      
+
       // Create edges between EVERY pair of stations (complete graph)
       for {
         from: StationNode <- stationNodes
@@ -93,7 +126,6 @@ object TransportGraph {
         if from != to // Avoid self-loops
       } {
         val cost = line.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
-        val edgeType = TransportEdgeType.ELEVATOR_TRAVEL
 
         // Add edge
         edges += TransportEdge(from, to, cost)
@@ -134,42 +166,67 @@ object TransportGraph {
   }
 
   private def buildAdjacencyList(edges: List[TransportEdge]): Map[StationNode, List[StationNode]] = {
-
+    edges
+      .groupBy(_.sourceNode) // Group all edges by their source node
+      .view
+      .mapValues(_.map(_.destinationNode)) // For each source node, extract all destination nodes
+      .toMap
   }
 
   // Create a simple test graph
   def createTestGraph(): TransportGraph = {
+
+//    // Create test nodesW
+//    val node1: StationNode = new StationNode {
+//      def identifier = "Floor1M"
+//
+//      def ownerLine: ElevatorBank = elevatorBank
+//
+//      def permission: TransportServicePermission = TransportServicePermission.FullyGranted
+//    }
+//
+//    val node2: StationNode = new StationNode {
+//      def identifier = "Floor1"
+//
+//      def ownerLine: ElevatorBank = elevatorBank
+//
+//      def permission: TransportServicePermission = TransportServicePermission.FullyGranted
+//    }
+
+    val naviGraph1 = new NavigationGraph
+    val naviGraph2 = new NavigationGraph
+    val naviGraph3 = new NavigationGraph
+    val naviGraph4 = new NavigationGraph
+
     // Create mock elevator bank
     val elevatorBank = ElevatorBank(
-      identifier = "TestElevator",
-      stationNodes = Map.empty, // Fill with actual data
-      stationLocations = Map.empty,
-      stationPermissions = Map.empty,
+
+
+      identifier = "OPS",
+      // Map with some entries
+      stationNodes = Map(
+        naviGraph1 -> new TopoNode("1M_hall"),
+        naviGraph2 -> new TopoNode("1_hall"),
+        naviGraph3 -> new TopoNode("B2_hall"),
+        naviGraph4 -> new TopoNode("B3_hall")
+      ),
+      stationLocations = Map(
+        naviGraph1 -> 14.5,
+        naviGraph2 -> 11.0,
+        naviGraph3 -> 3.5,
+        naviGraph4 -> 0.0
+      ),
+      stationPermissions = Map(
+        naviGraph1 -> TransportServicePermission.FullyGranted,
+        naviGraph2 -> TransportServicePermission.FullyGranted,
+        naviGraph3 -> TransportServicePermission.FullyGranted,
+        naviGraph4 -> TransportServicePermission.FullyGranted
+      ),
       maxVelocity = 2.0,
       acceleration = 1.0
     )
 
-    // Create test nodes
-    val node1 = new StationNode {
-      def identifier = "Floor1"
-      def ownerLine = elevatorBank
-      def permission = TransportServicePermission.FullyGranted
-      def getVerticalPosition: Double = 0.0
-      def getHorizontalPosition: Double = 0.0
-    }
-
-    val node2 = new StationNode {
-      def identifier = "Floor2"
-      def ownerLine = elevatorBank
-      def permission = TransportServicePermission.FullyGranted
-      def getVerticalPosition: Double = 10.0
-      def getHorizontalPosition: Double = 0.0
-    }
-
-    val nodes = Array(node1, node2)
-    val edges = List((node1, node2))
-
-    TransportGraph(nodes, edges)
+    TransportGraph(List(elevatorBank))
   }
 }
 
@@ -186,6 +243,54 @@ case class TransportEdge(
   cost: Double
 )
 
+
+
+
+
+object TransportGraphTest extends App {
+
+  def runTest(): Unit = {
+    println("=== Creating Test Transport Graph ===")
+
+    // Create the test graph
+    val graph = TransportGraph.createTestGraph()
+
+    println(s"Graph created with ${graph.nodes.size} nodes")
+    graph.nodes.foreach(node => println(s"  - Node: ${node.identifier}"))
+
+//    // Test finding a path
+//    if (graph.nodes.size >= 2) {
+//      val start = graph.nodes.head
+//      val goal = graph.nodes.last
+//
+//      println(s"\n=== Testing Path Finding ===")
+//      println(s"Start: ${start.identifier}")
+//      println(s"Goal: ${goal.identifier}")
+//
+//      // Find path (using unsafeRunSync for testing - in production use proper effect handling)
+//      val result = graph.findPath(start, goal).unsafeRunSync()
+//
+//      result match {
+//        case Some(path) =>
+//          println(s"Path found with ${path.nodes.size} nodes:")
+//          path.nodes.foreach(node => println(s"   → ${node.identifier}"))
+//        case None =>
+//          println("No path found")
+//      }
+//    } else {
+//      println("Not enough nodes to test path finding")
+//    }
+
+    // Test adjacency list
+    println(s"\n=== Testing Adjacency List ===")
+    graph.adjacencyList.foreach { case (node, neighbors) =>
+      println(s"${node.identifier} -> ${neighbors.map(_.identifier).mkString(", ")}")
+    }
+  }
+
+  // Run the test
+  runTest()
+}
 
 
 
