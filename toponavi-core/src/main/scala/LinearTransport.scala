@@ -83,7 +83,12 @@ case class ElevatorBank(
   }
 
   override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
-    40 + netTimeBetweenStations(src, dst)
+    waitingTime() + netTimeBetweenStations(src, dst)
+  }
+
+  // TODO: Use waiting-time estimation algorithm
+  private def waitingTime(): Double = {
+    40
   }
 
 }

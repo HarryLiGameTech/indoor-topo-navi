@@ -63,9 +63,8 @@ private class TransportGraph private(
     None
   }
 
-  // TODO
   private def heuristic(from: StationNode, to: StationNode): Double = {
-    0
+    from.ownerLine.netTimeBetweenStations(from.ownerGraph, to.ownerGraph)
   }
 
   private def distanceBetween(from: StationNode, to: StationNode): Double = {
@@ -137,7 +136,7 @@ object TransportGraph {
   private def createStationNodesForLine(line: LinearTransport): List[StationNode] = {
     line.stationNodes.map { case (navigationGraph, topoNode) =>
       new StationNode {
-        def identifier: String = s"${line.identifier}_${navigationGraph.toString}"
+        def identifier: String = s"${line.identifier}_${navigationGraph.identifier}"
 
         def ownerGraph: NavigationGraph = navigationGraph
 
@@ -175,24 +174,6 @@ object TransportGraph {
 
   // Create a simple test graph
   def createTestGraph(): TransportGraph = {
-
-//    // Create test nodesW
-//    val node1: StationNode = new StationNode {
-//      def identifier = "Floor1M"
-//
-//      def ownerLine: ElevatorBank = elevatorBank
-//
-//      def permission: TransportServicePermission = TransportServicePermission.FullyGranted
-//    }
-//
-//    val node2: StationNode = new StationNode {
-//      def identifier = "Floor1"
-//
-//      def ownerLine: ElevatorBank = elevatorBank
-//
-//      def permission: TransportServicePermission = TransportServicePermission.FullyGranted
-//    }
-
     val naviGraph1 = NavigationGraph.createSimpleGraph("Floor1M")
     val naviGraph2 = NavigationGraph.createSimpleGraph("Floor1")
     val naviGraph3 = NavigationGraph.createSimpleGraph("FloorB2")
@@ -258,28 +239,28 @@ object TransportGraphTest extends App {
     println(s"Graph created with ${graph.nodes.size} nodes")
     graph.nodes.foreach(node => println(s"  - Node: ${node.identifier}"))
 
-//    // Test finding a path
-//    if (graph.nodes.size >= 2) {
-//      val start = graph.nodes.head
-//      val goal = graph.nodes.last
-//
-//      println(s"\n=== Testing Path Finding ===")
-//      println(s"Start: ${start.identifier}")
-//      println(s"Goal: ${goal.identifier}")
-//
-//      // Find path (using unsafeRunSync for testing - in production use proper effect handling)
-//      val result = graph.findPath(start, goal).unsafeRunSync()
-//
-//      result match {
-//        case Some(path) =>
-//          println(s"Path found with ${path.nodes.size} nodes:")
-//          path.nodes.foreach(node => println(s"   → ${node.identifier}"))
-//        case None =>
-//          println("No path found")
-//      }
-//    } else {
-//      println("Not enough nodes to test path finding")
-//    }
+    // Test finding a path
+    if (graph.nodes.size >= 2) {
+      val start = graph.nodes.head
+      val goal = graph.nodes.last
+
+      println(s"\n=== Testing Path Finding ===")
+      println(s"Start: ${start.identifier}")
+      println(s"Goal: ${goal.identifier}")
+
+      // Find path (using unsafeRunSync for testing - in production use proper effect handling)
+      val result = graph.findPath(start, goal)
+
+      result match {
+        case Some(path) =>
+          println(s"Path found with ${path.routeNodes.size} nodes:")
+          path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
+        case None =>
+          println("No path found")
+      }
+    } else {
+      println("Not enough nodes to test path finding")
+    }
 
     // Test adjacency list
     println(s"\n=== Testing Adjacency List ===")
