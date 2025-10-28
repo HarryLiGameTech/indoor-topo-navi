@@ -14,7 +14,7 @@ case class TopoNode(
 case class AtomicPath(
   source: TopoNode,
   target: TopoNode,
-  costs: Map[VisitingMode, Int],
+  costs: Map[VisitingMode, Double],
   pathType: PathType // Temporary, to-be-modified to "modifiers"
 )
 

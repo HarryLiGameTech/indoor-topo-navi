@@ -193,10 +193,10 @@ object TransportGraph {
 //      def permission: TransportServicePermission = TransportServicePermission.FullyGranted
 //    }
 
-    val naviGraph1 = new NavigationGraph
-    val naviGraph2 = new NavigationGraph
-    val naviGraph3 = new NavigationGraph
-    val naviGraph4 = new NavigationGraph
+    val naviGraph1 = NavigationGraph.createSimpleGraph("Floor1M")
+    val naviGraph2 = NavigationGraph.createSimpleGraph("Floor1")
+    val naviGraph3 = NavigationGraph.createSimpleGraph("FloorB2")
+    val naviGraph4 = NavigationGraph.createSimpleGraph("FloorB3")
 
     // Create mock elevator bank
     val elevatorBank = ElevatorBank(
@@ -205,10 +205,10 @@ object TransportGraph {
       identifier = "OPS",
       // Map with some entries
       stationNodes = Map(
-        naviGraph1 -> new TopoNode("1M_hall"),
-        naviGraph2 -> new TopoNode("1_hall"),
-        naviGraph3 -> new TopoNode("B2_hall"),
-        naviGraph4 -> new TopoNode("B3_hall")
+        naviGraph1 -> TopoNode("1M_hall", Map.empty),
+        naviGraph2 -> TopoNode("1_hall", Map.empty),
+        naviGraph3 -> TopoNode("B2_hall", Map.empty),
+        naviGraph4 -> TopoNode("B3_hall", Map.empty)
       ),
       stationLocations = Map(
         naviGraph1 -> 14.5,
