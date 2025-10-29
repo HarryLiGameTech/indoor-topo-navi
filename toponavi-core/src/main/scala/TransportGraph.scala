@@ -6,11 +6,12 @@ import scala.collection.mutable
 // The RailNetwork shall be generated after all the modifiers are applied. i.e. locked and ineligible floor/elevator pair shall not appear here
 private class TransportGraph private(
   val nodes: List[StationNode],
-  val adjacencyList: Map[StationNode, List[StationNode]]
+  val adjacencyList: Map[StationNode, Set[StationNode]]
 ){
   def findPath(
     start: StationNode,
     goal: StationNode,
+    floorNameList: List[String]
   ): Option[Path] = {
     // Priority queue for open set (min-heap based on fScore)
     implicit val nodeOrdering: Ordering[(StationNode, Double)] =
@@ -23,7 +24,7 @@ private class TransportGraph private(
 
     // Initialize starting node
     gScore(start) = 0.0
-    fScore(start) = heuristic(start, goal)
+    fScore(start) = heuristic(start, goal, floorNameList)
     openSet.enqueue((start, fScore(start)))
 
     while (openSet.nonEmpty) {
@@ -50,7 +51,7 @@ private class TransportGraph private(
             // This path to neighbor is better than any previous one
             cameFrom(neighbor) = current
             gScore(neighbor) = tentativeGScore
-            fScore(neighbor) = tentativeGScore + heuristic(neighbor, goal)
+            fScore(neighbor) = tentativeGScore + heuristic(neighbor, goal, floorNameList)
 
             // Add to open set (we don't have decrease-key, so we allow duplicates)
             openSet.enqueue((neighbor, fScore(neighbor)))
@@ -63,8 +64,23 @@ private class TransportGraph private(
     None
   }
 
-  private def heuristic(from: StationNode, to: StationNode): Double = {
-    from.ownerLine.netTimeBetweenStations(from.ownerGraph, to.ownerGraph)
+  private def heuristic(from: StationNode, to: StationNode, stationNameList: List[String]): Double = {
+    // Get the floor identifiers
+    val fromFloor = from.ownerGraph.identifier
+    val toFloor = to.ownerGraph.identifier
+
+    // Find the indices in the station name list
+    val fromIndex = stationNameList.indexOf(fromFloor)
+    val toIndex = stationNameList.indexOf(toFloor)
+
+    // If either floor is not found in the list, return a large penalty
+    if (fromIndex == -1 || toIndex == -1) {
+      return Double.PositiveInfinity
+    }
+
+    // Calculate the absolute index difference and multiply by 5
+    val indexDifference = math.abs(fromIndex - toIndex)
+    5.0 * indexDifference
   }
 
   private def distanceBetween(from: StationNode, to: StationNode): Double = {
@@ -108,7 +124,7 @@ object TransportGraph {
     new TransportGraph(nodes, adjacencyList)
   }
 
-  private def generateTransGraphEdges(lines: List[LinearTransport]): (List[StationNode], List[TransportEdge]) = {
+  private def generateTransGraphEdges(lines: List[LinearTransport]): (List[StationNode], Set[TransportEdge]) = {
     val edges = mutable.ListBuffer[TransportEdge]()
     val allNodes = mutable.ListBuffer[StationNode]()
 
@@ -118,19 +134,42 @@ object TransportGraph {
       val stationNodes = createStationNodesForLine(line)
       allNodes ++= stationNodes
 
-      // Create edges between EVERY pair of stations (complete graph)
-      for {
-        from: StationNode <- stationNodes
-        to: StationNode <- stationNodes
-        if from != to // Avoid self-loops
-      } {
-        val cost = line.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
+      // Create TWO types of edges:
 
-        // Add edge
-        edges += TransportEdge(from, to, cost)
+      // 1. Internal edges: Within each elevator line (complete graph)
+      for (line <- lines) {
+        val stationNodes = allNodes.filter(_.ownerLine == line) // Get nodes for this specific line
+
+        for {
+          from <- stationNodes
+          to <- stationNodes
+          if from != to // Avoid self-loops
+        } {
+          val cost = line.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
+          edges += TransportEdge(from, to, cost)
+        }
+      }
+
+      // 2. Transfer edges: Between different elevator lines serving the same floor
+      // Group nodes by the NavigationGraph they serve (same physical floor)
+      val nodesByFloor = allNodes.groupBy(_.ownerGraph)
+
+      for {
+        (navigationGraph, nodesOnSameFloor) <- nodesByFloor
+        if nodesOnSameFloor.size > 1 // Only floors with multiple elevators
+      } {
+        // Create edges between every pair of different elevator lines on this floor
+        for {
+          from <- nodesOnSameFloor
+          to <- nodesOnSameFloor
+          if from != to && from.ownerLine != to.ownerLine // Different elevator lines
+        } {
+          val transferCost = 30 // TODO: Connect with the NavigationGraph to calculate
+          edges += TransportEdge(from, to, transferCost)
+        }
       }
     }
-    (allNodes.toList, edges.toList)
+    (allNodes.toList, edges.toSet)
   }
 
   private def createStationNodesForLine(line: LinearTransport): List[StationNode] = {
@@ -164,7 +203,7 @@ object TransportGraph {
     }.toList
   }
 
-  private def buildAdjacencyList(edges: List[TransportEdge]): Map[StationNode, List[StationNode]] = {
+  private def buildAdjacencyList(edges: Set[TransportEdge]): Map[StationNode, Set[StationNode]] = {
     edges
       .groupBy(_.sourceNode) // Group all edges by their source node
       .view
@@ -174,41 +213,94 @@ object TransportGraph {
 
   // Create a simple test graph
   def createTestGraph(): TransportGraph = {
-    val naviGraph1 = NavigationGraph.createSimpleGraph("Floor1M")
-    val naviGraph2 = NavigationGraph.createSimpleGraph("Floor1")
-    val naviGraph3 = NavigationGraph.createSimpleGraph("FloorB2")
-    val naviGraph4 = NavigationGraph.createSimpleGraph("FloorB3")
+    val naviGraph1M = NavigationGraph.createSimpleGraph("Floor1M")
+    val naviGraph1 = NavigationGraph.createSimpleGraph("Floor1")
+    val naviGraphB1M = NavigationGraph.createSimpleGraph("FloorB1M")
+    val naviGraphB1 = NavigationGraph.createSimpleGraph("FloorB1")
+    val naviGraphB2 = NavigationGraph.createSimpleGraph("FloorB2")
+    val naviGraphB3 = NavigationGraph.createSimpleGraph("FloorB3")
+
+    val lobbyNode = TopoNode("1_hall", Map.empty)
 
     // Create mock elevator bank
-    val elevatorBank = ElevatorBank(
-
-
+    val OPSBank = ElevatorBank(
       identifier = "OPS",
       // Map with some entries
       stationNodes = Map(
-        naviGraph1 -> TopoNode("1M_hall", Map.empty),
-        naviGraph2 -> TopoNode("1_hall", Map.empty),
-        naviGraph3 -> TopoNode("B2_hall", Map.empty),
-        naviGraph4 -> TopoNode("B3_hall", Map.empty)
+        naviGraph1M -> TopoNode("OPS_1M_hall", Map.empty),
+        naviGraph1 -> TopoNode("OPS_1_hall", Map.empty),
+        naviGraphB2 -> TopoNode("OPS_B2_hall", Map.empty),
+        naviGraphB3 -> TopoNode("OPS_B3_hall", Map.empty)
       ),
       stationLocations = Map(
-        naviGraph1 -> 14.5,
-        naviGraph2 -> 11.0,
-        naviGraph3 -> 3.5,
-        naviGraph4 -> 0.0
+        naviGraph1M -> 15.5,
+        naviGraph1 -> 12.0,
+        naviGraphB2 -> 3.5,
+        naviGraphB3 -> 0.0
       ),
       stationPermissions = Map(
+        naviGraph1M -> TransportServicePermission.FullyGranted,
         naviGraph1 -> TransportServicePermission.FullyGranted,
-        naviGraph2 -> TransportServicePermission.FullyGranted,
-        naviGraph3 -> TransportServicePermission.FullyGranted,
-        naviGraph4 -> TransportServicePermission.FullyGranted
+        naviGraphB2 -> TransportServicePermission.FullyGranted,
+        naviGraphB3 -> TransportServicePermission.FullyGranted
       ),
       maxVelocity = 2.0,
       acceleration = 1.0
     )
 
-    TransportGraph(List(elevatorBank))
+    // Create mock elevator bank
+    val BBFFBank = ElevatorBank(
+      identifier = "BBFF",
+      // Map with some entries
+      stationNodes = Map(
+        naviGraph1 -> TopoNode("BBFF_1_hall", Map.empty),
+        naviGraphB1 -> TopoNode("BBFF_B1_hall", Map.empty)
+      ),
+      stationLocations = Map(
+        naviGraph1 -> 4.5,
+        naviGraphB1 -> 0.0
+      ),
+      stationPermissions = Map(
+        naviGraph1 -> TransportServicePermission.FullyGranted,
+        naviGraphB1 -> TransportServicePermission.FullyGranted
+      ),
+      maxVelocity = 1.0,
+      acceleration = 1.0
+    )
+
+    // Create mock elevator bank
+    val PHFFBank = ElevatorBank(
+      identifier = "PHFF",
+      // Map with some entries
+      stationNodes = Map(
+        naviGraph1 -> TopoNode("PHFF_1_hall", Map.empty),
+        naviGraphB1M -> TopoNode("PHFF_B1M_hall", Map.empty),
+        naviGraphB1 -> TopoNode("PHFF_B1_hall", Map.empty),
+        naviGraphB2 -> TopoNode("PHFF_B2_hall", Map.empty),
+        naviGraphB3 -> TopoNode("PHFF_B3_hall", Map.empty),
+      ),
+      stationLocations = Map(
+        naviGraph1 -> 12.0,
+        naviGraphB1M -> 9.5,
+        naviGraphB1 -> 7.5,
+        naviGraphB2 -> 3.5,
+        naviGraphB3 -> 0.0
+      ),
+      stationPermissions = Map(
+        naviGraph1 -> TransportServicePermission.FullyGranted,
+        naviGraphB1M -> TransportServicePermission.FullyGranted,
+        naviGraphB1 -> TransportServicePermission.FullyGranted,
+        naviGraphB2 -> TransportServicePermission.FullyGranted,
+        naviGraphB3 -> TransportServicePermission.FullyGranted
+      ),
+      maxVelocity = 2.0,
+      acceleration = 1.0
+    )
+
+    TransportGraph(List(OPSBank, BBFFBank, PHFFBank))
   }
+
+
 }
 
 trait StationNode{
@@ -241,15 +333,15 @@ object TransportGraphTest extends App {
 
     // Test finding a path
     if (graph.nodes.size >= 2) {
-      val start = graph.nodes.head
-      val goal = graph.nodes.last
+      val start = graph.nodes(3)
+      val goal = graph.nodes(6)
 
       println(s"\n=== Testing Path Finding ===")
       println(s"Start: ${start.identifier}")
       println(s"Goal: ${goal.identifier}")
 
-      // Find path (using unsafeRunSync for testing - in production use proper effect handling)
-      val result = graph.findPath(start, goal)
+      // Find path (3rd param for testing only, to-be-connected to other subsystems)
+      val result = graph.findPath(start, goal, List("Floor1M", "Floor1", "FloorB1M", "FloorB1", "FloorB2", "FloorB3"))
 
       result match {
         case Some(path) =>

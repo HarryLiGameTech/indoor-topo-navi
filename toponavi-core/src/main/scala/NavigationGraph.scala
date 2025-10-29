@@ -81,6 +81,8 @@ class NavigationGraph private(
     // No path found
     None
   }
+
+  override def toString: String = identifier
 }
 
 
