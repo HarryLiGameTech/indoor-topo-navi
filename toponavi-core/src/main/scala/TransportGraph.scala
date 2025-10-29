@@ -80,7 +80,7 @@ private class TransportGraph private(
 
     // Calculate the absolute index difference and multiply by 5
     val indexDifference = math.abs(fromIndex - toIndex)
-    5.0 * indexDifference
+    2.5 * indexDifference
   }
 
   private def distanceBetween(from: StationNode, to: StationNode): Double = {
@@ -240,7 +240,7 @@ object TransportGraph {
       ),
       stationPermissions = Map(
         naviGraph1M -> TransportServicePermission.FullyGranted,
-        naviGraph1 -> TransportServicePermission.FullyGranted,
+        naviGraph1 -> TransportServicePermission.DepartOnly, // TODO: Fix permission limit
         naviGraphB2 -> TransportServicePermission.FullyGranted,
         naviGraphB3 -> TransportServicePermission.FullyGranted
       ),
@@ -288,7 +288,7 @@ object TransportGraph {
       ),
       stationPermissions = Map(
         naviGraph1 -> TransportServicePermission.FullyGranted,
-        naviGraphB1M -> TransportServicePermission.FullyGranted,
+        naviGraphB1M -> TransportServicePermission.DepartOnly, // TODO: Fix permission limit
         naviGraphB1 -> TransportServicePermission.FullyGranted,
         naviGraphB2 -> TransportServicePermission.FullyGranted,
         naviGraphB3 -> TransportServicePermission.FullyGranted
@@ -333,7 +333,7 @@ object TransportGraphTest extends App {
 
     // Test finding a path
     if (graph.nodes.size >= 2) {
-      val start = graph.nodes(3)
+      val start = graph.nodes.head
       val goal = graph.nodes(6)
 
       println(s"\n=== Testing Path Finding ===")
