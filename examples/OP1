@@ -12,7 +12,7 @@ transport OP1 is Elevator{
     // TODO
 
     // Stations
-    station Lobby at Lobby.OP1_hall {relativeLocation = 0.0} requires null // REFER TO THIS
+    station Lobby at Lobby.OP1_hall {relativeLocation = 0.0} requires null on ARRIVAL // REFER TO THIS
     station Floor4 at FloorZ1.OP1_hall {relativeLocation = 17.5}
     station Floor5 at FloorZ1.OP1_hall {relativeLocation = 22.0}
     station Floor6 at FloorZ1.OP1_hall {relativeLocation = 26.5}
