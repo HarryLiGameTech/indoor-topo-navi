@@ -211,96 +211,6 @@ object TransportGraph {
       .toMap
   }
 
-  // Create a simple test graph
-  def createTestGraph(): TransportGraph = {
-    val naviGraph1M = NavigationGraph.createSimpleGraph("Floor1M")
-    val naviGraph1 = NavigationGraph.createSimpleGraph("Floor1")
-    val naviGraphB1M = NavigationGraph.createSimpleGraph("FloorB1M")
-    val naviGraphB1 = NavigationGraph.createSimpleGraph("FloorB1")
-    val naviGraphB2 = NavigationGraph.createSimpleGraph("FloorB2")
-    val naviGraphB3 = NavigationGraph.createSimpleGraph("FloorB3")
-
-    val lobbyNode = TopoNode("1_hall", Map.empty)
-
-    // Create mock elevator bank
-    val OPSBank = ElevatorBank(
-      identifier = "OPS",
-      // Map with some entries
-      stationNodes = Map(
-        naviGraph1M -> TopoNode("OPS_1M_hall", Map.empty),
-        naviGraph1 -> TopoNode("OPS_1_hall", Map.empty),
-        naviGraphB2 -> TopoNode("OPS_B2_hall", Map.empty),
-        naviGraphB3 -> TopoNode("OPS_B3_hall", Map.empty)
-      ),
-      stationLocations = Map(
-        naviGraph1M -> 15.5,
-        naviGraph1 -> 12.0,
-        naviGraphB2 -> 3.5,
-        naviGraphB3 -> 0.0
-      ),
-      stationPermissions = Map(
-        naviGraph1M -> TransportServicePermission.FullyGranted,
-        naviGraph1 -> TransportServicePermission.DepartOnly, // TODO: Fix permission limit
-        naviGraphB2 -> TransportServicePermission.FullyGranted,
-        naviGraphB3 -> TransportServicePermission.FullyGranted
-      ),
-      maxVelocity = 2.0,
-      acceleration = 1.0
-    )
-
-    // Create mock elevator bank
-    val BBFFBank = ElevatorBank(
-      identifier = "BBFF",
-      // Map with some entries
-      stationNodes = Map(
-        naviGraph1 -> TopoNode("BBFF_1_hall", Map.empty),
-        naviGraphB1 -> TopoNode("BBFF_B1_hall", Map.empty)
-      ),
-      stationLocations = Map(
-        naviGraph1 -> 4.5,
-        naviGraphB1 -> 0.0
-      ),
-      stationPermissions = Map(
-        naviGraph1 -> TransportServicePermission.FullyGranted,
-        naviGraphB1 -> TransportServicePermission.FullyGranted
-      ),
-      maxVelocity = 1.0,
-      acceleration = 1.0
-    )
-
-    // Create mock elevator bank
-    val PHFFBank = ElevatorBank(
-      identifier = "PHFF",
-      // Map with some entries
-      stationNodes = Map(
-        naviGraph1 -> TopoNode("PHFF_1_hall", Map.empty),
-        naviGraphB1M -> TopoNode("PHFF_B1M_hall", Map.empty),
-        naviGraphB1 -> TopoNode("PHFF_B1_hall", Map.empty),
-        naviGraphB2 -> TopoNode("PHFF_B2_hall", Map.empty),
-        naviGraphB3 -> TopoNode("PHFF_B3_hall", Map.empty),
-      ),
-      stationLocations = Map(
-        naviGraph1 -> 12.0,
-        naviGraphB1M -> 9.5,
-        naviGraphB1 -> 7.5,
-        naviGraphB2 -> 3.5,
-        naviGraphB3 -> 0.0
-      ),
-      stationPermissions = Map(
-        naviGraph1 -> TransportServicePermission.FullyGranted,
-        naviGraphB1M -> TransportServicePermission.DepartOnly, // TODO: Fix permission limit
-        naviGraphB1 -> TransportServicePermission.FullyGranted,
-        naviGraphB2 -> TransportServicePermission.FullyGranted,
-        naviGraphB3 -> TransportServicePermission.FullyGranted
-      ),
-      maxVelocity = 2.0,
-      acceleration = 1.0
-    )
-
-    TransportGraph(List(OPSBank, BBFFBank, PHFFBank))
-  }
-
-
 }
 
 trait StationNode{
@@ -320,50 +230,7 @@ case class TransportEdge(
 
 
 
-object TransportGraphTest extends App {
 
-  def runTest(): Unit = {
-    println("=== Creating Test Transport Graph ===")
-
-    // Create the test graph
-    val graph = TransportGraph.createTestGraph()
-
-    println(s"Graph created with ${graph.nodes.size} nodes")
-    graph.nodes.foreach(node => println(s"  - Node: ${node.identifier}"))
-
-    // Test finding a path
-    if (graph.nodes.size >= 2) {
-      val start = graph.nodes.head
-      val goal = graph.nodes(6)
-
-      println(s"\n=== Testing Path Finding ===")
-      println(s"Start: ${start.identifier}")
-      println(s"Goal: ${goal.identifier}")
-
-      // Find path (3rd param for testing only, to-be-connected to other subsystems)
-      val result = graph.findPath(start, goal, List("Floor1M", "Floor1", "FloorB1M", "FloorB1", "FloorB2", "FloorB3"))
-
-      result match {
-        case Some(path) =>
-          println(s"Path found with ${path.routeNodes.size} nodes:")
-          path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
-        case None =>
-          println("No path found")
-      }
-    } else {
-      println("Not enough nodes to test path finding")
-    }
-
-    // Test adjacency list
-    println(s"\n=== Testing Adjacency List ===")
-    graph.adjacencyList.foreach { case (node, neighbors) =>
-      println(s"${node.identifier} -> ${neighbors.map(_.identifier).mkString(", ")}")
-    }
-  }
-
-  // Run the test
-  runTest()
-}
 
 
 
