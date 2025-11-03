@@ -107,7 +107,7 @@ private class TransportGraph private(
       }
     }.toList
 
-    Path(topoNodes)
+    Path(topoNodes, List.empty)
   }
   
 }

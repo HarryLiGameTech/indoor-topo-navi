@@ -16,12 +16,23 @@ case class TopoNode(
 case class AtomicPath(
   source: TopoNode,
   target: TopoNode,
+  attributes: Map[String, AttributeValue],
   costs: Map[VisitingMode, Double],
   pathType: PathType // Temporary, to-be-modified to "modifiers"
 ) {
   override def toString: String = s"${source} -> ${target}"
+  
+}
+
+// Companion object for alternative constructors
+object AtomicPath {
+  // Alternative constructor without attributes
+  def apply(source: TopoNode, target: TopoNode, costs: Map[VisitingMode, Double], pathType: PathType): AtomicPath = {
+    new AtomicPath(source, target, Map.empty, costs, pathType)
+  }
 }
 
 case class Path(
-  routeNodes: List[TopoNode]
+  routeNodes: List[TopoNode],
+  routeEdges: List[AtomicPath]
 )
