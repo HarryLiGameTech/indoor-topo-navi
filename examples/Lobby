@@ -16,8 +16,6 @@ TopoMap Lobby is TransHub { // Lobby
         } // In this period of time, people linearly reaches this floor
     }
     
-    topo-node NW_corner
-    topo-node NE_corner
     topo-node SW_corner
     topo-node SE_corner
 

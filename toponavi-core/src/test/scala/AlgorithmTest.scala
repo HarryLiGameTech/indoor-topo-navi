@@ -262,7 +262,7 @@ object TransportTester extends App {
       ),
       stationPermissions = Map(
         naviGraph1 -> TransportServicePermission.FullyGranted,
-        naviGraphB1M -> TransportServicePermission.DepartOnly, // TODO: Fix permission limit
+        naviGraphB1M -> TransportServicePermission.DepartOnly,
         naviGraphB1 -> TransportServicePermission.FullyGranted,
         naviGraphB2 -> TransportServicePermission.FullyGranted,
         naviGraphB3 -> TransportServicePermission.FullyGranted
@@ -286,7 +286,7 @@ object TransportTester extends App {
     // Test finding a path
     if (graph.nodes.size >= 2) {
       val start = graph.nodes.head
-      val goal = graph.nodes(6)
+      val goal = graph.nodes(1)
 
       println(s"\n=== Testing Path Finding ===")
       println(s"Start: ${start.identifier}")

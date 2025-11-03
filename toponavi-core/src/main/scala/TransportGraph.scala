@@ -1,5 +1,6 @@
 import cats.effect.IO
 import enums.TransportServicePermission
+import enums.TransportServicePermission.{ArriveOnly, DepartOnly}
 
 import scala.collection.mutable
 
@@ -143,7 +144,7 @@ object TransportGraph {
         for {
           from <- stationNodes
           to <- stationNodes
-          if from != to // Avoid self-loops
+          if ((from != to && from.permission != ArriveOnly) && to.permission != DepartOnly) // Avoid self-loops and takes permission into account
         } {
           val cost = line.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
           edges += TransportEdge(from, to, cost)
