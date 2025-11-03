@@ -161,7 +161,7 @@ object Tester extends App{
 
     // Test the graph
     val start = node1 // NW_corner
-    val goal = node27 //
+    val goal = node28 //
 
     println(s"Testing path from ${start.identifier} to ${goal.identifier}")
     val path = graph.findPath(start, goal, Normal)
@@ -169,6 +169,7 @@ object Tester extends App{
     path match {
       case Some(foundPath) =>
         println(s"✅ Path found: ${foundPath.routeNodes.map(_.identifier).mkString(" -> ")}")
+        print(s"Costing ${foundPath.totalCost(VisitingMode.Normal)} seconds")
       case None =>
         println("❌ No path found")
     }
@@ -193,6 +194,66 @@ object TransportTester extends App {
     val naviGraphB1 = NavigationGraph.createSimpleGraph("FloorB1")
     val naviGraphB2 = NavigationGraph.createSimpleGraph("FloorB2")
     val naviGraphB3 = NavigationGraph.createSimpleGraph("FloorB3")
+
+    // Create additional floors for expanded test cases
+    val naviGraph2 = NavigationGraph.createSimpleGraph("Floor2")
+    val naviGraph3 = NavigationGraph.createSimpleGraph("Floor3")
+    val naviGraph4 = NavigationGraph.createSimpleGraph("Floor4")
+    val naviGraph5 = NavigationGraph.createSimpleGraph("Floor5")
+    val naviGraph6 = NavigationGraph.createSimpleGraph("Floor6")
+    val naviGraph7 = NavigationGraph.createSimpleGraph("Floor7")
+    val naviGraph8 = NavigationGraph.createSimpleGraph("Floor8")
+    val naviGraph9 = NavigationGraph.createSimpleGraph("Floor9")
+    val naviGraph10 = NavigationGraph.createSimpleGraph("Floor10")
+    val naviGraph11 = NavigationGraph.createSimpleGraph("Floor11")
+    val naviGraph12 = NavigationGraph.createSimpleGraph("Floor12")
+    val naviGraph13 = NavigationGraph.createSimpleGraph("Floor13")
+    val naviGraph14 = NavigationGraph.createSimpleGraph("Floor14")
+    val naviGraph15 = NavigationGraph.createSimpleGraph("Floor15")
+    val naviGraph16 = NavigationGraph.createSimpleGraph("Floor16")
+    val naviGraph17 = NavigationGraph.createSimpleGraph("Floor17")
+    val naviGraph18 = NavigationGraph.createSimpleGraph("Floor18")
+    val naviGraph19 = NavigationGraph.createSimpleGraph("Floor19")
+    val naviGraph20 = NavigationGraph.createSimpleGraph("Floor20")
+    val naviGraph21 = NavigationGraph.createSimpleGraph("Floor21")
+    val naviGraph22 = NavigationGraph.createSimpleGraph("Floor22")
+    val naviGraph23 = NavigationGraph.createSimpleGraph("Floor23")
+    val naviGraph24 = NavigationGraph.createSimpleGraph("Floor24")
+    val naviGraph25 = NavigationGraph.createSimpleGraph("Floor25")
+    val naviGraph26 = NavigationGraph.createSimpleGraph("Floor26")
+    val naviGraph27 = NavigationGraph.createSimpleGraph("Floor27")
+    val naviGraph28 = NavigationGraph.createSimpleGraph("Floor28")
+    val naviGraph29 = NavigationGraph.createSimpleGraph("Floor29")
+    val naviGraph30 = NavigationGraph.createSimpleGraph("Floor30")
+    val naviGraph31 = NavigationGraph.createSimpleGraph("Floor31")
+    val naviGraph32 = NavigationGraph.createSimpleGraph("Floor32")
+    val naviGraph33 = NavigationGraph.createSimpleGraph("Floor33")
+    val naviGraph34 = NavigationGraph.createSimpleGraph("Floor34")
+    val naviGraph35 = NavigationGraph.createSimpleGraph("Floor35")
+    val naviGraph36 = NavigationGraph.createSimpleGraph("Floor36")
+    val naviGraph37 = NavigationGraph.createSimpleGraph("Floor37")
+    val naviGraph38 = NavigationGraph.createSimpleGraph("Floor38")
+    val naviGraph39 = NavigationGraph.createSimpleGraph("Floor39")
+    val naviGraph40 = NavigationGraph.createSimpleGraph("Floor40")
+    val naviGraph41 = NavigationGraph.createSimpleGraph("Floor41")
+    val naviGraph42 = NavigationGraph.createSimpleGraph("Floor42")
+    val naviGraph43 = NavigationGraph.createSimpleGraph("Floor43")
+    val naviGraph44 = NavigationGraph.createSimpleGraph("Floor44")
+    val naviGraph45 = NavigationGraph.createSimpleGraph("Floor45")
+    val naviGraph46 = NavigationGraph.createSimpleGraph("Floor46")
+    val naviGraph47 = NavigationGraph.createSimpleGraph("Floor47")
+    val naviGraph48 = NavigationGraph.createSimpleGraph("Floor48")
+    val naviGraph49 = NavigationGraph.createSimpleGraph("Floor49")
+    val naviGraph50 = NavigationGraph.createSimpleGraph("Floor50")
+    val naviGraph51 = NavigationGraph.createSimpleGraph("Floor51")
+    val naviGraph52 = NavigationGraph.createSimpleGraph("Floor52")
+    val naviGraph53 = NavigationGraph.createSimpleGraph("Floor53")
+    val naviGraph54 = NavigationGraph.createSimpleGraph("Floor54")
+    val naviGraph55 = NavigationGraph.createSimpleGraph("Floor55")
+    val naviGraph56 = NavigationGraph.createSimpleGraph("Floor56")
+    val naviGraph57 = NavigationGraph.createSimpleGraph("Floor57")
+    val naviGraph58 = NavigationGraph.createSimpleGraph("Floor58")
+    val naviGraph59 = NavigationGraph.createSimpleGraph("Floor59")
 
     val lobbyNode = TopoNode("1_hall", Map.empty)
 
@@ -271,7 +332,225 @@ object TransportTester extends App {
       acceleration = 1.0
     )
 
-    TransportGraph(List(OPSBank, BBFFBank, PHFFBank))
+    // PHS-1/2: B1, 2~4
+    val PHSBank = ElevatorBank(
+      identifier = "PHS",
+      stationNodes = Map(
+        naviGraphB1 -> TopoNode("PHS_B1_hall", Map.empty),
+        naviGraph2 -> TopoNode("PHS_2_hall", Map.empty),
+        naviGraph3 -> TopoNode("PHS_3_hall", Map.empty),
+        naviGraph4 -> TopoNode("PHS_4_hall", Map.empty)
+      ),
+      stationLocations = Map(naviGraphB1 -> 0.0, naviGraph2 -> 9.0, naviGraph3 -> 13.0, naviGraph4 -> 18.0),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 1.0,
+      acceleration = 1.0
+    )
+
+    // OP1: 1, 3~10, 12~17
+    val OP1Bank = ElevatorBank(
+      identifier = "OP1",
+      stationNodes = Map(
+        naviGraph1 -> TopoNode("OP1_1_hall", Map.empty),
+        naviGraph3 -> TopoNode("OP1_3_hall", Map.empty),
+        naviGraph4 -> TopoNode("OP1_4_hall", Map.empty),
+        naviGraph5 -> TopoNode("OP1_5_hall", Map.empty),
+        naviGraph6 -> TopoNode("OP1_6_hall", Map.empty),
+        naviGraph7 -> TopoNode("OP1_7_hall", Map.empty),
+        naviGraph8 -> TopoNode("OP1_8_hall", Map.empty),
+        naviGraph9 -> TopoNode("OP1_9_hall", Map.empty),
+        naviGraph10 -> TopoNode("OP1_10_hall", Map.empty),
+        naviGraph12 -> TopoNode("OP1_12_hall", Map.empty),
+        naviGraph13 -> TopoNode("OP1_13_hall", Map.empty),
+        naviGraph14 -> TopoNode("OP1_14_hall", Map.empty),
+        naviGraph15 -> TopoNode("OP1_15_hall", Map.empty),
+        naviGraph16 -> TopoNode("OP1_16_hall", Map.empty),
+        naviGraph17 -> TopoNode("OP1_17_hall", Map.empty)
+      ),
+      stationLocations = Map(
+        naviGraph1 -> calculateHeight(1),
+        naviGraph3 -> calculateHeight(3),
+        naviGraph4 -> calculateHeight(4),
+        naviGraph5 -> calculateHeight(5),
+        naviGraph6 -> calculateHeight(6),
+        naviGraph7 -> calculateHeight(7),
+        naviGraph8 -> calculateHeight(8),
+        naviGraph9 -> calculateHeight(9),
+        naviGraph10 -> calculateHeight(10),
+        naviGraph12 -> calculateHeight(12),
+        naviGraph13 -> calculateHeight(13),
+        naviGraph14 -> calculateHeight(14),
+        naviGraph15 -> calculateHeight(15),
+        naviGraph16 -> calculateHeight(16),
+        naviGraph17 -> calculateHeight(17)
+      ),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 2.5,
+      acceleration = 1.0
+    )
+
+    // OP2: 1, 19~27
+    val OP2Bank = ElevatorBank(
+      identifier = "OP2",
+      stationNodes = Map(
+        naviGraph1 -> TopoNode("OP2_1_hall", Map.empty),
+        naviGraph19 -> TopoNode("OP2_19_hall", Map.empty),
+        naviGraph20 -> TopoNode("OP2_20_hall", Map.empty),
+        naviGraph21 -> TopoNode("OP2_21_hall", Map.empty),
+        naviGraph22 -> TopoNode("OP2_22_hall", Map.empty),
+        naviGraph23 -> TopoNode("OP2_23_hall", Map.empty),
+        naviGraph24 -> TopoNode("OP2_24_hall", Map.empty),
+        naviGraph25 -> TopoNode("OP2_25_hall", Map.empty),
+        naviGraph26 -> TopoNode("OP2_26_hall", Map.empty),
+        naviGraph27 -> TopoNode("OP2_27_hall", Map.empty)
+      ),
+      stationLocations = Map(
+        naviGraph1 -> calculateHeight(1),
+        naviGraph19 -> calculateHeight(19),
+        naviGraph20 -> calculateHeight(20),
+        naviGraph21 -> calculateHeight(21),
+        naviGraph22 -> calculateHeight(22),
+        naviGraph23 -> calculateHeight(23),
+        naviGraph24 -> calculateHeight(24),
+        naviGraph25 -> calculateHeight(25),
+        naviGraph26 -> calculateHeight(26),
+        naviGraph27 -> calculateHeight(27)
+      ),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 4.0,
+      acceleration = 1.0
+    )
+
+    // OP3: 30, 31~37, 40~46
+    val OP3Bank = ElevatorBank(
+      identifier = "OP3",
+      stationNodes = Map(
+        naviGraph30 -> TopoNode("OP3_30_hall", Map.empty),
+        naviGraph31 -> TopoNode("OP3_31_hall", Map.empty),
+        naviGraph32 -> TopoNode("OP3_32_hall", Map.empty),
+        naviGraph33 -> TopoNode("OP3_33_hall", Map.empty),
+        naviGraph34 -> TopoNode("OP3_34_hall", Map.empty),
+        naviGraph35 -> TopoNode("OP3_35_hall", Map.empty),
+        naviGraph36 -> TopoNode("OP3_36_hall", Map.empty),
+        naviGraph37 -> TopoNode("OP3_37_hall", Map.empty),
+        naviGraph40 -> TopoNode("OP3_40_hall", Map.empty),
+        naviGraph41 -> TopoNode("OP3_41_hall", Map.empty),
+        naviGraph42 -> TopoNode("OP3_42_hall", Map.empty),
+        naviGraph43 -> TopoNode("OP3_43_hall", Map.empty),
+        naviGraph44 -> TopoNode("OP3_44_hall", Map.empty),
+        naviGraph45 -> TopoNode("OP3_45_hall", Map.empty),
+        naviGraph46 -> TopoNode("OP3_46_hall", Map.empty)
+      ),
+      stationLocations = Map(
+        naviGraph30 -> calculateHeight(30),
+        naviGraph31 -> calculateHeight(31),
+        naviGraph32 -> calculateHeight(32),
+        naviGraph33 -> calculateHeight(33),
+        naviGraph34 -> calculateHeight(34),
+        naviGraph35 -> calculateHeight(35),
+        naviGraph36 -> calculateHeight(36),
+        naviGraph37 -> calculateHeight(37),
+        naviGraph40 -> calculateHeight(40),
+        naviGraph41 -> calculateHeight(41),
+        naviGraph42 -> calculateHeight(42),
+        naviGraph43 -> calculateHeight(43),
+        naviGraph44 -> calculateHeight(44),
+        naviGraph45 -> calculateHeight(45),
+        naviGraph46 -> calculateHeight(46)
+      ),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 3.5,
+      acceleration = 1.0
+    )
+
+    // OP4: 29, 47~48, 50~59
+    val OP4Bank = ElevatorBank(
+      identifier = "OP4",
+      stationNodes = Map(
+        naviGraph29 -> TopoNode("OP4_29_hall", Map.empty),
+        naviGraph47 -> TopoNode("OP4_47_hall", Map.empty),
+        naviGraph48 -> TopoNode("OP4_48_hall", Map.empty),
+        naviGraph50 -> TopoNode("OP4_50_hall", Map.empty),
+        naviGraph51 -> TopoNode("OP4_51_hall", Map.empty),
+        naviGraph52 -> TopoNode("OP4_52_hall", Map.empty),
+        naviGraph53 -> TopoNode("OP4_53_hall", Map.empty),
+        naviGraph54 -> TopoNode("OP4_54_hall", Map.empty),
+        naviGraph55 -> TopoNode("OP4_55_hall", Map.empty),
+        naviGraph56 -> TopoNode("OP4_56_hall", Map.empty),
+        naviGraph57 -> TopoNode("OP4_57_hall", Map.empty),
+        naviGraph58 -> TopoNode("OP4_58_hall", Map.empty),
+        naviGraph59 -> TopoNode("OP4_59_hall", Map.empty)
+      ),
+      stationLocations = Map(
+        naviGraph29 -> calculateHeight(29),
+        naviGraph47 -> calculateHeight(47),
+        naviGraph48 -> calculateHeight(48),
+        naviGraph50 -> calculateHeight(50),
+        naviGraph51 -> calculateHeight(51),
+        naviGraph52 -> calculateHeight(52),
+        naviGraph53 -> calculateHeight(53),
+        naviGraph54 -> calculateHeight(54),
+        naviGraph55 -> calculateHeight(55),
+        naviGraph56 -> calculateHeight(56),
+        naviGraph57 -> calculateHeight(57),
+        naviGraph58 -> calculateHeight(58),
+        naviGraph59 -> calculateHeight(59)
+      ),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 5.0,
+      acceleration = 1.0
+    )
+
+    // OEX_low: 1, 29
+    val OEXLowBank = ElevatorBank(
+      identifier = "OEX_low",
+      stationNodes = Map(
+        naviGraph1 -> TopoNode("OEX_low_1_hall", Map.empty),
+        naviGraph29 -> TopoNode("OEX_low_29_hall", Map.empty)
+      ),
+      stationLocations = Map(naviGraph1 -> 0, naviGraph29 -> 140),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 6.0,
+      acceleration = 1.0
+    )
+
+    // OEX_upp: 1M, 30
+    val OEXUppBank = ElevatorBank(
+      identifier = "OEX_upp",
+      stationNodes = Map(
+        naviGraph1M -> TopoNode("OEX_upp_1M_hall", Map.empty),
+        naviGraph30 -> TopoNode("OEX_upp_30_hall", Map.empty)
+      ),
+      stationLocations = Map(naviGraph1M -> 0, naviGraph30 -> 140),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 6.0,
+      acceleration = 1.0
+    )
+
+    // OEX6: 29~30
+    val OEX6Bank = ElevatorBank(
+      identifier = "OEX6",
+      stationNodes = Map(
+        naviGraph29 -> TopoNode("OEX6_29_hall", Map.empty),
+        naviGraph30 -> TopoNode("OEX6_30_hall", Map.empty)
+      ),
+      stationLocations = Map(naviGraph29 -> 0.0, naviGraph30 -> 4.5),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 1.0,
+      acceleration = 0.8
+    )
+
+    TransportGraph(List(
+      OPSBank, BBFFBank, PHFFBank,
+      OP1Bank, OP2Bank, OP3Bank, OP4Bank,
+      OEXLowBank, OEXUppBank, OEX6Bank,
+      PHSBank
+    ))
+  }
+
+  // Now define station locations using the existing graphs
+  def calculateHeight(floor: Int): Double = {
+    if (floor <= 0) floor * 4.0 else (floor - 1) * 4.0 + 12.0
   }
   
   def runTest(): Unit = {
@@ -285,15 +564,23 @@ object TransportTester extends App {
 
     // Test finding a path
     if (graph.nodes.size >= 2) {
-      val start = graph.nodes.head
-      val goal = graph.nodes(1)
+      val start = graph.nodes.find(node => node.identifier == "OP1_Floor4").getOrElse(throw RuntimeException(""))
+      val goal = graph.nodes.find(node => node.identifier == "OP4_Floor59").getOrElse(throw RuntimeException(""))
 
       println(s"\n=== Testing Path Finding ===")
       println(s"Start: ${start.identifier}")
       println(s"Goal: ${goal.identifier}")
 
-      // Find path (3rd param for testing only, to-be-connected to other subsystems)
-      val result = graph.findPath(start, goal, List("Floor1M", "Floor1", "FloorB1M", "FloorB1", "FloorB2", "FloorB3"))
+      // Find path (3rd param for testing only, TODO: to-be-connected to other subsystems)
+      val result = graph.findPath(start, goal, List(
+        "Floor59", "Floor58", "Floor57", "Floor56", "Floor55", "Floor54", "Floor53", "Floor52", "Floor51", "Floor50",
+        "Floor49", "Floor48", "Floor47", "Floor46", "Floor45", "Floor44", "Floor43", "Floor42", "Floor41", "Floor40",
+        "Floor39", "Floor38", "Floor37", "Floor36", "Floor35", "Floor34", "Floor33", "Floor32", "Floor31", "Floor30",
+        "Floor29", "Floor28", "Floor27", "Floor26", "Floor25", "Floor24", "Floor23", "Floor22", "Floor21", "Floor20",
+        "Floor19", "Floor18", "Floor17", "Floor16", "Floor15", "Floor14", "Floor13", "Floor12", "Floor11", "Floor10",
+        "Floor9", "Floor8", "Floor7", "Floor6", "Floor5", "Floor4", "Floor3", "Floor2", "Floor1M", "Floor1",
+        "FloorB1M", "FloorB1", "FloorB2", "FloorB3"
+      ))
 
       result match {
         case Some(path) =>
