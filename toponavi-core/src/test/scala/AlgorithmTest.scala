@@ -299,7 +299,7 @@ object TransportTester extends App {
         case Some(path) =>
           println(s"Path found with ${path.routeNodes.size} nodes:")
           path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
-          println(s"With ${path.routeEdges.size} AtomicPaths:")
+          println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost(VisitingMode.Normal)} seconds:")
           path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier}"))
         case None =>
           println("No path found")

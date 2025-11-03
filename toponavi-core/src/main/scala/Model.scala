@@ -35,4 +35,8 @@ object AtomicPath {
 case class Path(
   routeNodes: List[TopoNode],
   routeEdges: List[AtomicPath]
-)
+) {
+  def totalCost(visitingMode: VisitingMode): Double = {
+    routeEdges.map(_.costs(visitingMode)).sum
+  }
+}

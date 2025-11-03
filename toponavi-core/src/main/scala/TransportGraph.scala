@@ -1,5 +1,5 @@
 import cats.effect.IO
-import enums.TransportServicePermission
+import enums.{PathType, TransportServicePermission, VisitingMode}
 import enums.TransportServicePermission.{ArriveOnly, DepartOnly}
 
 import scala.collection.mutable
@@ -33,7 +33,7 @@ private class TransportGraph private(
 
       // If we reached the goal, reconstruct the path
       if (current == goal) {
-        return Some(reconstructPath(cameFrom, current))
+        return Some(reconstructPath(cameFrom, current, getAllEdges())) // This step is OK, getAllEdges() works fine
       }
 
       // If the current fScore is outdated, skip
@@ -65,6 +65,15 @@ private class TransportGraph private(
     None
   }
 
+  // Helper method to get all edges from adjacencyList
+  private def getAllEdges(): List[TransportEdge] = {
+    adjacencyList.flatMap { case (sourceNode, targetNodes) =>
+      targetNodes.map { targetNode =>
+        TransportEdge(sourceNode, targetNode, 5.0) // Default cost of 5
+      }
+    }.toList
+  }
+
   private def heuristic(from: StationNode, to: StationNode, stationNameList: List[String]): Double = {
     // Get the floor identifiers
     val fromFloor = from.ownerGraph.identifier
@@ -89,17 +98,54 @@ private class TransportGraph private(
     from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
   }
 
-  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode): Path = {
+  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode, edges: List[TransportEdge]): Path = {
     val totalPath = mutable.ListBuffer[StationNode]()
+    val pathEdges = mutable.ListBuffer[TransportEdge]()
     var node = current
 
     while (cameFrom.contains(node)) {
+      val parent = cameFrom(node)
+
       totalPath.prepend(node)
-      node = cameFrom(node)
+
+      // Find the TransportEdge that connects parent -> node
+//      val edge = edges.find(edge => edge.sourceNode == parent && edge.destinationNode == node)
+//      edge.foreach(pathEdges.prepend)
+
+      if (parent.ownerLine == node.ownerLine){
+        pathEdges.prepend(TransportEdge(parent, node, parent.ownerLine.travelTimeBetweenStations(parent.ownerGraph, node.ownerGraph)))
+      }
+      else{
+        pathEdges.prepend(TransportEdge(parent, node, 50.0))
+      }
+
+      node = parent  // Move to the next node (only once!)
     }
     totalPath.prepend(node)
 
-    // Safe conversion with error handling
+    // Convert TransportEdge to AtomicPath
+    val atomicPaths = pathEdges.map { transportEdge =>
+      // Convert StationNode to TopoNode for source
+      val sourceTopoNode = transportEdge.sourceNode.ownerLine.stationNodes
+        .get(transportEdge.sourceNode.ownerGraph)
+        .getOrElse(throw new IllegalStateException(s"No TopoNode found for source: ${transportEdge.sourceNode.identifier}"))
+
+      // Convert StationNode to TopoNode for target
+      val targetTopoNode = transportEdge.destinationNode.ownerLine.stationNodes
+        .get(transportEdge.destinationNode.ownerGraph)
+        .getOrElse(throw new IllegalStateException(s"No TopoNode found for target: ${transportEdge.destinationNode.identifier}"))
+
+      // Create AtomicPath with default attributes and path type
+      AtomicPath(
+        source = sourceTopoNode,
+        target = targetTopoNode,
+        attributes = Map.empty, // Default empty attributes
+        costs = Map(VisitingMode.Normal -> transportEdge.cost), // Convert cost to costs map
+        pathType = PathType.General // Default path type
+      )
+    }.toList
+
+    // Convert StationNodes to TopoNodes for the path nodes
     val topoNodes = totalPath.map { stationNode =>
       stationNode.ownerLine.stationNodes.get(stationNode.ownerGraph) match {
         case Some(topoNode) => topoNode
@@ -107,7 +153,7 @@ private class TransportGraph private(
       }
     }.toList
 
-    Path(topoNodes, List.empty)
+    Path(topoNodes, atomicPaths)
   }
   
 }

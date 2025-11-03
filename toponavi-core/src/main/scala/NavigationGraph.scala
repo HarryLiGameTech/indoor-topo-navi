@@ -14,20 +14,25 @@ class NavigationGraph private(
     adjacencyList.filter(_.source == originNode)
   }
 
-  private def reconstructPath(cameFrom: mutable.Map[TopoNode, (TopoNode, AtomicPath)], current: TopoNode): Path = {
+  private def reconstructPath(cameFrom: mutable.Map[TopoNode, TopoNode], current: TopoNode, edges: List[AtomicPath]): Path = {
     val totalPath = mutable.ListBuffer[TopoNode]()
-    val pathEdges = mutable.ListBuffer[AtomicPath]()
+    val pathEdges = mutable.ListBuffer[AtomicPath]() // Track the edges used
     var node = current
 
+    // Trace back from goal to start using the cameFrom map
     while (cameFrom.contains(node)) {
-      val (parent, edge) = cameFrom(node)
-      totalPath.prepend(node)
-      pathEdges.prepend(edge)
-      node = parent
-    }
-    totalPath.prepend(node)
+      val parent = cameFrom(node)
+      totalPath.prepend(node) // Add current node to front of path
 
-    Path(totalPath.toList, pathEdges.toList)
+      // Find the edge that connects parent -> node
+      val edge = edges.find(e => e.source == parent && e.target == node)
+      edge.foreach(pathEdges.prepend) // Add the edge to the path
+
+      node = parent // Move to parent node
+    }
+    totalPath.prepend(node) // Add the start node
+
+    Path(totalPath.toList, pathEdges.toList) // Include edges in the Path
   }
 
   // Intra-Graph Pathfinding - Dijkstra's Algorithm
@@ -61,7 +66,7 @@ class NavigationGraph private(
 
         // If we reached the goal, reconstruct the path
         if (current == goal) {
-          return Some(reconstructPath(cameFrom, current))
+          return Some(reconstructPath(cameFrom, current, adjacencyList))
         }
 
         // Explore neighbors using the new adjacency list structure
