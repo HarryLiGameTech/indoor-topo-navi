@@ -33,7 +33,7 @@ private class TransportGraph private(
 
       // If we reached the goal, reconstruct the path
       if (current == goal) {
-        return Some(reconstructPath(cameFrom, current, getAllEdges())) // This step is OK, getAllEdges() works fine
+        return Some(reconstructPath(cameFrom, current)) // This step is OK, getAllEdges() works fine
       }
 
       // If the current fScore is outdated, skip
@@ -65,14 +65,6 @@ private class TransportGraph private(
     None
   }
 
-  // Helper method to get all edges from adjacencyList
-  private def getAllEdges(): List[TransportEdge] = {
-    adjacencyList.flatMap { case (sourceNode, targetNodes) =>
-      targetNodes.map { targetNode =>
-        TransportEdge(sourceNode, targetNode, 5.0) // Default cost of 5
-      }
-    }.toList
-  }
 
   private def heuristic(from: StationNode, to: StationNode, stationNameList: List[String]): Double = {
     // Get the floor identifiers
@@ -98,7 +90,7 @@ private class TransportGraph private(
     from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
   }
 
-  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode, edges: List[TransportEdge]): Path = {
+  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode): Path = {
     val totalPath = mutable.ListBuffer[StationNode]()
     val pathEdges = mutable.ListBuffer[TransportEdge]()
     var node = current
@@ -108,15 +100,11 @@ private class TransportGraph private(
 
       totalPath.prepend(node)
 
-      // Find the TransportEdge that connects parent -> node
-//      val edge = edges.find(edge => edge.sourceNode == parent && edge.destinationNode == node)
-//      edge.foreach(pathEdges.prepend)
-
       if (parent.ownerLine == node.ownerLine){
         pathEdges.prepend(TransportEdge(parent, node, parent.ownerLine.travelTimeBetweenStations(parent.ownerGraph, node.ownerGraph)))
       }
       else{
-        pathEdges.prepend(TransportEdge(parent, node, 50.0))
+        pathEdges.prepend(TransportEdge(parent, node, 30)) // TODO: Connect with the NavigationGraph to calculate
       }
 
       node = parent  // Move to the next node (only once!)
@@ -155,7 +143,6 @@ private class TransportGraph private(
 
     Path(topoNodes, atomicPaths)
   }
-  
 }
 
 
