@@ -1,8 +1,9 @@
-TopoMap Lobby is TransHub { // Lobby
+TopoMap Lobby{ // Lobby
 
     // TODO: Sparate UpperLobby and Lobby
 
     params {
+        map_type = "TransHub",
         permResident = 5, // 5 people always live here
         rushHour = {
             timePeriod = 7:45~9:45, 

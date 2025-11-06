@@ -1,0 +1,134 @@
+TopoMap Floor30{
+
+    params {
+        map_type = "TransHub",
+        permResident = 15, // 15 people always live here
+        rushHour = {
+            timePeriod = 7:45~9:45, 
+            gradient = EXPONENTIAL, 
+            category = BIDIRECTION
+        },
+        rushHour = {
+            timePeriod = 16:30~19:15,
+            gradient = LINEAR,
+            category = ARRIVE
+        } // In this period of time, people linearly reaches this floor
+    }
+
+
+    topo-node NW_corner
+    topo-node NE_corner
+    topo-node SW_corner
+    topo-node SE_corner
+
+    topo-node inside_room_01 {description = "inside the door of room 01"}
+    topo-node inside_room_02 {description = "inside the door of room 02"}
+    topo-node inside_room_03 {description = "inside the door of room 03"}
+    topo-node outside_room_01 {description = "outside the door of room 01"}
+    topo-node outside_room_02 {description = "outside the door of room 02"}
+    
+
+    topo-node OP3_hall {description = "zone-3 elevator hall"}
+    topo-node OP3_hall_outside
+    topo-node OS_hall {description = "service elevator hall"}
+    topo-node OS_hall_outside
+    topo-node OEX_hall {description = "express elevator hall"}
+    topo-node OEX_hall_outside
+    topo-node OEX6_hall {description = "just beside the door of the ferry elevator"}
+
+    topo-node staircase_A_outside
+    topo-node staircase_B
+    topo-node staircase_B_outside
+    topo-node staircase_C
+    topo-node staircase_C_outside
+    topo-node staircase_D
+    topo-node staircase_D_outside
+
+    topo-node intersact0
+    topo-node intersact1
+    topo-node intersact2
+    topo-node intersact3_north
+    topo-node intersact3_inside
+    topo-node intersact3_south
+
+
+    // Functional Rooms
+    topo-node toilet
+    topo-node toilet_outside
+    topo-node model
+    topo-node Bar
+
+    // Define Relationships 
+    // NTPP(toilet_hall, this) // Toilet hall is strictly inside this floor 
+    // TPP(male_toilet, toilet_hall) 
+    // TPP(female_toilet, toilet_hall) 
+    // EC(toilet_hall, staircase_1) // Toilets and staircase externally touches 
+    // DC(male_toilet, female_toilet) 
+    // DC(room_xx01, room_xx03) // These 2 rooms are on different side 
+    // DC(room_xx02, room_xx03) // These 2 rooms are on different side 
+    // EC(room_xx01, room_xx02) // Rooms next door 
+    // Rest to be discussed in later sections....
+
+
+    // In/Out rooms
+    atomic-path [outside_room_01 <-> inside_room_01] {cost = 1}
+    atomic-path [outside_room_02 <-> inside_room_02] {cost = 1}
+
+    atomic-path [intersact3_south <-> inside_room_03] {cost = 2}
+    atomic-path [intersact3_south <-> SW_corner] {cost = 4}
+    atomic-path [inside_room_03 <-> SW_corner] {cost = 3}
+
+    atomic-path [intersact0 <-> NW_corner] {cost = 5}
+    atomic-path [intersact2 <-> NE_corner] {cost = 5}
+
+
+    // The ring-like corridor around the core
+    atomic-path [intersact0 <-> toilet_outside] {cost = 7}
+    atomic-path [staircase_B_outside <-> toilet_outside] {cost = 4}
+    atomic-path [intersact2 <-> toilet_outside] {cost = 2}
+
+    atomic-path [intersact2 <-> OS_hall_outside] {cost = 5}
+    atomic-path [OP3_hall_outside <-> OS_hall_outside] {cost = 6}
+    atomic-path [OP3_hall_outside <-> intersact3_north] {cost = 2}
+    atomic-path [intersact3_inside -> intersact3_north] {cost = 2, movement = "PullSecuredDoor"}
+    atomic-path [intersact3_inside -> intersact3_south] {cost = 2, movement = "PullSecuredDoor"}
+    atomic-path [intersact3_north -> intersact3_inside] {cost = 2, movement = "PushDoor"}
+    atomic-path [intersact3_south -> intersact3_inside] {cost = 2, movement = "PushDoor"}
+
+    atomic-path [intersact3_inside <-> staircase_C_outside] {cost = 7}
+    atomic-path [intersact1 <-> staircase_C_outside] {cost = 6}
+
+    atomic-path [intersact1 <-> staircase_D_outside] {cost = 6}
+    atomic-path [OEX_hall_outside <-> staircase_D_outside] {cost = 4}
+    atomic-path [OEX_hall_outside <-> intersact0] {cost = 3}
+
+    // Bar Area
+    atomic-path [intersact1 <-> model] {cost = 2}
+    atomic-path [SW_corner <-> model] {cost = 3}
+    atomic-path [SW_corner <-> model] {cost = 3}
+    atomic-path [bar <-> model] {cost = 6}
+    atomic-path [bar <-> intersact3_south] {cost = 5}
+    
+
+    // In/Out staircases or elevators
+    atomic-path [staircase_B_outside -> staircase_B] {cost = 3, movement = "PushDoor"}
+    atomic-path [staircase_B -> staircase_B_outside] {cost = 5, movement = "PullSecuredDoor"} requires TenantsOnly
+
+    atomic-path [staircase_C_outside -> staircase_C] {cost = 3, movement = "PushDoor"}
+    atomic-path [staircase_C -> staircase_C_outside] {cost = 5, movement = "PullSecuredDoor"} requires TenantsOnly
+
+    atomic-path [staircase_D_outside -> staircase_D] {cost = 10, movement = "PushDoor"}
+    atomic-path [staircase_D -> staircase_D_outside] {cost = 8, movement = "PullSecuredDoor"} requires TenantsOnly
+
+
+    atomic-path [OS_hall -> staircase_A] {cost = 3, movement = "PushDoor"}
+    atomic-path [staircase_A -> OS_hall] {cost = 5, movement = "PullSecuredDoor"} requires TenantsOnly
+
+    atomic-path [OS_hall <-> OS_hall_outside] {cost = 2}
+    atomic-path [OP3_hall <-> OP3_hall_outside] {cost = 2}
+    atomic-path [OEX_hall <-> OEX_hall_outside] {cost = 2}
+
+    
+    // Passengers' elevator hall is on the RHS of the peh_crossing when heading to the north-west corner 
+    // Direction(passenger_elevator_hall, passenger_elevator_hall_crossing, NW_corner, RIGHT) 
+}
