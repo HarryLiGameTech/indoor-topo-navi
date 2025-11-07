@@ -1,7 +1,7 @@
 TopoMap Floor30{
 
     params {
-        map_type = "TransHub",
+        map_type = TransHub,
         permResident = 15, // 15 people always live here
         rushHour = {
             timePeriod = 7:45~9:45, 
@@ -12,7 +12,14 @@ TopoMap Floor30{
             timePeriod = 16:30~19:15,
             gradient = LINEAR,
             category = ARRIVE
-        } // In this period of time, people linearly reaches this floor
+        }, // In this period of time, people linearly reaches this floor
+        movement = enum {
+            PushDoor,
+            PullSecuredDoor,
+            PullDoor,
+            Walk,
+            Default
+        }
     }
 
 
@@ -90,10 +97,10 @@ TopoMap Floor30{
     atomic-path [intersact2 <-> OS_hall_outside] {cost = 5}
     atomic-path [OP3_hall_outside <-> OS_hall_outside] {cost = 6}
     atomic-path [OP3_hall_outside <-> intersact3_north] {cost = 2}
-    atomic-path [intersact3_inside -> intersact3_north] {cost = 2, movement = "PullSecuredDoor"}
-    atomic-path [intersact3_inside -> intersact3_south] {cost = 2, movement = "PullSecuredDoor"}
-    atomic-path [intersact3_north -> intersact3_inside] {cost = 2, movement = "PushDoor"}
-    atomic-path [intersact3_south -> intersact3_inside] {cost = 2, movement = "PushDoor"}
+    atomic-path [intersact3_inside -> intersact3_north] {cost = 2, movement = PullSecuredDoor}
+    atomic-path [intersact3_inside -> intersact3_south] {cost = 2, movement = PullSecuredDoor}
+    atomic-path [intersact3_north -> intersact3_inside] {cost = 2, movement = PushDoor}
+    atomic-path [intersact3_south -> intersact3_inside] {cost = 2, movement = PushDoor}
 
     atomic-path [intersact3_inside <-> staircase_C_outside] {cost = 7}
     atomic-path [intersact1 <-> staircase_C_outside] {cost = 6}
@@ -111,18 +118,18 @@ TopoMap Floor30{
     
 
     // In/Out staircases or elevators
-    atomic-path [staircase_B_outside -> staircase_B] {cost = 3, movement = "PushDoor"}
-    atomic-path [staircase_B -> staircase_B_outside] {cost = 5, movement = "PullSecuredDoor"} requires TenantsOnly
+    atomic-path [staircase_B_outside -> staircase_B] {cost = 3, movement = PushDoor}
+    atomic-path [staircase_B -> staircase_B_outside] {cost = 5, movement = PullSecuredDoor} requires TenantsOnly
 
-    atomic-path [staircase_C_outside -> staircase_C] {cost = 3, movement = "PushDoor"}
-    atomic-path [staircase_C -> staircase_C_outside] {cost = 5, movement = "PullSecuredDoor"} requires TenantsOnly
+    atomic-path [staircase_C_outside -> staircase_C] {cost = 3, movement = PushDoor}
+    atomic-path [staircase_C -> staircase_C_outside] {cost = 5, movement = PullSecuredDoor} requires TenantsOnly
 
-    atomic-path [staircase_D_outside -> staircase_D] {cost = 10, movement = "PushDoor"}
-    atomic-path [staircase_D -> staircase_D_outside] {cost = 8, movement = "PullSecuredDoor"} requires TenantsOnly
+    atomic-path [staircase_D_outside -> staircase_D] {cost = 10, movement = PushDoor}
+    atomic-path [staircase_D -> staircase_D_outside] {cost = 8, movement = PullSecuredDoor} requires TenantsOnly
 
 
-    atomic-path [OS_hall -> staircase_A] {cost = 3, movement = "PushDoor"}
-    atomic-path [staircase_A -> OS_hall] {cost = 5, movement = "PullSecuredDoor"} requires TenantsOnly
+    atomic-path [OS_hall -> staircase_A] {cost = 3, movement = PushDoor}
+    atomic-path [staircase_A -> OS_hall] {cost = 5, movement = PullSecuredDoor} requires TenantsOnly
 
     atomic-path [OS_hall <-> OS_hall_outside] {cost = 2}
     atomic-path [OP3_hall <-> OP3_hall_outside] {cost = 2}
@@ -131,4 +138,6 @@ TopoMap Floor30{
     
     // Passengers' elevator hall is on the RHS of the peh_crossing when heading to the north-west corner 
     // Direction(passenger_elevator_hall, passenger_elevator_hall_crossing, NW_corner, RIGHT) 
+
+    
 }
