@@ -46,6 +46,7 @@ object Interpreter {
           //  and since we cannot have self-reference when building the captured env,
           //  we now put a simple thunk at index 0 that will evaluate to the fixpoint
           tailcall(evalTramp(body)(using captured + (0 -> env(index).asInstanceOf[Value.FixThunk])))
+        // TODO: External symbols handling (out-of-context symbols, the z)
         case value => done(value)
       }
 
