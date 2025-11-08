@@ -14,7 +14,7 @@ private class TransportGraph private(
     start: StationNode,
     goal: StationNode,
     floorNameList: List[String]
-  ): Option[Path] = {
+  ): Option[IntraMapPath] = {
     // Priority queue for open set (min-heap based on fScore)
     implicit val nodeOrdering: Ordering[(StationNode, Double)] =
       Ordering.by[(StationNode, Double), Double](_._2).reverse
@@ -91,7 +91,7 @@ private class TransportGraph private(
     from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
   }
 
-  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode): Path = {
+  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode): IntraMapPath = {
     val totalPath = mutable.ListBuffer[StationNode]()
     val pathEdges = mutable.ListBuffer[TransportEdge]()
     var node = current
@@ -105,7 +105,12 @@ private class TransportGraph private(
         pathEdges.prepend(TransportEdge(parent, node, parent.ownerLine.travelTimeBetweenStations(parent.ownerGraph, node.ownerGraph)))
       }
       else{
-        pathEdges.prepend(TransportEdge(parent, node, 30)) // TODO: Connect with the NavigationGraph to calculate
+        val transferCost: Double = parent.ownerGraph.findPath(
+          parent.ownerGraph.nodes.find(n => n.identifier == trim(parent.identifier)).getOrElse(throw RuntimeException("Interchange: Source node not found")),
+          node.ownerGraph.nodes.find(n => n.identifier == trim(node.identifier)).getOrElse(throw RuntimeException(s"Interchange: Destination node: ${node.identifier} not found")),
+          VisitingMode.Normal
+        ).getOrElse(throw RuntimeException("Interchange: Path not found")).totalCost(VisitingMode.Normal)
+        pathEdges.prepend(TransportEdge(parent, node, transferCost)) // TODO: Connect with the NavigationGraph to calculate
       }
 
       node = parent  // Move to the next node (only once!)
@@ -142,11 +147,15 @@ private class TransportGraph private(
       }
     }.toList
 
-    Path(topoNodes, atomicPaths)
+    IntraMapPath(topoNodes, atomicPaths)
   }
+  
 }
 
-
+def trim(stationNodeId: String): String = {
+  // Assuming the format is "LineID@GraphID", we split by "@" and take the first part
+  stationNodeId.split("@").headOption.getOrElse(stationNodeId)
+}
 
 
 object TransportGraph {
@@ -200,10 +209,10 @@ object TransportGraph {
         } {
           // Calculate the transfer-time according to the intra-map navigation
           val transferCost: Double = from.ownerGraph.findPath(
-            from.ownerGraph.nodes.find(n => n.identifier == from.identifier).getOrElse(throw RuntimeException("Node not found")),
-            to.ownerGraph.nodes.find(n => n.identifier == to.identifier).getOrElse(throw RuntimeException("Node not found")),
+            from.ownerGraph.nodes.find(n => n.identifier == trim(from.identifier)).getOrElse(throw RuntimeException("Interchange: Source node not found")),
+            to.ownerGraph.nodes.find(n => n.identifier == trim(to.identifier)).getOrElse(throw RuntimeException(s"Interchange: Destination node: ${to.identifier} not found")),
             VisitingMode.Normal
-          ).getOrElse(throw RuntimeException("Path not found")).totalCost(VisitingMode.Normal)
+          ).getOrElse(throw RuntimeException("Interchange: Path not found")).totalCost(VisitingMode.Normal)
 
           edges += TransportEdge(from, to, transferCost)
         }
@@ -215,7 +224,7 @@ object TransportGraph {
   private def createStationNodesForLine(line: LinearTransport): List[StationNode] = {
     line.stationNodes.map { case (navigationGraph, topoNode) =>
       new StationNode {
-        def identifier: String = s"${line.identifier}_${navigationGraph.identifier}"
+        def identifier: String = s"${line.identifier}@${navigationGraph.identifier}"
 
         def ownerGraph: NavigationGraph = navigationGraph
 
@@ -250,6 +259,8 @@ object TransportGraph {
       .mapValues(_.map(_.destinationNode)) // For each source node, extract all destination nodes
       .toMap
   }
+
+  
 
 }
 

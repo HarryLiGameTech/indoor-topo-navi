@@ -14,7 +14,7 @@ class NavigationGraph private(
     adjacencyList.filter(_.source == originNode)
   }
 
-  private def reconstructPath(cameFrom: mutable.Map[TopoNode, TopoNode], current: TopoNode, edges: List[AtomicPath]): Path = {
+  private def reconstructPath(cameFrom: mutable.Map[TopoNode, TopoNode], current: TopoNode, edges: List[AtomicPath]): IntraMapPath = {
     val totalPath = mutable.ListBuffer[TopoNode]()
     val pathEdges = mutable.ListBuffer[AtomicPath]() // Track the edges used
     var node = current
@@ -32,7 +32,7 @@ class NavigationGraph private(
     }
     totalPath.prepend(node) // Add the start node
 
-    Path(totalPath.toList, pathEdges.toList) // Include edges in the Path
+    IntraMapPath(totalPath.toList, pathEdges.toList) // Include edges in the Path
   }
 
   // Intra-Graph Pathfinding - Dijkstra's Algorithm
@@ -40,7 +40,7 @@ class NavigationGraph private(
     start: TopoNode,
     goal: TopoNode,
     visitingMode: VisitingMode
-  ): Option[Path] = {
+  ): Option[IntraMapPath] = {
     // Priority queue for nodes to explore (min-heap based on cost)
     implicit val ordering: Ordering[(TopoNode, Double)] =
       Ordering.by[(TopoNode, Double), Double](_._2).reverse

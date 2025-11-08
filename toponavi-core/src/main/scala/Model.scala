@@ -32,11 +32,20 @@ object AtomicPath {
   }
 }
 
-case class Path(
+case class IntraMapPath(
   routeNodes: List[TopoNode],
   routeEdges: List[AtomicPath]
 ) {
   def totalCost(visitingMode: VisitingMode): Double = {
     routeEdges.map(_.costs(visitingMode)).sum
+  }
+}
+
+case class TransportationPath(
+  routeNodes: List[StationNode],
+  routeEdges: List[TransportEdge]
+) {
+  def totalCost: Double = {
+    routeEdges.map(_.cost).sum
   }
 }

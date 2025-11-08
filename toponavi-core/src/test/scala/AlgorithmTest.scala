@@ -1,5 +1,5 @@
 import enums.VisitingMode.Normal
-import enums.{PathType, TransportServicePermission, VisitingMode}
+import enums.{AttributeValue, PathType, TransportServicePermission, VisitingMode}
 
 import scala.collection.mutable
 
@@ -160,8 +160,8 @@ object Tester extends App{
 
 
     // Test the graph
-    val start = node1 // NW_corner
-    val goal = node28 //
+    val start = nodes.find(n => n.identifier == "OPS_hall_1").get // NW_corner
+    val goal = nodes.find(n => n.identifier == "OEX_hall_low").get //
 
     println(s"Testing path from ${start.identifier} to ${goal.identifier}")
     val path = graph.findPath(start, goal, Normal)
@@ -605,3 +605,380 @@ object TransportTester extends App {
   // Run the test
   runTest()
 }
+
+
+
+object HybridMapTest extends App {
+
+  def runTest(): Unit = {
+    val lobby: NavigationGraph = generateLobbyMap()
+    val carpark: NavigationGraph = generateCarparkMap()
+    val floor29: NavigationGraph = generateFloor29Map()
+
+    // OEX_low: 1, 29
+    val OEXLowBank = ElevatorBank(
+      identifier = "OEX_low",
+      stationNodes = Map(
+        lobby -> lobby.nodes.find(n => n.identifier == "OEX_low").get,
+        floor29 -> floor29.nodes.find(n => n.identifier == "OEX_low").get
+      ),
+      stationLocations = Map(lobby -> 0, floor29 -> 140),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 6.0,
+      acceleration = 1.0
+    )
+
+    val OPSBank = ElevatorBank(
+      identifier = "OPS",
+      stationNodes = Map(
+        lobby -> lobby.nodes.find(n => n.identifier == "OPS").get,
+        carpark -> carpark.nodes.find(n => n.identifier == "OPS").get
+      ),
+      stationLocations = Map(lobby -> 10.0, carpark -> 0.0),
+      stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+      maxVelocity = 1.5,
+      acceleration = 0.8
+    )
+
+    println(s"OEX: ${OEXLowBank.stationNodes}")
+    println(s"OPS: ${OPSBank.stationNodes}")
+    println(s"Carpark: ${carpark.nodes}")
+    println(s"Lobby: ${lobby.nodes}")
+    println(s"Floor30: ${floor29.nodes}")
+
+    val transportGraph = TransportGraph(List(OEXLowBank, OPSBank))
+    // Test finding a path
+    if (transportGraph.nodes.size >= 2) {
+      val start = transportGraph.nodes.find(node => node.identifier == "OPS@Carpark").getOrElse(throw RuntimeException(""))
+      val goal = transportGraph.nodes.find(node => node.identifier == "OEX_low@Floor29").getOrElse(throw RuntimeException(""))
+
+      println(s"\n=== Testing Path Finding ===")
+      println(s"Start: ${start.identifier}")
+      println(s"Goal: ${goal.identifier}")
+
+      // Find path (3rd param for testing only, TODO: to-be-connected to other subsystems)
+      val result = transportGraph.findPath(start, goal, List("Floor29", "Lobby", "Carpark"))
+
+      result match {
+        case Some(path) =>
+          println(s"Path found with ${path.routeNodes.size} nodes:")
+          path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
+          println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost(VisitingMode.Normal)} seconds:")
+          path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.costs(VisitingMode.Normal)} seconds"))
+        case None =>
+          println("No path found")
+      }
+    } else {
+      println("Not enough nodes to test path finding")
+    }
+  }
+
+  private def generateLobbyMap(): NavigationGraph = {
+    val lobbyNodes = mutable.ListBuffer[TopoNode]()
+    val lobbyEdges = mutable.ListBuffer[AtomicPath]()
+
+    // Create all TopoNodes according to the DSL
+    val node1 = TopoNode("SW_corner", Map.empty)
+    val node2 = TopoNode("SE_corner", Map.empty)
+
+    val node3 = TopoNode("SouthExitOutside", Map.empty)
+    val node4 = TopoNode("SouthExitInside", Map.empty)
+    val node5 = TopoNode("WestExitOutside", Map.empty)
+    val node6 = TopoNode("WestExitInside", Map.empty)
+    val node7 = TopoNode("EastExitOutside", Map.empty)
+    val node8 = TopoNode("EastExitInside", Map.empty) // == OS_hall_outside
+    val node9 = TopoNode("hankyu_exit_outside", Map.empty)
+    val node10 = TopoNode("hankyu_exit_inside", Map.empty)
+
+    val node11 = TopoNode("OP1_hall", Map.empty)
+    val node12 = TopoNode("OP1_hall_outside", Map.empty)
+    val node13 = TopoNode("OP2_hall", Map.empty)
+    val node14 = TopoNode("OP2_hall_outside", Map.empty)
+    val node15 = TopoNode("OEX_low", Map.empty)
+    val node16 = TopoNode("OEX_hall_upp", Map.empty)
+    val node17 = TopoNode("OEX_hall_upp_outside", Map.empty)
+    val node18 = TopoNode("OPS", Map.empty)
+    val node19 = TopoNode("OPS_hall_1M", Map.empty)
+    val node20 = TopoNode("OS_hall", Map.empty)
+
+    val node21 = TopoNode("escalator_high", Map.empty)
+    val node22 = TopoNode("staircase_A_1", Map.empty)
+    val node23 = TopoNode("staircase_A_1M", Map.empty)
+    val node24 = TopoNode("staircase_B", Map.empty)
+    val node25 = TopoNode("staircase_C", Map.empty)
+    val node26 = TopoNode("staircase_D", Map.empty)
+    val node27 = TopoNode("staircase_E", Map.empty)
+    val node28 = TopoNode("staircase_E_outside", Map.empty)
+
+    val node29 = TopoNode("west_intersact_1", Map.empty)
+    val node30 = TopoNode("west_intersact_2", Map.empty)
+    val node31 = TopoNode("east_intersact_1", Map.empty)
+
+    // Add all nodes to the list
+    lobbyNodes ++= List(
+      node1, node2, node3, node4, node5, node6, node7, node8, node9, node10,
+      node11, node12, node13, node14, node15, node16, node17, node18, node19,
+      node20, node21, node22, node23, node24, node25, node26, node27, node28,
+      node29, node30, node31
+    )
+
+
+    // Normal paths on the south
+    lobbyEdges += AtomicPath(node3, node4, Map(VisitingMode.Normal -> 5.0), PathType.General) // SouthExitOutside <-> SouthExitInside
+    lobbyEdges += AtomicPath(node4, node3, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node1, node4, Map(VisitingMode.Normal -> 8.0), PathType.General) // SW_corner <-> SouthExitInside
+    lobbyEdges += AtomicPath(node4, node1, Map(VisitingMode.Normal -> 8.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node2, node4, Map(VisitingMode.Normal -> 8.0), PathType.General) // SE_corner <-> SouthExitInside
+    lobbyEdges += AtomicPath(node4, node2, Map(VisitingMode.Normal -> 8.0), PathType.General)
+
+    // Normal paths on the west
+    lobbyEdges += AtomicPath(node5, node6, Map(VisitingMode.Normal -> 5.0), PathType.General) // WestExitOutside <-> WestExitInside
+    lobbyEdges += AtomicPath(node6, node5, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node1, node12, Map(VisitingMode.Normal -> 5.0), PathType.General) // SW_corner <-> OP1_hall_outside
+    lobbyEdges += AtomicPath(node12, node1, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node21, node12, Map(VisitingMode.Normal -> 15.0), PathType.General) // escalator_high <-> OP1_hall_outside
+    lobbyEdges += AtomicPath(node12, node21, Map(VisitingMode.Normal -> 15.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node29, node18, Map(VisitingMode.Normal -> 3.0), PathType.General) // west_intersact_1 <-> OPS_hall_1
+    lobbyEdges += AtomicPath(node18, node29, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node29, node6, Map(VisitingMode.Normal -> 3.0), PathType.General) // west_intersact_1 <-> WestExitInside
+    lobbyEdges += AtomicPath(node6, node29, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node12, node6, Map(VisitingMode.Normal -> 3.0), PathType.General) // OP1_hall_outside <-> WestExitInside
+    lobbyEdges += AtomicPath(node6, node12, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node12, node30, Map(VisitingMode.Normal -> 3.0), PathType.General) // OP1_hall_outside <-> west_intersact_2
+    lobbyEdges += AtomicPath(node30, node12, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    // Normal paths on the east
+    lobbyEdges += AtomicPath(node7, node8, Map(VisitingMode.Normal -> 5.0), PathType.General) // EastExitOutside <-> EastExitInside
+    lobbyEdges += AtomicPath(node8, node7, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node7, node14, Map(VisitingMode.Normal -> 6.0), PathType.General) // EastExitOutside <-> OP2_hall_outside
+    lobbyEdges += AtomicPath(node14, node7, Map(VisitingMode.Normal -> 6.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node2, node14, Map(VisitingMode.Normal -> 5.0), PathType.General) // SE_corner <-> OP2_hall_outside
+    lobbyEdges += AtomicPath(node14, node2, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node8, node14, Map(VisitingMode.Normal -> 5.0), PathType.General) // EastExitInside <-> OP2_hall_outside
+    lobbyEdges += AtomicPath(node14, node8, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node8, node31, Map(VisitingMode.Normal -> 7.0), PathType.General) // EastExitInside <-> east_intersact_1
+    lobbyEdges += AtomicPath(node31, node8, Map(VisitingMode.Normal -> 7.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node10, node31, Map(VisitingMode.Normal -> 4.0), PathType.General) // hankyu_exit_inside <-> east_intersact_1
+    lobbyEdges += AtomicPath(node31, node10, Map(VisitingMode.Normal -> 4.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node9, node10, Map(VisitingMode.Normal -> 3.0), PathType.General) // hankyu_exit_inside <-> hankyu_exit_outside
+    lobbyEdges += AtomicPath(node10, node9, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node7, node28, Map(VisitingMode.Normal -> 12.0), PathType.General) // EastExitOutside <-> staircase_E_outside
+    lobbyEdges += AtomicPath(node28, node7, Map(VisitingMode.Normal -> 12.0), PathType.General)
+
+    // Strange stuff
+    lobbyEdges += AtomicPath(node16, node23, Map(VisitingMode.Normal -> 8.0), PathType.General) // OEX_hall_upp <-> staircase_A_1M
+    lobbyEdges += AtomicPath(node23, node16, Map(VisitingMode.Normal -> 8.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node20, node22, Map(VisitingMode.Normal -> 5.0), PathType.General) // OS_hall <-> staircase_A_1
+    lobbyEdges += AtomicPath(node22, node20, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    // Restricted paths (all as General for testing)
+    lobbyEdges += AtomicPath(node12, node11, Map(VisitingMode.Normal -> 5.0), PathType.General) // OP1_hall_outside <-> OP1_hall
+    lobbyEdges += AtomicPath(node11, node12, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node14, node13, Map(VisitingMode.Normal -> 5.0), PathType.General) // OP2_hall_outside <-> OP2_hall
+    lobbyEdges += AtomicPath(node13, node14, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node8, node18, Map(VisitingMode.Normal -> 5.0), PathType.General) // EastExitInside -> OPS_hall_1
+
+    lobbyEdges += AtomicPath(node20, node8, Map(VisitingMode.Normal -> 4.0), PathType.General) // OS_hall -> EastExitInside
+
+    lobbyEdges += AtomicPath(node15, node29, Map(VisitingMode.Normal -> 5.0), PathType.General) // OEX_hall_low <-> west_intersact_1
+    lobbyEdges += AtomicPath(node29, node15, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node16, node17, Map(VisitingMode.Normal -> 5.0), PathType.General) // OEX_hall_upp <-> OEX_hall_upp_outside
+    lobbyEdges += AtomicPath(node17, node16, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node30, node17, Map(VisitingMode.Normal -> 6.0), PathType.General) // west_intersact_2 <-> OEX_hall_upp_outside
+    lobbyEdges += AtomicPath(node17, node30, Map(VisitingMode.Normal -> 6.0), PathType.General)
+
+    lobbyEdges += AtomicPath(node30, node26, Map(VisitingMode.Normal -> 10.0), PathType.General) // west_intersact_2 -> staircase_D
+
+    lobbyEdges += AtomicPath(node31, node24, Map(VisitingMode.Normal -> 7.0), PathType.General) // east_intersact_1 -> staircase_B
+
+    lobbyEdges += AtomicPath(node24, node31, Map(VisitingMode.Normal -> 5.0), PathType.General) // staircase_B -> east_intersact_1
+
+    lobbyEdges += AtomicPath(node25, node4, Map(VisitingMode.Normal -> 5.0), PathType.General) // staircase_C -> SouthExitInside
+    lobbyEdges += AtomicPath(node4, node25, Map(VisitingMode.Normal -> 6.0), PathType.General) // SouthExitInside -> staircase_C
+
+    lobbyEdges += AtomicPath(node26, node30, Map(VisitingMode.Normal -> 8.0), PathType.General) // staircase_D -> west_intersact_2
+
+    lobbyEdges += AtomicPath(node28, node27, Map(VisitingMode.Normal -> 3.0), PathType.General) // staircase_E_outside -> staircase_E
+
+    NavigationGraph("Lobby", lobbyNodes.toList, lobbyEdges.toList)
+  }
+
+  private def generateFloor29Map(): NavigationGraph = {
+    val floor30Nodes = mutable.ListBuffer[TopoNode]()
+    val floor30Edges = mutable.ListBuffer[AtomicPath]()
+
+    // Create all TopoNodes according to the DSL
+    val node1 = TopoNode("NW_corner", Map.empty)
+    val node2 = TopoNode("NE_corner", Map.empty)
+    val node3 = TopoNode("SW_corner", Map.empty)
+    val node4 = TopoNode("SE_corner", Map.empty)
+
+    val node5 = TopoNode("inside_room_01", Map("description" -> AttributeValue.StringValue("inside the door of room 01")))
+    val node6 = TopoNode("inside_room_02", Map("description" -> AttributeValue.StringValue("inside the door of room 02")))
+    val node7 = TopoNode("inside_room_03", Map("description" -> AttributeValue.StringValue("inside the door of room 03")))
+    val node8 = TopoNode("outside_room_01", Map("description" -> AttributeValue.StringValue("outside the door of room 01")))
+    val node9 = TopoNode("outside_room_02", Map("description" -> AttributeValue.StringValue("outside the door of room 02")))
+
+    val node10 = TopoNode("OP3_hall", Map("description" -> AttributeValue.StringValue("zone-3 elevator hall")))
+    val node11 = TopoNode("OP3_hall_outside", Map.empty)
+    val node12 = TopoNode("OS_hall", Map("description" -> AttributeValue.StringValue("service elevator hall")))
+    val node13 = TopoNode("OS_hall_outside", Map.empty)
+    val node14 = TopoNode("OEX_low", Map("description" -> AttributeValue.StringValue("express elevator hall")))
+    val node15 = TopoNode("OEX_hall_outside", Map.empty)
+    val node16 = TopoNode("OEX6_hall", Map("description" -> AttributeValue.StringValue("just beside the door of the ferry elevator")))
+
+    val node17 = TopoNode("staircase_A_outside", Map.empty)
+    val node18 = TopoNode("staircase_B", Map.empty)
+    val node19 = TopoNode("staircase_B_outside", Map.empty)
+    val node20 = TopoNode("staircase_C", Map.empty)
+    val node21 = TopoNode("staircase_C_outside", Map.empty)
+    val node22 = TopoNode("staircase_D", Map.empty)
+    val node23 = TopoNode("staircase_D_outside", Map.empty)
+
+    val node24 = TopoNode("intersact0", Map.empty)
+    val node25 = TopoNode("intersact1", Map.empty)
+    val node26 = TopoNode("intersact2", Map.empty)
+    val node27 = TopoNode("intersact3_north", Map.empty)
+    val node28 = TopoNode("intersact3_inside", Map.empty)
+    val node29 = TopoNode("intersact3_south", Map.empty)
+
+    val node30 = TopoNode("toilet", Map.empty)
+    val node31 = TopoNode("toilet_outside", Map.empty)
+    val node32 = TopoNode("model", Map.empty)
+    val node33 = TopoNode("Bar", Map.empty)
+
+    // Add all nodes to the list
+    floor30Nodes ++= List(
+      node1, node2, node3, node4, node5, node6, node7, node8, node9, node10,
+      node11, node12, node13, node14, node15, node16, node17, node18, node19, node20,
+      node21, node22, node23, node24, node25, node26, node27, node28, node29, node30,
+      node31, node32, node33
+    )
+
+    // In/Out rooms
+    floor30Edges += AtomicPath(node8, node5, Map(VisitingMode.Normal -> 1.0), PathType.General) // outside_room_01 <-> inside_room_01
+    floor30Edges += AtomicPath(node5, node8, Map(VisitingMode.Normal -> 1.0), PathType.General)
+
+    floor30Edges += AtomicPath(node9, node6, Map(VisitingMode.Normal -> 1.0), PathType.General) // outside_room_02 <-> inside_room_02
+    floor30Edges += AtomicPath(node6, node9, Map(VisitingMode.Normal -> 1.0), PathType.General)
+
+    floor30Edges += AtomicPath(node29, node7, Map(VisitingMode.Normal -> 2.0), PathType.General) // intersact3_south <-> inside_room_03
+    floor30Edges += AtomicPath(node7, node29, Map(VisitingMode.Normal -> 2.0), PathType.General)
+
+    floor30Edges += AtomicPath(node29, node3, Map(VisitingMode.Normal -> 4.0), PathType.General) // intersact3_south <-> SW_corner
+    floor30Edges += AtomicPath(node3, node29, Map(VisitingMode.Normal -> 4.0), PathType.General)
+
+    floor30Edges += AtomicPath(node7, node3, Map(VisitingMode.Normal -> 3.0), PathType.General) // inside_room_03 <-> SW_corner
+    floor30Edges += AtomicPath(node3, node7, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    floor30Edges += AtomicPath(node24, node1, Map(VisitingMode.Normal -> 5.0), PathType.General) // intersact0 <-> NW_corner
+    floor30Edges += AtomicPath(node1, node24, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    floor30Edges += AtomicPath(node26, node2, Map(VisitingMode.Normal -> 5.0), PathType.General) // intersact2 <-> NE_corner
+    floor30Edges += AtomicPath(node2, node26, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    // The ring-like corridor around the core
+    floor30Edges += AtomicPath(node24, node31, Map(VisitingMode.Normal -> 7.0), PathType.General) // intersact0 <-> toilet_outside
+    floor30Edges += AtomicPath(node31, node24, Map(VisitingMode.Normal -> 7.0), PathType.General)
+
+    floor30Edges += AtomicPath(node19, node31, Map(VisitingMode.Normal -> 4.0), PathType.General) // staircase_B_outside <-> toilet_outside
+    floor30Edges += AtomicPath(node31, node19, Map(VisitingMode.Normal -> 4.0), PathType.General)
+
+    floor30Edges += AtomicPath(node26, node31, Map(VisitingMode.Normal -> 2.0), PathType.General) // intersact2 <-> toilet_outside
+    floor30Edges += AtomicPath(node31, node26, Map(VisitingMode.Normal -> 2.0), PathType.General)
+
+    floor30Edges += AtomicPath(node26, node13, Map(VisitingMode.Normal -> 5.0), PathType.General) // intersact2 <-> OS_hall_outside
+    floor30Edges += AtomicPath(node13, node26, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    floor30Edges += AtomicPath(node11, node13, Map(VisitingMode.Normal -> 6.0), PathType.General) // OP3_hall_outside <-> OS_hall_outside
+    floor30Edges += AtomicPath(node13, node11, Map(VisitingMode.Normal -> 6.0), PathType.General)
+
+    floor30Edges += AtomicPath(node11, node27, Map(VisitingMode.Normal -> 2.0), PathType.General) // OP3_hall_outside <-> intersact3_north
+    floor30Edges += AtomicPath(node27, node11, Map(VisitingMode.Normal -> 2.0), PathType.General)
+
+    floor30Edges += AtomicPath(node28, node27, Map(VisitingMode.Normal -> 2.0), PathType.General) // intersact3_inside -> intersact3_north
+    floor30Edges += AtomicPath(node28, node29, Map(VisitingMode.Normal -> 2.0), PathType.General) // intersact3_inside -> intersact3_south
+
+    floor30Edges += AtomicPath(node27, node28, Map(VisitingMode.Normal -> 2.0), PathType.General) // intersact3_north -> intersact3_inside
+    floor30Edges += AtomicPath(node29, node28, Map(VisitingMode.Normal -> 2.0), PathType.General) // intersact3_south -> intersact3_inside
+
+    floor30Edges += AtomicPath(node28, node21, Map(VisitingMode.Normal -> 7.0), PathType.General) // intersact3_inside <-> staircase_C_outside
+    floor30Edges += AtomicPath(node21, node28, Map(VisitingMode.Normal -> 7.0), PathType.General)
+
+    floor30Edges += AtomicPath(node25, node21, Map(VisitingMode.Normal -> 6.0), PathType.General) // intersact1 <-> staircase_C_outside
+    floor30Edges += AtomicPath(node21, node25, Map(VisitingMode.Normal -> 6.0), PathType.General)
+
+    floor30Edges += AtomicPath(node25, node23, Map(VisitingMode.Normal -> 6.0), PathType.General) // intersact1 <-> staircase_D_outside
+    floor30Edges += AtomicPath(node23, node25, Map(VisitingMode.Normal -> 6.0), PathType.General)
+
+    floor30Edges += AtomicPath(node15, node23, Map(VisitingMode.Normal -> 4.0), PathType.General) // OEX_hall_outside <-> staircase_D_outside
+    floor30Edges += AtomicPath(node23, node15, Map(VisitingMode.Normal -> 4.0), PathType.General)
+
+    floor30Edges += AtomicPath(node15, node24, Map(VisitingMode.Normal -> 3.0), PathType.General) // OEX_hall_outside <-> intersact0
+    floor30Edges += AtomicPath(node24, node15, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    // Bar Area
+    floor30Edges += AtomicPath(node25, node32, Map(VisitingMode.Normal -> 2.0), PathType.General) // intersact1 <-> model
+    floor30Edges += AtomicPath(node32, node25, Map(VisitingMode.Normal -> 2.0), PathType.General)
+
+    floor30Edges += AtomicPath(node3, node32, Map(VisitingMode.Normal -> 3.0), PathType.General) // SW_corner <-> model
+    floor30Edges += AtomicPath(node32, node3, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    floor30Edges += AtomicPath(node33, node32, Map(VisitingMode.Normal -> 6.0), PathType.General) // bar <-> model
+    floor30Edges += AtomicPath(node32, node33, Map(VisitingMode.Normal -> 6.0), PathType.General)
+
+    floor30Edges += AtomicPath(node33, node29, Map(VisitingMode.Normal -> 5.0), PathType.General) // bar <-> intersact3_south
+    floor30Edges += AtomicPath(node29, node33, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    // In/Out staircases or elevators
+    floor30Edges += AtomicPath(node19, node18, Map(VisitingMode.Normal -> 3.0), PathType.General) // staircase_B_outside -> staircase_B
+    floor30Edges += AtomicPath(node18, node19, Map(VisitingMode.Normal -> 5.0), PathType.General) // staircase_B -> staircase_B_outside
+
+    floor30Edges += AtomicPath(node21, node20, Map(VisitingMode.Normal -> 3.0), PathType.General) // staircase_C_outside -> staircase_C
+    floor30Edges += AtomicPath(node20, node21, Map(VisitingMode.Normal -> 5.0), PathType.General) // staircase_C -> staircase_C_outside
+
+    floor30Edges += AtomicPath(node23, node22, Map(VisitingMode.Normal -> 10.0), PathType.General) // staircase_D_outside -> staircase_D
+    floor30Edges += AtomicPath(node22, node23, Map(VisitingMode.Normal -> 8.0), PathType.General) // staircase_D -> staircase_D_outside
+
+    floor30Edges += AtomicPath(node12, node17, Map(VisitingMode.Normal -> 3.0), PathType.General) // OS_hall -> staircase_A
+    floor30Edges += AtomicPath(node17, node12, Map(VisitingMode.Normal -> 5.0), PathType.General) // staircase_A -> OS_hall
+
+    floor30Edges += AtomicPath(node12, node13, Map(VisitingMode.Normal -> 2.0), PathType.General) // OS_hall <-> OS_hall_outside
+    floor30Edges += AtomicPath(node13, node12, Map(VisitingMode.Normal -> 2.0), PathType.General)
+
+    floor30Edges += AtomicPath(node10, node11, Map(VisitingMode.Normal -> 2.0), PathType.General) // OP3_hall <-> OP3_hall_outside
+    floor30Edges += AtomicPath(node11, node10, Map(VisitingMode.Normal -> 2.0), PathType.General)
+
+    floor30Edges += AtomicPath(node14, node15, Map(VisitingMode.Normal -> 2.0), PathType.General) // OEX_hall <-> OEX_hall_outside
+    floor30Edges += AtomicPath(node15, node14, Map(VisitingMode.Normal -> 2.0), PathType.General)
+
+    NavigationGraph("Floor29", floor30Nodes.toList, floor30Edges.toList)
+  }
+
+  private def generateCarparkMap(): NavigationGraph = {
+    NavigationGraph("Carpark", List(TopoNode("OPS", Map.empty)), List.empty)
+  }
+
+  runTest()
+}
+
