@@ -1,6 +1,7 @@
 import cats.effect.IO
 import enums.{PathType, TransportServicePermission, VisitingMode}
 import enums.TransportServicePermission.{ArriveOnly, DepartOnly}
+import enums.VisitingMode.Normal
 
 import scala.collection.mutable
 
@@ -80,7 +81,7 @@ private class TransportGraph private(
       return Double.PositiveInfinity
     }
 
-    // Calculate the absolute index difference and multiply by 5
+    // Calculate the absolute index difference and multiply by 2.5
     val indexDifference = math.abs(fromIndex - toIndex)
     2.5 * indexDifference
   }
@@ -169,7 +170,6 @@ object TransportGraph {
       allNodes ++= stationNodes
 
       // Create TWO types of edges:
-
       // 1. Internal edges: Within each elevator line (complete graph)
       for (line <- lines) {
         val stationNodes = allNodes.filter(_.ownerLine == line) // Get nodes for this specific line
@@ -198,7 +198,13 @@ object TransportGraph {
           to <- nodesOnSameFloor
           if from != to && from.ownerLine != to.ownerLine // Different elevator lines
         } {
-          val transferCost = 30 // TODO: Connect with the NavigationGraph to calculate
+          // Calculate the transfer-time according to the intra-map navigation
+          val transferCost: Double = from.ownerGraph.findPath(
+            from.ownerGraph.nodes.find(n => n.identifier == from.identifier).getOrElse(throw RuntimeException("Node not found")),
+            to.ownerGraph.nodes.find(n => n.identifier == to.identifier).getOrElse(throw RuntimeException("Node not found")),
+            VisitingMode.Normal
+          ).getOrElse(throw RuntimeException("Path not found")).totalCost(VisitingMode.Normal)
+
           edges += TransportEdge(from, to, transferCost)
         }
       }
