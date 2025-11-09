@@ -69,6 +69,32 @@ class TransportGraph private(
   }
 
 
+  // This one only provide cross-graph fuzzy pathfinding without considering the start and goal nodes inside each graph
+  // Outputs the returnIndex-th quickest cross-graph traveling solution (0 means quickest and n means slowest)
+  def findPathFuzzy(
+    startGraph: NavigationGraph,
+    goalGraph: NavigationGraph,
+    floorNameList: List[String],
+    returnIndex: Int
+  ): TransportationPath = {
+    val startNodes = nodes.filter(_.ownerGraph == startGraph)
+    val goalNodes = nodes.filter(_.ownerGraph == goalGraph)
+    // TODO: Try findPath for all possible combinations
+    TransportationPath(List.empty, List.empty)
+  }
+
+  def findPathFuzzy(
+    startGraph: NavigationGraph,
+    goal: StationNode,
+    floorNameList: List[String],
+    returnIndex: Int
+  ): TransportationPath = {
+    val startNodes = nodes.filter(_.ownerGraph == startGraph)
+    // TODO: Try findPath for all possible combinations
+    TransportationPath(List.empty, List.empty)
+  }
+
+
   private def heuristic(from: StationNode, to: StationNode, stationNameList: List[String]): Double = {
     // Get the floor identifiers
     val fromFloor = from.ownerGraph.identifier
@@ -118,36 +144,6 @@ class TransportGraph private(
       node = parent  // Move to the next node (only once!)
     }
     totalPath.prepend(node)
-
-    // Convert TransportEdge to AtomicPath
-//    val atomicPaths = pathEdges.map { transportEdge =>
-//      // Convert StationNode to TopoNode for source
-//      val sourceTopoNode = transportEdge.sourceNode.ownerLine.stationNodes
-//        .get(transportEdge.sourceNode.ownerGraph)
-//        .getOrElse(throw new IllegalStateException(s"No TopoNode found for source: ${transportEdge.sourceNode.identifier}"))
-//
-//      // Convert StationNode to TopoNode for target
-//      val targetTopoNode = transportEdge.destinationNode.ownerLine.stationNodes
-//        .get(transportEdge.destinationNode.ownerGraph)
-//        .getOrElse(throw new IllegalStateException(s"No TopoNode found for target: ${transportEdge.destinationNode.identifier}"))
-//
-//      // Create AtomicPath with default attributes and path type
-//      AtomicPath(
-//        source = sourceTopoNode,
-//        target = targetTopoNode,
-//        attributes = Map.empty, // Default empty attributes
-//        costs = Map(VisitingMode.Normal -> transportEdge.cost), // Convert cost to costs map
-//        pathType = PathType.General // Default path type
-//      )
-//    }.toList
-
-//    // Convert StationNodes to TopoNodes for the path nodes
-//    val topoNodes = totalPath.map { stationNode =>
-//      stationNode.ownerLine.stationNodes.get(stationNode.ownerGraph) match {
-//        case Some(topoNode) => topoNode
-//        case None => throw new IllegalStateException(s"No TopoNode found for StationNode: ${stationNode.identifier}")
-//      }
-//    }.toList
 
     TransportationPath(totalPath.toList, pathEdges.toList)
   }
@@ -224,35 +220,26 @@ object TransportGraph {
   }
 
   private def createStationNodesForLine(line: LinearTransport): List[StationNode] = {
-    line.stationNodes.map { case (navigationGraph, topoNode) =>
-      new StationNode {
-        def identifier: String = s"${line.identifier}@${navigationGraph.identifier}"
-
-        def ownerGraph: NavigationGraph = navigationGraph
-
-        def ownerLine: LinearTransport = line
-
-        def permission: TransportServicePermission = {
-          // Determine permission based on arrival/departure capabilities
-          (line.canArriveAt(navigationGraph), line.canDepartFrom(navigationGraph)) match {
-            case (true, true) => TransportServicePermission.FullyGranted
-            case (true, false) => TransportServicePermission.ArriveOnly
-            case (false, true) => TransportServicePermission.DepartOnly
-            case (false, false) => TransportServicePermission.NoAccess
-          }
-        }
-
-        override def toString: String = identifier
-
-        override def equals(obj: Any): Boolean = obj match {
-          case other: StationNode => this.identifier == other.identifier
-          case _ => false
-        }
-
-        override def hashCode(): Int = identifier.hashCode
-      }
-    }.toList
-  }
+    line.stationNodes.map { 
+      case (navigationGraph, topoNode) =>
+        StationNode (
+          identifier = s"${line.identifier}@${navigationGraph.identifier}",
+  
+          ownerGraph = navigationGraph,
+  
+          ownerLine = line,
+  
+          permission = // Determine permission based on arrival/departure capabilities
+            (line.canArriveAt(navigationGraph), line.canDepartFrom(navigationGraph)) match {
+              case (true, true) => TransportServicePermission.FullyGranted
+              case (true, false) => TransportServicePermission.ArriveOnly
+              case (false, true) => TransportServicePermission.DepartOnly
+              case (false, false) => TransportServicePermission.NoAccess
+            }
+        )  
+    }
+  }.toList
+}
 
   private def buildAdjacencyList(edges: Set[TransportEdge]): Map[StationNode, Set[StationNode]] = {
     edges
@@ -262,15 +249,23 @@ object TransportGraph {
       .toMap
   }
 
-  
+// This one might have fucked up
+case class StationNode(
+  identifier: String,
+  ownerGraph: NavigationGraph,
+  ownerLine: LinearTransport,
+  permission: TransportServicePermission
+){
+  def localNode: TopoNode = ownerGraph.nodes.find(n => n.identifier == trim(identifier)).getOrElse(throw RuntimeException(s"StationNode: Local node for ${identifier} not found"))
 
-}
+  override def toString: String = identifier
 
-trait StationNode{
-  def identifier: String
-  def ownerGraph: NavigationGraph
-  def ownerLine: LinearTransport
-  def permission: TransportServicePermission
+  override def equals(obj: Any): Boolean = obj match {
+    case other: StationNode => this.identifier == other.identifier
+    case _ => false
+  }
+
+  override def hashCode(): Int = identifier.hashCode
 }
 
 case class TransportEdge(
