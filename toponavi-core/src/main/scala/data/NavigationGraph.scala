@@ -1,3 +1,5 @@
+package data
+
 import enums.VisitingMode.Normal
 import enums.{PathType, VisitingMode}
 

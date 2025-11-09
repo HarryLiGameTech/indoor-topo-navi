@@ -1,6 +1,10 @@
+package data
+
 import cats.effect.IO
-import scala.collection.mutable
 import enums.*
+import enums.VisitingMode.Normal
+
+import scala.collection.mutable
 
 case class TopoNodeAttribute(
   attribute: Map[String, AttributeValue]
@@ -13,16 +17,28 @@ case class TopoNode(
   override def toString: String = identifier
 }
 
+case class GlobalNode(
+  owningGraph: NavigationGraph,
+  localNode: TopoNode
+)
+
 case class AtomicPath(
   source: TopoNode,
   target: TopoNode,
   attributes: Map[String, AttributeValue],
   costs: Map[VisitingMode, Double],
-  pathType: PathType // Temporary, to-be-modified to "modifiers"
+  pathType: PathType // TODO: modify to "modifiers"
 ) {
   override def toString: String = s"${source} -> ${target}"
-  
 }
+
+case class RouteEdge(
+  source: GlobalNode,
+  target: GlobalNode,
+  cost: Double,
+  category: RouteEdgeCategory,
+  movementDescription: String
+)
 
 // Companion object for alternative constructors
 object AtomicPath {
@@ -32,19 +48,37 @@ object AtomicPath {
   }
 }
 
+trait NavigatablePath {
+  def routeNodes: List[_]
+  def routeEdges: List[_]
+  def totalCost: Double
+}
+
 case class IntraMapPath(
   routeNodes: List[TopoNode],
   routeEdges: List[AtomicPath]
-) {
+) extends NavigatablePath {
+
   def totalCost(visitingMode: VisitingMode): Double = {
     routeEdges.map(_.costs(visitingMode)).sum
   }
+
+  override def totalCost: Double = totalCost(Normal)
 }
 
 case class TransportationPath(
   routeNodes: List[StationNode],
   routeEdges: List[TransportEdge]
-) {
+) extends NavigatablePath {
+  def totalCost: Double = {
+    routeEdges.map(_.cost).sum
+  }
+}
+
+case class NavigationPath(
+  routeNodes: List[GlobalNode],
+  routeEdges: List[RouteEdge]
+) extends NavigatablePath {
   def totalCost: Double = {
     routeEdges.map(_.cost).sum
   }

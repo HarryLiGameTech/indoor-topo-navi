@@ -1,3 +1,5 @@
+package data
+
 import enums.TransportServicePermission
 
 trait LinearTransport {

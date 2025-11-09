@@ -1,12 +1,14 @@
+package data
+
 import cats.effect.IO
-import enums.{PathType, TransportServicePermission, VisitingMode}
 import enums.TransportServicePermission.{ArriveOnly, DepartOnly}
 import enums.VisitingMode.Normal
+import enums.{PathType, TransportServicePermission, VisitingMode}
 
 import scala.collection.mutable
 
 // The RailNetwork shall be generated after all the modifiers are applied. i.e. locked and ineligible floor/elevator pair shall not appear here
-private class TransportGraph private(
+class TransportGraph private(
   val nodes: List[StationNode],
   val adjacencyList: Map[StationNode, Set[StationNode]]
 ){

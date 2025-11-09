@@ -1,3 +1,4 @@
+import data.{AtomicPath, ElevatorBank, NavigationGraph, TopoNode, TransportGraph}
 import enums.VisitingMode.Normal
 import enums.{AttributeValue, PathType, TransportServicePermission, VisitingMode}
 
@@ -982,3 +983,10 @@ object HybridMapTest extends App {
   runTest()
 }
 
+
+
+
+
+object NavigationTest extends App{
+
+}
