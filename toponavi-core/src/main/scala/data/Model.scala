@@ -22,6 +22,12 @@ case class GlobalNode(
   localNode: TopoNode
 )
 
+object GlobalNode {
+  def fromTopoNode(graph: NavigationGraph, node: TopoNode): GlobalNode = {
+    GlobalNode(graph, node)
+  }
+}
+
 case class AtomicPath(
   source: TopoNode,
   target: TopoNode,
@@ -39,6 +45,24 @@ case class RouteEdge(
   category: RouteEdgeCategory,
   movementDescription: String
 )
+
+object RouteEdge {
+  def fromAtomicPath(
+    owningGraph: NavigationGraph,
+    atomicPath: AtomicPath,
+    visitingMode: VisitingMode
+  ): RouteEdge = {
+    val sourceGlobalNode = GlobalNode.fromTopoNode(owningGraph, atomicPath.source)
+    val targetGlobalNode = GlobalNode.fromTopoNode(owningGraph, atomicPath.target)
+    RouteEdge(
+      source = sourceGlobalNode,
+      target = targetGlobalNode,
+      cost = atomicPath.costs(visitingMode),
+      category = RouteEdgeCategory.Walking,
+      movementDescription = s"Move from ${atomicPath.source.identifier} to ${atomicPath.target.identifier} via ${atomicPath.pathType}"
+    )
+  }
+}
 
 // Companion object for alternative constructors
 object AtomicPath {
@@ -75,11 +99,18 @@ case class TransportationPath(
   }
 }
 
-case class NavigationPath(
+case class NavigationOutputPath(
   routeNodes: List[GlobalNode],
   routeEdges: List[RouteEdge]
 ) extends NavigatablePath {
+
   def totalCost: Double = {
     routeEdges.map(_.cost).sum
+  }
+
+  def prettyPrint: String = {
+    val nodeStr = routeNodes.map(n => s"${n.owningGraph.identifier}:${n.localNode.identifier}").mkString(" -> ")
+    val edgeStr = routeEdges.map(e => s"[${e.category}, cost=${e.cost}]").mkString(", ")
+    s"Nodes: $nodeStr\nEdges: $edgeStr\nTotal Cost: $totalCost"
   }
 }
