@@ -586,7 +586,7 @@ object TransportTester extends App {
         case Some(path) =>
           println(s"Path found with ${path.routeNodes.size} nodes:")
           path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
-          println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost(VisitingMode.Normal)} seconds:")
+          println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
           path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier}"))
         case None =>
           println("No path found")
@@ -663,8 +663,8 @@ object HybridMapTest extends App {
         case Some(path) =>
           println(s"Path found with ${path.routeNodes.size} nodes:")
           path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
-          println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost(VisitingMode.Normal)} seconds:")
-          path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.costs(VisitingMode.Normal)} seconds"))
+          println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
+          path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
         case None =>
           println("No path found")
       }

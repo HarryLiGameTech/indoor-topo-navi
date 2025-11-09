@@ -14,7 +14,7 @@ private class TransportGraph private(
     start: StationNode,
     goal: StationNode,
     floorNameList: List[String]
-  ): Option[IntraMapPath] = {
+  ): Option[TransportationPath] = {
     // Priority queue for open set (min-heap based on fScore)
     implicit val nodeOrdering: Ordering[(StationNode, Double)] =
       Ordering.by[(StationNode, Double), Double](_._2).reverse
@@ -91,7 +91,7 @@ private class TransportGraph private(
     from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
   }
 
-  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode): IntraMapPath = {
+  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode): TransportationPath = {
     val totalPath = mutable.ListBuffer[StationNode]()
     val pathEdges = mutable.ListBuffer[TransportEdge]()
     var node = current
@@ -118,36 +118,36 @@ private class TransportGraph private(
     totalPath.prepend(node)
 
     // Convert TransportEdge to AtomicPath
-    val atomicPaths = pathEdges.map { transportEdge =>
-      // Convert StationNode to TopoNode for source
-      val sourceTopoNode = transportEdge.sourceNode.ownerLine.stationNodes
-        .get(transportEdge.sourceNode.ownerGraph)
-        .getOrElse(throw new IllegalStateException(s"No TopoNode found for source: ${transportEdge.sourceNode.identifier}"))
+//    val atomicPaths = pathEdges.map { transportEdge =>
+//      // Convert StationNode to TopoNode for source
+//      val sourceTopoNode = transportEdge.sourceNode.ownerLine.stationNodes
+//        .get(transportEdge.sourceNode.ownerGraph)
+//        .getOrElse(throw new IllegalStateException(s"No TopoNode found for source: ${transportEdge.sourceNode.identifier}"))
+//
+//      // Convert StationNode to TopoNode for target
+//      val targetTopoNode = transportEdge.destinationNode.ownerLine.stationNodes
+//        .get(transportEdge.destinationNode.ownerGraph)
+//        .getOrElse(throw new IllegalStateException(s"No TopoNode found for target: ${transportEdge.destinationNode.identifier}"))
+//
+//      // Create AtomicPath with default attributes and path type
+//      AtomicPath(
+//        source = sourceTopoNode,
+//        target = targetTopoNode,
+//        attributes = Map.empty, // Default empty attributes
+//        costs = Map(VisitingMode.Normal -> transportEdge.cost), // Convert cost to costs map
+//        pathType = PathType.General // Default path type
+//      )
+//    }.toList
 
-      // Convert StationNode to TopoNode for target
-      val targetTopoNode = transportEdge.destinationNode.ownerLine.stationNodes
-        .get(transportEdge.destinationNode.ownerGraph)
-        .getOrElse(throw new IllegalStateException(s"No TopoNode found for target: ${transportEdge.destinationNode.identifier}"))
+//    // Convert StationNodes to TopoNodes for the path nodes
+//    val topoNodes = totalPath.map { stationNode =>
+//      stationNode.ownerLine.stationNodes.get(stationNode.ownerGraph) match {
+//        case Some(topoNode) => topoNode
+//        case None => throw new IllegalStateException(s"No TopoNode found for StationNode: ${stationNode.identifier}")
+//      }
+//    }.toList
 
-      // Create AtomicPath with default attributes and path type
-      AtomicPath(
-        source = sourceTopoNode,
-        target = targetTopoNode,
-        attributes = Map.empty, // Default empty attributes
-        costs = Map(VisitingMode.Normal -> transportEdge.cost), // Convert cost to costs map
-        pathType = PathType.General // Default path type
-      )
-    }.toList
-
-    // Convert StationNodes to TopoNodes for the path nodes
-    val topoNodes = totalPath.map { stationNode =>
-      stationNode.ownerLine.stationNodes.get(stationNode.ownerGraph) match {
-        case Some(topoNode) => topoNode
-        case None => throw new IllegalStateException(s"No TopoNode found for StationNode: ${stationNode.identifier}")
-      }
-    }.toList
-
-    IntraMapPath(topoNodes, atomicPaths)
+    TransportationPath(totalPath.toList, pathEdges.toList)
   }
   
 }
@@ -254,9 +254,9 @@ object TransportGraph {
 
   private def buildAdjacencyList(edges: Set[TransportEdge]): Map[StationNode, Set[StationNode]] = {
     edges
-      .groupBy(_.sourceNode) // Group all edges by their source node
+      .groupBy(_.source) // Group all edges by their source node
       .view
-      .mapValues(_.map(_.destinationNode)) // For each source node, extract all destination nodes
+      .mapValues(_.map(_.target)) // For each source node, extract all destination nodes
       .toMap
   }
 
@@ -272,8 +272,8 @@ trait StationNode{
 }
 
 case class TransportEdge(
-  sourceNode: StationNode,
-  destinationNode: StationNode,
+  source: StationNode,
+  target: StationNode,
   cost: Double
 )
 
