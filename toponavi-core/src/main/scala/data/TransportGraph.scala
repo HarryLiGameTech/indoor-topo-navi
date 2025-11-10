@@ -134,14 +134,14 @@ class TransportGraph private(
       }
       else{
         val transferCost: Double = parent.ownerGraph.findPath(
-          parent.ownerGraph.nodes.find(n => n.identifier == trim(parent.identifier)).getOrElse(throw RuntimeException("Interchange: Source node not found")),
-          node.ownerGraph.nodes.find(n => n.identifier == trim(node.identifier)).getOrElse(throw RuntimeException(s"Interchange: Destination node: ${node.identifier} not found")),
+          parent.ownerLine.stationNodes(parent.ownerGraph),
+          node.ownerLine.stationNodes(node.ownerGraph),
           VisitingMode.Normal
         ).getOrElse(throw RuntimeException("Interchange: Path not found")).totalCost(VisitingMode.Normal)
-        pathEdges.prepend(TransportEdge(parent, node, transferCost)) // TODO: Connect with the NavigationGraph to calculate
+        pathEdges.prepend(TransportEdge(parent, node, transferCost))
       }
 
-      node = parent  // Move to the next node (only once!)
+      node = parent  // Move to the next node
     }
     totalPath.prepend(node)
 
@@ -207,8 +207,8 @@ object TransportGraph {
         } {
           // Calculate the transfer-time according to the intra-map navigation
           val transferCost: Double = from.ownerGraph.findPath(
-            from.ownerGraph.nodes.find(n => n.identifier == trim(from.identifier)).getOrElse(throw RuntimeException("Interchange: Source node not found")),
-            to.ownerGraph.nodes.find(n => n.identifier == trim(to.identifier)).getOrElse(throw RuntimeException(s"Interchange: Destination node: ${to.identifier} not found")),
+            from.ownerLine.stationNodes(from.ownerGraph),
+            to.ownerLine.stationNodes(to.ownerGraph),
             VisitingMode.Normal
           ).getOrElse(throw RuntimeException("Interchange: Path not found")).totalCost(VisitingMode.Normal)
 
@@ -220,15 +220,15 @@ object TransportGraph {
   }
 
   private def createStationNodesForLine(line: LinearTransport): List[StationNode] = {
-    line.stationNodes.map { 
+    line.stationNodes.map {
       case (navigationGraph, topoNode) =>
         StationNode (
           identifier = s"${line.identifier}@${navigationGraph.identifier}",
-  
+
           ownerGraph = navigationGraph,
-  
+
           ownerLine = line,
-  
+
           permission = // Determine permission based on arrival/departure capabilities
             (line.canArriveAt(navigationGraph), line.canDepartFrom(navigationGraph)) match {
               case (true, true) => TransportServicePermission.FullyGranted
@@ -236,7 +236,7 @@ object TransportGraph {
               case (false, true) => TransportServicePermission.DepartOnly
               case (false, false) => TransportServicePermission.NoAccess
             }
-        )  
+        )
     }
   }.toList
 }
@@ -256,7 +256,8 @@ case class StationNode(
   ownerLine: LinearTransport,
   permission: TransportServicePermission
 ){
-  def localNode: TopoNode = ownerGraph.nodes.find(n => n.identifier == trim(identifier)).getOrElse(throw RuntimeException(s"StationNode: Local node for ${identifier} not found"))
+//  def localNode: TopoNode = ownerGraph.nodes.find(n => n.identifier == trim(identifier)).getOrElse(throw RuntimeException(s"StationNode: Local node for ${identifier} not found"))
+  def localNode: TopoNode = ownerLine.stationNodes(ownerGraph)
 
   override def toString: String = identifier
 
