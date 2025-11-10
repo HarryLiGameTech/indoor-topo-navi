@@ -93,7 +93,7 @@ class TransportGraph private(
           }
         }
         val sortedPaths = allPaths.sortBy(_.totalCost)
-        if (sortedPaths.isDefinedAt(returnIndex)){
+        if (returnIndex >= 0 && returnIndex < sortedPaths.size){
           Some(TransportationPath(sortedPaths(returnIndex).routeNodes, sortedPaths(returnIndex).routeEdges))
         }
         else{
@@ -108,6 +108,7 @@ class TransportGraph private(
     startGraph: NavigationGraph,
     goal: StationNode,
     floorNameList: List[String],
+    preference: RoutePlanningPreferences,
     returnIndex: Int
   ): TransportationPath = {
     val startNodes = nodes.filter(_.ownerGraph == startGraph)
@@ -228,13 +229,16 @@ object TransportGraph {
           if from != to && from.ownerLine != to.ownerLine // Different elevator lines
         } {
           // Calculate the transfer-time according to the intra-map navigation
-          val transferCost: Double = from.ownerGraph.findPath(
+          from.ownerGraph.findPath(
             from.ownerLine.stationNodes(from.ownerGraph),
             to.ownerLine.stationNodes(to.ownerGraph),
             VisitingMode.Normal
-          ).getOrElse(throw RuntimeException("Interchange: Path not found")).totalCost(VisitingMode.Normal)
-
-          edges += TransportEdge(from, to, transferCost)
+          ) match{
+            case Some(path) =>
+              val transferCost = path.totalCost(VisitingMode.Normal)
+              edges += TransportEdge(from, to, transferCost)
+            case None => () // Just skip this non-existent edge when path-not-found on NavigationGraph
+          }
         }
       }
     }
