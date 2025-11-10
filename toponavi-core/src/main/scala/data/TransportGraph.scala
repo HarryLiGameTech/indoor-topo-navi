@@ -77,7 +77,7 @@ class TransportGraph private(
     floorNameList: List[String],
     preference: RoutePlanningPreferences,
     returnIndex: Int
-  ): TransportationPath = {
+  ): Option[TransportationPath] = {
     val startNodes = nodes.filter(_.ownerGraph == startGraph)
     val goalNodes = nodes.filter(_.ownerGraph == goalGraph)
     preference match{
@@ -94,12 +94,12 @@ class TransportGraph private(
         }
         val sortedPaths = allPaths.sortBy(_.totalCost)
         if (sortedPaths.isDefinedAt(returnIndex)){
-          TransportationPath(sortedPaths(returnIndex).routeNodes, sortedPaths(returnIndex).routeEdges)
+          Some(TransportationPath(sortedPaths(returnIndex).routeNodes, sortedPaths(returnIndex).routeEdges))
         }
         else{
-          throw new RuntimeException("Fuzzy Transport Path: returnIndex out of bounds")
+          None
         }
-      case _ => TransportationPath(List.empty, List.empty)// Other preferences not implemented yet
+      case _ => None
     }
 
   }
@@ -140,6 +140,7 @@ class TransportGraph private(
     from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
   }
 
+  // TODO: Option[TransportationPath]
   private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode): TransportationPath = {
     val totalPath = mutable.ListBuffer[StationNode]()
     val pathEdges = mutable.ListBuffer[TransportEdge]()

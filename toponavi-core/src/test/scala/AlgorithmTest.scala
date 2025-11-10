@@ -572,7 +572,7 @@ object TransportTester extends App {
       println(s"Start: ${start.identifier}")
       println(s"Goal: ${goal.identifier}")
 
-      // Find path (3rd param for testing only, TODO: to-be-connected to other subsystems)
+      // Find path (3rd param for testing only)
       val result = graph.findPath(start, goal, List(
         "Floor59", "Floor58", "Floor57", "Floor56", "Floor55", "Floor54", "Floor53", "Floor52", "Floor51", "Floor50",
         "Floor49", "Floor48", "Floor47", "Floor46", "Floor45", "Floor44", "Floor43", "Floor42", "Floor41", "Floor40",
@@ -632,7 +632,7 @@ object HybridMapTest extends App {
     val OPSBank = ElevatorBank(
       identifier = "OPS",
       stationNodes = Map(
-        lobby -> lobby.nodes.find(n => n.identifier == "OPS").get,
+        lobby -> lobby.nodes.find(n => n.identifier == "OPS_hall_1").get,
         carpark -> carpark.nodes.find(n => n.identifier == "OPS").get
       ),
       stationLocations = Map(lobby -> 10.0, carpark -> 0.0),
@@ -657,7 +657,7 @@ object HybridMapTest extends App {
       println(s"Start: ${start.identifier}")
       println(s"Goal: ${goal.identifier}")
 
-      // Find path (3rd param for testing only, TODO: to-be-connected to other subsystems)
+      // Find path (3rd param for testing only)
       val result = transportGraph.findPath(start, goal, List("Floor29", "Lobby", "Carpark"))
 
       result match {
@@ -698,7 +698,7 @@ object HybridMapTest extends App {
     val node15 = TopoNode("OEX_low", Map.empty)
     val node16 = TopoNode("OEX_hall_upp", Map.empty)
     val node17 = TopoNode("OEX_hall_upp_outside", Map.empty)
-    val node18 = TopoNode("OPS", Map.empty)
+    val node18 = TopoNode("OPS_hall_1", Map.empty)
     val node19 = TopoNode("OPS_hall_1M", Map.empty)
     val node20 = TopoNode("OS_hall", Map.empty)
 
