@@ -3,7 +3,7 @@ package data
 import cats.effect.IO
 import enums.TransportServicePermission.{ArriveOnly, DepartOnly}
 import enums.VisitingMode.Normal
-import enums.{PathType, TransportServicePermission, VisitingMode}
+import enums.{PathType, RoutePlanningPreferences, TransportServicePermission, VisitingMode}
 
 import scala.collection.mutable
 
@@ -75,12 +75,33 @@ class TransportGraph private(
     startGraph: NavigationGraph,
     goalGraph: NavigationGraph,
     floorNameList: List[String],
+    preference: RoutePlanningPreferences,
     returnIndex: Int
   ): TransportationPath = {
     val startNodes = nodes.filter(_.ownerGraph == startGraph)
     val goalNodes = nodes.filter(_.ownerGraph == goalGraph)
-    // TODO: Try findPath for all possible combinations
-    TransportationPath(List.empty, List.empty)
+    preference match{
+      case RoutePlanningPreferences.MinimizeTime =>
+        val allPaths = mutable.ListBuffer[TransportationPath]()
+        for (startNode <- startNodes){
+          for (goalNode <- goalNodes){
+            val pathOption = findPath(startNode, goalNode, floorNameList)
+            pathOption match{
+              case Some(path) => allPaths += path
+              case None => ()
+            }
+          }
+        }
+        val sortedPaths = allPaths.sortBy(_.totalCost)
+        if (sortedPaths.isDefinedAt(returnIndex)){
+          TransportationPath(sortedPaths(returnIndex).routeNodes, sortedPaths(returnIndex).routeEdges)
+        }
+        else{
+          throw new RuntimeException("Fuzzy Transport Path: returnIndex out of bounds")
+        }
+      case _ => TransportationPath(List.empty, List.empty)// Other preferences not implemented yet
+    }
+
   }
 
   def findPathFuzzy(
@@ -274,12 +295,6 @@ case class TransportEdge(
   target: StationNode,
   cost: Double
 )
-
-
-
-
-
-
 
 
 
