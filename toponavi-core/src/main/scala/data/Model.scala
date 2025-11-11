@@ -20,7 +20,9 @@ case class TopoNode(
 case class GlobalNode(
   owningGraph: NavigationGraph,
   localNode: TopoNode
-)
+) {
+  override def toString: String = s"(${owningGraph.identifier}: ${localNode.identifier})"
+}
 
 object GlobalNode {
   def fromTopoNode(graph: NavigationGraph, node: TopoNode): GlobalNode = {

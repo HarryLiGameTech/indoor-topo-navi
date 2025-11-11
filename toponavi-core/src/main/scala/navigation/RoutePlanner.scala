@@ -1,6 +1,6 @@
 package navigation
 
-import data.{GlobalNode, NavigatablePath, NavigationGraph, NavigationOutputPath, RouteEdge, StationNode, TopoNode, TransportGraph}
+import data.{GlobalNode, NavigationGraph, NavigationOutputPath, RouteEdge, TopoNode, TransportGraph}
 import enums.{NavigationError, RouteEdgeCategory, RoutePlanningPreferences}
 import enums.NavigationError.{InvalidData, NoRouteFound}
 
@@ -186,6 +186,15 @@ class RoutePlanner private(
     s"RoutePlanner with ${graphs.size}, isHighRise=$isHighRise)"
   }
 
+}
+
+object RoutePlanner {
+  def apply(
+    graphs: Map[String, NavigationGraph],
+    transportGraph: TransportGraph,
+    subMapNames: List[String],
+    isHighRise: Boolean
+  ): RoutePlanner = new RoutePlanner(graphs, transportGraph, subMapNames, isHighRise)
 }
 
 def trim(stationNodeId: String): String = {
