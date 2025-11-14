@@ -140,7 +140,9 @@ class TransportGraph private(
     0.01 * indexDifference
   }
 
+  // TODO: Distinguish transfer edge from elevator-ride edge
   private def distanceBetween(from: StationNode, to: StationNode): Double = {
+    println(from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph))
     // Use the line's travel time
     from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
   }
