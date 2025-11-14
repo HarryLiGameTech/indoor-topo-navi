@@ -1,7 +1,7 @@
 import data.{AtomicPath, ElevatorBank, NavigationGraph, TopoNode, TransportGraph}
 import enums.RoutePlanningPreferences.MinimizeTime
 import enums.VisitingMode.Normal
-import enums.{AttributeValue, PathType, TransportServicePermission, VisitingMode}
+import enums.{AttributeValue, PathType, RoutePlanningPreferences, TransportServicePermission, VisitingMode}
 import navigation.RoutePlanner
 
 import scala.collection.mutable
@@ -9,37 +9,17 @@ import scala.collection.mutable
 
 
 object RoutePlanningTester extends App{
-  // TODO: Add the following elevators (along with their respective NavigationGraphs. Only <elevator_bank>_hall nodes are needed in each graph, leave the edge list EMPTY):
-  // floor52 is 200 height, and each floor above adds 4 height
-
-  // FS4 (Modify): B1, 1, 28, 52, 72, 89
-  // LS9: 52-65
-  // S2: 1, 52
-
-
-/*  val floor100: NavigationGraph = generateFloor100Map()
-  val floor96: NavigationGraph = generateFloor96Map()
-  val floor94: NavigationGraph = generateFloor94Map()
-  val floor1: NavigationGraph = generateFloor1Map()
-  val floorB1: NavigationGraph = generateFloorB1Map()
-  val floor89: NavigationGraph = generateFloor89Map()
-
-  val floor28: NavigationGraph = generateFloorMapWithElevatorOnly("floor28", "FS4_hall")
-  val floor72: NavigationGraph = generateFloorMapWithElevatorOnly("floor72", "FS4_hall")
-  for(i <- 52 to 65){
-//    val floorX: NavigationGraph = generateFloorMapWithElevatorOnly(s"floor$i", "LS9_hall")
-    // TODO: 不能更改变量名称，用Map来存
-  }*/
 
   val floorMap: Map[String, NavigationGraph] = Map(
     "floor100" -> generateFloor100Map(),
     "floor96" -> generateFloor96Map(),
     "floor94" -> generateFloor94Map(),
+    "floor3" -> generateFloor3Map(),
     "floor1" -> generateFloor1Map(),
     "floorB1" -> generateFloorB1Map(),
     "floor89" -> generateFloor89Map(),
     "floor52" -> generateFloor52Map(),
-    "floor28" -> generateFloorMapWithElevatorOnly("floor28", "FS4_hall"),
+    "floor28" -> generateFloor28Map(),
     "floor72" -> generateFloorMapWithElevatorOnly("floor72", "FS4_hall")
   ) ++ (53 to 65).map { i =>
     s"floor$i" -> generateFloorMapWithElevatorOnly(s"floor$i", "LS9_hall")
@@ -54,7 +34,7 @@ object RoutePlanningTester extends App{
       floorMap("floor96") -> floorMap("floor96").nodes.find(n => n.identifier == "FS10_hall").get
     ),
     stationLocations = Map(floorMap("floor100") -> 475, floorMap("floor96") -> 435),
-    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted), // DONT GIVE A SHIT
+    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
     maxVelocity = 1.75,
     acceleration = 1.0
   )
@@ -67,7 +47,7 @@ object RoutePlanningTester extends App{
       floorMap("floor89") -> floorMap("floor89").nodes.find(n => n.identifier == "FS8_hall").get
     ),
     stationLocations = Map(floorMap("floor96") -> 435, floorMap("floor94") -> 425, floorMap("floor89") -> 390),
-    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted), // DONT GIVE A SHIT
+    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted), 
     maxVelocity = 1.75,
     acceleration = 1.0
   )
@@ -76,10 +56,11 @@ object RoutePlanningTester extends App{
     identifier = "GE",
     stationNodes = Map(
       floorMap("floor94") -> floorMap("floor94").nodes.find(n => n.identifier == "GE_hall").get,
+      floorMap("floor3") -> floorMap("floor3").nodes.find(n => n.identifier == "GE_hall").get,
       floorMap("floorB1") -> floorMap("floorB1").nodes.find(n => n.identifier == "GE_hall").get
     ),
-    stationLocations = Map(floorMap("floor94") -> 425, floorMap("floorB1") -> -10),
-    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted), // DONT GIVE A SHIT
+    stationLocations = Map(floorMap("floor94") -> 425, floorMap("floor3") -> 10, floorMap("floorB1") -> -5),
+    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
     maxVelocity = 8.0,
     acceleration = 1.0
   )
@@ -95,8 +76,20 @@ object RoutePlanningTester extends App{
       floorMap("floorB1") -> floorMap("floorB1").nodes.find(n => n.identifier == "FS4_hall").get,
 
     ),
-    stationLocations = Map(floorMap("floor89") -> 390, floorMap("floor72") -> 280, floorMap("floor52") -> 200, floorMap("floor28") -> 100, floorMap("floor1") -> 0, floorMap("floorB1") -> -10),
-    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted), // DONT GIVE A SHIT
+    stationLocations = Map(floorMap("floor89") -> 390, floorMap("floor72") -> 280, floorMap("floor52") -> 200, floorMap("floor28") -> 100, floorMap("floor1") -> 0, floorMap("floorB1") -> -5),
+    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+    maxVelocity = 6.0,
+    acceleration = 1.0
+  )
+
+  val S1 = ElevatorBank(
+    identifier = "S1",
+    stationNodes = Map(
+      floorMap("floor28") -> floorMap("floor28").nodes.find(n => n.identifier == "S1_hall").get,
+      floorMap("floor1") -> floorMap("floor1").nodes.find(n => n.identifier == "S1_hall").get,
+    ),
+    stationLocations = Map(floorMap("floor1") -> 0, floorMap("floor28") -> 100),
+    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
     maxVelocity = 6.0,
     acceleration = 1.0
   )
@@ -108,8 +101,8 @@ object RoutePlanningTester extends App{
       floorMap("floor1") -> floorMap("floor1").nodes.find(n => n.identifier == "S2_hall").get,
     ),
     stationLocations = Map(floorMap("floor1") -> 0, floorMap("floor52") -> 200),
-    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted), // DONT GIVE A SHIT
-    maxVelocity = 6.0,
+    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+    maxVelocity = 10.0,
     acceleration = 1.0
   )
 
@@ -148,16 +141,29 @@ object RoutePlanningTester extends App{
       floorMap("floor65") -> 252
     ),
     stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted), // DONT GIVE A SHIT
-    maxVelocity = 6.0,
-    acceleration = 1.0
+    maxVelocity = 1.25,
+    acceleration = 0.7
   )
 
-  val transportGraph = TransportGraph(List(FS10, FS8, GE, FS4, S2, LS9))
+  val CP = ElevatorBank(
+    identifier = "CP",
+    stationNodes = Map(
+      floorMap("floor3") -> floorMap("floor3").nodes.find(n => n.identifier == "CP_hall").get,
+      floorMap("floor1") -> floorMap("floor1").nodes.find(n => n.identifier == "CP_hall").get,
+      floorMap("floorB1") -> floorMap("floorB1").nodes.find(n => n.identifier == "CP_hall").get
+    ),
+    stationLocations = Map(floorMap("floor3") -> 10, floorMap("floor1") -> 0, floorMap("floorB1") -> -5),
+    stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+    maxVelocity = 1.5,
+    acceleration = 0.8
+  )
+
+  val transportGraph = TransportGraph(List(FS10, FS8, GE, FS4, S1, S2, LS9, CP))
 
   // Test precise pathfinding for transport
   if (transportGraph.nodes.size >= 2) {
     val start = transportGraph.nodes.find(node => node.identifier == "FS10@floor100").getOrElse(throw RuntimeException(""))
-    val goal = transportGraph.nodes.find(node => node.identifier == "LS9@floor64").getOrElse(throw RuntimeException(""))
+    val goal = transportGraph.nodes.find(node => node.identifier == "CP@floor1").getOrElse(throw RuntimeException(""))
 
     println(s"\n=== Testing Path Finding ===")
     println(s"Start: ${start.identifier}")
@@ -168,7 +174,7 @@ object RoutePlanningTester extends App{
       "floor100", "floor96", "floor94", "floor89",
       "floor72", "floor65", "floor64", "floor63", "floor62", "floor61", "floor60",
       "floor59", "floor58", "floor57", "floor56", "floor55", "floor54", "floor53",
-      "floor52", "floor28", "floor1", "floorB1"
+      "floor52", "floor28", "floor3", "floor1", "floorB1"
     ))
     result match {
       case Some(path) =>
@@ -186,9 +192,9 @@ object RoutePlanningTester extends App{
   // Test fuzzy pathfinding for transport
   if (transportGraph.nodes.size >= 2) {
     val start = floorMap("floor100")
-    val target = floorMap("floor89")
+    val target = floorMap("floor1")
 
-    val result = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor1", "floorB1"), MinimizeTime, 0)
+    val result = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 0)
     result match {
       case Some(path) =>
         println(s"\n=== Testing Fuzzy Path Finding with Solution 0 ===")
@@ -203,9 +209,9 @@ object RoutePlanningTester extends App{
     }
 
     val start1 = floorMap("floor100")
-    val target1 = floorMap("floor89")
+    val target1 = floorMap("floor1")
 
-    val result1 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor1", "floorB1"), MinimizeTime, 1)
+    val result1 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 1)
     result1 match {
       case Some(path) =>
         println(s"\n=== Testing Fuzzy Path Finding with Solution 1 ===")
@@ -220,9 +226,9 @@ object RoutePlanningTester extends App{
     }
 
     val start2 = floorMap("floor100")
-    val target2 = floorMap("floor89")
+    val target2 = floorMap("floor1")
 
-    val result2 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor1", "floorB1"), MinimizeTime, 2)
+    val result2 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 2)
     result2 match {
       case Some(path) =>
         println(s"\n=== Testing Fuzzy Path Finding with Solution 2 ===")
@@ -235,21 +241,57 @@ object RoutePlanningTester extends App{
       case None =>
         println("No fuzzy path found for solution 2")
     }
+
+    val start3 = floorMap("floor100")
+    val target3 = floorMap("floor1")
+
+    val result3 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 3)
+    result3 match {
+      case Some(path) =>
+        println(s"\n=== Testing Fuzzy Path Finding with Solution 3 ===")
+        println(s"Start: ${start.identifier}")
+        println(s"Goal: ${target.identifier}")
+        println(s"Path found with ${path.routeNodes.size} nodes:")
+        path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
+        println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
+        path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
+      case None =>
+        println("No fuzzy path found for solution 3")
+    }
   }
+
+
+
+
+
+
 
   // TEST NAVIGATE BEGIN //
   val routePlanner = RoutePlanner(floorMap, transportGraph, List(
     "floor100", "floor96", "floor94", "floor89",
     "floor72", "floor65", "floor64", "floor63", "floor62", "floor61", "floor60",
     "floor59", "floor58", "floor57", "floor56", "floor55", "floor54", "floor53",
-    "floor52", "floor28", "floor1", "floorB1"
+    "floor52", "floor28", "floor3", "floor1", "floorB1"
   ), true)
 
-  routePlanner.navigate("floor100", "floor64", "FS10_hall", "LS9_hall", Normal) match {
+  routePlanner.navigate("floor100", "floor3", "FS10_hall", "CP_hall", Normal, RoutePlanningPreferences.MinimizeTime) match {
     case Right(navigationPath) =>
       println(s"\n=== Testing RoutePlanner Navigate ===")
-      println(s"Start: floor100@FS10_hall")
-      println(s"Goal: floor64@LS9_hall")
+//      println(s"Start: floor100@FS10_hall")
+//      println(s"Goal: floor64@LS9_hall")
+      println(s"Path found with ${navigationPath.routeNodes.size} nodes:")
+      navigationPath.routeNodes.foreach(node => println(s"   → ${node.toString}"))
+      println(s"With ${navigationPath.routeEdges.size} AtomicPaths, taking ${navigationPath.totalCost} seconds:")
+      navigationPath.routeEdges.foreach(edge => println(s"   ${edge.source.toString} => ${edge.target.toString} takes ${edge.cost} seconds"))
+    case Left(error) =>
+      println(s"Navigation error: ${error}")
+  }
+
+  routePlanner.navigate("floor3", "floor1", "CP_hall", "CP_hall", Normal, RoutePlanningPreferences.MinimizeTime) match {
+    case Right(navigationPath) =>
+      println(s"\n=== Testing RoutePlanner Navigate ===")
+      //      println(s"Start: floor100@FS10_hall")
+      //      println(s"Goal: floor64@LS9_hall")
       println(s"Path found with ${navigationPath.routeNodes.size} nodes:")
       navigationPath.routeNodes.foreach(node => println(s"   → ${node.toString}"))
       println(s"With ${navigationPath.routeEdges.size} AtomicPaths, taking ${navigationPath.totalCost} seconds:")
@@ -303,16 +345,16 @@ object RoutePlanningTester extends App{
 
     // Create all TopoNodes according to the DSL
     val node1 = TopoNode("FS10_hall", Map.empty)
-    val node2 = TopoNode("gallery", Map.empty)
+    val node2 = TopoNode("maintenance_hall", Map.empty)
     val node3 = TopoNode("FS8_hall", Map.empty)
     floor96Nodes ++= List(
       node1, node2, node3
     )
 
-    floor96Edges += AtomicPath(node1, node2, Map(VisitingMode.Normal -> 1.0), PathType.General) // FS10_hall <-> gallery
+    floor96Edges += AtomicPath(node1, node2, Map(VisitingMode.Normal -> 1.0), PathType.General) // FS10_hall <-> maintenance_hall
     floor96Edges += AtomicPath(node2, node1, Map(VisitingMode.Normal -> 1.0), PathType.General)
 
-    floor96Edges += AtomicPath(node2, node3, Map(VisitingMode.Normal -> 1.0), PathType.General) // gallery <-> FS8_hall
+    floor96Edges += AtomicPath(node2, node3, Map(VisitingMode.Normal -> 1.0), PathType.General) // maintenance_hall <-> FS8_hall
     floor96Edges += AtomicPath(node3, node2, Map(VisitingMode.Normal -> 1.0), PathType.General)
 
     NavigationGraph("floor96", floor96Nodes.toList, floor96Edges.toList) // TODO: Modify this
@@ -331,14 +373,14 @@ object RoutePlanningTester extends App{
       node1, node2, node3, node4
     )
 
-    floor94Edges += AtomicPath(node1, node2, Map(VisitingMode.Normal -> 1.0), PathType.General) // FS8_hall <-> shops
-    floor94Edges += AtomicPath(node2, node1, Map(VisitingMode.Normal -> 1.0), PathType.General)
+    floor94Edges += AtomicPath(node1, node2, Map(VisitingMode.Normal -> 12.0), PathType.General) // FS8_hall <-> shops
+    floor94Edges += AtomicPath(node2, node1, Map(VisitingMode.Normal -> 12.0), PathType.General)
 
-    floor94Edges += AtomicPath(node2, node3, Map(VisitingMode.Normal -> 1.0), PathType.General) // shops <-> toilet
-    floor94Edges += AtomicPath(node3, node2, Map(VisitingMode.Normal -> 1.0), PathType.General)
+    floor94Edges += AtomicPath(node2, node3, Map(VisitingMode.Normal -> 12.0), PathType.General) // shops <-> toilet
+    floor94Edges += AtomicPath(node3, node2, Map(VisitingMode.Normal -> 12.0), PathType.General)
 
-    floor94Edges += AtomicPath(node3, node4, Map(VisitingMode.Normal -> 1.0), PathType.General) // toilet <-> GE_hall
-    floor94Edges += AtomicPath(node4, node3, Map(VisitingMode.Normal -> 1.0), PathType.General)
+    floor94Edges += AtomicPath(node3, node4, Map(VisitingMode.Normal -> 8.0), PathType.General) // toilet <-> GE_hall
+    floor94Edges += AtomicPath(node4, node3, Map(VisitingMode.Normal -> 8.0), PathType.General)
 
     NavigationGraph("floor94", floor94Nodes.toList, floor94Edges.toList) // TODO: Modify this
   }
@@ -363,18 +405,68 @@ object RoutePlanningTester extends App{
     NavigationGraph("floor52", floor52Nodes.toList, floor52Edges.toList)
   }
 
+  def generateFloor28Map(): NavigationGraph = {
+    val floor28Nodes = mutable.ListBuffer[TopoNode]()
+    val floor28Edges = mutable.ListBuffer[AtomicPath]()
+
+    // Create all TopoNodes according to the DSL
+    val node_fs4 = TopoNode("FS4_hall", Map.empty)
+    val node_s1 = TopoNode("S1_hall", Map.empty)
+    val node_amenities = TopoNode("amenities", Map.empty)
+    floor28Edges += AtomicPath(node_fs4, node_amenities, Map(VisitingMode.Normal -> 1.0), PathType.General) // FS4_hall  -> amenities
+
+    floor28Edges += AtomicPath(node_amenities, node_s1, Map(VisitingMode.Normal -> 1.0), PathType.General) // amenities <-> S1_hall
+    floor28Edges += AtomicPath(node_s1, node_amenities, Map(VisitingMode.Normal -> 1.0), PathType.General)
+    floor28Nodes ++= List(
+      node_fs4, node_s1, node_amenities
+    )
+
+    NavigationGraph("floor28", floor28Nodes.toList, floor28Edges.toList)
+  }
+
+  def generateFloor3Map(): NavigationGraph = {
+    val floor3Nodes = mutable.ListBuffer[TopoNode]()
+    val floor3Edges = mutable.ListBuffer[AtomicPath]()
+
+    // Create all TopoNodes according to the DSL
+    val node_ge = TopoNode("GE_hall", Map.empty)
+    val node_shops = TopoNode("shops", Map.empty)
+    val node_cp = TopoNode("CP_hall", Map.empty)
+    floor3Nodes ++= List(
+      node_ge, node_shops, node_cp
+    )
+
+    floor3Edges += AtomicPath(node_ge, node_shops, Map(VisitingMode.Normal -> 10.0), PathType.General) // GE_hall <-> shops
+    floor3Edges += AtomicPath(node_shops, node_ge, Map(VisitingMode.Normal -> 10.0), PathType.General)
+    floor3Edges += AtomicPath(node_shops, node_cp, Map(VisitingMode.Normal -> 15.0), PathType.General) // shops <-> CP_hall
+    floor3Edges += AtomicPath(node_cp, node_shops, Map(VisitingMode.Normal -> 15.0), PathType.General)
+
+    NavigationGraph("floor3", floor3Nodes.toList, floor3Edges.toList)
+  }
+
   def generateFloor1Map(): NavigationGraph = {
     val floor1Nodes = mutable.ListBuffer[TopoNode]()
     val floor1Edges = mutable.ListBuffer[AtomicPath]()
 
     // Create all TopoNodes according to the DSL
-    val node1 = TopoNode("FS4_hall", Map.empty)
-    val node2 = TopoNode("S2_hall", Map.empty)
+    val node_fs4 = TopoNode("FS4_hall", Map.empty)
+    val node_s2 = TopoNode("S2_hall", Map.empty)
+    val node_s1 = TopoNode("S1_hall", Map.empty)
+    val node_cp = TopoNode("CP_hall", Map.empty)
+    floor1Edges += AtomicPath(node_fs4, node_s1, Map(VisitingMode.Normal -> 12.0), PathType.General) // S1_hall <-  FS4_hall
+    floor1Edges += AtomicPath(node_fs4, node_cp, Map(VisitingMode.Normal -> 15.0), PathType.General) // CP_hall <-  FS4_hall
+
+    floor1Edges += AtomicPath(node_s2, node_cp, Map(VisitingMode.Normal -> 5.0), PathType.General) // CP_hall <->  S2_hall
+    floor1Edges += AtomicPath(node_cp, node_s2, Map(VisitingMode.Normal -> 5.0), PathType.General)
+
+    floor1Edges += AtomicPath(node_s1, node_cp, Map(VisitingMode.Normal -> 35.0), PathType.General) // CP_hall <->  S1_hall
+    floor1Edges += AtomicPath(node_cp, node_s1, Map(VisitingMode.Normal -> 35.0), PathType.General)
     floor1Nodes ++= List(
-      node1, node2
+      node_fs4, node_s1, node_s2, node_cp
     )
 
-    NavigationGraph("floor1", floor1Nodes.toList, floor1Edges.toList) // TODO: Modify this
+
+    NavigationGraph("floor1", floor1Nodes.toList, floor1Edges.toList)
   }
 
   def generateFloorB1Map(): NavigationGraph = {
@@ -382,20 +474,24 @@ object RoutePlanningTester extends App{
     val floorB1Edges = mutable.ListBuffer[AtomicPath]()
 
     // Create all TopoNodes according to the DSL
-    val node1 = TopoNode("GE_hall", Map.empty)
-    val node2 = TopoNode("entrance", Map.empty)
-    val node3 = TopoNode("FS4_hall", Map.empty)
+    val node_ge = TopoNode("GE_hall", Map.empty)
+    val node_entrance = TopoNode("entrance", Map.empty)
+    val node_fs4 = TopoNode("FS4_hall", Map.empty)
+    val node_cp = TopoNode("CP_hall", Map.empty)
     floorB1Nodes ++= List(
-      node1, node2, node3
+      node_ge, node_entrance, node_fs4, node_cp
     )
 
-    floorB1Edges += AtomicPath(node1, node2, Map(VisitingMode.Normal -> 1.0), PathType.General) // GE_hall <-> entrance
-    floorB1Edges += AtomicPath(node2, node1, Map(VisitingMode.Normal -> 1.0), PathType.General)
+    floorB1Edges += AtomicPath(node_ge, node_entrance, Map(VisitingMode.Normal -> 15.0), PathType.General) // GE_hall <-> entrance
+    floorB1Edges += AtomicPath(node_entrance, node_ge, Map(VisitingMode.Normal -> 15.0), PathType.General)
 
-    floorB1Edges += AtomicPath(node2, node3, Map(VisitingMode.Normal -> 1.0), PathType.General) // entrance <-> FS4_hall
-    floorB1Edges += AtomicPath(node3, node2, Map(VisitingMode.Normal -> 1.0), PathType.General)
+    floorB1Edges += AtomicPath(node_entrance, node_cp, Map(VisitingMode.Normal -> 20.0), PathType.General) // entrance <-> FS4_hall
+    floorB1Edges += AtomicPath(node_cp, node_entrance, Map(VisitingMode.Normal -> 20.0), PathType.General)
 
-    NavigationGraph("floorB1", floorB1Nodes.toList, floorB1Edges.toList) // TODO: Modify this
+    floorB1Edges += AtomicPath(node_fs4, node_cp, Map(VisitingMode.Normal -> 40.0), PathType.General) // FS4_hall <-> CP_hall
+    floorB1Edges += AtomicPath(node_cp, node_fs4, Map(VisitingMode.Normal -> 40.0), PathType.General)
+
+    NavigationGraph("floorB1", floorB1Nodes.toList, floorB1Edges.toList)
   }
 
   def generateFloor89Map(): NavigationGraph = {
@@ -417,7 +513,7 @@ object RoutePlanningTester extends App{
     floor89Edges += AtomicPath(node3, node4, Map(VisitingMode.Normal -> 1.0), PathType.General) // FS4_hall <-> refuge_B
     floor89Edges += AtomicPath(node4, node3, Map(VisitingMode.Normal -> 1.0), PathType.General)
 
-    NavigationGraph("floor89", floor89Nodes.toList, floor89Edges.toList) // TODO: Modify this
+    NavigationGraph("floor89", floor89Nodes.toList, floor89Edges.toList)
   }
 
   def generateFloorMapWithElevatorOnly(floorName: String, elevatorName: String): NavigationGraph = {
@@ -430,6 +526,6 @@ object RoutePlanningTester extends App{
       node1
     )
 
-    NavigationGraph(s"${floorName}", floorNodes.toList, floorEdges.toList) // TODO: Modify this
+    NavigationGraph(s"${floorName}", floorNodes.toList, floorEdges.toList)
   }
 }

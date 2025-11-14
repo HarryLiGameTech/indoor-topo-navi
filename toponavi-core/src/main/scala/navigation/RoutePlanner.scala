@@ -19,7 +19,8 @@ class RoutePlanner private(
     goalGraphName: String,
     sourceNodeName: String,
     goalNodeName: String,
-    visitingMode: enums.VisitingMode
+    visitingMode: enums.VisitingMode,
+    preferences: RoutePlanningPreferences
   ): Either[NavigationError, NavigationOutputPath] = {
     // This would involve combining intra-map paths and transportation paths
     // to create a complete route from startNode in startGraph to goalNode in goalGraph
@@ -29,7 +30,6 @@ class RoutePlanner private(
         (sourceGraph.nodes.find(_.identifier == sourceNodeName),
           goalGraph.nodes.find(_.identifier == goalNodeName)) match {
           case (Some(sourceNode), Some(goalNode)) =>
-            // TODO: Route planning logic goes here
             if isHighRise then{
               findRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode)
             }

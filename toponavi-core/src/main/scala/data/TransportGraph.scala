@@ -81,25 +81,28 @@ class TransportGraph private(
     val startNodes = nodes.filter(_.ownerGraph == startGraph)
     val goalNodes = nodes.filter(_.ownerGraph == goalGraph)
     preference match{
-      case RoutePlanningPreferences.MinimizeTime =>
+      case RoutePlanningPreferences.MinimizeTime => {
         val allPaths = mutable.ListBuffer[TransportationPath]()
-        for (startNode <- startNodes){
-          for (goalNode <- goalNodes){
+        for (startNode <- startNodes) {
+          for (goalNode <- goalNodes) {
             val pathOption = findPath(startNode, goalNode, floorNameList)
-            pathOption match{
+            pathOption match {
               case Some(path) => allPaths += path
               case None => ()
             }
           }
         }
         val sortedPaths = allPaths.sortBy(_.totalCost)
-        if (returnIndex >= 0 && returnIndex < sortedPaths.size){
+        if (returnIndex >= 0 && returnIndex < sortedPaths.size) {
           Some(TransportationPath(sortedPaths(returnIndex).routeNodes, sortedPaths(returnIndex).routeEdges))
         }
-        else{
+        else {
           None
         }
-      case _ => None
+      }
+      case _ => {
+        None
+      }
     }
 
   }
@@ -132,8 +135,9 @@ class TransportGraph private(
     }
 
     // Calculate the absolute index difference and multiply by 2.5
+    // TODO: Enhance heuristic value, this is too NAIVE
     val indexDifference = math.abs(fromIndex - toIndex)
-    2.5 * indexDifference
+    0.01 * indexDifference
   }
 
   private def distanceBetween(from: StationNode, to: StationNode): Double = {
