@@ -11,6 +11,7 @@
           </set>
         </option>
         <option name="sbtVersion" value="1.11.6" />
+        <option name="separateProdAndTestSources" value="false" />
       </SbtProjectSettings>
     </option>
   </component>
