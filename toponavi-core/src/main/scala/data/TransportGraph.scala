@@ -26,6 +26,9 @@ class TransportGraph private(
     val fScore = mutable.Map[StationNode, Double]().withDefaultValue(Double.PositiveInfinity)
     val cameFrom = mutable.Map[StationNode, StationNode]()
 
+    var bestPath: Option[TransportationPath] = None
+    var bestCost = Double.PositiveInfinity
+
     // Initialize starting node
     gScore(start) = 0.0
     fScore(start) = heuristic(start, goal, floorNameList)
@@ -45,27 +48,38 @@ class TransportGraph private(
         // So we allow duplicate nodes with different scores
         ()
       } else {
-        // Explore neighbors
-        for (neighbor <- adjacencyList.getOrElse(current, Nil)) {
-          // Tentative gScore is distance from start to neighbor through current
-          val tentativeGScore = gScore(current) + distanceBetween(current, neighbor)
+        // If we reached the goal, record it but don't return yet
+        if (current == goal) {
+          val pathCost = gScore(current)
+          if (pathCost < bestCost) {
+            bestCost = pathCost
+            bestPath = Some(reconstructPath(cameFrom, current))
+          }
+          // Continue searching - there might be a better path we haven't found yet
+        }
 
-          // If we found a better path to neighbor
-          if (tentativeGScore < gScore(neighbor)) {
-            // This path to neighbor is better than any previous one
-            cameFrom(neighbor) = current
-            gScore(neighbor) = tentativeGScore
-            fScore(neighbor) = tentativeGScore + heuristic(neighbor, goal, floorNameList)
+        // Only explore neighbors if current path might lead to a better solution
+        if (gScore(current) < bestCost) {
+          for (neighbor <- adjacencyList.getOrElse(current, Nil)) {
+            val tentativeGScore = gScore(current) + distanceBetween(current, neighbor)
 
-            // Add to open set (we don't have decrease-key, so we allow duplicates)
-            openSet.enqueue((neighbor, fScore(neighbor)))
+            if (tentativeGScore < gScore(neighbor)) {
+              cameFrom(neighbor) = current
+              gScore(neighbor) = tentativeGScore
+              fScore(neighbor) = tentativeGScore + heuristic(neighbor, goal, floorNameList)
+
+              // Only enqueue if this path might be better than our current best
+              if (fScore(neighbor) < bestCost) {
+                openSet.enqueue((neighbor, fScore(neighbor)))
+              }
+            }
           }
         }
       }
     }
 
-    // No path found
-    None
+    //
+    bestPath
   }
 
 
@@ -141,8 +155,23 @@ class TransportGraph private(
   }
 
   private def distanceBetween(from: StationNode, to: StationNode): Double = {
-    // Use the line's travel time
-    from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
+    if (from.ownerLine == to.ownerLine){
+      // Use the line's travel time
+      from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
+    }
+    else{
+      // Use the transfer time via the navigation graph
+      from.ownerGraph.findPath(
+        from.ownerLine.stationNodes(from.ownerGraph),
+        to.ownerLine.stationNodes(to.ownerGraph),
+        VisitingMode.Normal
+      ) match{
+        case Some(path) =>
+          path.totalCost(VisitingMode.Normal)
+        case None =>
+          Double.PositiveInfinity // No valid transfer path
+      }
+    }
   }
 
   // TODO: Option[TransportationPath]
