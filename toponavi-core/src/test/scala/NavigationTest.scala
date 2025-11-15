@@ -189,76 +189,76 @@ object RoutePlanningTester extends App{
     println("Not enough nodes to test path finding")
   }
 
-  // Test fuzzy pathfinding for transport
-  if (transportGraph.nodes.size >= 2) {
-    val start = floorMap("floor100")
-    val target = floorMap("floor1")
-
-    val result = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 0)
-    result match {
-      case Some(path) =>
-        println(s"\n=== Testing Fuzzy Path Finding with Solution 0 ===")
-        println(s"Start: ${start.identifier}")
-        println(s"Goal: ${target.identifier}")
-        println(s"Path found with ${path.routeNodes.size} nodes:")
-        path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
-        println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
-        path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
-      case None =>
-        println("No fuzzy path found")
-    }
-
-    val start1 = floorMap("floor100")
-    val target1 = floorMap("floor1")
-
-    val result1 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 1)
-    result1 match {
-      case Some(path) =>
-        println(s"\n=== Testing Fuzzy Path Finding with Solution 1 ===")
-        println(s"Start: ${start.identifier}")
-        println(s"Goal: ${target.identifier}")
-        println(s"Path found with ${path.routeNodes.size} nodes:")
-        path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
-        println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
-        path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
-      case None =>
-        println("No fuzzy path found")
-    }
-
-    val start2 = floorMap("floor100")
-    val target2 = floorMap("floor1")
-
-    val result2 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 2)
-    result2 match {
-      case Some(path) =>
-        println(s"\n=== Testing Fuzzy Path Finding with Solution 2 ===")
-        println(s"Start: ${start.identifier}")
-        println(s"Goal: ${target.identifier}")
-        println(s"Path found with ${path.routeNodes.size} nodes:")
-        path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
-        println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
-        path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
-      case None =>
-        println("No fuzzy path found for solution 2")
-    }
-
-    val start3 = floorMap("floor100")
-    val target3 = floorMap("floor1")
-
-    val result3 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 3)
-    result3 match {
-      case Some(path) =>
-        println(s"\n=== Testing Fuzzy Path Finding with Solution 3 ===")
-        println(s"Start: ${start.identifier}")
-        println(s"Goal: ${target.identifier}")
-        println(s"Path found with ${path.routeNodes.size} nodes:")
-        path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
-        println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
-        path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
-      case None =>
-        println("No fuzzy path found for solution 3")
-    }
-  }
+//  // Test fuzzy pathfinding for transport
+//  if (transportGraph.nodes.size >= 2) {
+//    val start = floorMap("floor3")
+//    val target = floorMap("floor89")
+//
+//    val result = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 0)
+//    result match {
+//      case Some(path) =>
+//        println(s"\n=== Testing Fuzzy Path Finding with Solution 0 ===")
+//        println(s"Start: ${start.identifier}")
+//        println(s"Goal: ${target.identifier}")
+//        println(s"Path found with ${path.routeNodes.size} nodes:")
+//        path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
+//        println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
+//        path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
+//      case None =>
+//        println("No fuzzy path found")
+//    }
+//
+//    val start1 = floorMap("floor3")
+//    val target1 = floorMap("floor89")
+//
+//    val result1 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 1)
+//    result1 match {
+//      case Some(path) =>
+//        println(s"\n=== Testing Fuzzy Path Finding with Solution 1 ===")
+//        println(s"Start: ${start.identifier}")
+//        println(s"Goal: ${target.identifier}")
+//        println(s"Path found with ${path.routeNodes.size} nodes:")
+//        path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
+//        println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
+//        path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
+//      case None =>
+//        println("No fuzzy path found")
+//    }
+//
+//    val start2 = floorMap("floor3")
+//    val target2 = floorMap("floor89")
+//
+//    val result2 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 2)
+//    result2 match {
+//      case Some(path) =>
+//        println(s"\n=== Testing Fuzzy Path Finding with Solution 2 ===")
+//        println(s"Start: ${start.identifier}")
+//        println(s"Goal: ${target.identifier}")
+//        println(s"Path found with ${path.routeNodes.size} nodes:")
+//        path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
+//        println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
+//        path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
+//      case None =>
+//        println("No fuzzy path found for solution 2")
+//    }
+//
+//    val start3 = floorMap("floor100")
+//    val target3 = floorMap("floor1")
+//
+//    val result3 = transportGraph.findPathFuzzy(start, target, List("floor100", "floor96", "floor94", "floor89", "floor3", "floor1", "floorB1"), MinimizeTime, 3)
+//    result3 match {
+//      case Some(path) =>
+//        println(s"\n=== Testing Fuzzy Path Finding with Solution 3 ===")
+//        println(s"Start: ${start.identifier}")
+//        println(s"Goal: ${target.identifier}")
+//        println(s"Path found with ${path.routeNodes.size} nodes:")
+//        path.routeNodes.foreach(node => println(s"   → ${node.identifier}"))
+//        println(s"With ${path.routeEdges.size} AtomicPaths, taking ${path.totalCost} seconds:")
+//        path.routeEdges.foreach(edge => println(s"   ${edge.source.identifier} => ${edge.target.identifier} takes ${edge.cost} seconds"))
+//      case None =>
+//        println("No fuzzy path found for solution 3")
+//    }
+//  }
 
 
 
@@ -274,20 +274,20 @@ object RoutePlanningTester extends App{
     "floor52", "floor28", "floor3", "floor1", "floorB1"
   ), true)
 
-  routePlanner.navigate("floor100", "floor3", "FS10_hall", "CP_hall", Normal, RoutePlanningPreferences.MinimizeTime) match {
-    case Right(navigationPath) =>
-      println(s"\n=== Testing RoutePlanner Navigate ===")
-//      println(s"Start: floor100@FS10_hall")
-//      println(s"Goal: floor64@LS9_hall")
-      println(s"Path found with ${navigationPath.routeNodes.size} nodes:")
-      navigationPath.routeNodes.foreach(node => println(s"   → ${node.toString}"))
-      println(s"With ${navigationPath.routeEdges.size} AtomicPaths, taking ${navigationPath.totalCost} seconds:")
-      navigationPath.routeEdges.foreach(edge => println(s"   ${edge.source.toString} => ${edge.target.toString} takes ${edge.cost} seconds"))
-    case Left(error) =>
-      println(s"Navigation error: ${error}")
-  }
+//  routePlanner.navigate("floor100", "floor3", "FS10_hall", "CP_hall", Normal, RoutePlanningPreferences.MinimizeTime) match {
+//    case Right(navigationPath) =>
+//      println(s"\n=== Testing RoutePlanner Navigate ===")
+////      println(s"Start: floor100@FS10_hall")
+////      println(s"Goal: floor64@LS9_hall")
+//      println(s"Path found with ${navigationPath.routeNodes.size} nodes:")
+//      navigationPath.routeNodes.foreach(node => println(s"   → ${node.toString}"))
+//      println(s"With ${navigationPath.routeEdges.size} AtomicPaths, taking ${navigationPath.totalCost} seconds:")
+//      navigationPath.routeEdges.foreach(edge => println(s"   ${edge.source.toString} => ${edge.target.toString} takes ${edge.cost} seconds"))
+//    case Left(error) =>
+//      println(s"Navigation error: ${error}")
+//  }
 
-  routePlanner.navigate("floor3", "floor1", "CP_hall", "CP_hall", Normal, RoutePlanningPreferences.MinimizeTime) match {
+  routePlanner.navigate("floor3", "floor89", "CP_hall", "FS4_hall", Normal, RoutePlanningPreferences.MinimizeTime) match {
     case Right(navigationPath) =>
       println(s"\n=== Testing RoutePlanner Navigate ===")
       //      println(s"Start: floor100@FS10_hall")
@@ -383,6 +383,28 @@ object RoutePlanningTester extends App{
     floor94Edges += AtomicPath(node4, node3, Map(VisitingMode.Normal -> 8.0), PathType.General)
 
     NavigationGraph("floor94", floor94Nodes.toList, floor94Edges.toList) // TODO: Modify this
+  }
+
+  def generateFloor89Map(): NavigationGraph = {
+    val floor89Nodes = mutable.ListBuffer[TopoNode]()
+    val floor89Edges = mutable.ListBuffer[AtomicPath]()
+
+    // Create all TopoNodes according to the DSL
+    val node1 = TopoNode("FS8_hall", Map.empty)
+    val node2 = TopoNode("refuge_A", Map.empty)
+    val node3 = TopoNode("FS4_hall", Map.empty)
+    val node4 = TopoNode("refuge_B", Map.empty)
+    floor89Nodes ++= List(
+      node1, node2, node3, node4
+    )
+
+    floor89Edges += AtomicPath(node1, node2, Map(VisitingMode.Normal -> 3.0), PathType.General) // FS8_hall <-> refuge_A
+    floor89Edges += AtomicPath(node2, node1, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    floor89Edges += AtomicPath(node3, node4, Map(VisitingMode.Normal -> 3.0), PathType.General) // FS4_hall <-> refuge_B
+    floor89Edges += AtomicPath(node4, node3, Map(VisitingMode.Normal -> 3.0), PathType.General)
+
+    NavigationGraph("floor89", floor89Nodes.toList, floor89Edges.toList)
   }
 
   def generateFloor52Map(): NavigationGraph = {
@@ -494,27 +516,7 @@ object RoutePlanningTester extends App{
     NavigationGraph("floorB1", floorB1Nodes.toList, floorB1Edges.toList)
   }
 
-  def generateFloor89Map(): NavigationGraph = {
-    val floor89Nodes = mutable.ListBuffer[TopoNode]()
-    val floor89Edges = mutable.ListBuffer[AtomicPath]()
 
-    // Create all TopoNodes according to the DSL
-    val node1 = TopoNode("FS8_hall", Map.empty)
-    val node2 = TopoNode("refuge_A", Map.empty)
-    val node3 = TopoNode("FS4_hall", Map.empty)
-    val node4 = TopoNode("refuge_B", Map.empty)
-    floor89Nodes ++= List(
-      node1, node2, node3, node4
-    )
-
-    floor89Edges += AtomicPath(node1, node2, Map(VisitingMode.Normal -> 1.0), PathType.General) // FS8_hall <-> refuge_A
-    floor89Edges += AtomicPath(node2, node1, Map(VisitingMode.Normal -> 1.0), PathType.General)
-
-    floor89Edges += AtomicPath(node3, node4, Map(VisitingMode.Normal -> 1.0), PathType.General) // FS4_hall <-> refuge_B
-    floor89Edges += AtomicPath(node4, node3, Map(VisitingMode.Normal -> 1.0), PathType.General)
-
-    NavigationGraph("floor89", floor89Nodes.toList, floor89Edges.toList)
-  }
 
   def generateFloorMapWithElevatorOnly(floorName: String, elevatorName: String): NavigationGraph = {
     val floorNodes = mutable.ListBuffer[TopoNode]()

@@ -5,6 +5,7 @@ import enums.{NavigationError, RouteEdgeCategory, RoutePlanningPreferences}
 import enums.NavigationError.{InvalidData, NoRouteFound}
 
 import scala.collection.mutable
+import scala.util.boundary.break
 
 class RoutePlanner private(
   graphs: Map[String, NavigationGraph],
@@ -91,7 +92,7 @@ class RoutePlanner private(
             allRouteEdges ++= startPath.routeEdges.map(RouteEdge.fromAtomicPath(sourceGraph, _, visitingMode))
           case None =>
             // Recurse with next index
-            findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, transportSolutionIndex + 1)
+            return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, transportSolutionIndex + 1)
         }
 
         // 2. Add paths between interchange nodes - only when on the same floor
@@ -112,7 +113,7 @@ class RoutePlanner private(
                 allRouteEdges ++= path.routeEdges.map(RouteEdge.fromAtomicPath(currentInterchange.ownerGraph, _, visitingMode))
               case None =>
                 // Recurse with next index
-                findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, transportSolutionIndex + 1)
+                return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, transportSolutionIndex + 1)
             }
           } else {
             // Different floors - this is a vehicle-ride, so create direct transport edge
@@ -140,22 +141,11 @@ class RoutePlanner private(
               allRouteEdges ++= finalPath.routeEdges.map(RouteEdge.fromAtomicPath(goalGraph, _, visitingMode))
             case None =>
               // Recurse with next index
-              findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, transportSolutionIndex + 1)
+              return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, transportSolutionIndex + 1)
           }
         } else {
-          // Last interchange and goal are on different floors - need additional elevator
-          val transportEdge = RouteEdge(
-            source = GlobalNode(interchangeNodes.last.ownerGraph, interchangeNodes.last.localNode),
-            target = GlobalNode(goalGraph, goalNode), // Assuming goalNode needs to be converted to GlobalNode
-            cost = interchangeNodes.last.ownerLine.travelTimeBetweenStations(
-              interchangeNodes.last.ownerGraph,
-              goalGraph
-            ),
-            category = RouteEdgeCategory.Transport,
-            movementDescription = s"Take ${interchangeNodes.last.ownerLine.identifier} from ${interchangeNodes.last.ownerGraph.identifier} to ${goalGraph.identifier}"
-          )
-          allRouteEdges += transportEdge
-          allGlobalNodes += GlobalNode(goalGraph, goalNode)
+          
+          return Left(NoRouteFound("Final segment at fault"))
         }
 
         Right(NavigationOutputPath(allGlobalNodes.toList, allRouteEdges.toList))
