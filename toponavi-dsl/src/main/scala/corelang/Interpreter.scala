@@ -1,7 +1,6 @@
 package corelang
-import scala.util.control.TailCalls.*
 
-type Env = Map[Int, Value]
+import scala.util.control.TailCalls.*
 
 // Utility functions
 object util {
@@ -20,34 +19,32 @@ object util {
 
 import util._
 
-// Utility: shift all env indices by +1 (De Bruijn "lift") and insert arg at index 0
-extension (env: Env) def extend(arg: Value): Env = {
-  val shifted = env.iterator.map { case (idx, value) => (idx + 1) -> value }.toMap
-  shifted + (0 -> arg)
-}
-
-
-
 // This version prevents stack-overflow
 object Interpreter {
 
   def name: String = "Trampoline Interpreter"
 
-  def eval(term: Term)(using env: Env): Value = {
+  def eval(term: Term)(using env: Env = Environment.empty[Identifier, Type, Value]): Value = {
     evalTramp(term)(using env).result
   }
 
-  private def evalTramp(term: Term)(using env: Map[Int, Value]): TailRec[Value] = term match {
+  private def evalTramp(term: Term)(using env: Env): TailRec[Value] = term match {
 
     case Term.Var(index) =>
-      env(index) match {
-        case Value.FixThunk(annotatedType, body, captured) =>
+      env.getValue(Identifier.Index(index)) match {
+        case Some(Value.FixThunk(annotatedType, body, captured)) =>
           // When a FixThunk is looked up, evaluate its body in the captured environment
-          //  and since we cannot have self-reference when building the captured env,
-          //  we now put a simple thunk at index 0 that will evaluate to the fixpoint
-          tailcall(evalTramp(body)(using captured + (0 -> env(index).asInstanceOf[Value.FixThunk])))
-        // TODO: External symbols handling (out-of-context symbols, the z)
-        case value => done(value)
+          // with the thunk itself at index 0 for recursive reference
+          val extendedEnv = captured.addValueVar(Identifier.Index(0), Value.FixThunk(annotatedType, body, captured))
+          tailcall(evalTramp(body)(using extendedEnv))
+        case Some(value) => done(value)
+        case None => throw new RuntimeException(s"Variable index $index not found in environment")
+      }
+
+    case Term.Sym(ident) =>
+      env.getValue(Identifier.Symbol(ident)) match {
+        case Some(value) => done(value)
+        case None => throw new RuntimeException(s"Unbound symbol: $ident")
       }
 
     case Term.Lam(parameterType, body) =>
@@ -58,7 +55,7 @@ object Interpreter {
       rightValue <- evalTramp(rightTerm)
       result <- leftValue match {
         case Value.Closure(closureEnv, body) =>
-          val newEnv = closureEnv.map { case (i, v) => (i + 1) -> v } + (0 -> rightValue)
+          val newEnv = rightValue :: closureEnv
           tailcall(evalTramp(body)(using newEnv))
         case other => throw new RuntimeException(s"Runtime type error: expected closure, got $other")
       }
@@ -70,7 +67,13 @@ object Interpreter {
     case Term.StringLit(s) => done(Value.StringVal(s))
     case Term.ListLit(tpe, elements) => for {
       evaluatedElements <- elements.map(evalTramp(_)).sequence
-    } yield Value.ListVal(tpe.getOrElse(evaluatedElements.head.toTerm.infer()), evaluatedElements)
+    } yield {
+      val inferredType = tpe.orElse {
+        if (evaluatedElements.nonEmpty) Some(evaluatedElements.head.toTerm.infer())
+        else throw new RuntimeException("Cannot infer type of empty list without type annotation")
+      }.get
+      Value.ListVal(inferredType, evaluatedElements)
+    }
 
     case Term.BinOp(kind, leftTerm, rightTerm) =>
       for {
@@ -107,10 +110,16 @@ object Interpreter {
     } yield result
 
     case Term.Fix(annotatedType, body) =>
-      // Y-combinator approach: put a simple thunk at index 0
-      // When it's looked up later, it will be evaluated in the environment where the lookup happens
-      lazy val newEnv = env.map { case (i, v) => (i + 1) -> v } + (0 -> fixThunk)
-      lazy val fixThunk = Value.FixThunk(annotatedType, body, env.map { case (i, v) => (i + 1) -> v })
+      // Create a thunk that will be looked up lazily. The thunk captures the shifted environment.
+      // When the FixThunk is accessed in Term.Var, it will be evaluated with itself at index 0
+      val shiftedEnv = env.values.map { case (id, v) =>
+        id match {
+          case Identifier.Index(i) => (Identifier.Index(i + 1), v)
+          case other => (other, v)
+        }
+      }
+      val fixThunk = Value.FixThunk(annotatedType, body, Environment(env.types, shiftedEnv))
+      val newEnv = Environment(env.types, shiftedEnv + (Identifier.Index(0) -> fixThunk))
       tailcall(evalTramp(body)(using newEnv))
 
     case Term.Record(fields) =>

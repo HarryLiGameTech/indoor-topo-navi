@@ -2,7 +2,7 @@ transport OEX_LOW is Elevator{
     default-access = TenantsOnly
 
     // Params
-    params {
+    config {
         maxSpeed = 6.0, // 6 meters a second
         acceleration = 0.9, // 0.9m/s2
         cars = [OEX_1, OEX_2, OEX_3, OEX_4, OEX_5]

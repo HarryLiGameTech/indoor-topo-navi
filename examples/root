@@ -1,10 +1,13 @@
-root TopoMap NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int, keyAccess: String[]){
+root TopoMap NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int){
 
-    map_type{
+    floors: List = [Lobby, Floor2, ..., Floor80]
+    // 10-20 same topology
+
+    enum MapType {
         TransHub,
-        StdFloor
+        StdFloor,
     }
-    
+
     submap FloorZ1
     submap FloorZ2
     submap FloorZ3
@@ -14,28 +17,43 @@ root TopoMap NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int, keyAcc
     submap Floor29
     submap Floor30
 
-    submap OP1
-    submap OP2
-    submap OP3
-    submap OP4
-    submap OEX // Express
-    submap OFR // 29/30
-    submap OS
+    vehicle OP1
+    vehicle OP2
+    vehicle OP3
+    vehicle OP4
+    vehicle OEX // Express
+    vehicle OFR // 29/30
+    vehicle OS
+
+    station {
+        relativeLocation: Float,
+    }
+
+    atomic-path {
+        cost : Int,
+        description : String?,
+    }
 
     // TODO: Change syntax
-    // EQ_ALL("Floor" + p"4~17", FloorZ1)
+    // EQ_ALL("Floor" + p"4~17", FloorZ1) // floor 4-17 are std floors, equal to map called FloorZ1
     // EQ_ALL("Floor" + p"19~27", FloorZ2)
     // EQ_ALL("Floor" + p"31~46", FloorZ3)
     // EQ_ALL("Floor" + p"47~59", FloorZ4)
 
-    // Define what means "TenantsOnly" 
-    constraint TenantsOnly{ 
-        require(haveStaffCard == true, UNAUTHORIZED)
+    #forall($level in [4 .. 17]) {
+        alias Floor$level := FloorZ1
+    }
+
+    // Define what means "TenantsOnly"
+    constraint TenantsOnly{
+        require haveStaffCard == true otherwise UNAUTHORIZED
     } 
+
+    // [Unauthorized, ReallyUnauthorized]
 
     // Define what means ManagementOnly 
     constraint ManagementOnly{ 
-        require(haveManagementCard == true, UnauthorizedVisitException)
+        require haveManagetmentCard == true otherwise UnauthorizedVisitExcepion
     } 
 
     // Define what means EmergencyEgress 
@@ -43,7 +61,4 @@ root TopoMap NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int, keyAcc
         require(circumstance == "Emergency", PathUnavailableException) 
     }
 
-    constraint HasRoomKey(string roomName){
-        require(keys.contains(roomName), UNAUTHORIZED)
-    }
 }

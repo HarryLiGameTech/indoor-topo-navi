@@ -1,6 +1,18 @@
 package corelang
 
-enum Type {
+import corelang.Identifier.Index
+import corelang.{Environment, Identified, TypeEnvironment, TypeOnlyEnvironment}
+
+enum Identifier {
+  case Index(index: Int)
+  case Symbol(name: String)
+}
+
+type TypeOnlyEnv = TypeOnlyEnvironment[Identifier, Type]
+type TypeEnv = TypeEnvironment[Identifier, Type]
+type Env = Environment[Identifier, Type, Value]
+
+enum Type extends Identified[Identifier] {
   case IntType
   case FloatType
   case BoolType
@@ -12,12 +24,6 @@ enum Type {
 
 enum OpKind {
   case Add, Sub, Mul, Eq, Lt, Gt, Concat
-
-//  def resultType: Type = this match {
-//    case Add | Sub | Mul => Type.IntType
-//    case Eq | Lt | Gt => Type.BoolType
-//    case Concat => Type.StringType
-//  }
 
   override def toString: String = this match {
     case Add => "+"
@@ -53,15 +59,15 @@ enum Expr {
    */
   def toTerm(stack: List[String] = Nil): Term = {
 
-    def lookup(name: String, ctx: List[String]): Int = {
-      ctx.indexOf(name) match {
-        case -1 => throw new RuntimeException(s"Unbound variable: $name")
-        case idx => idx
+    def lookup(ident: String, ctx: List[String]): Term = {
+      ctx.indexOf(ident) match {
+        case -1    => Term.Sym(ident)
+        case index => Term.Var(index)
       }
     }
 
     this match {
-      case Expr.Var(name) => Term.Var(lookup(name, stack))
+      case Expr.Var(name) => lookup(name, stack)
 
       case Expr.Lam(param, tpe, body) =>
         val extended = param :: stack
@@ -131,6 +137,7 @@ enum Expr {
 
 enum Term {
   case Var(index: Int)
+  case Sym(ident: String)
   case Lam(parameterType: Type, body: Term)
   case App(leftTerm: Term, rightTerm: Term)
   case IntLit(n: Long)
@@ -148,10 +155,16 @@ enum Term {
    * Infer the type of this term.
    * @param typeEnv type environment mapping De Bruijn indices to types
    */
-  def infer(typeEnv: List[Type] = Nil): Type = this match {
+  def infer(typeEnv: TypeOnlyEnv = TypeEnvironment.empty[Identifier, Type]): Type = this match {
     case Term.Var(index) =>
-      if (index >= 0 && index < typeEnv.length) typeEnv(index)
+      if (index >= 0 && index < typeEnv.types.size) typeEnv.types(Index(index))
       else throw new RuntimeException(s"Variable index $index out of bounds in type environment")
+
+    case Term.Sym(ident) =>
+      if (typeEnv.getType(Identifier.Symbol(ident)).isDefined)
+        typeEnv.types(Identifier.Symbol(ident))
+      else
+        throw new RuntimeException(s"Unbound symbol: $ident")
 
     case Term.Lam(parameterType, body) =>
       val extendedEnv = parameterType :: typeEnv
@@ -202,36 +215,3 @@ enum Term {
   }
 }
 
-enum Value {
-  case IntVal(n: Long)
-  case FloatVal(v: Double)
-  case BoolVal(b: Boolean)
-  case StringVal(s: String)
-  case ListVal(tpe: Type, elements: List[Value]) // type is now inferred, no need to Option[] anymore
-  case Closure(env: Map[Int, Value], body: Term)
-  case FixThunk(annotatedType: Type, body: Term, env: Map[Int, Value] = Map.empty)
-  case RecordVal(fields: Map[String, Value])
-
-  def toTerm: Term = this match {
-    case IntVal(n) => Term.IntLit(n)
-    case FloatVal(v) => Term.FloatLit(v)
-    case BoolVal(b) => Term.BoolLit(b)
-    case StringVal(s) => Term.StringLit(s)
-    case ListVal(tpe, elements) => Term.ListLit(Some(tpe), elements.map(_.toTerm))
-    case Closure(_, _) | FixThunk(_, _, _) => throw new RuntimeException("Cannot convert closure or fixpoint to term")
-    case RecordVal(fields) => Term.Record(fields.map { case (k, v) => (k, v.toTerm) })
-  }
-
-  override def toString: String = this match {
-    case IntVal(n) => n.toString
-    case FloatVal(v) => v.toString
-    case BoolVal(b) => b.toString
-    case StringVal(s) => s"\"$s\""
-    case ListVal(tpe, elements) => elements.mkString("[", ", ", "]")
-    case Closure(_, body) => s"<closure>"
-    case FixThunk(annotatedType, _, _) => s"<fixpoint: $annotatedType>"
-    case RecordVal(fields) =>
-      val fieldStr = fields.map { case (name, value) => s"$name: $value" }.mkString(", ")
-      s"{ $fieldStr }"
-  }
-}

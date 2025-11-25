@@ -1,27 +1,27 @@
 TopoMap Floor30{
 
-    params {
-        map_type = TransHub,
+    config {
+        mapType = MapType::TransHub,
         permResident = 15, // 15 people always live here
         rushHour = {
             timePeriod = 7:45~9:45, 
             gradient = EXPONENTIAL, 
-            category = BIDIRECTION
+            category = BIDIRECTION,
         },
         rushHour = {
             timePeriod = 16:30~19:15,
             gradient = LINEAR,
-            category = ARRIVE
-        }, // In this period of time, people linearly reaches this floor
-        movement = enum {
-            PushDoor,
-            PullSecuredDoor,
-            PullDoor,
-            Walk,
-            Default
-        }
+            category = ARRIVE,
+        } // In this period of time, people linearly reaches this floor
     }
 
+    enum Movement {
+        PushDoor,
+        PullSecuredDoor,
+        PullDoor,
+        Walk,
+        Default
+    }
 
     topo-node NW_corner
     topo-node NE_corner

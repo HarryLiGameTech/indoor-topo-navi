@@ -19,7 +19,7 @@ enum TransportServicePermission:
   case DepartOnly
   case FullyGranted // Both arriving and departing is allowed
 
-enum AttributeValue:
+enum AttributeValue: // TODO: Use dsl.Value
   case IntValue(value: Int)
   case StringValue(value: String)
   case BoolValue(value: Boolean)

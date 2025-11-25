@@ -1,8 +1,10 @@
 transport OP1 is Elevator{
     default-access = TenantsOnly
 
+    station require TenantsOnly & OtherRequirement by default
+
     // Params
-    params {
+    config {
         maxSpeed = 4.0, // 4 meters a second
         acceleration = 0.9, // 0.9m/s2
         cars = [OP1_1, OP1_2, OP1_3, OP1_4, OP1_5, OP1_6]
@@ -12,11 +14,11 @@ transport OP1 is Elevator{
     // TODO
 
     // Stations
-    station Lobby at Lobby.OP1_hall {relativeLocation = 0.0} requires null on ARRIVAL // REFER TO THIS
-    station Floor4 at FloorZ1.OP1_hall {relativeLocation = 17.5}
-    station Floor5 at FloorZ1.OP1_hall {relativeLocation = 22.0}
-    station Floor6 at FloorZ1.OP1_hall {relativeLocation = 26.5}
-    station Floor7 at FloorZ1.OP1_hall {relativeLocation = 31.0}
+    station Lobby at Lobby.OP1_hall {relativeLocation = 0.0} override requires [haveStaffCard, haveManagementCard] on Depart // REFER TO THIS
+    station Floor4 at FloorZ1.OP1_hall at 17.5 {}
+    station Floor5 at FloorZ1.OP1_hall {relativeLocation = 22.0, description = ""}
+    station Floor6 at FloorZ1.OP1_hall {relativeLocation = 26.5, description = 123}
+    station Floor7 at FloorZ1.OP1_hall {relativeLocation = 31.0, timeAcc = fun (p1: Float) => p1*1.2 }
     station Floor8 at FloorZ1.OP1_hall {relativeLocation = 35.5}
     station Floor9 at FloorZ1.OP1_hall {relativeLocation = 40.0}
     station Floor10 at FloorZ1.OP1_hall {relativeLocation = 44.5}

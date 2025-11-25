@@ -287,7 +287,7 @@ object RoutePlanningTester extends App{
 //      println(s"Navigation error: ${error}")
 //  }
 
-  routePlanner.navigate("floor3", "floor89", "CP_hall", "FS4_hall", Normal, RoutePlanningPreferences.MinimizeTime) match {
+  routePlanner.navigate("floorB1", "floor89", "CP_hall", "refuge_B", Normal, RoutePlanningPreferences.MinimizeTime) match {
     case Right(navigationPath) =>
       println(s"\n=== Testing RoutePlanner Navigate ===")
       //      println(s"Start: floor100@FS10_hall")
