@@ -8,6 +8,30 @@ root TopoMap NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int){
         StdFloor,
     }
 
+    def f (a : Int) => a + 1
+    let myInt = f 2
+
+    def fib = fix fib: Int -> Int. {
+        fun n: Int =>
+          if n < 2 then 1
+          else fib (n - 1) + fib (n - 2)
+    }
+    // ==> 55
+
+    def fib (n: Int) =>
+      if n < 2 then 1
+      else fib (n - 1) + fib (n - 2)
+
+    object MyClass {
+      a: Int = 1
+      b: Int = a + 1
+    }
+
+    fix MyClass: {a : Int; b: Int}. {
+      a: Int = 1
+      b: Int = MyClass.a + 1
+    }
+
     submap FloorZ1
     submap FloorZ2
     submap FloorZ3
@@ -46,6 +70,7 @@ root TopoMap NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int){
 
     // Define what means "TenantsOnly"
     constraint TenantsOnly{
+        require myInt > 2 ...
         require haveStaffCard == true otherwise UNAUTHORIZED
     } 
 

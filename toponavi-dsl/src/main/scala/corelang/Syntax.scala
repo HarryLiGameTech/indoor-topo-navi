@@ -20,6 +20,7 @@ enum Type extends Identified[Identifier] {
   case ListType(elemType: Type)
   case Arrow(from: Type, to: Type) // a.k.a. function
   case RecordType(fields: Map[String, Type])
+  case EnumType(name: String, variants: Set[String]) // Plain enum with named variants
 }
 
 enum OpKind {
@@ -52,6 +53,8 @@ enum Expr {
   case Proj(record: Expr, field: String)
   case Let(name: String, value: Expr, body: Expr)
   case LetRec(name: String, tpe: Type, value: Expr, body: Expr)
+  case EnumLit(enumType: String, variant: String) // Enum literal: MyEnum.Variant
+  case Match(scrutinee: Expr, cases: List[(String, Expr)]) // Pattern match on enum
 
   /**
    * Convert this expression (with names) to a Term (with De Bruijn indices).
@@ -131,6 +134,14 @@ enum Expr {
         val fixTerm = Term.Fix(tpe, valueTerm)
         val bodyTerm = body.toTerm(extended)
         Term.App(Term.Lam(tpe, bodyTerm), fixTerm)
+
+      case Expr.EnumLit(enumType, variant) =>
+        Term.EnumLit(enumType, variant)
+
+      case Expr.Match(scrutinee, cases) =>
+        val scrutineeTerm = scrutinee.toTerm(stack)
+        val casesTerms = cases.map { case (variant, expr) => (variant, expr.toTerm(stack)) }
+        Term.Match(scrutineeTerm, casesTerms)
     }
   }
 }
@@ -150,6 +161,8 @@ enum Term {
   case Fix(annotatedType: Type, body: Term)
   case Record(fields: Map[String, Term])
   case Proj(record: Term, field: String)
+  case EnumLit(enumType: String, variant: String)
+  case Match(scrutinee: Term, cases: List[(String, Term)])
 
   /**
    * Infer the type of this term.
@@ -184,16 +197,16 @@ enum Term {
     case Term.ListLit(None, hd::tl)     => Type.ListType(hd.infer(typeEnv))
     case Term.ListLit(None, Nil)        => throw new RuntimeException("Cannot infer type of empty list without annotation")
     case Term.BinOp(kind, lhs, rhs)     => (kind, lhs.infer(typeEnv), rhs.infer(typeEnv)) match {
-      case (OpKind.Add, Type.IntType, Type.IntType) => Type.IntType
-      case (OpKind.Sub, Type.IntType, Type.IntType) => Type.IntType
-      case (OpKind.Mul, Type.IntType, Type.IntType) => Type.IntType
+      case (OpKind.Add, Type.IntType, Type.IntType)     => Type.IntType
+      case (OpKind.Sub, Type.IntType, Type.IntType)     => Type.IntType
+      case (OpKind.Mul, Type.IntType, Type.IntType)     => Type.IntType
       case (OpKind.Add, Type.FloatType, Type.FloatType) => Type.FloatType
       case (OpKind.Sub, Type.FloatType, Type.FloatType) => Type.FloatType
       case (OpKind.Mul, Type.FloatType, Type.FloatType) => Type.FloatType
-      case (OpKind.Eq, Type.FloatType, Type.FloatType) => Type.BoolType
-      case (OpKind.Lt, Type.FloatType, Type.FloatType) => Type.BoolType
-      case (OpKind.Gt, Type.FloatType, Type.FloatType) => Type.BoolType
-      case (OpKind.Eq, Type.BoolType, Type.BoolType) => Type.BoolType
+      case (OpKind.Eq, Type.FloatType, Type.FloatType)  => Type.BoolType
+      case (OpKind.Lt, Type.FloatType, Type.FloatType)  => Type.BoolType
+      case (OpKind.Gt, Type.FloatType, Type.FloatType)  => Type.BoolType
+      case (OpKind.Eq, Type.BoolType, Type.BoolType)    => Type.BoolType
       case (OpKind.Concat, Type.StringType, Type.StringType) => Type.StringType
       case (OpKind.Concat, Type.ListType(lhsType), Type.ListType(rhsType)) if lhsType == rhsType => Type.ListType(lhsType)
       case _ => throw RuntimeException(s"Illegal type for binary operator: ${lhs.infer(typeEnv)} ${kind} ${rhs.infer(typeEnv)}")
@@ -211,6 +224,34 @@ enum Term {
         case Type.RecordType(fields) => fields.getOrElse(field,
           throw new RuntimeException(s"Field $field not found in record"))
         case _ => throw new RuntimeException("Cannot project from non-record type")
+      }
+
+    case Term.EnumLit(enumType, variant) =>
+      // Look up the enum type in the type environment
+      typeEnv.getType(Identifier.Symbol(enumType)) match {
+        case Some(Type.EnumType(name, variants)) =>
+          if (variants.contains(variant)) Type.EnumType(name, variants)
+          else throw new RuntimeException(s"Variant $variant not found in enum $enumType")
+        case Some(_) =>
+          throw new RuntimeException(s"$enumType is not an enum type")
+        case None =>
+          throw new RuntimeException(s"Enum type $enumType not found in environment")
+      }
+
+    case Term.Match(scrutinee, cases) =>
+      scrutinee.infer(typeEnv) match {
+        case Type.EnumType(name, variants) =>
+          // Verify all cases are valid variants
+          val caseVariants = cases.map(_._1).toSet
+          if (!caseVariants.subsetOf(variants)) {
+            val invalid = caseVariants -- variants
+            throw new RuntimeException(s"Invalid variants in match: ${invalid.mkString(", ")}")
+          }
+          // All case branches should have the same type, return the type of the first branch
+          if (cases.isEmpty) throw new RuntimeException("Match expression must have at least one case")
+          cases.head._2.infer(typeEnv)
+        case other =>
+          throw new RuntimeException(s"Cannot match on non-enum type: $other")
       }
   }
 }

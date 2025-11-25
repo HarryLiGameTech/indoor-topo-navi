@@ -3,21 +3,15 @@ package corelang
 import scala.util.control.TailCalls.*
 
 // Utility functions
-object util {
-  extension [A](xs: List[TailRec[A]]) {
-    def sequence: TailRec[List[A]] = {
-      xs match {
-        case Nil => done(Nil)
-        case h :: t => for {
-          hd <- h
-          tl <- t.sequence
-        } yield hd :: tl
-      }
-    }
+extension [A](xs: List[TailRec[A]]) {
+  def sequence: TailRec[List[A]] = xs match {
+    case Nil => done(Nil)
+    case h :: t => for {
+      hd <- h
+      tl <- t.sequence
+    } yield hd :: tl
   }
 }
-
-import util._
 
 // This version prevents stack-overflow
 object Interpreter {
@@ -142,5 +136,21 @@ object Interpreter {
           fields.getOrElse(field, throw new RuntimeException(s"Field '$field' not found in record"))
         case _ => throw new RuntimeException("Select operation on non-record value")
       }
+
+    case Term.EnumLit(enumType, variant) =>
+      done(Value.EnumVal(enumType, variant))
+
+    case Term.Match(scrutinee, cases) =>
+      for {
+        scrutineeValue <- evalTramp(scrutinee)
+        result <- scrutineeValue match {
+          case Value.EnumVal(_, variant) =>
+            cases.find(_._1 == variant) match {
+              case Some((_, expr)) => tailcall(evalTramp(expr))
+              case None => throw new RuntimeException(s"No matching case for variant: $variant")
+            }
+          case _ => throw new RuntimeException("Match expression requires enum value")
+        }
+      } yield result
   }
 }
