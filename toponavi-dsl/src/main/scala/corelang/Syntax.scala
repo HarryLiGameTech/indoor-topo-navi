@@ -61,7 +61,7 @@ enum Expr {
    * Convert this expression (with names) to a Term (with De Bruijn indices).
    * @param stack binding stack; head = most-recent binding
    */
-  def toTerm(stack: List[String] = Nil): Term = {
+  def toTerm(typeEnv: TypeEnv, stack: List[String] = Nil): Term = {
 
     def lookup(ident: String, ctx: List[String]): Term = {
       ctx.indexOf(ident) match {
@@ -75,11 +75,11 @@ enum Expr {
 
       case Expr.Lam(param, tpe, body) =>
         val extended = param :: stack
-        Term.Lam(tpe, body.toTerm(extended))
+        Term.Lam(tpe, body.toTerm(typeEnv, extended))
 
       case Expr.App(fnExpr, argExpr) =>
-        val fnTerm = fnExpr.toTerm(stack)
-        val argTerm = argExpr.toTerm(stack)
+        val fnTerm = fnExpr.toTerm(typeEnv, stack)
+        val argTerm = argExpr.toTerm(typeEnv, stack)
         Term.App(fnTerm, argTerm)
 
       case Expr.IntLit(value) =>
@@ -95,53 +95,65 @@ enum Expr {
         Term.StringLit(value)
 
       case Expr.ListLit(tpe, elements) =>
-        Term.ListLit(tpe, elements.map(_.toTerm(stack)))
+        Term.ListLit(tpe, elements.map(_.toTerm(typeEnv, stack)))
 
       case Expr.BinOp(kind, lhs, rhs) =>
-        val leftTerm = lhs.toTerm(stack)
-        val rightTerm = rhs.toTerm(stack)
+        val leftTerm = lhs.toTerm(typeEnv, stack)
+        val rightTerm = rhs.toTerm(typeEnv, stack)
         Term.BinOp(kind, leftTerm, rightTerm)
 
       case Expr.If(cond, thenBr, elseBr) =>
-        val condTerm = cond.toTerm(stack)
-        val thenTerm = thenBr.toTerm(stack)
-        val elseTerm = elseBr.toTerm(stack)
+        val condTerm = cond.toTerm(typeEnv, stack)
+        val thenTerm = thenBr.toTerm(typeEnv, stack)
+        val elseTerm = elseBr.toTerm(typeEnv, stack)
         Term.If(condTerm, thenTerm, elseTerm)
 
       case Expr.Fix(name, tpe, body) =>
         val extended = name :: stack
-        val bodyTerm = body.toTerm(extended)
+        val bodyTerm = body.toTerm(typeEnv, extended)
         Term.Fix(tpe, bodyTerm)
 
       case Expr.Record(fields) =>
-        val termFields = fields.map { case (name, expr) => (name, expr.toTerm(stack)) }
+        val termFields = fields.map { case (name, expr) => (name, expr.toTerm(typeEnv, stack)) }
         Term.Record(termFields)
 
       case Expr.Proj(record, field) =>
-        val recordTerm = record.toTerm(stack)
+        val recordTerm = record.toTerm(typeEnv, stack)
         Term.Proj(recordTerm, field)
 
       case Expr.Let(name, value, body) =>
         // let x = e1 in e2  ~~>  (\x. e2) e1
-        val valueTerm = value.toTerm(stack)
+        val valueTerm = value.toTerm(typeEnv, stack)
         val extended = name :: stack
-        val bodyTerm = body.toTerm(extended)
+        val bodyTerm = body.toTerm(typeEnv, extended)
         Term.App(Term.Lam(valueTerm.infer(), bodyTerm), valueTerm)
 
       case Expr.LetRec(name, tpe, value, body) =>
         // let rec f: T = e1 in e2  ~~>  (\f. e2) (fix f: T. e1)
         val extended = name :: stack
-        val valueTerm = value.toTerm(extended)
+        val valueTerm = value.toTerm(typeEnv, extended)
         val fixTerm = Term.Fix(tpe, valueTerm)
-        val bodyTerm = body.toTerm(extended)
+        val bodyTerm = body.toTerm(typeEnv, extended)
         Term.App(Term.Lam(tpe, bodyTerm), fixTerm)
 
       case Expr.EnumLit(enumType, variant) =>
-        Term.EnumLit(enumType, variant)
+        // Lookup the enum type from the type environment
+        typeEnv.getType(Identifier.Symbol(enumType)) match {
+          case Some(et: Type.EnumType) =>
+            if (et.variants.contains(variant)) {
+              Term.EnumLit(et, variant)
+            } else {
+              throw new RuntimeException(s"Variant $variant not found in enum $enumType")
+            }
+          case Some(_) =>
+            throw new RuntimeException(s"$enumType is not an enum type")
+          case None =>
+            throw new RuntimeException(s"Enum type $enumType not found in environment")
+        }
 
       case Expr.Match(scrutinee, cases) =>
-        val scrutineeTerm = scrutinee.toTerm(stack)
-        val casesTerms = cases.map { case (variant, expr) => (variant, expr.toTerm(stack)) }
+        val scrutineeTerm = scrutinee.toTerm(typeEnv, stack)
+        val casesTerms = cases.map { case (variant, expr) => (variant, expr.toTerm(typeEnv, stack)) }
         Term.Match(scrutineeTerm, casesTerms)
     }
   }
@@ -162,7 +174,7 @@ enum Term {
   case Fix(annotatedType: Type, body: Term)
   case Record(fields: Map[String, Term])
   case Proj(record: Term, field: String)
-  case EnumLit(enumType: String, variant: String)
+  case EnumLit(enumType: Type.EnumType, variant: String)
   case Match(scrutinee: Term, cases: List[(String, Term)])
 
   /**
@@ -228,15 +240,11 @@ enum Term {
       }
 
     case Term.EnumLit(enumType, variant) =>
-      // Look up the enum type in the type environment
-      typeEnv.getType(Identifier.Symbol(enumType)) match {
-        case Some(Type.EnumType(name, variants)) =>
-          if (variants.contains(variant)) Type.EnumType(name, variants)
-          else throw new RuntimeException(s"Variant $variant not found in enum $enumType")
-        case Some(_) =>
-          throw new RuntimeException(s"$enumType is not an enum type")
-        case None =>
-          throw new RuntimeException(s"Enum type $enumType not found in environment")
+      // The enumType is already a Type.EnumType, just validate the variant and return it
+      if (enumType.variants.contains(variant)) {
+        enumType
+      } else {
+        throw new RuntimeException(s"Variant $variant not found in enum ${enumType.name}")
       }
 
     case Term.Match(scrutinee, cases) =>

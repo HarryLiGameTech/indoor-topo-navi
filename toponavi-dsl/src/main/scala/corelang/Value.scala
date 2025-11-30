@@ -9,7 +9,7 @@ enum Value extends Identified[Identifier] {
   case Closure(env: Env, body: Term)
   case FixThunk(annotatedType: Type, body: Term, env: Env)
   case RecordVal(fields: Map[String, Value])
-  case EnumVal(enumType: String, variant: String)
+  case EnumVal(enumType: Type.EnumType, variant: String)
 
   def toTerm: Term = this match {
     case IntVal(n) => Term.IntLit(n)
@@ -33,6 +33,6 @@ enum Value extends Identified[Identifier] {
     case RecordVal(fields) =>
       val fieldStr = fields.map { case (name, value) => s"$name: $value" }.mkString(", ")
       s"{ $fieldStr }"
-    case EnumVal(enumType, variant) => s"$enumType.$variant"
+    case EnumVal(enumType, variant) => s"${enumType.name}.$variant"
   }
 }

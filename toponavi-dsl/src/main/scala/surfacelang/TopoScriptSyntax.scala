@@ -18,7 +18,7 @@ trait SyntaxNameSpace {
     val typeEnv = types.foldLeft(Environment.empty[Identifier, Type, Value]) { 
       case (env, (name, tpe)) => env.addTypeVar(Identifier.Symbol(name), tpe)
     }
-    val defnTerms = defns.map { case (n, e) => (n, e.toTerm()) }.toMap
+    val defnTerms = defns.map { case (n, e) => (n, e.toTerm(typeEnv)) }.toMap
     defnTerms.foldLeft(typeEnv) { case (env, (name, term)) =>
       val value = Interpreter.eval(term)(using env)
       env.addValueVar(Identifier.Symbol(name), value)
