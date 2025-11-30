@@ -26,6 +26,10 @@ trait SyntaxNameSpace {
   }
 }
 
+trait Elaborateable[T] {
+  def elaborate(env: Env): T
+}
+
 // Root TopoMap definition
 case class RootSyntax(
   name: String,
@@ -33,12 +37,21 @@ case class RootSyntax(
   types: List[(String, Type)],
   defns: List[(String, Expr)],
   data: List[Data],
-  submaps: List[String],
+  submaps: List[SubTopoMapSyntax],
   constraints: List[ConstraintSyntax]
-) extends SyntaxNameSpace{
+) extends SyntaxNameSpace with Elaborateable[TopoRootValue] {
   
-  def elaborate: TopoRootTerm = {
-    ???
+  def elaborate(env: Env): TopoRootValue = {
+    val ctx = this.synthesisEnv
+    
+    TopoRootValue(
+      name = name,
+      params = params,
+      submaps = submaps.map(_.elaborate(ctx)).toSet,
+      transportations = Set.empty, // TODO: Add transportation elaboration
+      context = ctx
+    )
+    
   }
 }
 
@@ -51,7 +64,17 @@ case class SubTopoMapSyntax(
   data: List[Data],
   nodes: List[TopoNode],
   paths: List[AtomicPath]
-) extends SyntaxNameSpace
+) extends SyntaxNameSpace with Elaborateable[TopoMapValue] {
+  
+  def elaborate(env: Env): TopoMapValue = {
+    val ctx = this.synthesisEnv
+    
+    TopoMapValue(
+      name = name,
+      context = ctx
+    )
+  }
+}
 
 // Constraint definition
 // TODO: Modify
@@ -59,7 +82,16 @@ case class ConstraintSyntax(
   name: String,
   params: List[(String, Type)],
   conditions: List[Expr]
-) {
+) extends Elaborateable[ConstraintValue] {
+
+  def elaborate(env: Env): ConstraintValue = {
+    val ctx = env // TODO: Extend env with params?
+
+    ConstraintValue(
+      name = name,
+      context = ctx
+    )
+  }
 
 }
 
@@ -67,8 +99,18 @@ case class ConstraintSyntax(
 case class TopoNode(
   name: String,
   data: Data
-) {
+) extends Elaborateable[TopoNodeValue] {
 
+  def elaborate(env: Env): TopoNodeValue = {
+    Interpreter.eval(data.toTerm(env)) match {
+      case rv: Value.RecordVal => TopoNodeValue(
+        name = name,
+        context = env,
+        data = rv
+      )
+      case other => throw new RuntimeException(s"Node data must evaluate to RecordVal, got: $other")
+    }
+  }
 }
 
 // Path definition

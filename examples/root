@@ -58,11 +58,6 @@ root TopoMap NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int){
         description : String?,
     }
 
-    // TODO: Change syntax
-    // EQ_ALL("Floor" + p"4~17", FloorZ1) // floor 4-17 are std floors, equal to map called FloorZ1
-    // EQ_ALL("Floor" + p"19~27", FloorZ2)
-    // EQ_ALL("Floor" + p"31~46", FloorZ3)
-    // EQ_ALL("Floor" + p"47~59", FloorZ4)
 
     #forall($level in [4 .. 17]) {
         alias Floor$level := FloorZ1

@@ -12,6 +12,8 @@ trait ImmutTypeEnvironment[Id, +T <: Identified[Id]] {
   def ty(id: Id): T = types(id)
 
   def getType(id: Id): Option[T] = types.get(id)
+
+  def merge[T1 >: T <: Identified[Id]](other: ImmutTypeEnvironment[Id, T1]): ImmutTypeEnvironment[Id, T1]
 }
 
 trait TypeEnvironment[Id, T <: Identified[Id]] extends ImmutTypeEnvironment[Id, T] { self =>
@@ -19,6 +21,8 @@ trait TypeEnvironment[Id, T <: Identified[Id]] extends ImmutTypeEnvironment[Id, 
   type Self <: TypeEnvironment[Id, T]
 
   def addTypeVar[T1 <: T](id: Id, ty: T1): Self
+
+  def merge(other: Self): Self
 
   def withTypeVar[T1 <: T, R](id: Id, ty: T1)(f: Self => R): R = f(addTypeVar(id, ty))
 
@@ -39,6 +43,17 @@ case class TypeOnlyEnvironment[Id, T <: Identified[Id]](
 
   override def addTypeVar[T1 <: T](id: Id, ty: T1): TypeOnlyEnvironment[Id, T] = {
     copy(types = types + (id -> ty))
+  }
+
+  override def merge(other: TypeOnlyEnvironment[Id, T]): TypeOnlyEnvironment[Id, T] = {
+    copy(types = this.types ++ other.types)
+  }
+
+  override def merge[T1 >: T <: Identified[Id]](other: ImmutTypeEnvironment[Id, T1]): ImmutTypeEnvironment[Id, T1] = {
+    other match {
+      case env: TypeOnlyEnvironment[Id, T1] => TypeOnlyEnvironment(this.types ++ env.types)
+      case _ => TypeOnlyEnvironment(this.types ++ other.types)
+    }
   }
 
   // Support :: operator for De Bruijn indices (assuming Id is compatible with Int)
@@ -63,6 +78,10 @@ trait ImmutEnvironment[Id, +T <: Identified[Id], +V <: Identified[Id]] extends I
   def value(id: Id): V = values(id)
 
   def getValue(id: Id): Option[V] = values.get(id)
+
+  def merge[T1 >: T <: Identified[Id], V1 >: V <: Identified[Id]](
+    other: ImmutEnvironment[Id, T1, V1]
+  ): ImmutEnvironment[Id, T1, V1]
 }
 
 case class Environment[Id, T <: Identified[Id], V <: Identified[Id]](
@@ -125,11 +144,30 @@ case class Environment[Id, T <: Identified[Id], V <: Identified[Id]](
     f(copy(values = values ++ vars.toMap))
   }
 
-  def merge(other: Environment[Id, T, V]): Environment[Id, T, V] = {
+  override def merge(other: Environment[Id, T, V]): Environment[Id, T, V] = {
     Environment(
       types = this.types ++ other.types,
       values = this.values ++ other.values,
     )
+  }
+
+  override def merge[T1 >: T <: Identified[Id]](other: ImmutTypeEnvironment[Id, T1]): ImmutTypeEnvironment[Id, T1] = {
+    other match {
+      case env: TypeOnlyEnvironment[Id, T1] => TypeOnlyEnvironment(this.types ++ env.types)
+      case env: Environment[Id, T1, _] => Environment(this.types ++ env.types, this.values)
+      case _ => TypeOnlyEnvironment(this.types ++ other.types)
+    }
+  }
+
+  override def merge[T1 >: T <: Identified[Id], V1 >: V <: Identified[Id]](
+    other: ImmutEnvironment[Id, T1, V1]
+  ): ImmutEnvironment[Id, T1, V1] = {
+    other match {
+      case env: Environment[Id, T1, V1] => 
+        Environment(this.types ++ env.types, this.values ++ env.values)
+      case _ => 
+        Environment(this.types ++ other.types, this.values ++ other.values)
+    }
   }
 
   // Support :: operator for De Bruijn indices (assuming Id is compatible with Identifier)
