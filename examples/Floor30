@@ -14,6 +14,7 @@ TopoMap Floor30{
             category = ARRIVE,
         } // In this period of time, people linearly reaches this floor
     }
+    
 
     enum Movement {
         PushDoor,

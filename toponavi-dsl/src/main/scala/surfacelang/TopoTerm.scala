@@ -4,29 +4,27 @@ import corelang.{Environment, Identifier, Type, Value, Term, Expr, Env, TypeOnly
 
 type Context = Env
 
-case class TopoRoot(
+case class TopoRootTerm(
   name: String,
   params: List[(String, Type)],
-  submaps: Set[TopoMap],
-  transportations: Set[TopoTransportation],
+  submaps: Set[TopoMapTerm],
+  transportations: Set[TopoTransportationTerm],
   context: Context,
 ) {
-  def evalaute(ctx: Context = context): Value = {
-    corelang.Interpreter.eval(toTerm)(using env)
-  }
+  
 }
 
-case class TopoTransportation(
+case class TopoTransportationTerm(
   name: String,
   context: Context,
 )
 
-case class TopoMap(
+case class TopoMapTerm(
   name: String,
   context: Context,
 )
 
-case class Constraint(
+case class ConstraintTerm(
   name: String,
   context: Context,
 ) {

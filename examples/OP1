@@ -3,7 +3,7 @@ transport OP1 is Elevator{
 
     station require TenantsOnly & OtherRequirement by default
 
-    // Params
+    // Config
     config {
         maxSpeed = 4.0, // 4 meters a second
         acceleration = 0.9, // 0.9m/s2
