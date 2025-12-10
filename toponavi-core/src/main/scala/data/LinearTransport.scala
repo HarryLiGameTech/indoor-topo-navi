@@ -1,6 +1,7 @@
 package data
 
-import enums.TransportServicePermission
+import enums.ElevatorTrafficPattern.{BidirectionalRush, DownRush, Flat, UpRush}
+import enums.{ElevatorTrafficPattern, TransportServicePermission}
 
 trait LinearTransport {
   def identifier: String
@@ -24,8 +25,12 @@ case class ElevatorBank(
   stationNodes: Map[NavigationGraph, TopoNode],
   stationLocations: Map[NavigationGraph, Double],
   stationPermissions: Map[NavigationGraph, TransportServicePermission],
+  stationPopulations: Map[NavigationGraph, Int],
   maxVelocity: Double,
-  acceleration: Double
+  acceleration: Double,
+  carAmount: Int,
+  capacity: Int = 21,
+  duty: Int = 1600
 ) extends LinearTransport {
 
   override def canArriveAt(target: NavigationGraph): Boolean = {
@@ -84,13 +89,44 @@ case class ElevatorBank(
     }
   }
 
+  // TODO: Substitute netTimeBetweenStations(src, dst)
   override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
-    waitingTime() + netTimeBetweenStations(src, dst)
+    waitingTime(Flat) + netTimeBetweenStations(src, dst)
   }
 
-  // TODO: Use waiting-time estimation algorithm
-  private def waitingTime(): Double = {
-    40
+  private def waitingTime(trafficPattern: ElevatorTrafficPattern): Double = {
+    if trafficPattern == Flat then 40.0
+    else roundTripTime(trafficPattern) / (carAmount * 2)
+  }
+  
+  private def roundTripTime(trafficPattern: ElevatorTrafficPattern): Double = {
+    if true then 120
+    else{
+      trafficPattern match {
+        case UpRush => {
+          upTime() + downTime() + stops() * 15
+        }
+        case DownRush => {
+          999
+        } // TODO: Implement
+        case BidirectionalRush => {
+          999
+        }
+        case _ => 120
+      }
+    }
+  }
+  
+  private def upTime(): Double = {
+    
+  }
+  
+  private def downTime(): Double = {
+    
   }
 
+  private def populationSum(): Int = {
+    
+  }
+  
 }
