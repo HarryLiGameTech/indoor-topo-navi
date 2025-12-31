@@ -80,5 +80,14 @@ root TopoMap NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int){
     constraint EmergencyEgress{ 
         require(circumstance == "Emergency", PathUnavailableException) 
     }
+    
+    constraint myConstraint(cond: Int) {
+        require cond > myInt
+    }
+    
+    // Actually:
+    def myConstraint(cond: Int): Constraint = constraint {
+        require cond > myInt;
+    }
 
 }

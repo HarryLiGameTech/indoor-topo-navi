@@ -270,5 +270,7 @@ enum Term {
           throw new RuntimeException(s"Cannot match on non-enum type: $other")
       }
   }
+  
+  def eval(using env: Env): Value = Interpreter.eval(this)(using env)
 }
 

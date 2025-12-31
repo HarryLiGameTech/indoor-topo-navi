@@ -25,16 +25,6 @@ case class TopoMapValue(
   context: Context,
 )
 
-case class ConstraintValue(
-  name: String,
-  context: Context,
-) {
-  def check(ctx: Context = context): Boolean = {
-    // Placeholder for constraint checking logic
-    true
-  }
-}
-
 case class TopoNodeValue(
   name: String,
   context: Context,
@@ -46,6 +36,7 @@ case class TopoNodeValue(
 case class AtomicPathValue(
   from: TopoNodeValue,
   to: TopoNodeValue,
+  bidirectional: Boolean,
   context: Context,
 ) {
   

@@ -1,5 +1,6 @@
 package surfacelang
 
+import corelang.Value.BoolVal
 import corelang.{Env, Environment, Expr, Identifier, Interpreter, Term, Type, Value}
 
 // AST
@@ -27,21 +28,20 @@ trait SyntaxNameSpace {
 }
 
 trait Elaborateable[T] {
-  def elaborate(env: Env): T
+  def elaborate(using topoEnv: TopoEnvironment): T
 }
 
 // Root TopoMap definition
-case class RootSyntax(
+case class RootExpr(
   name: String,
   params: List[(String, Type)], // paramName -> type
   types: List[(String, Type)], // type aliases like enums
   defns: List[(String, Expr)],
   data: List[Data],
-  submaps: List[SubTopoMapSyntax],
-  constraints: List[ConstraintSyntax]
+  submaps: List[SubTopoMapExpr]
 ) extends SyntaxNameSpace with Elaborateable[TopoRootValue] {
   
-  def elaborate(env: Env): TopoRootValue = {
+  override def elaborate(using topoEnv: TopoEnvironment): TopoRootValue = {
     val ctx = this.synthesisEnv
     
     TopoRootValue(
@@ -56,17 +56,17 @@ case class RootSyntax(
 }
 
 // Submap definition
-case class SubTopoMapSyntax(
+case class SubTopoMapExpr(
   name: String,
   params: Params,
   types: List[(String, Type)],
   defns: List[(String, Expr)], // aliases
   data: List[Data],
-  nodes: List[TopoNode],
-  paths: List[AtomicPath]
+  nodes: List[TopoNodeExpr],
+  paths: List[AtomicPathExpr]
 ) extends SyntaxNameSpace with Elaborateable[TopoMapValue] {
   
-  def elaborate(env: Env): TopoMapValue = {
+  override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = {
     val ctx = this.synthesisEnv
     
     TopoMapValue(
@@ -76,36 +76,17 @@ case class SubTopoMapSyntax(
   }
 }
 
-// Constraint definition
-// TODO: Modify
-case class ConstraintSyntax(
-  name: String,
-  params: List[(String, Type)],
-  conditions: List[Expr]
-) extends Elaborateable[ConstraintValue] {
-
-  def elaborate(env: Env): ConstraintValue = {
-    val ctx = env // TODO: Extend env with params?
-
-    ConstraintValue(
-      name = name,
-      context = ctx
-    )
-  }
-
-}
-
 // Node definition
-case class TopoNode(
+case class TopoNodeExpr(
   name: String,
   data: Data
 ) extends Elaborateable[TopoNodeValue] {
 
-  def elaborate(env: Env): TopoNodeValue = {
-    Interpreter.eval(data.toTerm(env)) match {
+  override def elaborate(using topoEnv: TopoEnvironment): TopoNodeValue = {
+    Interpreter.eval(data.toTerm(topoEnv.env)) match {
       case rv: Value.RecordVal => TopoNodeValue(
         name = name,
-        context = env,
+        context = topoEnv.env,
         data = rv
       )
       case other => throw new RuntimeException(s"Node data must evaluate to RecordVal, got: $other")
@@ -114,12 +95,26 @@ case class TopoNode(
 }
 
 // Path definition
-case class AtomicPath(
+case class AtomicPathExpr(
   from: String,
   to: String,
   bidirectional: Boolean,
   data: Data,
-  constraints: List[String] // TODO: List[Constraint]???
-) {
-
+  constraints: List[Expr] 
+) extends Elaborateable[Option[AtomicPathValue]] {
+  override def elaborate(using topoEnv: TopoEnvironment): Option[AtomicPathValue] = {
+    if constraints.forall { expr =>
+      expr.toTerm(topoEnv.env).eval(using topoEnv.env) match {
+        case BoolVal(b) => b
+        case _ => throw RuntimeException("Constraint must be a boolean value")
+      }
+    } then {
+      Some(AtomicPathValue(
+        from = topoEnv.nodes.getOrElse(from, throw RuntimeException(s"Fuck, no such node: $from")),
+        to = topoEnv.nodes.getOrElse(to, throw RuntimeException(s"Fuck, no such node: $to")),
+        bidirectional = bidirectional,
+        context = topoEnv.env,
+      ))
+    } else None
+  }
 }
