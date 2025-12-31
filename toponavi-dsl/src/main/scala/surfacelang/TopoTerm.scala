@@ -1,7 +1,7 @@
 package surfacelang
 
 import corelang.Value.RecordVal
-import corelang.{Env, Environment, Expr, Identifier, Term, Type, TypeEnvironment, TypeOnlyEnvironment, Value}
+import corelang.{Env, Type, Value}
 
 type Context = Env
 
@@ -22,6 +22,8 @@ case class TopoTransportationValue(
 
 case class TopoMapValue(
   name: String,
+  nodes: Set[TopoNodeValue],
+  paths: Set[AtomicPathValue],
   context: Context,
 )
 

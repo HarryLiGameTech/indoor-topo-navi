@@ -15,7 +15,7 @@ trait SyntaxNameSpace {
     defns.toMap.getOrElse(name, throw new RuntimeException(s"Term '$name' not found"))
   }
   
-  def synthesisEnv: Env = {
+  lazy val synthesisEnv: Env = {
     val typeEnv = types.foldLeft(Environment.empty[Identifier, Type, Value]) { 
       case (env, (name, tpe)) => env.addTypeVar(Identifier.Symbol(name), tpe)
     }
@@ -31,6 +31,20 @@ trait Elaborateable[T] {
   def elaborate(using topoEnv: TopoEnvironment): T
 }
 
+trait ConstrainedElaborateable[T] extends Elaborateable[Option[T]] {
+  def constraints: Iterable[Expr]
+  def constrainedElaborate(using topoEnv: TopoEnvironment): T
+  override def elaborate(using topoEnv: TopoEnvironment): Option[T] = {
+    if constraints.forall { expr =>
+      given Env = topoEnv.env
+      expr.toTerm(topoEnv.env).eval match {
+        case BoolVal(b) => b
+        case _ => throw RuntimeException("Constraint must be a boolean value")
+      }
+    } then Some(this.constrainedElaborate) else None
+  } 
+}
+
 // Root TopoMap definition
 case class RootExpr(
   name: String,
@@ -42,14 +56,13 @@ case class RootExpr(
 ) extends SyntaxNameSpace with Elaborateable[TopoRootValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): TopoRootValue = {
-    val ctx = this.synthesisEnv
-    
+    val env = this.synthesisEnv
     TopoRootValue(
       name = name,
       params = params,
-      submaps = submaps.map(_.elaborate(ctx)).toSet,
+      submaps = submaps.map(_.elaborate(using topoEnv.merge(env))).toSet,
       transportations = Set.empty, // TODO: Add transportation elaboration
-      context = ctx
+      context = env
     )
     
   }
@@ -67,11 +80,12 @@ case class SubTopoMapExpr(
 ) extends SyntaxNameSpace with Elaborateable[TopoMapValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = {
-    val ctx = this.synthesisEnv
-    
+    given newTopoEnv: TopoEnvironment = topoEnv.merge(this.synthesisEnv)
     TopoMapValue(
       name = name,
-      context = ctx
+      nodes = nodes.map(_.elaborate).toSet,
+      paths = paths.flatMap(_.elaborate).toSet,
+      context = newTopoEnv.env,
     )
   }
 }
@@ -100,21 +114,14 @@ case class AtomicPathExpr(
   to: String,
   bidirectional: Boolean,
   data: Data,
-  constraints: List[Expr] 
-) extends Elaborateable[Option[AtomicPathValue]] {
-  override def elaborate(using topoEnv: TopoEnvironment): Option[AtomicPathValue] = {
-    if constraints.forall { expr =>
-      expr.toTerm(topoEnv.env).eval(using topoEnv.env) match {
-        case BoolVal(b) => b
-        case _ => throw RuntimeException("Constraint must be a boolean value")
-      }
-    } then {
-      Some(AtomicPathValue(
-        from = topoEnv.nodes.getOrElse(from, throw RuntimeException(s"Fuck, no such node: $from")),
-        to = topoEnv.nodes.getOrElse(to, throw RuntimeException(s"Fuck, no such node: $to")),
-        bidirectional = bidirectional,
-        context = topoEnv.env,
-      ))
-    } else None
+  override val constraints: List[Expr]
+) extends ConstrainedElaborateable[AtomicPathValue] {
+  override def constrainedElaborate(using topoEnv: TopoEnvironment): AtomicPathValue = {
+    AtomicPathValue(
+      from = topoEnv.nodes.getOrElse(from, throw RuntimeException(s"Fuck, no such node: $from")),
+      to = topoEnv.nodes.getOrElse(to, throw RuntimeException(s"Fuck, no such node: $to")),
+      bidirectional = bidirectional,
+      context = topoEnv.env,
+    )
   }
 }

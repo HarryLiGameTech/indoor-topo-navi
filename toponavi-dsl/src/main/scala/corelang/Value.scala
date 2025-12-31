@@ -19,7 +19,7 @@ enum Value extends Identified[Identifier] {
     case StringVal(s) => Term.StringLit(s)
     case PropositionVal(preds) => Term.Proposition(preds.map(_.toTerm))
     case ListVal(tpe, elements) => Term.ListLit(Some(tpe), elements.map(_.toTerm))
-    case Closure(_, _) | FixThunk(_, _, _) => throw new RuntimeException("Cannot convert closure or fixpoint to term")
+    case Closure(_, _) | FixThunk(_, _, _) => throw RuntimeException("Cannot convert closure or fixpoint to term")
     case RecordVal(fields) => Term.Record(fields.map { case (k, v) => (k, v.toTerm) })
     case EnumVal(enumType, variant) => Term.EnumLit(enumType, variant)
   }
