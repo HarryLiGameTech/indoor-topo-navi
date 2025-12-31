@@ -39,7 +39,7 @@ class TransportGraph private(
 
       // If we reached the goal, reconstruct the path
       if (current == goal) {
-        return Some(reconstructPath(cameFrom, current)) // This step is OK, getAllEdges() works fine
+        return Some(reconstructPath(cameFrom, current))
       }
 
       // If the current fScore is outdated, skip
@@ -61,7 +61,7 @@ class TransportGraph private(
         // Only explore neighbors if current path might lead to a better solution
         if (gScore(current) < bestCost) {
           for (neighbor <- adjacencyList.getOrElse(current, Nil)) {
-            val tentativeGScore = gScore(current) + distanceBetween(current, neighbor)
+            val tentativeGScore = gScore(current) + actualCostBetween(current, neighbor)
 
             if (tentativeGScore < gScore(neighbor)) {
               cameFrom(neighbor) = current
@@ -154,7 +154,7 @@ class TransportGraph private(
     0.01 * indexDifference
   }
 
-  private def distanceBetween(from: StationNode, to: StationNode): Double = {
+  private def actualCostBetween(from: StationNode, to: StationNode): Double = {
     if (from.ownerLine == to.ownerLine){
       // Use the line's travel time
       from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)

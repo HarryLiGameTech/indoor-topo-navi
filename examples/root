@@ -67,7 +67,7 @@ root TopoMap NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int){
     constraint TenantsOnly{
         require myInt > 2 ...
         require haveStaffCard == true otherwise UNAUTHORIZED
-    } 
+    }
 
     // [Unauthorized, ReallyUnauthorized]
 

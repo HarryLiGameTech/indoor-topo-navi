@@ -18,6 +18,7 @@ enum Type extends Identified[Identifier] {
   case FloatType
   case BoolType
   case StringType
+  case PropositionType // used for constraints
   case ListType(elemType: Type)
   case Arrow(from: Type, to: Type) // a.k.a. function
   case RecordType(fields: Map[String, Type])
@@ -46,6 +47,7 @@ enum Expr {
   case FloatLit(value: Double)
   case BoolLit(value: Boolean)
   case StringLit(value: String)
+  case Proposition(predicates: Set[Expr])
   case ListLit(tpe: Option[Type], elements: List[Expr])
   case BinOp(kind: OpKind, lhs: Expr, rhs: Expr)
   case If(cond: Expr, thenBr: Expr, elseBr: Expr)
@@ -93,6 +95,9 @@ enum Expr {
 
       case Expr.StringLit(value) =>
         Term.StringLit(value)
+
+      case Expr.Proposition(predicates) =>
+        Term.Proposition(predicates.map(_.toTerm(typeEnv, stack)))
 
       case Expr.ListLit(tpe, elements) =>
         Term.ListLit(tpe, elements.map(_.toTerm(typeEnv, stack)))
@@ -168,6 +173,7 @@ enum Term {
   case FloatLit(v: Double)
   case BoolLit(b: Boolean)
   case StringLit(s: String)
+  case Proposition(predicates: Set[Term])
   case ListLit(tpe: Option[Type], elements: List[Term])
   case BinOp(kind: OpKind, leftTerm: Term, rightTerm: Term)
   case If(cond: Term, thenBranch: Term, elseBranch: Term)
@@ -206,6 +212,7 @@ enum Term {
     case Term.FloatLit(_)               => Type.FloatType
     case Term.BoolLit(_)                => Type.BoolType
     case Term.StringLit(_)              => Type.StringType
+    case Term.Proposition(_)            => Type.PropositionType
     case Term.ListLit(Some(tpe), _)     => Type.ListType(tpe)
     case Term.ListLit(None, hd::tl)     => Type.ListType(hd.infer(typeEnv))
     case Term.ListLit(None, Nil)        => throw new RuntimeException("Cannot infer type of empty list without annotation")

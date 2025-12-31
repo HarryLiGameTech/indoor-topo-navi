@@ -33,8 +33,8 @@ trait Elaborateable[T] {
 // Root TopoMap definition
 case class RootSyntax(
   name: String,
-  params: List[(String, Type)],
-  types: List[(String, Type)],
+  params: List[(String, Type)], // paramName -> type
+  types: List[(String, Type)], // type aliases like enums
   defns: List[(String, Expr)],
   data: List[Data],
   submaps: List[SubTopoMapSyntax],
@@ -60,7 +60,7 @@ case class SubTopoMapSyntax(
   name: String,
   params: Params,
   types: List[(String, Type)],
-  defns: List[(String, Expr)],
+  defns: List[(String, Expr)], // aliases
   data: List[Data],
   nodes: List[TopoNode],
   paths: List[AtomicPath]

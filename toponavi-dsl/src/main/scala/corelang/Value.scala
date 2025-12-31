@@ -5,6 +5,7 @@ enum Value extends Identified[Identifier] {
   case FloatVal(v: Double)
   case BoolVal(b: Boolean)
   case StringVal(s: String)
+  case PropositionVal(preds: Set[Value])
   case ListVal(tpe: Type, elements: List[Value]) // type is now inferred, no need to Option[] anymore
   case Closure(env: Env, body: Term)
   case FixThunk(annotatedType: Type, body: Term, env: Env)
@@ -16,6 +17,7 @@ enum Value extends Identified[Identifier] {
     case FloatVal(v) => Term.FloatLit(v)
     case BoolVal(b) => Term.BoolLit(b)
     case StringVal(s) => Term.StringLit(s)
+    case PropositionVal(preds) => Term.Proposition(preds.map(_.toTerm))
     case ListVal(tpe, elements) => Term.ListLit(Some(tpe), elements.map(_.toTerm))
     case Closure(_, _) | FixThunk(_, _, _) => throw new RuntimeException("Cannot convert closure or fixpoint to term")
     case RecordVal(fields) => Term.Record(fields.map { case (k, v) => (k, v.toTerm) })
@@ -27,9 +29,10 @@ enum Value extends Identified[Identifier] {
     case FloatVal(v) => v.toString
     case BoolVal(b) => b.toString
     case StringVal(s) => s"\"$s\""
+    case PropositionVal(preds) => s"<proposition>"
     case ListVal(tpe, elements) => elements.mkString("[", ", ", "]")
     case Closure(_, body) => s"<closure>"
-    case FixThunk(annotatedType, _, _) => s"<fixpoint: $annotatedType>"
+    case FixThunk(annotatedType, _, _) => s"<fix: $annotatedType>"
     case RecordVal(fields) =>
       val fieldStr = fields.map { case (name, value) => s"$name: $value" }.mkString(", ")
       s"{ $fieldStr }"

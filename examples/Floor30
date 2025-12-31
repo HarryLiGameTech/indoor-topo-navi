@@ -135,6 +135,10 @@ TopoMap Floor30{
     atomic-path [OS_hall <-> OS_hall_outside] {cost = 2}
     atomic-path [OP3_hall <-> OP3_hall_outside] {cost = 2}
     atomic-path [OEX_hall <-> OEX_hall_outside] {cost = 2}
+    
+    atomic-path [normal_node -> secured_node] {data} requires {
+        require haveCard
+    }
 
     
     // Passengers' elevator hall is on the RHS of the peh_crossing when heading to the north-west corner 

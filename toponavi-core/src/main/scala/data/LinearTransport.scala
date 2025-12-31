@@ -26,6 +26,7 @@ case class ElevatorBank(
   stationLocations: Map[NavigationGraph, Double],
   stationPermissions: Map[NavigationGraph, TransportServicePermission],
   stationPopulations: Map[NavigationGraph, Int],
+  departureRate: Map[NavigationGraph, Double],
   maxVelocity: Double,
   acceleration: Double,
   carAmount: Int,
@@ -121,12 +122,23 @@ case class ElevatorBank(
     
   }
   
+  private def upPathCandidateProbability(start: NavigationGraph, end: NavigationGraph): Double = {
+    
+  }
+  
   private def downTime(): Double = {
     
   }
+  
+  private def stops(): Int = {
+    if true then 0
+    else{
+      -1 // TODO: Implement
+    }
+  }
 
   private def populationSum(): Int = {
-    
+    stationPopulations.values.sum
   }
   
 }
