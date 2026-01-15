@@ -17,313 +17,493 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterProgram(MapFileParser.ProgramContext ctx) { }
+	@Override public void enterRootExpr(MapFileParser.RootExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitProgram(MapFileParser.ProgramContext ctx) { }
+	@Override public void exitRootExpr(MapFileParser.RootExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTopoMap(MapFileParser.TopoMapContext ctx) { }
+	@Override public void enterTopoMapExpr(MapFileParser.TopoMapExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTopoMap(MapFileParser.TopoMapContext ctx) { }
+	@Override public void exitTopoMapExpr(MapFileParser.TopoMapExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterNodeContent(MapFileParser.NodeContentContext ctx) { }
+	@Override public void enterTransportExpr(MapFileParser.TransportExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitNodeContent(MapFileParser.NodeContentContext ctx) { }
+	@Override public void exitTransportExpr(MapFileParser.TransportExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterRelationshipContent(MapFileParser.RelationshipContentContext ctx) { }
+	@Override public void enterSurfaceBody(MapFileParser.SurfaceBodyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitRelationshipContent(MapFileParser.RelationshipContentContext ctx) { }
+	@Override public void exitSurfaceBody(MapFileParser.SurfaceBodyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPathContent(MapFileParser.PathContentContext ctx) { }
+	@Override public void enterCoreExpr(MapFileParser.CoreExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPathContent(MapFileParser.PathContentContext ctx) { }
+	@Override public void exitCoreExpr(MapFileParser.CoreExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterDirectionContent(MapFileParser.DirectionContentContext ctx) { }
+	@Override public void enterTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitDirectionContent(MapFileParser.DirectionContentContext ctx) { }
+	@Override public void exitTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterModifierContent(MapFileParser.ModifierContentContext ctx) { }
+	@Override public void enterAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitModifierContent(MapFileParser.ModifierContentContext ctx) { }
+	@Override public void exitAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCommentContent(MapFileParser.CommentContentContext ctx) { }
+	@Override public void enterArrowExpr(MapFileParser.ArrowExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCommentContent(MapFileParser.CommentContentContext ctx) { }
+	@Override public void exitArrowExpr(MapFileParser.ArrowExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTopoNodeDeclaration(MapFileParser.TopoNodeDeclarationContext ctx) { }
+	@Override public void enterVehicleExpr(MapFileParser.VehicleExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTopoNodeDeclaration(MapFileParser.TopoNodeDeclarationContext ctx) { }
+	@Override public void exitVehicleExpr(MapFileParser.VehicleExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterRelationshipDeclaration(MapFileParser.RelationshipDeclarationContext ctx) { }
+	@Override public void enterSubmapExpr(MapFileParser.SubmapExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitRelationshipDeclaration(MapFileParser.RelationshipDeclarationContext ctx) { }
+	@Override public void exitSubmapExpr(MapFileParser.SubmapExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPathDeclaration(MapFileParser.PathDeclarationContext ctx) { }
+	@Override public void enterTypeDef(MapFileParser.TypeDefContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPathDeclaration(MapFileParser.PathDeclarationContext ctx) { }
+	@Override public void exitTypeDef(MapFileParser.TypeDefContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterDirectionDeclaration(MapFileParser.DirectionDeclarationContext ctx) { }
+	@Override public void enterFuncDef(MapFileParser.FuncDefContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitDirectionDeclaration(MapFileParser.DirectionDeclarationContext ctx) { }
+	@Override public void exitFuncDef(MapFileParser.FuncDefContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterModifierDeclaration(MapFileParser.ModifierDeclarationContext ctx) { }
+	@Override public void enterScriptExpr(MapFileParser.ScriptExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitModifierDeclaration(MapFileParser.ModifierDeclarationContext ctx) { }
+	@Override public void exitScriptExpr(MapFileParser.ScriptExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterModifierText(MapFileParser.ModifierTextContext ctx) { }
+	@Override public void enterParamList(MapFileParser.ParamListContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitModifierText(MapFileParser.ModifierTextContext ctx) { }
+	@Override public void exitParamList(MapFileParser.ParamListContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExprFnCall(MapFileParser.ExprFnCallContext ctx) { }
+	@Override public void enterParam(MapFileParser.ParamContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitExprFnCall(MapFileParser.ExprFnCallContext ctx) { }
+	@Override public void exitParam(MapFileParser.ParamContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExprMul(MapFileParser.ExprMulContext ctx) { }
+	@Override public void enterTypeExpr(MapFileParser.TypeExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitExprMul(MapFileParser.ExprMulContext ctx) { }
+	@Override public void exitTypeExpr(MapFileParser.TypeExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExprAdd(MapFileParser.ExprAddContext ctx) { }
+	@Override public void enterTypeAtom(MapFileParser.TypeAtomContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitExprAdd(MapFileParser.ExprAddContext ctx) { }
+	@Override public void exitTypeAtom(MapFileParser.TypeAtomContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExprIdentifier(MapFileParser.ExprIdentifierContext ctx) { }
+	@Override public void enterRecordType(MapFileParser.RecordTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitExprIdentifier(MapFileParser.ExprIdentifierContext ctx) { }
+	@Override public void exitRecordType(MapFileParser.RecordTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExprPow(MapFileParser.ExprPowContext ctx) { }
+	@Override public void enterFieldDecl(MapFileParser.FieldDeclContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitExprPow(MapFileParser.ExprPowContext ctx) { }
+	@Override public void exitFieldDecl(MapFileParser.FieldDeclContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExprIf(MapFileParser.ExprIfContext ctx) { }
+	@Override public void enterAppMlExpr(MapFileParser.AppMlExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitExprIf(MapFileParser.ExprIfContext ctx) { }
+	@Override public void exitAppMlExpr(MapFileParser.AppMlExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExprPrimitive(MapFileParser.ExprPrimitiveContext ctx) { }
+	@Override public void enterAppCExpr(MapFileParser.AppCExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitExprPrimitive(MapFileParser.ExprPrimitiveContext ctx) { }
+	@Override public void exitAppCExpr(MapFileParser.AppCExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExprParan(MapFileParser.ExprParanContext ctx) { }
+	@Override public void enterIfExpr(MapFileParser.IfExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitExprParan(MapFileParser.ExprParanContext ctx) { }
+	@Override public void exitIfExpr(MapFileParser.IfExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPrimitiveInt(MapFileParser.PrimitiveIntContext ctx) { }
+	@Override public void enterLetExpr(MapFileParser.LetExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPrimitiveInt(MapFileParser.PrimitiveIntContext ctx) { }
+	@Override public void exitLetExpr(MapFileParser.LetExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPrimitiveBool(MapFileParser.PrimitiveBoolContext ctx) { }
+	@Override public void enterLetRecExpr(MapFileParser.LetRecExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPrimitiveBool(MapFileParser.PrimitiveBoolContext ctx) { }
+	@Override public void exitLetRecExpr(MapFileParser.LetRecExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPrimitiveFloat(MapFileParser.PrimitiveFloatContext ctx) { }
+	@Override public void enterNegExpr(MapFileParser.NegExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPrimitiveFloat(MapFileParser.PrimitiveFloatContext ctx) { }
+	@Override public void exitNegExpr(MapFileParser.NegExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPrimitiveString(MapFileParser.PrimitiveStringContext ctx) { }
+	@Override public void enterCompExpr(MapFileParser.CompExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPrimitiveString(MapFileParser.PrimitiveStringContext ctx) { }
+	@Override public void exitCompExpr(MapFileParser.CompExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAtomExpr(MapFileParser.AtomExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAtomExpr(MapFileParser.AtomExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterLamExpr(MapFileParser.LamExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLamExpr(MapFileParser.LamExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMulDivExpr(MapFileParser.MulDivExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMulDivExpr(MapFileParser.MulDivExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFixExpr(MapFileParser.FixExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFixExpr(MapFileParser.FixExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterProjExpr(MapFileParser.ProjExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitProjExpr(MapFileParser.ProjExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAddSubExpr(MapFileParser.AddSubExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAddSubExpr(MapFileParser.AddSubExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAtom(MapFileParser.AtomContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAtom(MapFileParser.AtomContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFieldAssign(MapFileParser.FieldAssignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFieldAssign(MapFileParser.FieldAssignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBlock(MapFileParser.BlockContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBlock(MapFileParser.BlockContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterLetStmt(MapFileParser.LetStmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLetStmt(MapFileParser.LetStmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterExprStmt(MapFileParser.ExprStmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExprStmt(MapFileParser.ExprStmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterPathSpec(MapFileParser.PathSpecContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitPathSpec(MapFileParser.PathSpecContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterArrowSpec(MapFileParser.ArrowSpecContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArrowSpec(MapFileParser.ArrowSpecContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterArrowHeading(MapFileParser.ArrowHeadingContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArrowHeading(MapFileParser.ArrowHeadingContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterRequirements(MapFileParser.RequirementsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRequirements(MapFileParser.RequirementsContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

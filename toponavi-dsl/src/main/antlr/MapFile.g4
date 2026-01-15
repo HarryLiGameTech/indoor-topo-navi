@@ -5,11 +5,27 @@ grammar MapFile;
 // -----------------------------------------------------------------------------
 
 // Entry point: A program is a list of top-level definitions or expressions
-program
-    : topLevelDef* EOF
+surfaceDef
+    : 'root' ID '(' paramList? ')' surfaceBody                        # RootExpr
+    | 'topo-map' ID '(' paramList? ')' surfaceBody                    # TopoMapExpr
+    | 'transport' ID 'is' expr surfaceBody                            # TransportExpr
     ;
 
-topLevelDef
+surfaceBody
+    : '{' (surfaceBodyElement NL)+ '}'
+    ;
+
+surfaceBodyElement
+    : coreDef                                             # CoreExpr
+    | 'topo-node' ID recordType                           # TopoNodeExpr
+    | 'atomic-path' pathSpec recordType requirements      # AtomicPathExpr
+    | 'arrow' arrowSpec arrowHeading '>>' expr            # ArrowExpr
+    | 'vehicle' ID                                        # VehicleExpr
+    | 'submap' ID                                         # SubmapExpr
+    ;
+
+coreDef
+    // Core language
     : 'type' ID '=' typeExpr                                    # TypeDef
     | 'def' ID '(' paramList? ')' (':' typeExpr)? '=' expr      # FuncDef
     | expr                                                      # ScriptExpr
@@ -35,8 +51,12 @@ typeAtom
     | 'Bool'
     | 'String'
     | ID
-    | '{' (fieldDecl (',' fieldDecl)*)? '}'   // Record Type
+    | recordType
     | '(' typeExpr ')'
+    ;
+
+recordType
+    : '{' (fieldDecl (',' fieldDecl)*)? '}'
     ;
 
 fieldDecl
@@ -60,8 +80,8 @@ expr
     | expr ('==' | '<' | '>' | '<=' | '>=') expr          # CompExpr
 
     // Control Flow (Lowest Precedence / Right Associative)
-    | 'if' expr 'then' expr 'else' expr                   # IfExpr
-    | 'let' ID (':' typeExpr)? '=' expr 'in' expr         # LetExpr
+    | 'if' cond=expr 'then' ifExpr=expr 'else' elseExpr=expr                   # IfExpr
+    | 'let' ID (':' letType=typeExpr)? '=' assignValue=expr 'in' expr         # LetExpr
     | 'let' 'rec' ID (':' typeExpr)? '=' expr 'in' expr   # LetRecExpr
     | 'fix' ID ':' typeExpr '.' expr                      # FixExpr
     | ('\\' | 'fn') ID ':' typeExpr ('=>' | '.') expr     # LamExpr
@@ -93,6 +113,24 @@ block
 stmt
     : 'let' ID (':' typeExpr)? '=' expr     # LetStmt  // 'let' without 'in'
     | expr                                  # ExprStmt // Side-effect
+    ;
+
+pathSpec
+    : '[' ID ('<'? '->' ID) ']'
+    ;
+
+arrowSpec
+    : '[' ID '->' ID ']'
+    ;
+
+arrowHeading
+    : '^^'
+    | '\\' '/' // '\/'
+    ;
+
+requirements
+    : 'requires' ID
+    | 'requires' '<' (ID ('&&' ID)*)? '>'
     ;
 
 // -----------------------------------------------------------------------------

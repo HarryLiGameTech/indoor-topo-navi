@@ -11,177 +11,276 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#program}.
+	 * Visit a parse tree produced by the {@code RootExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitProgram(MapFileParser.ProgramContext ctx);
+	T visitRootExpr(MapFileParser.RootExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#topoMap}.
+	 * Visit a parse tree produced by the {@code TopoMapExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTopoMap(MapFileParser.TopoMapContext ctx);
+	T visitTopoMapExpr(MapFileParser.TopoMapExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code nodeContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Visit a parse tree produced by the {@code TransportExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitNodeContent(MapFileParser.NodeContentContext ctx);
+	T visitTransportExpr(MapFileParser.TransportExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code relationshipContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Visit a parse tree produced by {@link MapFileParser#surfaceBody}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitRelationshipContent(MapFileParser.RelationshipContentContext ctx);
+	T visitSurfaceBody(MapFileParser.SurfaceBodyContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code pathContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Visit a parse tree produced by the {@code CoreExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPathContent(MapFileParser.PathContentContext ctx);
+	T visitCoreExpr(MapFileParser.CoreExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code directionContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Visit a parse tree produced by the {@code TopoNodeExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitDirectionContent(MapFileParser.DirectionContentContext ctx);
+	T visitTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code modifierContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Visit a parse tree produced by the {@code AtomicPathExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitModifierContent(MapFileParser.ModifierContentContext ctx);
+	T visitAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code commentContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Visit a parse tree produced by the {@code ArrowExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCommentContent(MapFileParser.CommentContentContext ctx);
+	T visitArrowExpr(MapFileParser.ArrowExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#topoNodeDeclaration}.
+	 * Visit a parse tree produced by the {@code VehicleExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTopoNodeDeclaration(MapFileParser.TopoNodeDeclarationContext ctx);
+	T visitVehicleExpr(MapFileParser.VehicleExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#relationshipDeclaration}.
+	 * Visit a parse tree produced by the {@code SubmapExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitRelationshipDeclaration(MapFileParser.RelationshipDeclarationContext ctx);
+	T visitSubmapExpr(MapFileParser.SubmapExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#pathDeclaration}.
+	 * Visit a parse tree produced by the {@code TypeDef}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPathDeclaration(MapFileParser.PathDeclarationContext ctx);
+	T visitTypeDef(MapFileParser.TypeDefContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#directionDeclaration}.
+	 * Visit a parse tree produced by the {@code FuncDef}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitDirectionDeclaration(MapFileParser.DirectionDeclarationContext ctx);
+	T visitFuncDef(MapFileParser.FuncDefContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#modifierDeclaration}.
+	 * Visit a parse tree produced by the {@code ScriptExpr}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitModifierDeclaration(MapFileParser.ModifierDeclarationContext ctx);
+	T visitScriptExpr(MapFileParser.ScriptExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#modifierText}.
+	 * Visit a parse tree produced by {@link MapFileParser#paramList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitModifierText(MapFileParser.ModifierTextContext ctx);
+	T visitParamList(MapFileParser.ParamListContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprFnCall}
+	 * Visit a parse tree produced by {@link MapFileParser#param}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParam(MapFileParser.ParamContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#typeExpr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTypeExpr(MapFileParser.TypeExprContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#typeAtom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTypeAtom(MapFileParser.TypeAtomContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#recordType}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRecordType(MapFileParser.RecordTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#fieldDecl}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFieldDecl(MapFileParser.FieldDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code AppMlExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprFnCall(MapFileParser.ExprFnCallContext ctx);
+	T visitAppMlExpr(MapFileParser.AppMlExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprMul}
+	 * Visit a parse tree produced by the {@code AppCExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprMul(MapFileParser.ExprMulContext ctx);
+	T visitAppCExpr(MapFileParser.AppCExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprAdd}
+	 * Visit a parse tree produced by the {@code IfExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprAdd(MapFileParser.ExprAddContext ctx);
+	T visitIfExpr(MapFileParser.IfExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprIdentifier}
+	 * Visit a parse tree produced by the {@code LetExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprIdentifier(MapFileParser.ExprIdentifierContext ctx);
+	T visitLetExpr(MapFileParser.LetExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprPow}
+	 * Visit a parse tree produced by the {@code LetRecExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprPow(MapFileParser.ExprPowContext ctx);
+	T visitLetRecExpr(MapFileParser.LetRecExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprIf}
+	 * Visit a parse tree produced by the {@code NegExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprIf(MapFileParser.ExprIfContext ctx);
+	T visitNegExpr(MapFileParser.NegExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprPrimitive}
+	 * Visit a parse tree produced by the {@code CompExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprPrimitive(MapFileParser.ExprPrimitiveContext ctx);
+	T visitCompExpr(MapFileParser.CompExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprParan}
+	 * Visit a parse tree produced by the {@code AtomExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprParan(MapFileParser.ExprParanContext ctx);
+	T visitAtomExpr(MapFileParser.AtomExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code primitiveInt}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Visit a parse tree produced by the {@code LamExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPrimitiveInt(MapFileParser.PrimitiveIntContext ctx);
+	T visitLamExpr(MapFileParser.LamExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code primitiveBool}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Visit a parse tree produced by the {@code MulDivExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPrimitiveBool(MapFileParser.PrimitiveBoolContext ctx);
+	T visitMulDivExpr(MapFileParser.MulDivExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code primitiveFloat}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Visit a parse tree produced by the {@code FixExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPrimitiveFloat(MapFileParser.PrimitiveFloatContext ctx);
+	T visitFixExpr(MapFileParser.FixExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code primitiveString}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Visit a parse tree produced by the {@code ProjExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPrimitiveString(MapFileParser.PrimitiveStringContext ctx);
+	T visitProjExpr(MapFileParser.ProjExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code AddSubExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAddSubExpr(MapFileParser.AddSubExprContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAtom(MapFileParser.AtomContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#fieldAssign}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFieldAssign(MapFileParser.FieldAssignContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#block}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock(MapFileParser.BlockContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code LetStmt}
+	 * labeled alternative in {@link MapFileParser#stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLetStmt(MapFileParser.LetStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ExprStmt}
+	 * labeled alternative in {@link MapFileParser#stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprStmt(MapFileParser.ExprStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#pathSpec}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPathSpec(MapFileParser.PathSpecContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#arrowSpec}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrowSpec(MapFileParser.ArrowSpecContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#arrowHeading}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrowHeading(MapFileParser.ArrowHeadingContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#requirements}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRequirements(MapFileParser.RequirementsContext ctx);
 }

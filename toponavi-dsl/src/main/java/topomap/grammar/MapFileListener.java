@@ -8,299 +8,467 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  */
 public interface MapFileListener extends ParseTreeListener {
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#program}.
+	 * Enter a parse tree produced by the {@code RootExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 */
-	void enterProgram(MapFileParser.ProgramContext ctx);
+	void enterRootExpr(MapFileParser.RootExprContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#program}.
+	 * Exit a parse tree produced by the {@code RootExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 */
-	void exitProgram(MapFileParser.ProgramContext ctx);
+	void exitRootExpr(MapFileParser.RootExprContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#topoMap}.
+	 * Enter a parse tree produced by the {@code TopoMapExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 */
-	void enterTopoMap(MapFileParser.TopoMapContext ctx);
+	void enterTopoMapExpr(MapFileParser.TopoMapExprContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#topoMap}.
+	 * Exit a parse tree produced by the {@code TopoMapExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 */
-	void exitTopoMap(MapFileParser.TopoMapContext ctx);
+	void exitTopoMapExpr(MapFileParser.TopoMapExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code nodeContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Enter a parse tree produced by the {@code TransportExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 */
-	void enterNodeContent(MapFileParser.NodeContentContext ctx);
+	void enterTransportExpr(MapFileParser.TransportExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code nodeContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Exit a parse tree produced by the {@code TransportExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 */
-	void exitNodeContent(MapFileParser.NodeContentContext ctx);
+	void exitTransportExpr(MapFileParser.TransportExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code relationshipContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Enter a parse tree produced by {@link MapFileParser#surfaceBody}.
 	 * @param ctx the parse tree
 	 */
-	void enterRelationshipContent(MapFileParser.RelationshipContentContext ctx);
+	void enterSurfaceBody(MapFileParser.SurfaceBodyContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code relationshipContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Exit a parse tree produced by {@link MapFileParser#surfaceBody}.
 	 * @param ctx the parse tree
 	 */
-	void exitRelationshipContent(MapFileParser.RelationshipContentContext ctx);
+	void exitSurfaceBody(MapFileParser.SurfaceBodyContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code pathContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Enter a parse tree produced by the {@code CoreExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterPathContent(MapFileParser.PathContentContext ctx);
+	void enterCoreExpr(MapFileParser.CoreExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code pathContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Exit a parse tree produced by the {@code CoreExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitPathContent(MapFileParser.PathContentContext ctx);
+	void exitCoreExpr(MapFileParser.CoreExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code directionContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Enter a parse tree produced by the {@code TopoNodeExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterDirectionContent(MapFileParser.DirectionContentContext ctx);
+	void enterTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code directionContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Exit a parse tree produced by the {@code TopoNodeExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitDirectionContent(MapFileParser.DirectionContentContext ctx);
+	void exitTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code modifierContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Enter a parse tree produced by the {@code AtomicPathExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterModifierContent(MapFileParser.ModifierContentContext ctx);
+	void enterAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code modifierContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Exit a parse tree produced by the {@code AtomicPathExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitModifierContent(MapFileParser.ModifierContentContext ctx);
+	void exitAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code commentContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Enter a parse tree produced by the {@code ArrowExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterCommentContent(MapFileParser.CommentContentContext ctx);
+	void enterArrowExpr(MapFileParser.ArrowExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code commentContent}
-	 * labeled alternative in {@link MapFileParser#topoMapContent}.
+	 * Exit a parse tree produced by the {@code ArrowExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitCommentContent(MapFileParser.CommentContentContext ctx);
+	void exitArrowExpr(MapFileParser.ArrowExprContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#topoNodeDeclaration}.
+	 * Enter a parse tree produced by the {@code VehicleExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterTopoNodeDeclaration(MapFileParser.TopoNodeDeclarationContext ctx);
+	void enterVehicleExpr(MapFileParser.VehicleExprContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#topoNodeDeclaration}.
+	 * Exit a parse tree produced by the {@code VehicleExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitTopoNodeDeclaration(MapFileParser.TopoNodeDeclarationContext ctx);
+	void exitVehicleExpr(MapFileParser.VehicleExprContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#relationshipDeclaration}.
+	 * Enter a parse tree produced by the {@code SubmapExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterRelationshipDeclaration(MapFileParser.RelationshipDeclarationContext ctx);
+	void enterSubmapExpr(MapFileParser.SubmapExprContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#relationshipDeclaration}.
+	 * Exit a parse tree produced by the {@code SubmapExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitRelationshipDeclaration(MapFileParser.RelationshipDeclarationContext ctx);
+	void exitSubmapExpr(MapFileParser.SubmapExprContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#pathDeclaration}.
+	 * Enter a parse tree produced by the {@code TypeDef}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
 	 */
-	void enterPathDeclaration(MapFileParser.PathDeclarationContext ctx);
+	void enterTypeDef(MapFileParser.TypeDefContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#pathDeclaration}.
+	 * Exit a parse tree produced by the {@code TypeDef}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
 	 */
-	void exitPathDeclaration(MapFileParser.PathDeclarationContext ctx);
+	void exitTypeDef(MapFileParser.TypeDefContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#directionDeclaration}.
+	 * Enter a parse tree produced by the {@code FuncDef}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
 	 */
-	void enterDirectionDeclaration(MapFileParser.DirectionDeclarationContext ctx);
+	void enterFuncDef(MapFileParser.FuncDefContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#directionDeclaration}.
+	 * Exit a parse tree produced by the {@code FuncDef}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
 	 */
-	void exitDirectionDeclaration(MapFileParser.DirectionDeclarationContext ctx);
+	void exitFuncDef(MapFileParser.FuncDefContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#modifierDeclaration}.
+	 * Enter a parse tree produced by the {@code ScriptExpr}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
 	 */
-	void enterModifierDeclaration(MapFileParser.ModifierDeclarationContext ctx);
+	void enterScriptExpr(MapFileParser.ScriptExprContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#modifierDeclaration}.
+	 * Exit a parse tree produced by the {@code ScriptExpr}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
 	 */
-	void exitModifierDeclaration(MapFileParser.ModifierDeclarationContext ctx);
+	void exitScriptExpr(MapFileParser.ScriptExprContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#modifierText}.
+	 * Enter a parse tree produced by {@link MapFileParser#paramList}.
 	 * @param ctx the parse tree
 	 */
-	void enterModifierText(MapFileParser.ModifierTextContext ctx);
+	void enterParamList(MapFileParser.ParamListContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#modifierText}.
+	 * Exit a parse tree produced by {@link MapFileParser#paramList}.
 	 * @param ctx the parse tree
 	 */
-	void exitModifierText(MapFileParser.ModifierTextContext ctx);
+	void exitParamList(MapFileParser.ParamListContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code exprFnCall}
+	 * Enter a parse tree produced by {@link MapFileParser#param}.
+	 * @param ctx the parse tree
+	 */
+	void enterParam(MapFileParser.ParamContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#param}.
+	 * @param ctx the parse tree
+	 */
+	void exitParam(MapFileParser.ParamContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#typeExpr}.
+	 * @param ctx the parse tree
+	 */
+	void enterTypeExpr(MapFileParser.TypeExprContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#typeExpr}.
+	 * @param ctx the parse tree
+	 */
+	void exitTypeExpr(MapFileParser.TypeExprContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#typeAtom}.
+	 * @param ctx the parse tree
+	 */
+	void enterTypeAtom(MapFileParser.TypeAtomContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#typeAtom}.
+	 * @param ctx the parse tree
+	 */
+	void exitTypeAtom(MapFileParser.TypeAtomContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#recordType}.
+	 * @param ctx the parse tree
+	 */
+	void enterRecordType(MapFileParser.RecordTypeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#recordType}.
+	 * @param ctx the parse tree
+	 */
+	void exitRecordType(MapFileParser.RecordTypeContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#fieldDecl}.
+	 * @param ctx the parse tree
+	 */
+	void enterFieldDecl(MapFileParser.FieldDeclContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#fieldDecl}.
+	 * @param ctx the parse tree
+	 */
+	void exitFieldDecl(MapFileParser.FieldDeclContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code AppMlExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprFnCall(MapFileParser.ExprFnCallContext ctx);
+	void enterAppMlExpr(MapFileParser.AppMlExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code exprFnCall}
+	 * Exit a parse tree produced by the {@code AppMlExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprFnCall(MapFileParser.ExprFnCallContext ctx);
+	void exitAppMlExpr(MapFileParser.AppMlExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code exprMul}
+	 * Enter a parse tree produced by the {@code AppCExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprMul(MapFileParser.ExprMulContext ctx);
+	void enterAppCExpr(MapFileParser.AppCExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code exprMul}
+	 * Exit a parse tree produced by the {@code AppCExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprMul(MapFileParser.ExprMulContext ctx);
+	void exitAppCExpr(MapFileParser.AppCExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code exprAdd}
+	 * Enter a parse tree produced by the {@code IfExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprAdd(MapFileParser.ExprAddContext ctx);
+	void enterIfExpr(MapFileParser.IfExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code exprAdd}
+	 * Exit a parse tree produced by the {@code IfExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprAdd(MapFileParser.ExprAddContext ctx);
+	void exitIfExpr(MapFileParser.IfExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code exprIdentifier}
+	 * Enter a parse tree produced by the {@code LetExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprIdentifier(MapFileParser.ExprIdentifierContext ctx);
+	void enterLetExpr(MapFileParser.LetExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code exprIdentifier}
+	 * Exit a parse tree produced by the {@code LetExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprIdentifier(MapFileParser.ExprIdentifierContext ctx);
+	void exitLetExpr(MapFileParser.LetExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code exprPow}
+	 * Enter a parse tree produced by the {@code LetRecExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprPow(MapFileParser.ExprPowContext ctx);
+	void enterLetRecExpr(MapFileParser.LetRecExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code exprPow}
+	 * Exit a parse tree produced by the {@code LetRecExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprPow(MapFileParser.ExprPowContext ctx);
+	void exitLetRecExpr(MapFileParser.LetRecExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code exprIf}
+	 * Enter a parse tree produced by the {@code NegExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprIf(MapFileParser.ExprIfContext ctx);
+	void enterNegExpr(MapFileParser.NegExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code exprIf}
+	 * Exit a parse tree produced by the {@code NegExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprIf(MapFileParser.ExprIfContext ctx);
+	void exitNegExpr(MapFileParser.NegExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code exprPrimitive}
+	 * Enter a parse tree produced by the {@code CompExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprPrimitive(MapFileParser.ExprPrimitiveContext ctx);
+	void enterCompExpr(MapFileParser.CompExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code exprPrimitive}
+	 * Exit a parse tree produced by the {@code CompExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprPrimitive(MapFileParser.ExprPrimitiveContext ctx);
+	void exitCompExpr(MapFileParser.CompExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code exprParan}
+	 * Enter a parse tree produced by the {@code AtomExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprParan(MapFileParser.ExprParanContext ctx);
+	void enterAtomExpr(MapFileParser.AtomExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code exprParan}
+	 * Exit a parse tree produced by the {@code AtomExpr}
 	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprParan(MapFileParser.ExprParanContext ctx);
+	void exitAtomExpr(MapFileParser.AtomExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code primitiveInt}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Enter a parse tree produced by the {@code LamExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterPrimitiveInt(MapFileParser.PrimitiveIntContext ctx);
+	void enterLamExpr(MapFileParser.LamExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code primitiveInt}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Exit a parse tree produced by the {@code LamExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitPrimitiveInt(MapFileParser.PrimitiveIntContext ctx);
+	void exitLamExpr(MapFileParser.LamExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code primitiveBool}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Enter a parse tree produced by the {@code MulDivExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterPrimitiveBool(MapFileParser.PrimitiveBoolContext ctx);
+	void enterMulDivExpr(MapFileParser.MulDivExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code primitiveBool}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Exit a parse tree produced by the {@code MulDivExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitPrimitiveBool(MapFileParser.PrimitiveBoolContext ctx);
+	void exitMulDivExpr(MapFileParser.MulDivExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code primitiveFloat}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Enter a parse tree produced by the {@code FixExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterPrimitiveFloat(MapFileParser.PrimitiveFloatContext ctx);
+	void enterFixExpr(MapFileParser.FixExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code primitiveFloat}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Exit a parse tree produced by the {@code FixExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitPrimitiveFloat(MapFileParser.PrimitiveFloatContext ctx);
+	void exitFixExpr(MapFileParser.FixExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code primitiveString}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Enter a parse tree produced by the {@code ProjExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterPrimitiveString(MapFileParser.PrimitiveStringContext ctx);
+	void enterProjExpr(MapFileParser.ProjExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code primitiveString}
-	 * labeled alternative in {@link MapFileParser#primitive}.
+	 * Exit a parse tree produced by the {@code ProjExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitPrimitiveString(MapFileParser.PrimitiveStringContext ctx);
+	void exitProjExpr(MapFileParser.ProjExprContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code AddSubExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterAddSubExpr(MapFileParser.AddSubExprContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code AddSubExpr}
+	 * labeled alternative in {@link MapFileParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitAddSubExpr(MapFileParser.AddSubExprContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#atom}.
+	 * @param ctx the parse tree
+	 */
+	void enterAtom(MapFileParser.AtomContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#atom}.
+	 * @param ctx the parse tree
+	 */
+	void exitAtom(MapFileParser.AtomContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#fieldAssign}.
+	 * @param ctx the parse tree
+	 */
+	void enterFieldAssign(MapFileParser.FieldAssignContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#fieldAssign}.
+	 * @param ctx the parse tree
+	 */
+	void exitFieldAssign(MapFileParser.FieldAssignContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#block}.
+	 * @param ctx the parse tree
+	 */
+	void enterBlock(MapFileParser.BlockContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#block}.
+	 * @param ctx the parse tree
+	 */
+	void exitBlock(MapFileParser.BlockContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code LetStmt}
+	 * labeled alternative in {@link MapFileParser#stmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterLetStmt(MapFileParser.LetStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code LetStmt}
+	 * labeled alternative in {@link MapFileParser#stmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitLetStmt(MapFileParser.LetStmtContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ExprStmt}
+	 * labeled alternative in {@link MapFileParser#stmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprStmt(MapFileParser.ExprStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ExprStmt}
+	 * labeled alternative in {@link MapFileParser#stmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprStmt(MapFileParser.ExprStmtContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#pathSpec}.
+	 * @param ctx the parse tree
+	 */
+	void enterPathSpec(MapFileParser.PathSpecContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#pathSpec}.
+	 * @param ctx the parse tree
+	 */
+	void exitPathSpec(MapFileParser.PathSpecContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#arrowSpec}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrowSpec(MapFileParser.ArrowSpecContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#arrowSpec}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrowSpec(MapFileParser.ArrowSpecContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#arrowHeading}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrowHeading(MapFileParser.ArrowHeadingContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#arrowHeading}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrowHeading(MapFileParser.ArrowHeadingContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#requirements}.
+	 * @param ctx the parse tree
+	 */
+	void enterRequirements(MapFileParser.RequirementsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#requirements}.
+	 * @param ctx the parse tree
+	 */
+	void exitRequirements(MapFileParser.RequirementsContext ctx);
 }

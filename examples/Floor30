@@ -14,7 +14,6 @@ TopoMap Floor30{
             category = ARRIVE,
         } // In this period of time, people linearly reaches this floor
     }
-    
 
     enum Movement {
         PushDoor,
@@ -142,5 +141,6 @@ TopoMap Floor30{
     // Passengers' elevator hall is on the RHS of the peh_crossing when heading to the north-west corner 
     // Direction(passenger_elevator_hall, passenger_elevator_hall_crossing, NW_corner, RIGHT) 
 
-    
+    arrow [a -> b] ^^ c >> RIGHT
+    arrow [a -> d] \/ e >> LEFT
 }
