@@ -1,93 +1,133 @@
 grammar MapFile;
 
-// Top-level structure
-program : topoMap* EOF;
+// -----------------------------------------------------------------------------
+// PARSER RULES
+// -----------------------------------------------------------------------------
 
-topoMap : 'TopoMap' name=Identifier '{' topoMapContent* '}';
-
-topoMapContent
-    :   topoNodeDeclaration             # nodeContent
-    |   relationshipDeclaration         # relationshipContent
-    |   pathDeclaration                 # pathContent
-    |   directionDeclaration            # directionContent
-    |   modifierDeclaration             # modifierContent
-    |   LineComment                     # commentContent
+// Entry point: A program is a list of top-level definitions or expressions
+program
+    : topLevelDef* EOF
     ;
 
-// Declaration rules
-topoNodeDeclaration : 'TopoNode' '(' name=Identifier ')' (LineComment)?;
+topLevelDef
+    : 'type' ID '=' typeExpr                                    # TypeDef
+    | 'def' ID '(' paramList? ')' (':' typeExpr)? '=' expr      # FuncDef
+    | expr                                                      # ScriptExpr
+    ;
 
-relationshipDeclaration : relationType=RCC '(' subject=Identifier ',' object=Identifier ')' (LineComment)?;
+paramList
+    : param (',' param)*
+    ;
 
-pathDeclaration : 'AtomicPath' '(' from=Identifier ',' to=Identifier ','
-    cost=expr ',' modifier=Identifier ')';
+param
+    : ID ':' typeExpr
+    ;
 
-directionDeclaration : 'Direction' '(' from=Identifier ',' via=Identifier ','
-    to=Identifier ',' direction=TPCC ')';
+// --- Types ---
+// Right-associative arrow: Int -> Int -> Int means Int -> (Int -> Int)
+typeExpr
+    : typeAtom ('->' typeExpr)?
+    ;
 
-modifierDeclaration : 'modifier' name=Identifier '{' modifierText* '}';
+typeAtom
+    : 'Int'
+    | 'Float'
+    | 'Bool'
+    | 'String'
+    | ID
+    | '{' (fieldDecl (',' fieldDecl)*)? '}'   // Record Type
+    | '(' typeExpr ')'
+    ;
 
-// TODO
-modifierText : 'TODO';
+fieldDecl
+    : ID ':' typeExpr
+    ;
 
+// --- Expressions ---
+// Precedence is determined by the order of alternatives (Highest to Lowest)
 expr
-    :   primitive                                                       # exprPrimitive
-    |   ident=Identifier                                                # exprIdentifier
-    |   '(' expr ')'                                                    # exprParan
-    |   fn=Identifier '(' (args+=expr (',' args+=expr)*)? ')'           # exprFnCall
-    |   lhs=expr ('**') rhs=expr                                        # exprPow
-    |   lhs=expr op=('*'|'/'|'%') rhs=expr                              # exprMul
-    |   lhs=expr op=('+'|'-') rhs=expr                                  # exprAdd
-    |   'if' cond=expr 'then' thenExpr=expr 'else' elseExpr=expr        # exprIf
+    : atom                                                # AtomExpr
+    | expr '.' ID                                         # ProjExpr
+
+    // Application (Left-Associative)
+    | expr atom                                           # AppMlExpr  // f x
+    | expr '(' (expr (',' expr)*)? ')'                    # AppCExpr   // f(x, y)
+
+    // Arithmetic & Logic
+    | '-' expr                                            # NegExpr
+    | expr ('*' | '/') expr                               # MulDivExpr
+    | expr ('+' | '-') expr                               # AddSubExpr
+    | expr ('==' | '<' | '>' | '<=' | '>=') expr          # CompExpr
+
+    // Control Flow (Lowest Precedence / Right Associative)
+    | 'if' expr 'then' expr 'else' expr                   # IfExpr
+    | 'let' ID (':' typeExpr)? '=' expr 'in' expr         # LetExpr
+    | 'let' 'rec' ID (':' typeExpr)? '=' expr 'in' expr   # LetRecExpr
+    | 'fix' ID ':' typeExpr '.' expr                      # FixExpr
+    | ('\\' | 'fn') ID ':' typeExpr ('=>' | '.') expr     # LamExpr
     ;
 
-primitive
-    :   Int                         # primitiveInt
-    |   ('true' | 'false')          # primitiveBool
-    |   Float                       # primitiveFloat
-    |   RegularStringLiteral        # primitiveString
+// Basic atomic units
+atom
+    : INT
+    | FLOAT
+    | 'true'
+    | 'false'
+    | ID
+    | '{' (fieldAssign (',' fieldAssign)*)? '}'   // Record Literal
+    | block                                       // Code Block
+    | '(' expr ')'
     ;
 
-
-RCC: 'DC' | 'EC' | 'EQ' | 'TPP' | 'NTPP';
-
-TPCC: 'FRONT' | 'FRONT_RIGHT' | 'RIGHT' | 'REAR_RIGHT' | 'REAR' | 'REAR_LEFT' | 'LEFT' | 'FRONT_LEFT';
-
-Int: '-'? (Dec | Hex | Oct | Bin);
-Dec: [0-9]+;
-Hex: '0x' HexDigit+;
-Oct: '0o' [0-7]+;
-Bin: '0b' [01]+;
-Float: '-'?[0-9]+[.][0-9]+;
-RegularStringLiteral: '"'  (~["\\\r\n] | CommonCharacter)* '"';
-
-
-Identifier: [a-zA-Z][a-zA-Z_]*;
-
-LineComment
-    : '//' (~[\r\n])* -> skip
+fieldAssign
+    : ID '=' expr
     ;
 
-fragment HexDigit: [0-9] | [A-F] | [a-f];
-fragment ExponentPart: [eE] ('+' | '-')? [0-9] ('_'* [0-9])*;
+// --- Code Blocks ---
+// Example: { let pi = 3.14; pi * r }
+// Allows statements terminated by semicolon, ending with an optional expression.
+block
+    : '{' (stmt ';')* expr? '}'
+    ;
 
-fragment CommonCharacter
-	: '\\\''
-	| '\\"'
-	| '\\\\'
-	| '\\0'
-	| '\\a'
-	| '\\b'
-	| '\\f'
-	| '\\n'
-	| '\\r'
-	| '\\t'
-	| '\\v'
-	;
+stmt
+    : 'let' ID (':' typeExpr)? '=' expr     # LetStmt  // 'let' without 'in'
+    | expr                                  # ExprStmt // Side-effect
+    ;
 
-fragment NewLineAsciiChar
-	: '\r\n' | '\r' | '\n'
-	;
+// -----------------------------------------------------------------------------
+// LEXER RULES
+// -----------------------------------------------------------------------------
 
-// Whitespaces
-Whitespace: [ \t\r]+ -> channel(HIDDEN);
+// Identifiers
+ID
+    : [a-zA-Z_] [a-zA-Z0-9_]*
+    ;
+
+// Literals
+// Float must come before Int to ensure greedy matching of dots
+FLOAT
+    : [0-9]+ '.' [0-9]+
+    ;
+
+INT
+    : [0-9]+
+    ;
+
+// Strings (Simple double-quoted)
+STRING
+    : '"' (~["\r\n] | '\\"')* '"'
+    ;
+
+// Comments & Whitespace
+WS
+    : [ \t\r\n]+ -> skip
+    ;
+
+COMMENT
+    : '//' ~[\r\n]* -> skip
+    ;
+
+BLOCK_COMMENT
+    : '/*' .*? '*/' -> skip
+    ;
