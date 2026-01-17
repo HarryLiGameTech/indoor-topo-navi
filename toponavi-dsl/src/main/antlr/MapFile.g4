@@ -75,9 +75,9 @@ expr
 
     // Arithmetic & Logic
     | '-' expr                                            # NegExpr
-    | expr ('*' | '/') expr                               # MulDivExpr
-    | expr ('+' | '-') expr                               # AddSubExpr
-    | expr ('==' | '<' | '>' | '<=' | '>=') expr          # CompExpr
+    | expr op=('*' | '/') expr                               # MulDivExpr
+    | expr op=('+' | '-') expr                               # AddSubExpr
+    | expr op=('==' | '<' | '>' | '<=' | '>=') expr          # CompExpr
 
     // Control Flow (Lowest Precedence / Right Associative)
     | 'if' cond=expr 'then' ifExpr=expr 'else' elseExpr=expr                   # IfExpr

@@ -1356,6 +1356,7 @@ public class MapFileParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class CompExprContext extends ExprContext {
+		public Token op;
 		public List<ExprContext> expr() {
 			return getRuleContexts(ExprContext.class);
 		}
@@ -1423,6 +1424,7 @@ public class MapFileParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class MulDivExprContext extends ExprContext {
+		public Token op;
 		public List<ExprContext> expr() {
 			return getRuleContexts(ExprContext.class);
 		}
@@ -1491,6 +1493,7 @@ public class MapFileParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class AddSubExprContext extends ExprContext {
+		public Token op;
 		public List<ExprContext> expr() {
 			return getRuleContexts(ExprContext.class);
 		}
@@ -1710,9 +1713,10 @@ public class MapFileParser extends Parser {
 						setState(209);
 						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");
 						setState(210);
+						((MulDivExprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==T__26 || _la==T__27) ) {
-						_errHandler.recoverInline(this);
+							((MulDivExprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -1730,9 +1734,10 @@ public class MapFileParser extends Parser {
 						setState(212);
 						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
 						setState(213);
+						((AddSubExprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==T__25 || _la==T__28) ) {
-						_errHandler.recoverInline(this);
+							((AddSubExprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -1750,9 +1755,10 @@ public class MapFileParser extends Parser {
 						setState(215);
 						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
 						setState(216);
+						((CompExprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 33285996544L) != 0)) ) {
-						_errHandler.recoverInline(this);
+							((CompExprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;

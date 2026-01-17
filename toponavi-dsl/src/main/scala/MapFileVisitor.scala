@@ -29,11 +29,11 @@ class MapFileVisitor extends MapFileBaseVisitor[Any]{
    * - (String, Expr) for FuncDef (desugared to let-rec style tuple, but without the 'in')
    * - Expr for ScriptExpr
    */
-  override def visitCoreDef(ctx: CoreDefContext): Any = {
-    if (ctx.typeDef() != null) visitTypeDef(ctx.typeDef())
-    else if (ctx.funcDef() != null) visitFuncDef(ctx.funcDef())
-    else visitExpr(ctx.expr())
-  }
+//  override def visitCoreDef(ctx: CoreDefContext): Any = {
+//    if (ctx.typeDef() != null) visitTypeDef(ctx.typeDef())
+//    else if (ctx.funcDef() != null) visitFuncDef(ctx.funcDef())
+//    else visitExpr(ctx.expr())
+//  }
 
   override def visitTypeDef(ctx: TypeDefContext): (String, Type) = {
     (ctx.ID().getText, visitTypeExpr(ctx.typeExpr()))
@@ -66,9 +66,8 @@ class MapFileVisitor extends MapFileBaseVisitor[Any]{
   }
 
   // --- Types ---
-
   override def visitTypeExpr(ctx: TypeExprContext): Type = {
-    if (ctx.arrow != null) {
+    if (ctx.typeExpr() != null) {
       // Int -> Int -> Int  =>  Arrow(Int, Arrow(Int, Int))
       Type.Arrow(visitTypeAtom(ctx.typeAtom()), visitTypeExpr(ctx.typeExpr()))
     } else {
