@@ -3,6 +3,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import topomap.grammar.{MapFileLexer, MapFileParser, MapFileVisitor}
 import corelang.{Expr, OpKind, Type}
+import syntax.TopoMapVisitor
 
 class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
 

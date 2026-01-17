@@ -46,42 +46,42 @@ public class MapFileBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitCoreExpr(MapFileParser.CoreExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSurfaceElementCoreDef(MapFileParser.SurfaceElementCoreDefContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSurfaceElementTopoNode(MapFileParser.SurfaceElementTopoNodeContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSurfaceElementAtomicPath(MapFileParser.SurfaceElementAtomicPathContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitArrowExpr(MapFileParser.ArrowExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitVehicleExpr(MapFileParser.VehicleExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitSubmapExpr(MapFileParser.SubmapExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -299,4 +299,11 @@ public class MapFileBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public T visitRequirements(MapFileParser.RequirementsContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitRecordAssign(MapFileParser.RecordAssignContext ctx) { return visitChildren(ctx); }
 }

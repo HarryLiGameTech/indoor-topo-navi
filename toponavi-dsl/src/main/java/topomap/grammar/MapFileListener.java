@@ -54,77 +54,77 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitSurfaceBody(MapFileParser.SurfaceBodyContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code CoreExpr}
+	 * Enter a parse tree produced by the {@code SurfaceElementCoreDef}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterCoreExpr(MapFileParser.CoreExprContext ctx);
+	void enterSurfaceElementCoreDef(MapFileParser.SurfaceElementCoreDefContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code CoreExpr}
+	 * Exit a parse tree produced by the {@code SurfaceElementCoreDef}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitCoreExpr(MapFileParser.CoreExprContext ctx);
+	void exitSurfaceElementCoreDef(MapFileParser.SurfaceElementCoreDefContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code TopoNodeExpr}
+	 * Enter a parse tree produced by the {@code SurfaceElementTopoNode}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx);
+	void enterSurfaceElementTopoNode(MapFileParser.SurfaceElementTopoNodeContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code TopoNodeExpr}
+	 * Exit a parse tree produced by the {@code SurfaceElementTopoNode}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx);
+	void exitSurfaceElementTopoNode(MapFileParser.SurfaceElementTopoNodeContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code AtomicPathExpr}
+	 * Enter a parse tree produced by the {@code SurfaceElementAtomicPath}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx);
+	void enterSurfaceElementAtomicPath(MapFileParser.SurfaceElementAtomicPathContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code AtomicPathExpr}
+	 * Exit a parse tree produced by the {@code SurfaceElementAtomicPath}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx);
+	void exitSurfaceElementAtomicPath(MapFileParser.SurfaceElementAtomicPathContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ArrowExpr}
+	 * Enter a parse tree produced by the {@code SurfaceElementArrow}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterArrowExpr(MapFileParser.ArrowExprContext ctx);
+	void enterSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code ArrowExpr}
+	 * Exit a parse tree produced by the {@code SurfaceElementArrow}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitArrowExpr(MapFileParser.ArrowExprContext ctx);
+	void exitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code VehicleExpr}
+	 * Enter a parse tree produced by the {@code SurfaceElementVehicleExpr}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterVehicleExpr(MapFileParser.VehicleExprContext ctx);
+	void enterSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code VehicleExpr}
+	 * Exit a parse tree produced by the {@code SurfaceElementVehicleExpr}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitVehicleExpr(MapFileParser.VehicleExprContext ctx);
+	void exitSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code SubmapExpr}
+	 * Enter a parse tree produced by the {@code SurfaceElementSubmapExpr}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterSubmapExpr(MapFileParser.SubmapExprContext ctx);
+	void enterSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code SubmapExpr}
+	 * Exit a parse tree produced by the {@code SurfaceElementSubmapExpr}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitSubmapExpr(MapFileParser.SubmapExprContext ctx);
+	void exitSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code TypeDef}
 	 * labeled alternative in {@link MapFileParser#coreDef}.
@@ -471,4 +471,14 @@ public interface MapFileListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitRequirements(MapFileParser.RequirementsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#recordAssign}.
+	 * @param ctx the parse tree
+	 */
+	void enterRecordAssign(MapFileParser.RecordAssignContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#recordAssign}.
+	 * @param ctx the parse tree
+	 */
+	void exitRecordAssign(MapFileParser.RecordAssignContext ctx);
 }

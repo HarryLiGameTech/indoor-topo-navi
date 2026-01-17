@@ -3,6 +3,8 @@ package surfacelang
 import corelang.Value.BoolVal
 import corelang.{Env, Environment, Expr, Identifier, Interpreter, Term, Type, Value}
 
+trait SurfaceSyntax
+
 // AST
 type Params = List[(String, Type)]
 type Data = Expr.Record
@@ -53,7 +55,7 @@ case class RootExpr(
   defns: List[(String, Expr)],
   data: List[Data],
   submaps: List[SubTopoMapExpr]
-) extends SyntaxNameSpace with Elaborateable[TopoRootValue] {
+) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoRootValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): TopoRootValue = {
     val env = this.synthesisEnv
@@ -77,7 +79,7 @@ case class SubTopoMapExpr(
   data: List[Data],
   nodes: List[TopoNodeExpr],
   paths: List[AtomicPathExpr]
-) extends SyntaxNameSpace with Elaborateable[TopoMapValue] {
+) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = {
     given newTopoEnv: TopoEnvironment = topoEnv.merge(this.synthesisEnv)
@@ -94,7 +96,7 @@ case class SubTopoMapExpr(
 case class TopoNodeExpr(
   name: String,
   data: Data
-) extends Elaborateable[TopoNodeValue] {
+) extends SurfaceSyntax with Elaborateable[TopoNodeValue] {
 
   override def elaborate(using topoEnv: TopoEnvironment): TopoNodeValue = {
     Interpreter.eval(data.toTerm(topoEnv.env)) match {
@@ -115,7 +117,7 @@ case class AtomicPathExpr(
   bidirectional: Boolean,
   data: Data,
   override val constraints: List[Expr]
-) extends ConstrainedElaborateable[AtomicPathValue] {
+) extends SurfaceSyntax with ConstrainedElaborateable[AtomicPathValue] {
   override def constrainedElaborate(using topoEnv: TopoEnvironment): AtomicPathValue = {
     AtomicPathValue(
       from = topoEnv.nodes.getOrElse(from, throw RuntimeException(s"Fuck, no such node: $from")),

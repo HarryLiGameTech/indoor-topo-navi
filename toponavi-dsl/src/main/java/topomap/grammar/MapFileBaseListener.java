@@ -65,73 +65,73 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCoreExpr(MapFileParser.CoreExprContext ctx) { }
+	@Override public void enterSurfaceElementCoreDef(MapFileParser.SurfaceElementCoreDefContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCoreExpr(MapFileParser.CoreExprContext ctx) { }
+	@Override public void exitSurfaceElementCoreDef(MapFileParser.SurfaceElementCoreDefContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx) { }
+	@Override public void enterSurfaceElementTopoNode(MapFileParser.SurfaceElementTopoNodeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTopoNodeExpr(MapFileParser.TopoNodeExprContext ctx) { }
+	@Override public void exitSurfaceElementTopoNode(MapFileParser.SurfaceElementTopoNodeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx) { }
+	@Override public void enterSurfaceElementAtomicPath(MapFileParser.SurfaceElementAtomicPathContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitAtomicPathExpr(MapFileParser.AtomicPathExprContext ctx) { }
+	@Override public void exitSurfaceElementAtomicPath(MapFileParser.SurfaceElementAtomicPathContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterArrowExpr(MapFileParser.ArrowExprContext ctx) { }
+	@Override public void enterSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitArrowExpr(MapFileParser.ArrowExprContext ctx) { }
+	@Override public void exitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterVehicleExpr(MapFileParser.VehicleExprContext ctx) { }
+	@Override public void enterSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitVehicleExpr(MapFileParser.VehicleExprContext ctx) { }
+	@Override public void exitSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterSubmapExpr(MapFileParser.SubmapExprContext ctx) { }
+	@Override public void enterSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitSubmapExpr(MapFileParser.SubmapExprContext ctx) { }
+	@Override public void exitSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -504,6 +504,18 @@ public class MapFileBaseListener implements MapFileListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitRequirements(MapFileParser.RequirementsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterRecordAssign(MapFileParser.RecordAssignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRecordAssign(MapFileParser.RecordAssignContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

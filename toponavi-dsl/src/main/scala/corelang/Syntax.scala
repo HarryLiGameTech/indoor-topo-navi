@@ -9,6 +9,17 @@ enum Identifier {
   case Symbol(name: String)
 }
 
+object Identifier {
+  given Conversion[String, Identifier] with {
+    def apply(s: String): Identifier = Identifier(s)
+  }
+
+  def apply(s: String): Identifier = s.toIntOption match {
+    case Some(i) => Identifier.Index(i)
+    case None => Identifier.Symbol(s)
+  }
+}
+
 type TypeOnlyEnv = TypeOnlyEnvironment[Identifier, Type]
 type TypeEnv = TypeEnvironment[Identifier, Type]
 type Env = Environment[Identifier, Type, Value]
@@ -39,7 +50,7 @@ enum OpKind {
   }
 }
 
-enum Expr {
+enum Expr extends Identified[Identifier] {
   case Var(name: String)
   case Lam(param: String, tpe: Type, body: Expr)
   case App(fn: Expr, arg: Expr)

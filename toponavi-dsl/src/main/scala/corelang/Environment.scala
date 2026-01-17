@@ -1,6 +1,6 @@
 package corelang
 
-trait Identified[T]
+trait Identified[+T]
 
 trait Typed[Id, T <: Identified[Id]] extends Identified[Id] {
   def infer(using env: ImmutEnvironment[Id, T, Typed[Id, T]]): T

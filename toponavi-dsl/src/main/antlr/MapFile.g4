@@ -6,22 +6,22 @@ grammar MapFile;
 
 // Entry point: A program is a list of top-level definitions or expressions
 surfaceDef
-    : 'root' ID '(' paramList? ')' surfaceBody                        # RootExpr
-    | 'topo-map' ID '(' paramList? ')' surfaceBody                    # TopoMapExpr
-    | 'transport' ID 'is' expr surfaceBody                            # TransportExpr
+    : 'root' ID '(' paramList? ')' surfaceBody                        # SurfaceDefRootExpr
+    | 'topo-map' ID '(' paramList? ')' surfaceBody                    # SurfaceDefTopoMapExpr
+    | 'transport' ID 'is' expr surfaceBody                            # SurfaceDefTransportExpr
     ;
 
 surfaceBody
-    : '{' (surfaceBodyElement NL)+ '}'
+    : '{' (surfaceBodyElement NL)* surfaceBodyElement '}'
     ;
 
 surfaceBodyElement
-    : coreDef                                             # CoreExpr
-    | 'topo-node' ID recordType                           # TopoNodeExpr
-    | 'atomic-path' pathSpec recordType requirements      # AtomicPathExpr
-    | 'arrow' arrowSpec arrowHeading '>>' expr            # ArrowExpr
-    | 'vehicle' ID                                        # VehicleExpr
-    | 'submap' ID                                         # SubmapExpr
+    : coreDef                                             # SurfaceElementCoreDef
+    | 'topo-node' ID recordAssign                         # SurfaceElementTopoNode
+    | 'atomic-path' pathSpec recordAssign requirements    # SurfaceElementAtomicPath
+    | 'arrow' arrowSpec arrowHeading '>>' expr            # SurfaceElementArrow
+    | 'vehicle' ID                                        # SurfaceElementVehicleExpr
+    | 'submap' ID                                         # SurfaceElementSubmapExpr
     ;
 
 coreDef
@@ -75,12 +75,12 @@ expr
 
     // Arithmetic & Logic
     | '-' expr                                            # NegExpr
-    | expr op=('*' | '/') expr                               # MulDivExpr
-    | expr op=('+' | '-') expr                               # AddSubExpr
-    | expr op=('==' | '<' | '>' | '<=' | '>=') expr          # CompExpr
+    | expr op=('*' | '/') expr                            # MulDivExpr
+    | expr op=('+' | '-') expr                            # AddSubExpr
+    | expr op=('==' | '<' | '>' | '<=' | '>=') expr       # CompExpr
 
     // Control Flow (Lowest Precedence / Right Associative)
-    | 'if' cond=expr 'then' ifExpr=expr 'else' elseExpr=expr                   # IfExpr
+    | 'if' cond=expr 'then' ifExpr=expr 'else' elseExpr=expr                  # IfExpr
     | 'let' ID (':' letType=typeExpr)? '=' assignValue=expr 'in' expr         # LetExpr
     | 'let' 'rec' ID (':' typeExpr)? '=' expr 'in' expr   # LetRecExpr
     | 'fix' ID ':' typeExpr '.' expr                      # FixExpr
@@ -117,7 +117,7 @@ stmt
     ;
 
 pathSpec
-    : '[' ID ('<'? '->' ID) ']'
+    : '[' ID (direction=('<->' | '->') ID) ']'
     ;
 
 arrowSpec
@@ -126,12 +126,16 @@ arrowSpec
 
 arrowHeading
     : '^^'
-    | '\\' '/' // '\/'
+    | '\\/' // '\/'
     ;
 
 requirements
     : 'requires' ID
     | 'requires' '<' (ID ('&&' ID)*)? '>'
+    ;
+
+recordAssign
+    : '{' (fieldAssign (',' fieldAssign)*)? '}'
     ;
 
 // -----------------------------------------------------------------------------
@@ -156,6 +160,10 @@ INT
 // Strings (Simple double-quoted)
 STRING
     : '"' (~["\r\n] | '\\"')* '"'
+    ;
+
+NL
+    : ('\r'? '\n')+
     ;
 
 // Comments & Whitespace
