@@ -36,7 +36,22 @@ class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
     val visitor = new TopoMapVisitor()
 
     // We know coreDef returns Any, but for 'def' input it returns (String, Expr)
-    visitor.visitCoreDef(tree).asInstanceOf[(String, Expr)]
+    // Manually dispatch based on the specific context type
+    tree match {
+      case ctx: MapFileParser.FuncDefContext =>
+        visitor.visitFuncDef(ctx)
+
+      case ctx: MapFileParser.TypeDefContext =>
+        // This helper expects a (String, Expr), but TypeDef returns (String, Type).
+        // You might want to throw an exception or handle it differently if testing types.
+        throw new IllegalArgumentException("Input code was a type definition, expected a function definition.")
+
+      case ctx: MapFileParser.ScriptExprContext =>
+        throw new IllegalArgumentException("Input code was a script expression, expected a function definition.")
+
+      case _ =>
+        throw new IllegalArgumentException(s"Unknown context type: ${tree.getClass.getName}")
+    }  
   }
 
   "MapFileVisitor" should "parse integer literals" in {

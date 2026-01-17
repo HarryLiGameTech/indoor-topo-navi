@@ -79,31 +79,31 @@ class TopoMapVisitor extends MapFileBaseVisitor[Any]{
   }
 
   override def visitTypeAtom(ctx: TypeAtomContext): Type = {
-    if (ctx.ID() != null) {
-      // Usually Type.Var or Enum ref. 
-      // Since corelang.Type doesn't have a generic "Ref", we check for primitives 
-      // or assume it's a named type (which might need resolution or EnumType).
-      ctx.ID().getText match {
+    if (ctx.typeExpr() != null) {
+      // Case: '(' typeExpr ')'
+      visitTypeExpr(ctx.typeExpr())
+    }
+    else if (ctx.recordType() != null) {
+      // Case: recordType
+      visitRecordType(ctx.recordType())
+    }
+    else if (ctx.ID() != null) {
+      // Case: ID (named types like aliases or enums)
+      val name = ctx.ID().getText
+      // We throw here because corelang.Type requires resolved types, not just names
+      throw new RuntimeException(s"Named types ($name) must be resolved or are not supported in this visitor yet.")
+    }
+    else {
+      // Case: 'Int' | 'Float' | 'Bool' | 'String'
+      // These are keywords, so they don't have helper methods like ID(),
+      // but we can check the text directly.
+      ctx.getText match {
         case "Int"    => Type.IntType
         case "Float"  => Type.FloatType
         case "Bool"   => Type.BoolType
         case "String" => Type.StringType
-        case other    =>
-          // If it's not a primitive, it might be an EnumType or Alias.
-          // Since we can't look up definitions here easily, we might need a placeholder 
-          // or assume it's an EnumType if it's uppercase? 
-          // For now, let's treat unknown IDs as EnumType with empty variants (to be resolved later) 
-          // OR throw if strict.
-          // corelang.Type doesn't have a "TypeRef". 
-          // We'll throw for now as corelang seems to require full type info.
-          throw new RuntimeException(s"Named types ($other) must be resolved or are not supported in this visitor yet.")
+        case other    => throw new RuntimeException(s"Unknown type atom: $other")
       }
-    } else if (ctx.recordType() != null) {
-      visitRecordType(ctx.recordType())
-    } else if (ctx.typeExpr() != null) {
-      visitTypeExpr(ctx.typeExpr())
-    } else {
-      visitTypeAtom(ctx) // Fallback for literals if they existed in TypeAtom
     }
   }
 
