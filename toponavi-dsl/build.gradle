@@ -28,9 +28,24 @@ dependencies {
     testRuntimeOnly "org.scalatestplus:junit-5-10_3:3.2.19.0"
 }
 
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['src/main/scala', 'src/main/java']
+        }
+        java {
+            srcDirs = []
+        }
+    }
+}
+
 generateGrammarSource {
     outputDirectory = file("src/main/java/topomap/grammar")
     arguments += ["-visitor", "-long-messages", "-package", "topomap.grammar"]
+}
+
+tasks.named('compileScala') {
+    dependsOn 'generateGrammarSource'
 }
 
 test {

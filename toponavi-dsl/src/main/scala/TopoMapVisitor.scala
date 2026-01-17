@@ -1,13 +1,16 @@
 import corelang.{Expr, OpKind, Type}
-import topomap.grammar.MapFileParser.{AddSubExprContext, AppCExprContext, AppMlExprContext, AtomContext, AtomExprContext, BlockContext, CompExprContext, CoreDefContext, ExprContext, ExprStmtContext, FixExprContext, FuncDefContext, IfExprContext, LamExprContext, LetExprContext, LetRecExprContext, LetStmtContext, MulDivExprContext, NegExprContext, ProjExprContext, RecordTypeContext, TypeAtomContext, TypeDefContext, TypeExprContext}
+import topomap.grammar.MapFileParser.{AddSubExprContext, AppCExprContext, AppMlExprContext, AtomContext, AtomExprContext, BlockContext, CompExprContext, ExprStmtContext, FixExprContext, FuncDefContext, IfExprContext, LamExprContext, LetExprContext, LetRecExprContext, LetStmtContext, MulDivExprContext, NegExprContext, ProjExprContext, RecordTypeContext, TypeAtomContext, TypeDefContext, TypeExprContext}
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser}
+import org.antlr.v4.runtime.tree.ParseTree
 
 import scala.jdk.CollectionConverters.*
 
 
 
-class MapFileVisitor extends MapFileBaseVisitor[Any]{
+class TopoMapVisitor extends MapFileBaseVisitor[Any]{
   // --- Helpers for Currying ---
+
+  def visitE(tree: ParseTree): Expr = visit(tree).asInstanceOf[Expr]
 
   private def curryLambda(params: Seq[(String, Type)], body: Expr): Expr = {
     params.foldRight(body) { case ((name, tpe), acc) =>
@@ -46,7 +49,7 @@ class MapFileVisitor extends MapFileBaseVisitor[Any]{
     // we just return the name and the value (the lambda chain).
 
     val name = ctx.ID().getText
-    val bodyRaw = visitExpr(ctx.expr())
+    val bodyRaw = visitE(ctx.expr())
 
     val params = if (ctx.paramList() == null) Seq.empty else {
       ctx.paramList().param().asScala.map { p =>
@@ -113,71 +116,68 @@ class MapFileVisitor extends MapFileBaseVisitor[Any]{
 
   // --- Expressions ---
 
-  override def visitExpr(ctx: ExprContext): Expr = {
-    ctx match {
-      case c: AtomExprContext => visitAtom(c.atom())
-      case c: ProjExprContext => Expr.Proj(visitExpr(c.expr()), c.ID().getText)
+  override def visitAtomExpr(ctx: AtomExprContext): Expr = visitAtom(ctx.atom())
 
-      // f x (Left Associative)
-      case c: AppMlExprContext =>
-        Expr.App(visitExpr(c.expr()), visitAtom(c.atom()))
+  override def visitProjExpr(ctx: ProjExprContext): Expr = Expr.Proj(visitE(ctx.expr()), ctx.ID().getText)
 
-      // f(x, y)
-      case c: AppCExprContext =>
-        val func = visitExpr(c.expr(0))
-        val args = if (c.expr().size() > 1) c.expr().asScala.tail.map(visitExpr).toSeq else Seq.empty
-        curryApply(func, args)
+  override def visitAppMlExpr(ctx: AppMlExprContext): Expr =
+    Expr.App(visitE(ctx.expr()), visitAtom(ctx.atom()))
 
-      case c: NegExprContext =>
-        // Desugar -x to (0 - x) or similar, since Expr doesn't have UnaryOp
-        Expr.BinOp(OpKind.Sub, Expr.IntLit(0), visitExpr(c.expr()))
+  override def visitAppCExpr(ctx: AppCExprContext): Expr = {
+    val func = visitE(ctx.expr(0))
+    val args = if (ctx.expr().size() > 1) ctx.expr().asScala.tail.map(visitE).toSeq else Seq.empty
+    curryApply(func, args)
+  }
 
-      case c: MulDivExprContext =>
-        val op = c.op.getText match {
-          case "*" => OpKind.Mul
-          case "/" => throw new UnsupportedOperationException("Division not supported in OpKind yet")
-        }
-        Expr.BinOp(op, visitExpr(c.expr(0)), visitExpr(c.expr(1)))
+  override def visitNegExpr(ctx: NegExprContext): Expr =
+    Expr.BinOp(OpKind.Sub, Expr.IntLit(0), visitE(ctx.expr()))
 
-      case c: AddSubExprContext =>
-        val op = c.op.getText match {
-          case "+" => OpKind.Add
-          case "-" => OpKind.Sub
-        }
-        Expr.BinOp(op, visitExpr(c.expr(0)), visitExpr(c.expr(1)))
-
-      case c: CompExprContext =>
-        val op = c.op.getText match {
-          case "==" => OpKind.Eq
-          case "<"  => OpKind.Lt
-          case ">"  => OpKind.Gt
-          case "<=" => throw new UnsupportedOperationException("<= not supported in OpKind")
-          case ">=" => throw new UnsupportedOperationException(">= not supported in OpKind")
-        }
-        Expr.BinOp(op, visitExpr(c.expr(0)), visitExpr(c.expr(1)))
-
-      case c: IfExprContext =>
-        Expr.If(visitExpr(c.cond), visitExpr(c.ifExpr), visitExpr(c.elseExpr))
-
-      case c: LetExprContext =>
-        // let x = val in body
-        Expr.Let(c.ID().getText, visitExpr(c.assignValue), visitExpr(c.expr(1)))
-
-      case c: LetRecExprContext =>
-        // let rec f: T = val in body
-        val name = c.ID().getText
-        val tpe = if (c.typeExpr() != null) visitTypeExpr(c.typeExpr()) else throw new RuntimeException("LetRec requires explicit type")
-        Expr.LetRec(name, tpe, visitExpr(c.expr(0)), visitExpr(c.expr(1)))
-
-      case c: FixExprContext =>
-        Expr.Fix(c.ID().getText, visitTypeExpr(c.typeExpr()), visitExpr(c.expr()))
-
-      case c: LamExprContext =>
-        // \x: Int. body  OR  fn x: Int => body
-        val name = c.ID().getText
-        val tpe = visitTypeExpr(c.typeExpr())
-        Expr.Lam(name, tpe, visitExpr(c.expr()))
+  override def visitMulDivExpr(ctx: MulDivExprContext): Expr = {
+    val op = ctx.op.getText match {
+      case "*" => OpKind.Mul
+      case "/" => throw new UnsupportedOperationException("Division not supported in OpKind yet")
     }
+    Expr.BinOp(op, visitE(ctx.expr(0)), visitE(ctx.expr(1)))
+  }
+
+  override def visitAddSubExpr(ctx: AddSubExprContext): Expr = {
+    val op = ctx.op.getText match {
+      case "+" => OpKind.Add
+      case "-" => OpKind.Sub
+    }
+    Expr.BinOp(op, visitE(ctx.expr(0)), visitE(ctx.expr(1)))
+  }
+
+  override def visitCompExpr(ctx: CompExprContext): Expr = {
+    val op = ctx.op.getText match {
+      case "==" => OpKind.Eq
+      case "<"  => OpKind.Lt
+      case ">"  => OpKind.Gt
+      case "<=" => throw new UnsupportedOperationException("<= not supported in OpKind")
+      case ">=" => throw new UnsupportedOperationException(">= not supported in OpKind")
+    }
+    Expr.BinOp(op, visitE(ctx.expr(0)), visitE(ctx.expr(1)))
+  }
+
+  override def visitIfExpr(ctx: IfExprContext): Expr =
+    Expr.If(visitE(ctx.cond), visitE(ctx.ifExpr), visitE(ctx.elseExpr))
+
+  override def visitLetExpr(ctx: LetExprContext): Expr =
+    Expr.Let(ctx.ID().getText, visitE(ctx.assignValue), visitE(ctx.expr(1)))
+
+  override def visitLetRecExpr(ctx: LetRecExprContext): Expr = {
+    val name = ctx.ID().getText
+    val tpe = if (ctx.typeExpr() != null) visitTypeExpr(ctx.typeExpr()) else throw new RuntimeException("LetRec requires explicit type")
+    Expr.LetRec(name, tpe, visitE(ctx.expr(0)), visitE(ctx.expr(1)))
+  }
+
+  override def visitFixExpr(ctx: FixExprContext): Expr =
+    Expr.Fix(ctx.ID().getText, visitTypeExpr(ctx.typeExpr()), visitE(ctx.expr()))
+
+  override def visitLamExpr(ctx: LamExprContext): Expr = {
+    val name = ctx.ID().getText
+    val tpe = visitTypeExpr(ctx.typeExpr())
+    Expr.Lam(name, tpe, visitE(ctx.expr()))
   }
 
   // --- Atoms ---
@@ -190,12 +190,12 @@ class MapFileVisitor extends MapFileBaseVisitor[Any]{
     else if (ctx.ID() != null) Expr.Var(ctx.ID().getText)
     else if (ctx.block() != null) visitBlock(ctx.block())
     else if (ctx.getChild(0).getText == "{") visitRecordLiteral(ctx)
-    else visitExpr(ctx.expr()) // Parentheses
+    else visitE(ctx.expr()) // Parentheses
   }
 
   private def visitRecordLiteral(ctx: AtomContext): Expr = {
     val fields = ctx.fieldAssign().asScala.map { field =>
-      (field.ID().getText, visitExpr(field.expr()))
+      (field.ID().getText, visitE(field.expr()))
     }.toMap
     Expr.Record(fields)
   }
@@ -209,16 +209,16 @@ class MapFileVisitor extends MapFileBaseVisitor[Any]{
     // If statement is just an expression (side effect), we treat it as Let("_", expr, body)
 
     val stmts = ctx.stmt().asScala
-    val finalExpr = if (ctx.expr() != null) visitExpr(ctx.expr()) else Expr.Record(Map.empty) // Unit/Empty record if no final expr
+    val finalExpr = if (ctx.expr() != null) visitE(ctx.expr()) else Expr.Record(Map.empty) // Unit/Empty record if no final expr
 
     stmts.foldRight(finalExpr) { (stmt, acc) =>
       stmt match {
         case s: LetStmtContext =>
           // let x = e
-          Expr.Let(s.ID().getText, visitExpr(s.expr()), acc)
+          Expr.Let(s.ID().getText, visitE(s.expr()), acc)
         case s: ExprStmtContext =>
           // e (side effect, discard result)
-          Expr.Let("_", visitExpr(s.expr()), acc)
+          Expr.Let("_", visitE(s.expr()), acc)
       }
     }
   }

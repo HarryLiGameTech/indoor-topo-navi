@@ -21,7 +21,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       val parser = MapFileParser(CommonTokenStream(lexer))
       parser.removeErrorListeners()
       parser.addErrorListener(listener)
-      MapFileVisitor().visitProgram(parser.program())
+      TopoMapVisitor().visitProgram(parser.program())
     }
 
     println(program)

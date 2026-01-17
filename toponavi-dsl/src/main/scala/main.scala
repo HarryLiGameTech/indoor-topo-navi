@@ -17,7 +17,7 @@ def main(): Unit = {
     val parser = MapFileParser(CommonTokenStream(lexer))
     parser.removeErrorListeners()
     parser.addErrorListener(listener)
-    MapFileVisitor().visitProgram(parser.program())
+//    MapFileVisitor().visitProgram(parser.program())
   }
 
   println(program)

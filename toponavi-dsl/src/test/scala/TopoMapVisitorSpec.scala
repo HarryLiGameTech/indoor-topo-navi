@@ -1,12 +1,10 @@
-package toponavi.dsl.concrete
-
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import topomap.grammar.{MapFileLexer, MapFileParser}
+import topomap.grammar.{MapFileLexer, MapFileParser, MapFileVisitor}
 import corelang.{Expr, OpKind, Type}
 
-class MapFileVisitorSpec extends AnyFlatSpec with Matchers {
+class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
 
   /**
    * Helper function to parse a string input starting from the 'expr' rule
@@ -21,8 +19,8 @@ class MapFileVisitorSpec extends AnyFlatSpec with Matchers {
     // We assume the input is an expression for these tests
     val tree = parser.expr()
 
-    val visitor = new MapFileVisitor()
-    visitor.visitExpr(tree)
+    val visitor = new TopoMapVisitor()
+    visitor.visitE(tree)
   }
 
   /**
@@ -35,7 +33,7 @@ class MapFileVisitorSpec extends AnyFlatSpec with Matchers {
     val parser = new MapFileParser(tokens)
 
     val tree = parser.coreDef() // Assuming input is a 'def'
-    val visitor = new MapFileVisitor()
+    val visitor = new TopoMapVisitor()
 
     // We know coreDef returns Any, but for 'def' input it returns (String, Expr)
     visitor.visitCoreDef(tree).asInstanceOf[(String, Expr)]
