@@ -91,6 +91,7 @@ expr
 atom
     : INT
     | FLOAT
+    | STRING
     | 'true'
     | 'false'
     | ID

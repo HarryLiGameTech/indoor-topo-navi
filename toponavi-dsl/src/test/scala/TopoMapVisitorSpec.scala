@@ -51,7 +51,7 @@ class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
 
       case _ =>
         throw new IllegalArgumentException(s"Unknown context type: ${tree.getClass.getName}")
-    }  
+    }
   }
 
   "MapFileVisitor" should "parse integer literals" in {
@@ -139,10 +139,38 @@ class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "parse record literals" in {
-    val code = "{ x = 1, y = 2 }"
+    val code = "{ x = 1, y = 2, t = \"string\" }"
     parseExpr(code) shouldBe Expr.Record(Map(
       "x" -> Expr.IntLit(1),
-      "y" -> Expr.IntLit(2)
+      "y" -> Expr.IntLit(2),
+      "t" -> Expr.StringLit("string")
+    ))
+  }
+
+  it should "parse record with bin-op" in {
+    val code = "{sum = 1+2, prod = 3*4}"
+    parseExpr(code) shouldBe Expr.Record(Map(
+      "sum" -> Expr.BinOp(OpKind.Add, Expr.IntLit(1), Expr.IntLit(2)),
+      "prod" -> Expr.BinOp(OpKind.Mul, Expr.IntLit(3), Expr.IntLit(4))
+    ))
+  }
+
+  it should "parse record with bool values" in {
+    val code = "{flag = true, negFlag = false}"
+    parseExpr(code) shouldBe Expr.Record(Map(
+      "flag" -> Expr.BoolLit(true),
+      "negFlag" -> Expr.BoolLit(false)
+    ))
+  }
+
+  it should "parse nested record" in {
+    val code = "{point = {x = 1, y = 2}, label = \"A\"}"
+    parseExpr(code) shouldBe Expr.Record(Map(
+      "point" -> Expr.Record(Map(
+        "x" -> Expr.IntLit(1),
+        "y" -> Expr.IntLit(2)
+      )),
+      "label" -> Expr.StringLit("A")
     ))
   }
 
@@ -187,7 +215,7 @@ class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "parse complex types" in {
-    // We can't test parseType directly easily unless we expose it, 
+    // We can't test parseType directly easily unless we expose it,
     // but we can test it via a lambda or definition.
     val code = "\\f: Int -> Bool. f 1"
 
@@ -195,6 +223,33 @@ class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
       "f",
       Type.Arrow(Type.IntType, Type.BoolType),
       Expr.App(Expr.Var("f"), Expr.IntLit(1))
+    )
+  }
+
+  it should "parse fixpoint expressions" in {
+    // fix f: Int -> Int. \x: Int. if x == 0 then 1 else x * f(x - 1)
+    val code = "fix f: Int -> Int. \\x: Int. if x == 0 then 1 else x * f(x - 1)"
+
+    val result = parseExpr(code)
+
+    // Expected AST structure
+    result shouldBe Expr.Fix(
+      "f",
+      Type.Arrow(Type.IntType, Type.IntType),
+      Expr.Lam(
+        "x", Type.IntType,
+        Expr.If(
+          Expr.BinOp(OpKind.Eq, Expr.Var("x"), Expr.IntLit(0)),
+          Expr.IntLit(1),
+          Expr.BinOp(OpKind.Mul,
+            Expr.Var("x"),
+            Expr.App(
+              Expr.Var("f"),
+              Expr.BinOp(OpKind.Sub, Expr.Var("x"), Expr.IntLit(1))
+            )
+          )
+        )
+      )
     )
   }
 }

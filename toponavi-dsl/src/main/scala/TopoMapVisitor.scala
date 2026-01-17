@@ -185,6 +185,11 @@ class TopoMapVisitor extends MapFileBaseVisitor[Any]{
   override def visitAtom(ctx: AtomContext): Expr = {
     if (ctx.INT() != null) Expr.IntLit(ctx.INT().getText.toLong)
     else if (ctx.FLOAT() != null) Expr.FloatLit(ctx.FLOAT().getText.toDouble)
+    else if (ctx.STRING() != null) {
+      // Remove surrounding quotes
+      val str = ctx.STRING().getText
+      Expr.StringLit(str.substring(1, str.length - 1))
+    }
     else if (ctx.getText == "true") Expr.BoolLit(true)
     else if (ctx.getText == "false") Expr.BoolLit(false)
     else if (ctx.ID() != null) Expr.Var(ctx.ID().getText)
