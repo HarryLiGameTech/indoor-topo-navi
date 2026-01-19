@@ -67,6 +67,13 @@ public class MapFileBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitSurfaceElementStation(MapFileParser.SurfaceElementStationContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

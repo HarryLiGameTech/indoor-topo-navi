@@ -15,10 +15,12 @@ surfaceBody
     : '{' (surfaceBodyElement NL)* surfaceBodyElement '}'
     ;
 
+// station Floor4 at FloorZ1.OP1_hall at 17.5 {} requires haveStaffCard on Arrive
 surfaceBodyElement
     : coreDef                                             # SurfaceElementCoreDef
     | 'topo-node' ID recordAssign                         # SurfaceElementTopoNode
     | 'atomic-path' pathSpec recordAssign requirements    # SurfaceElementAtomicPath
+    | 'station' ID 'at' expr ('at' expr)* recordAssign requirements 'on' expr  # SurfaceElementStation
     | 'arrow' arrowSpec arrowHeading '>>' expr            # SurfaceElementArrow
     | 'vehicle' ID                                        # SurfaceElementVehicleExpr
     | 'submap' ID                                         # SurfaceElementSubmapExpr

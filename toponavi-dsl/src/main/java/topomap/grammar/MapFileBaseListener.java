@@ -101,6 +101,18 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSurfaceElementStation(MapFileParser.SurfaceElementStationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSurfaceElementStation(MapFileParser.SurfaceElementStationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx) { }
 	/**
 	 * {@inheritDoc}

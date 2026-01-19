@@ -1,11 +1,12 @@
 package syntax
 
-import corelang.{Expr, OpKind, Type}
+import corelang.{Environment, Expr, Identifier, OpKind, Type}
 import org.antlr.v4.runtime.tree.ParseTree
-import surfacelang.{AtomicPathExpr, RootExpr, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, VehicleRef}
+import surfacelang.{AtomicPathExpr, RootExpr, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TransportExpr, VehicleRef}
 import topomap.grammar.MapFileParser.*
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser, MapFileVisitor}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.*
 
@@ -68,7 +69,10 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
           case pathCtx: MapFileParser.SurfaceElementAtomicPathContext =>
             val path = visitSurfaceElementAtomicPath(pathCtx)
             paths += path
-          case _ => // Ignore other elements for now
+          case arrowCtx: MapFileParser.SurfaceElementArrowContext =>
+            // TODO: Ignore for now, to-be-updated
+          case coreDef: MapFileParser.CoreDefContext => 
+            ???
         }
       }
     }
@@ -84,9 +88,39 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     )
   }
 
-  // TODO
-  override def visitSurfaceDefTransportExpr(ctx: MapFileParser.SurfaceDefTransportExprContext): SurfaceSyntax = {
-    ???
+  override def visitSurfaceDefTransportExpr(ctx: MapFileParser.SurfaceDefTransportExprContext): TransportExpr = {
+    val name = ctx.ID().getText
+    
+    if (ctx.expr() != null) {
+      // TODO: Should that one really be an expr?
+//      if (ctx.expr().getText != "Elevator") // not "Elevator" or "Stairs" or "Escalator" or "Tram"{
+//        throw RuntimeException(s"Unsupported transport type: ${ctx.expr().getText}")
+//      }
+    }
+    
+    val stationNodes = mutable.Map[TopoMapRef, TopoNodeExpr]()
+    val stationLocations = mutable.Map[TopoMapRef, Double]()
+
+    if (ctx.surfaceBody() != null) {
+      for (element <- ctx.surfaceBody().surfaceBodyElement().asScala) {
+        element match {
+          // TODO: Handle transport body elements
+          case stationCtx: MapFileParser.SurfaceElementStationContext =>
+            val stationNodeTri = visitSurfaceElementStation(stationCtx)
+            // extract and add this pair into the stationNodes
+            stationNodes += (stationNodeTri._1 -> stationNodeTri._2)
+            stationLocations += (stationNodeTri._1 -> stationNodeTri._3)
+          case _ => // Ignore other elements for now
+        }
+      }
+    }
+    
+    TransportExpr(
+      name = name,
+      stationNodes = stationNodes, // TODO: Deal with the type mismatch
+      stationLocations = stationLocations, // TODO: Deal with the type mismatch
+      data = Expr.Record(Map.empty)
+    )
   }
   
 
@@ -171,6 +205,17 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       data = Expr.Record(fields),
       constraints = constraintExprs
     )
+  }
+
+  // Use as an intermediate function
+  override def visitSurfaceElementStation(ctx: SurfaceElementStationContext): (TopoMapRef, TopoNodeExpr, Double) = {
+    val mapRef = TopoMapRef(
+      name = ctx.ID().getText
+    )
+    
+    val nodeExpr = ??? // TODO: get the node expression from the context
+
+    (mapRef, nodeExpr, ctx.expr(1).visit.asInstanceOf[Expr.FloatLit].value) // TODO: Correct?
   }
   
   override def visitSurfaceElementArrow(ctx: MapFileParser.SurfaceElementArrowContext): TopoMapRef = {

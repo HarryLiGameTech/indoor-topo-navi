@@ -43,3 +43,12 @@ case class AtomicPathValue(
 ) {
   
 }
+
+case class TransportValue(
+  name: String,
+  stations: Map[TopoMapValue, TopoNodeValue],
+  stationLocations: Map[TopoMapValue, Double],
+  context: Context,
+) {
+  
+}

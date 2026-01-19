@@ -15,7 +15,7 @@ transport OP1 is Elevator{
 
     // Stations
     station Lobby at Lobby.OP1_hall {relativeLocation = 0.0} override requires [haveStaffCard, haveManagementCard] on Depart // REFER TO THIS
-    station Floor4 at FloorZ1.OP1_hall at 17.5 {}
+    station Floor4 at FloorZ1.OP1_hall at 17.5 {} requires haveStaffCard on Arrive
     station Floor5 at FloorZ1.OP1_hall {relativeLocation = 22.0, description = ""}
     station Floor6 at FloorZ1.OP1_hall {relativeLocation = 26.5, description = 123}
     station Floor7 at FloorZ1.OP1_hall {relativeLocation = 31.0, timeAcc = fun (p1: Float) => p1*1.2 }

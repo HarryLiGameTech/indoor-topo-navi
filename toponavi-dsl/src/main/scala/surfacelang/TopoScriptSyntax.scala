@@ -93,6 +93,29 @@ case class SubTopoMapExpr(
   }
 }
 
+case class TransportExpr(
+  name: String,
+  stationNodes: Map[SubTopoMapExpr, TopoNodeExpr],
+  stationLocations: Map[SubTopoMapExpr, Double],
+  data: Data
+) extends SurfaceSyntax with Elaborateable[TransportValue] {
+  override def elaborate(using topoEnv: TopoEnvironment): TransportValue = {
+    TransportValue(
+      name = name,
+      stations = stationNodes.map { case (mapExpr, nodeExpr) =>
+        val mapValue = mapExpr.elaborate
+        val nodeValue = nodeExpr.elaborate
+        (mapValue, nodeValue)
+      },
+      stationLocations = stationLocations.map { case (mapExpr, location) =>
+        val mapValue = mapExpr.elaborate
+        (mapValue, location)
+      },
+      context = topoEnv.env,
+    )
+  }
+}
+
 // Node definition
 case class TopoNodeExpr(
   name: String,
