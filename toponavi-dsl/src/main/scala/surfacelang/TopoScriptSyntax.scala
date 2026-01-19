@@ -54,7 +54,8 @@ case class RootExpr(
   types: List[(String, Type)], // type aliases like enums
   defns: List[(String, Expr)],
   data: List[Data],
-  submaps: List[SubTopoMapExpr]
+  submaps: List[SubTopoMapExpr],
+  submapReferences: List[String]
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoRootValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): TopoRootValue = {
@@ -126,4 +127,17 @@ case class AtomicPathExpr(
       context = topoEnv.env,
     )
   }
+}
+
+
+case class TopoMapRef(
+  name: String
+) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue]{
+  override def elaborate(using topoEnv: TopoEnvironment): Any // TODO
+}
+
+case class VehicleRef(
+  name: String
+) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue]{
+  override def elaborate(using topoEnv: TopoEnvironment): Any // TODO
 }

@@ -11,26 +11,26 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	/**
-	 * Visit a parse tree produced by the {@code RootExpr}
+	 * Visit a parse tree produced by the {@code SurfaceDefRootExpr}
 	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitRootExpr(MapFileParser.RootExprContext ctx);
+	T visitSurfaceDefRootExpr(MapFileParser.SurfaceDefRootExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code TopoMapExpr}
+	 * Visit a parse tree produced by the {@code SurfaceDefTopoMapExpr}
 	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTopoMapExpr(MapFileParser.TopoMapExprContext ctx);
+	T visitSurfaceDefTopoMapExpr(MapFileParser.SurfaceDefTopoMapExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code TransportExpr}
+	 * Visit a parse tree produced by the {@code SurfaceDefTransportExpr}
 	 * labeled alternative in {@link MapFileParser#surfaceDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTransportExpr(MapFileParser.TransportExprContext ctx);
+	T visitSurfaceDefTransportExpr(MapFileParser.SurfaceDefTransportExprContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MapFileParser#surfaceBody}.
 	 * @param ctx the parse tree

@@ -18,21 +18,21 @@ public class MapFileBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitRootExpr(MapFileParser.RootExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSurfaceDefRootExpr(MapFileParser.SurfaceDefRootExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitTopoMapExpr(MapFileParser.TopoMapExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSurfaceDefTopoMapExpr(MapFileParser.SurfaceDefTopoMapExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitTransportExpr(MapFileParser.TransportExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSurfaceDefTransportExpr(MapFileParser.SurfaceDefTransportExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
