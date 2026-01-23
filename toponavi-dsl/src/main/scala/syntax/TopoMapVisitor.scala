@@ -24,9 +24,15 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     }.toList
 
     val submapRefs = ListBuffer[String]()
+    val vehicleRefs = ListBuffer[String]()
     if (ctx.surfaceBody() != null) {
       for (element <- ctx.surfaceBody().surfaceBodyElement().asScala) {
         element match {
+          case coreDefCtx: MapFileParser.SurfaceElementCoreDefContext =>
+            visitSurfaceElementCoreDef(coreDefCtx)
+          case vehicleCtx: MapFileParser.SurfaceElementVehicleExprContext =>
+            val vehicleRef = vehicleCtx.ID().getText
+            vehicleRefs += vehicleRef // Append vehicle to list vehicles
           case submapCtx: MapFileParser.SurfaceElementSubmapExprContext =>
             val submapRef = submapCtx.ID().getText
             submapRefs += submapRef // Append submap to list submaps
@@ -42,7 +48,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       defns = List.empty, // TODO: Implement definitions
       data = List.empty, // TODO: Implement root-level data
       submaps = List.empty, // TODO: Implement submap definitions
-      submapReferences = submapRefs.toList
+      submapReferences = submapRefs.toList,
+      transportReferences = vehicleRefs.toList
     )
   }
 
@@ -104,7 +111,6 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     if (ctx.surfaceBody() != null) {
       for (element <- ctx.surfaceBody().surfaceBodyElement().asScala) {
         element match {
-          // TODO: Handle transport body elements
           case stationCtx: MapFileParser.SurfaceElementStationContext =>
             val stationNodeTri = visitSurfaceElementStation(stationCtx)
             // extract and add this pair into the stationNodes
@@ -124,6 +130,7 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
   }
   
 
+  // TODO: Important one, but don't know what to do yet
   override def visitSurfaceElementCoreDef(ctx: MapFileParser.SurfaceElementCoreDefContext): SurfaceSyntax = {
     // 1. Get the abstract CoreDefContext child
     val coreCtx = ctx.coreDef()

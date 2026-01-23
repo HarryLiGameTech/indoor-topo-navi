@@ -55,7 +55,8 @@ case class RootExpr(
   defns: List[(String, Expr)],
   data: List[Data],
   submaps: List[SubTopoMapExpr],
-  submapReferences: List[String]
+  submapReferences: List[String],
+  transportReferences: List[String]
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoRootValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): TopoRootValue = {
