@@ -147,6 +147,11 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
         // Wrap the tuple in your AST case class
         SurfaceSyntax.FuncDef(name, expr)
 
+      case c: MapFileParser.ExprContext =>
+        val expr = visitExpr(c)
+        // Wrap the expression in your AST case class
+        SurfaceSyntax.ExprDef(expr)
+
       case c: MapFileParser.ScriptExprContext =>
         // Handle standalone expressions if allowed, or throw error
         throw new RuntimeException("Standalone expressions (ScriptExpr) are not allowed in this context.")

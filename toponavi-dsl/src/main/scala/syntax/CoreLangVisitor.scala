@@ -10,8 +10,7 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
   Expr | Type | SurfaceTerm |
   Environment[Identifier, Type, Expr] 
 ] {
-  // --- Helpers for Currying ---
-
+  
   extension (expr: ExprContext) {
     def visit: Expr = visitExpr(expr)
   }
@@ -33,6 +32,8 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
     case _ => throw RuntimeException(s"Unknown ExprContext type: ${expr.getClass.getName}")
   }
 
+
+  // --- Helpers for Currying ---
   protected def curryLambda(params: Seq[(String, Type)], body: Expr): Expr = {
     params.foldRight(body) { case ((name, tpe), acc) => Expr.Lam(name, tpe, acc) }
   }
