@@ -56,7 +56,7 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
     // we just return the name and the value (the lambda chain).
 
     val name = ctx.ID().getText
-    val bodyRaw = visitExpr(ctx.expr)
+    val bodyRaw = ctx.expr.visit
 
     val params = if (ctx.paramList() == null) Seq.empty else {
       ctx.paramList().param().asScala.map { p =>

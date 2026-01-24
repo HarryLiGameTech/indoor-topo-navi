@@ -52,7 +52,7 @@ typeAtom
     | 'Float'
     | 'Bool'
     | 'String'
-    | ID
+    | identifier
     | recordType
     | '(' typeExpr ')'
     ;
@@ -96,7 +96,7 @@ atom
     | STRING
     | 'true'
     | 'false'
-    | ID
+    | identifier
     | '{' (fieldAssign (',' fieldAssign)*)? '}'   // Record Literal
     | block                                       // Code Block
     | '(' expr ')'
@@ -138,6 +138,10 @@ requirements
 
 recordAssign
     : '{' (fieldAssign (',' fieldAssign)*)? '}'
+    ;
+
+identifier
+    : path+=ID ('::' path+=ID)*
     ;
 
 // -----------------------------------------------------------------------------

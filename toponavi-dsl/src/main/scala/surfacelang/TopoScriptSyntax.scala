@@ -9,6 +9,7 @@ trait SurfaceSyntax
 type Params = List[(String, Type)]
 type Data = Expr.Record
 
+// TODO: Refactor
 trait SyntaxNameSpace {
   def types: List[(String, Type)]
   def defns: List[(String, Expr)]
@@ -50,13 +51,9 @@ trait ConstrainedElaborateable[T] extends Elaborateable[Option[T]] {
 // Root TopoMap definition
 case class RootExpr(
   name: String,
-  params: List[(String, Type)], // paramName -> type
-  types: List[(String, Type)], // type aliases like enums
-  defns: List[(String, Expr)],
-  data: List[Data],
-  submaps: List[SubTopoMapExpr],
-  submapReferences: List[String],
-  transportReferences: List[String]
+  params: List[(String, Type)] = List.empty, // paramName -> type
+  env: Environment[Identifier, Type, Expr] = Environment.empty,
+  data: List[Data] = List.empty
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoRootValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): TopoRootValue = {
@@ -64,8 +61,6 @@ case class RootExpr(
     TopoRootValue(
       name = name,
       params = params,
-      submaps = submaps.map(_.elaborate(using topoEnv.merge(env))).toSet,
-      transportations = Set.empty, // TODO: Add transportation elaboration
       context = env
     )
     
@@ -76,8 +71,7 @@ case class RootExpr(
 case class SubTopoMapExpr(
   name: String,
   params: Params,
-  types: List[(String, Type)],
-  defns: List[(String, Expr)], // aliases
+  env: Environment[Identifier, Type, Expr],
   data: List[Data],
   nodes: List[TopoNodeExpr],
   paths: List[AtomicPathExpr]

@@ -109,8 +109,11 @@ TopoMap Floor30{
     atomic-path [OEX_hall_outside <-> staircase_D_outside] {cost = 4}
     atomic-path [OEX_hall_outside <-> intersact0] {cost = 3}
 
+    def f(a: Int): Int = a * 2
+
+    expr.eval(env)
     // Bar Area
-    atomic-path [intersact1 <-> model] {cost = 2}
+    atomic-path [intersact1 <-> model] {cost = 2 + a * 2}
     atomic-path [SW_corner <-> model] {cost = 3}
     atomic-path [SW_corner <-> model] {cost = 3}
     atomic-path [bar <-> model] {cost = 6}
