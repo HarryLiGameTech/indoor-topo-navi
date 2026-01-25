@@ -202,7 +202,11 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
     }
     else if (ctx.getText == "true") Expr.BoolLit(true)
     else if (ctx.getText == "false") Expr.BoolLit(false)
-    else if (ctx.identifier() != null) Expr.Var(ctx.identifier().getText)
+    else if (ctx.identifier() != null) {
+      val ids = ctx.identifier().ID().asScala.map(_.getText).toList
+      if (ids.size == 1) Expr.Var(ids.head)
+      else Expr.Path(ids)
+    }
     else if (ctx.block() != null) visitBlock(ctx.block())
     else if (ctx.getChild(0).getText == "{") visitRecordLiteral(ctx)
     else visitExpr(ctx.expr()) // Parentheses

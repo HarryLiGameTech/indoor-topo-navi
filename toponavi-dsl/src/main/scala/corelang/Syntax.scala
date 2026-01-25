@@ -68,6 +68,7 @@ enum Expr extends Identified[Identifier] {
   case Let(name: String, value: Expr, body: Expr)
   case LetRec(name: String, tpe: Type, value: Expr, body: Expr)
   case EnumLit(enumType: String, variant: String) // Enum literal: MyEnum.Variant
+  case Path(ids: List[String]) // Path identifier: root::sub::leaf
   case Match(scrutinee: Expr, cases: List[(String, Expr)]) // Pattern match on enum
 
   /**
@@ -84,6 +85,27 @@ enum Expr extends Identified[Identifier] {
     }
 
     this match {
+      case Expr.Path(ids) =>
+        ids match {
+          case Nil => throw new RuntimeException("Path cannot be empty")
+          case head :: tail =>
+             // Try to resolve as Enum first (if length is 2)
+             val enumTry = if (tail.size == 1) {
+               typeEnv.getType(Identifier.Symbol(head)) match {
+                 case Some(et: Type.EnumType) if et.variants.contains(tail.head) =>
+                   Some(Term.EnumLit(et, tail.head))
+                 case _ => None
+               }
+             } else None
+
+             enumTry.getOrElse {
+               // Otherwise, treat as variable/symbol access + projections
+               val startTerm = lookup(head, stack)
+               tail.foldLeft(startTerm) { (acc, field) =>
+                 Term.Proj(acc, field)
+               }
+             }
+        }
       case Expr.Var(name) => lookup(name, stack)
 
       case Expr.Lam(param, tpe, body) =>
@@ -284,4 +306,3 @@ enum Term {
   
   def eval(using env: Env): Value = Interpreter.eval(this)(using env)
 }
-
