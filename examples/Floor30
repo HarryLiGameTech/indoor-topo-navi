@@ -1,4 +1,4 @@
-TopoMap Floor30{
+topo-map Floor30{
 
     config {
         mapType = MapType::TransHub,

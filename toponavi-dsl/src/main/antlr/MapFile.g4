@@ -29,7 +29,7 @@ globalConfigElement
 surfaceBodyElement
     : coreDef                                             # SurfaceElementCoreDef
     | 'topo-node' ID recordAssign                         # SurfaceElementTopoNode
-    | 'atomic-path' pathSpec recordAssign requirements    # SurfaceElementAtomicPath
+    | 'atomic-path' pathSpec recordAssign requirements?   # SurfaceElementAtomicPath
     | 'station' ID 'at' expr ('at' expr)* recordAssign requirements 'on' expr  # SurfaceElementStation
     | 'arrow' arrowSpec arrowHeading '>>' expr            # SurfaceElementArrow
     ;

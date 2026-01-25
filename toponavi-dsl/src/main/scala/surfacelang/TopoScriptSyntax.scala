@@ -54,11 +54,11 @@ case class RootExpr(
   params: Params = List.empty, // paramName -> type
   env: Environment[Identifier, Type, Expr] = Environment.empty,
   data: List[Data] = List.empty
-) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoRootValue] {
+) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[RootValue] {
   
-  override def elaborate(using topoEnv: TopoEnvironment): TopoRootValue = {
+  override def elaborate(using topoEnv: TopoEnvironment): RootValue = {
     val env = this.synthesisEnv
-    TopoRootValue(
+    RootValue(
       name = name,
       params = params,
       context = env
@@ -98,12 +98,12 @@ case class TransportExpr(
     TransportValue(
       name = name,
       stations = stationNodes.map { case (mapExpr, nodeExpr) =>
-        val mapValue = mapExpr.elaborate
+        val mapValue = TopoMapRefValue(mapExpr.name)
         val nodeValue = nodeExpr.elaborate
         (mapValue, nodeValue)
       },
       stationLocations = stationLocations.map { case (mapExpr, location) =>
-        val mapValue = mapExpr.elaborate
+        val mapValue = TopoMapRefValue(mapExpr.name)
         (mapValue, location)
       },
       context = topoEnv.env,
@@ -150,8 +150,8 @@ case class AtomicPathExpr(
 
 case class TopoMapRef(
   name: String
-) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue]{
-  override def elaborate(using topoEnv: TopoEnvironment): Any // TODO
+) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapRefValue]{
+  override def elaborate(using topoEnv: TopoEnvironment): TopoMapRefValue = TopoMapRefValue(name)
 }
 
 case class VehicleRef(

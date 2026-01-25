@@ -6,24 +6,33 @@ import util.catchError
 
 class ExampleTest extends AnyFunSuite with should.Matchers{
   test("example test"){
-    val code =
+    val rootCode =
       """
-      TopoMap Test{
-          =342RF
+      root TestBuilding{
+          def a = 1
+      }
+      """
+      
+    val subMapCode =
+      """
+      topo-map TestSubMap{
+          topo-node tt1
+          topo-node tt2
+          atomic-path [tt1 <-> tt2] {cose = 114}
       }
       """
 
-    val program = catchError(code.strip) { listener =>
-      val stripedCode = code.strip()
+    val rootProgram = catchError(rootCode.strip) { listener =>
+      val stripedCode = rootCode.strip()
       val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
       lexer.removeErrorListeners()
       lexer.addErrorListener(listener)
       val parser = MapFileParser(CommonTokenStream(lexer))
       parser.removeErrorListeners()
       parser.addErrorListener(listener)
-//      syntax.TopoMapVisitor().visitProgram(parser.program())
+      syntax.TopoMapVisitor().visitSurfaceDefRootExpr(parser.rootExpr())
     }
 
-    println(program)
+    println(rootProgram)
   }
 }

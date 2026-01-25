@@ -5,11 +5,11 @@ import corelang.{Env, Type, Value}
 
 type Context = Env
 
-case class TopoRootValue(
+case class RootValue(
   name: String,
   params: List[(String, Type)],
-  submaps: Set[TopoMapValue],
-  transportations: Set[TopoTransportationValue],
+//  submaps: Set[TopoMapValue],
+//  transportations: Set[TopoTransportationValue],
   context: Context,
 ) {
   
@@ -44,10 +44,12 @@ case class AtomicPathValue(
   
 }
 
+case class TopoMapRefValue(name: String)
+
 case class TransportValue(
   name: String,
-  stations: Map[TopoMapValue, TopoNodeValue],
-  stationLocations: Map[TopoMapValue, Double],
+  stations: Map[TopoMapRefValue, TopoNodeValue],
+  stationLocations: Map[TopoMapRefValue, Double],
   context: Context,
 ) {
   
