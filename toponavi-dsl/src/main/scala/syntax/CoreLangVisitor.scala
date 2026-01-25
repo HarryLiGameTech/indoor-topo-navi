@@ -97,9 +97,9 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
       // Case: recordType
       visitRecordType(ctx.recordType())
     }
-    else if (ctx.ID() != null) {
+    else if (ctx.identifier() != null) {
       // Case: ID (named types like aliases or enums)
-      val name = ctx.ID().getText
+      val name = ctx.identifier().getText
       // We throw here because corelang.Type requires resolved types, not just names
       throw RuntimeException(s"Named types ($name) must be resolved or are not supported in this visitor yet.")
     }
@@ -202,7 +202,7 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
     }
     else if (ctx.getText == "true") Expr.BoolLit(true)
     else if (ctx.getText == "false") Expr.BoolLit(false)
-    else if (ctx.ID() != null) Expr.Var(ctx.ID().getText)
+    else if (ctx.identifier() != null) Expr.Var(ctx.identifier().getText)
     else if (ctx.block() != null) visitBlock(ctx.block())
     else if (ctx.getChild(0).getText == "{") visitRecordLiteral(ctx)
     else visitExpr(ctx.expr()) // Parentheses
