@@ -29,18 +29,10 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       case coreDefCtx: SurfaceElementCoreDefContext =>
         val envUpdate = visitSurfaceElementCoreDef(coreDefCtx)
         acc.copy(env = acc.env.merge(envUpdate))
-      case topoNodeCtx: SurfaceElementTopoNodeContext =>
-        ???
-      case atomicPathCtx: SurfaceElementAtomicPathContext =>
-        ???
-      case arrowCtx: SurfaceElementArrowContext =>
-        ???
-      case stationCtx: SurfaceElementStationContext =>
-        ???
+      case _ => acc // Ignore other elements for now
     }
   }
 
-  // TODO
   override def visitSurfaceDefTopoMapExpr(ctx: SurfaceDefTopoMapExprContext): SubTopoMapExpr = {
     val name = ctx.ID().getText
 
@@ -51,34 +43,22 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       (paramName, paramType)
     }.toList
 
-    val nodes = ListBuffer[TopoNodeExpr]()
-    val paths = ListBuffer[AtomicPathExpr]()
-
-    if (ctx.surfaceBody() != null) {
-      for (element <- ctx.surfaceBody().surfaceBodyElement().asScala) {
-        element match {
-          case nodeCtx: SurfaceElementTopoNodeContext =>
-            val node = visitSurfaceElementTopoNode(nodeCtx)
-            nodes += node
-          case pathCtx: SurfaceElementAtomicPathContext =>
-            val path = visitSurfaceElementAtomicPath(pathCtx)
-            paths += path
-          case arrowCtx: SurfaceElementArrowContext =>
-            // TODO: Ignore for now, to-be-updated
-          case coreDef: CoreDefContext =>
-            ???
-        }
-      }
+    ctx.surfaceBody().surfaceBodyElement().asScala.foldLeft(
+      SubTopoMapExpr(name, params)
+    ) { (acc, element) => element match
+      case coreDefCtx: SurfaceElementCoreDefContext =>
+        val envUpdate = visitSurfaceElementCoreDef(coreDefCtx)
+        acc.copy(env = acc.env.merge(envUpdate))
+      case topoNodeCtx: SurfaceElementTopoNodeContext =>
+        val node = visitSurfaceElementTopoNode(topoNodeCtx)
+        acc.copy(nodes = acc.nodes :+ node)
+      case atomicPathCtx: SurfaceElementAtomicPathContext =>
+        val path = visitSurfaceElementAtomicPath(atomicPathCtx)
+        acc.copy(paths = acc.paths :+ path)
+      case arrowCtx: SurfaceElementArrowContext =>
+        ??? // TODO: to-be-updated for implementation
+      case _ => acc // Ignore other elements for now
     }
-
-    SubTopoMapExpr(
-      name = name,
-      params = params,
-      env = Environment.empty, // TODO: Implement submap-level environment
-      data = List.empty, // TODO: Implement submap-level data
-      nodes = nodes.toList,
-      paths = paths.toList
-    )
   }
 
   override def visitSurfaceDefTransportExpr(ctx: SurfaceDefTransportExprContext): TransportExpr = {
@@ -90,6 +70,24 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
 //        throw RuntimeException(s"Unsupported transport type: ${ctx.expr().getText}")
 //      }
     }
+
+    ctx.surfaceBody().surfaceBodyElement().asScala.foldLeft(
+      TransportExpr(
+        name = name,
+        stationNodes = Map.empty,
+        stationLocations = Map.empty,
+        data = Expr.Record(Map.empty)
+      )
+    ) { (acc, element) => element match
+      case stationCtx: SurfaceElementStationContext =>
+        val stationNodeTri = visitSurfaceElementStation(stationCtx)
+        acc.copy(
+          stationNodes = acc.stationNodes + (stationNodeTri._1 -> stationNodeTri._2),
+          stationLocations = acc.stationLocations + (stationNodeTri._1 -> stationNodeTri._3)
+        )
+      case _ => acc // Ignore other elements for now
+    })
+    
     
     val stationNodes = mutable.Map[TopoMapRef, TopoNodeExpr]()
     val stationLocations = mutable.Map[TopoMapRef, Double]()
@@ -190,13 +188,13 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     ???
   }
   
-  override def visitSurfaceElementVehicleExpr(ctx: SurfaceElementVehicleExprContext): VehicleRef = {
+  override def visitGlobalConfigElementVehicleRef(ctx: GlobalConfigElementVehicleRefContext): VehicleRef = {
     VehicleRef(
       name = ctx.ID().getText
     )
   }
   
-  override def visitSurfaceElementSubmapExpr(ctx: SurfaceElementSubmapExprContext): TopoMapRef = {
+  override def visitGlobalConfigElementSubmapRef(ctx: GlobalConfigElementSubmapRefContext): TopoMapRef = {
     TopoMapRef(
       name = ctx.ID().getText
     )

@@ -1,4 +1,4 @@
-location-configuration{
+building-includes{
     submap FloorZ1
     submap FloorZ2
     submap FloorZ3

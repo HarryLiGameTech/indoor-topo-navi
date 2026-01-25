@@ -44,6 +44,28 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitSurfaceDefTransportExpr(MapFileParser.SurfaceDefTransportExprContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code SurfaceDefGlobalConfigExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
+	 * @param ctx the parse tree
+	 */
+	void enterSurfaceDefGlobalConfigExpr(MapFileParser.SurfaceDefGlobalConfigExprContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SurfaceDefGlobalConfigExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
+	 * @param ctx the parse tree
+	 */
+	void exitSurfaceDefGlobalConfigExpr(MapFileParser.SurfaceDefGlobalConfigExprContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#globalConfigBody}.
+	 * @param ctx the parse tree
+	 */
+	void enterGlobalConfigBody(MapFileParser.GlobalConfigBodyContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#globalConfigBody}.
+	 * @param ctx the parse tree
+	 */
+	void exitGlobalConfigBody(MapFileParser.GlobalConfigBodyContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link MapFileParser#surfaceBody}.
 	 * @param ctx the parse tree
 	 */
@@ -53,6 +75,30 @@ public interface MapFileListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitSurfaceBody(MapFileParser.SurfaceBodyContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code GlobalConfigElementVehicleRef}
+	 * labeled alternative in {@link MapFileParser#globalConfigElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterGlobalConfigElementVehicleRef(MapFileParser.GlobalConfigElementVehicleRefContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code GlobalConfigElementVehicleRef}
+	 * labeled alternative in {@link MapFileParser#globalConfigElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitGlobalConfigElementVehicleRef(MapFileParser.GlobalConfigElementVehicleRefContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code GlobalConfigElementSubmapRef}
+	 * labeled alternative in {@link MapFileParser#globalConfigElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterGlobalConfigElementSubmapRef(MapFileParser.GlobalConfigElementSubmapRefContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code GlobalConfigElementSubmapRef}
+	 * labeled alternative in {@link MapFileParser#globalConfigElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitGlobalConfigElementSubmapRef(MapFileParser.GlobalConfigElementSubmapRefContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code SurfaceElementCoreDef}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
@@ -113,30 +159,6 @@ public interface MapFileListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code SurfaceElementVehicleExpr}
-	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
-	 * @param ctx the parse tree
-	 */
-	void enterSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code SurfaceElementVehicleExpr}
-	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
-	 * @param ctx the parse tree
-	 */
-	void exitSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code SurfaceElementSubmapExpr}
-	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
-	 * @param ctx the parse tree
-	 */
-	void enterSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code SurfaceElementSubmapExpr}
-	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
-	 * @param ctx the parse tree
-	 */
-	void exitSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code TypeDef}
 	 * labeled alternative in {@link MapFileParser#coreDef}.
@@ -493,4 +515,14 @@ public interface MapFileListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitRecordAssign(MapFileParser.RecordAssignContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#identifier}.
+	 * @param ctx the parse tree
+	 */
+	void enterIdentifier(MapFileParser.IdentifierContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#identifier}.
+	 * @param ctx the parse tree
+	 */
+	void exitIdentifier(MapFileParser.IdentifierContext ctx);
 }

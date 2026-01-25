@@ -4,15 +4,25 @@ grammar MapFile;
 // PARSER RULES
 // -----------------------------------------------------------------------------
 
-// Entry point: A program is a list of top-level definitions or expressions
+// Entry point
 surfaceDef
     : 'root' ID '(' paramList? ')' surfaceBody                        # SurfaceDefRootExpr
     | 'topo-map' ID '(' paramList? ')' surfaceBody                    # SurfaceDefTopoMapExpr
     | 'transport' ID 'is' expr surfaceBody                            # SurfaceDefTransportExpr
+    | 'building-includes' globalConfigBody                            # SurfaceDefGlobalConfigExpr
+    ;
+
+globalConfigBody
+    : '{' NL* (globalConfigElement NL+)* globalConfigElement? NL* '}'
     ;
 
 surfaceBody
     : '{' (surfaceBodyElement NL)* surfaceBodyElement '}'
+    ;
+
+globalConfigElement
+    : 'vehicle' ID                                        # GlobalConfigElementVehicleRef
+    | 'submap' ID                                         # GlobalConfigElementSubmapRef
     ;
 
 // station Floor4 at FloorZ1.OP1_hall at 17.5 {} requires haveStaffCard on Arrive
@@ -22,8 +32,6 @@ surfaceBodyElement
     | 'atomic-path' pathSpec recordAssign requirements    # SurfaceElementAtomicPath
     | 'station' ID 'at' expr ('at' expr)* recordAssign requirements 'on' expr  # SurfaceElementStation
     | 'arrow' arrowSpec arrowHeading '>>' expr            # SurfaceElementArrow
-    | 'vehicle' ID                                        # SurfaceElementVehicleExpr
-    | 'submap' ID                                         # SurfaceElementSubmapExpr
     ;
 
 coreDef

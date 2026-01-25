@@ -32,11 +32,38 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSurfaceDefTransportExpr(MapFileParser.SurfaceDefTransportExprContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code SurfaceDefGlobalConfigExpr}
+	 * labeled alternative in {@link MapFileParser#surfaceDef}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSurfaceDefGlobalConfigExpr(MapFileParser.SurfaceDefGlobalConfigExprContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#globalConfigBody}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGlobalConfigBody(MapFileParser.GlobalConfigBodyContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link MapFileParser#surfaceBody}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitSurfaceBody(MapFileParser.SurfaceBodyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code GlobalConfigElementVehicleRef}
+	 * labeled alternative in {@link MapFileParser#globalConfigElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGlobalConfigElementVehicleRef(MapFileParser.GlobalConfigElementVehicleRefContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code GlobalConfigElementSubmapRef}
+	 * labeled alternative in {@link MapFileParser#globalConfigElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGlobalConfigElementSubmapRef(MapFileParser.GlobalConfigElementSubmapRefContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code SurfaceElementCoreDef}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
@@ -72,20 +99,6 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code SurfaceElementVehicleExpr}
-	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code SurfaceElementSubmapExpr}
-	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code TypeDef}
 	 * labeled alternative in {@link MapFileParser#coreDef}.
@@ -296,4 +309,10 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitRecordAssign(MapFileParser.RecordAssignContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#identifier}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIdentifier(MapFileParser.IdentifierContext ctx);
 }

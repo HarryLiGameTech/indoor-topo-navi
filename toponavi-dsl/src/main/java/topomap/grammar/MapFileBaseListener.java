@@ -53,6 +53,30 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSurfaceDefGlobalConfigExpr(MapFileParser.SurfaceDefGlobalConfigExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSurfaceDefGlobalConfigExpr(MapFileParser.SurfaceDefGlobalConfigExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterGlobalConfigBody(MapFileParser.GlobalConfigBodyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitGlobalConfigBody(MapFileParser.GlobalConfigBodyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterSurfaceBody(MapFileParser.SurfaceBodyContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -60,6 +84,30 @@ public class MapFileBaseListener implements MapFileListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitSurfaceBody(MapFileParser.SurfaceBodyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterGlobalConfigElementVehicleRef(MapFileParser.GlobalConfigElementVehicleRefContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitGlobalConfigElementVehicleRef(MapFileParser.GlobalConfigElementVehicleRefContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterGlobalConfigElementSubmapRef(MapFileParser.GlobalConfigElementSubmapRefContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitGlobalConfigElementSubmapRef(MapFileParser.GlobalConfigElementSubmapRefContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -120,30 +168,6 @@ public class MapFileBaseListener implements MapFileListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitSurfaceElementVehicleExpr(MapFileParser.SurfaceElementVehicleExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitSurfaceElementSubmapExpr(MapFileParser.SurfaceElementSubmapExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -528,6 +552,18 @@ public class MapFileBaseListener implements MapFileListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitRecordAssign(MapFileParser.RecordAssignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterIdentifier(MapFileParser.IdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitIdentifier(MapFileParser.IdentifierContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

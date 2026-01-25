@@ -51,7 +51,7 @@ trait ConstrainedElaborateable[T] extends Elaborateable[Option[T]] {
 // Root TopoMap definition
 case class RootExpr(
   name: String,
-  params: List[(String, Type)] = List.empty, // paramName -> type
+  params: Params = List.empty, // paramName -> type
   env: Environment[Identifier, Type, Expr] = Environment.empty,
   data: List[Data] = List.empty
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoRootValue] {
@@ -70,11 +70,11 @@ case class RootExpr(
 // Submap definition
 case class SubTopoMapExpr(
   name: String,
-  params: Params,
-  env: Environment[Identifier, Type, Expr],
-  data: List[Data],
-  nodes: List[TopoNodeExpr],
-  paths: List[AtomicPathExpr]
+  params: Params = List.empty,
+  env: Environment[Identifier, Type, Expr] = Environment.empty,
+  data: List[Data] = List.empty,
+  nodes: List[TopoNodeExpr] = List.empty,
+  paths: List[AtomicPathExpr] = List.empty
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = {
