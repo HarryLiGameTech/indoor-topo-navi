@@ -2,7 +2,7 @@ package syntax
 
 import corelang.{Environment, Expr, Identifier, OpKind, Type}
 import org.antlr.v4.runtime.tree.ParseTree
-import surfacelang.{AtomicPathExpr, RootExpr, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TransportExpr, VehicleRef}
+import surfacelang.{AtomicPathExpr, GlobalConfigExpr, RootExpr, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TransportExpr, VehicleRef}
 import topomap.grammar.MapFileParser.*
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser, MapFileVisitor}
 
@@ -86,33 +86,36 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
           stationLocations = acc.stationLocations + (stationNodeTri._1 -> stationNodeTri._3)
         )
       case _ => acc // Ignore other elements for now
-    })
-    
-    
-    val stationNodes = mutable.Map[TopoMapRef, TopoNodeExpr]()
-    val stationLocations = mutable.Map[TopoMapRef, Double]()
+    }
+  }
 
-    if (ctx.surfaceBody() != null) {
-      for (element <- ctx.surfaceBody().surfaceBodyElement().asScala) {
-        element match {
-          case stationCtx: SurfaceElementStationContext =>
-            val stationNodeTri = visitSurfaceElementStation(stationCtx)
-            // extract and add this pair into the stationNodes
-            stationNodes += (stationNodeTri._1 -> stationNodeTri._2)
-            stationLocations += (stationNodeTri._1 -> stationNodeTri._3)
-          case _ => // Ignore other elements for now
+  override def visitSurfaceDefGlobalConfigExpr(ctx: SurfaceDefGlobalConfigExprContext): GlobalConfigExpr = {
+    Option(ctx.globalConfigBody)
+      .flatMap(body => Option(body.globalConfigElement))
+      .map(_.asScala.toList)
+      .getOrElse(List.empty)
+      .foldLeft(GlobalConfigExpr(List.empty, List.empty)) { (acc, elementCtx) =>
+        elementCtx match {
+          case submapCtx: GlobalConfigElementSubmapRefContext =>
+            acc.copy(submaps = acc.submaps :+ visitGlobalConfigElementSubmapRef(submapCtx))
+          case vehicleCtx: GlobalConfigElementVehicleRefContext =>
+            acc.copy(vehicles = acc.vehicles :+ visitGlobalConfigElementVehicleRef(vehicleCtx))
+          case _ => acc // Ignore other elements
         }
       }
-    }
-    
-    TransportExpr(
-      name = name,
-      stationNodes = stationNodes, // TODO: Deal with the type mismatch
-      stationLocations = stationLocations, // TODO: Deal with the type mismatch
-      data = Expr.Record(Map.empty)
+  }
+
+  override def visitGlobalConfigElementVehicleRef(ctx: GlobalConfigElementVehicleRefContext): VehicleRef = {
+    VehicleRef(
+      name = ctx.ID().getText
     )
   }
-  
+
+  override def visitGlobalConfigElementSubmapRef(ctx: GlobalConfigElementSubmapRefContext): TopoMapRef = {
+    TopoMapRef(
+      name = ctx.ID().getText
+    )
+  }
 
   override def visitSurfaceElementCoreDef(ctx: SurfaceElementCoreDefContext): Environment[Identifier, Type, Expr] = {
     ctx.coreDef match {
@@ -184,19 +187,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     (mapRef, nodeExpr, ctx.expr(1).visit.asInstanceOf[Expr.FloatLit].value) // TODO: Correct?
   }
   
+  // TODO: to-be-updated for implementation
   override def visitSurfaceElementArrow(ctx: SurfaceElementArrowContext): TopoMapRef = {
     ???
-  }
-  
-  override def visitGlobalConfigElementVehicleRef(ctx: GlobalConfigElementVehicleRefContext): VehicleRef = {
-    VehicleRef(
-      name = ctx.ID().getText
-    )
-  }
-  
-  override def visitGlobalConfigElementSubmapRef(ctx: GlobalConfigElementSubmapRefContext): TopoMapRef = {
-    TopoMapRef(
-      name = ctx.ID().getText
-    )
   }
 }

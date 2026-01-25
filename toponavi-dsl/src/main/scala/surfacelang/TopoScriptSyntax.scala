@@ -90,8 +90,8 @@ case class SubTopoMapExpr(
 
 case class TransportExpr(
   name: String,
-  stationNodes: Map[SubTopoMapExpr, TopoNodeExpr],
-  stationLocations: Map[SubTopoMapExpr, Double],
+  stationNodes: Map[TopoMapRef, TopoNodeExpr],
+  stationLocations: Map[TopoMapRef, Double],
   data: Data
 ) extends SurfaceSyntax with Elaborateable[TransportValue] {
   override def elaborate(using topoEnv: TopoEnvironment): TransportValue = {
@@ -159,3 +159,8 @@ case class VehicleRef(
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue]{
   override def elaborate(using topoEnv: TopoEnvironment): Any // TODO
 }
+
+case class GlobalConfigExpr(
+  submaps: List[TopoMapRef],
+  vehicles: List[VehicleRef]
+) extends SurfaceSyntax
