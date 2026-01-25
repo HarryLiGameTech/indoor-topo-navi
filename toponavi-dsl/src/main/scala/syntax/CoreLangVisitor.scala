@@ -204,8 +204,8 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
     else if (ctx.getText == "false") Expr.BoolLit(false)
     else if (ctx.identifier() != null) {
       val ids = ctx.identifier().ID().asScala.map(_.getText).toList
-      if (ids.size == 1) Expr.Var(ids.head)
-      else Expr.Path(ids)
+      if (ids.size == 1) Expr.Var(Identifier.Symbol(ids.head))
+      else Expr.Var(Identifier.Path(ids))
     }
     else if (ctx.block() != null) visitBlock(ctx.block())
     else if (ctx.getChild(0).getText == "{") visitRecordLiteral(ctx)

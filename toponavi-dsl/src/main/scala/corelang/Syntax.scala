@@ -7,6 +7,7 @@ import corelang.{Environment, Identified, TypeEnvironment, TypeOnlyEnvironment}
 enum Identifier {
   case Index(index: Int)
   case Symbol(name: String)
+  case Path(ids: List[String]) // Path identifier: root::sub::leaf
 }
 
 object Identifier {
@@ -51,7 +52,7 @@ enum OpKind {
 }
 
 enum Expr extends Identified[Identifier] {
-  case Var(name: String)
+  case Var(id: Identifier)
   case Lam(param: String, tpe: Type, body: Expr)
   case App(fn: Expr, arg: Expr)
   case IntLit(value: Long)
@@ -68,7 +69,6 @@ enum Expr extends Identified[Identifier] {
   case Let(name: String, value: Expr, body: Expr)
   case LetRec(name: String, tpe: Type, value: Expr, body: Expr)
   case EnumLit(enumType: String, variant: String) // Enum literal: MyEnum.Variant
-  case Path(ids: List[String]) // Path identifier: root::sub::leaf
   case Match(scrutinee: Expr, cases: List[(String, Expr)]) // Pattern match on enum
 
   /**
@@ -85,28 +85,32 @@ enum Expr extends Identified[Identifier] {
     }
 
     this match {
-      case Expr.Path(ids) =>
-        ids match {
-          case Nil => throw new RuntimeException("Path cannot be empty")
-          case head :: tail =>
-             // Try to resolve as Enum first (if length is 2)
-             val enumTry = if (tail.size == 1) {
-               typeEnv.getType(Identifier.Symbol(head)) match {
-                 case Some(et: Type.EnumType) if et.variants.contains(tail.head) =>
-                   Some(Term.EnumLit(et, tail.head))
-                 case _ => None
-               }
-             } else None
+      case Expr.Var(id) =>
+        id match {
+          case Identifier.Symbol(name) => lookup(name, stack)
+          case Identifier.Index(_) => throw new RuntimeException("Explicit index identifier in source AST not supported")
+          case Identifier.Path(ids) =>
+             ids match {
+               case Nil => throw new RuntimeException("Path cannot be empty")
+               case head :: tail =>
+                  // Try to resolve as Enum first (if length is 2)
+                  val enumTry = if (tail.size == 1) {
+                    typeEnv.getType(Identifier.Symbol(head)) match {
+                      case Some(et: Type.EnumType) if et.variants.contains(tail.head) =>
+                        Some(Term.EnumLit(et, tail.head))
+                      case _ => None
+                    }
+                  } else None
 
-             enumTry.getOrElse {
-               // Otherwise, treat as variable/symbol access + projections
-               val startTerm = lookup(head, stack)
-               tail.foldLeft(startTerm) { (acc, field) =>
-                 Term.Proj(acc, field)
-               }
+                  enumTry.getOrElse {
+                    // Otherwise, treat as variable/symbol access + projections
+                    val startTerm = lookup(head, stack)
+                    tail.foldLeft(startTerm) { (acc, field) =>
+                       Term.Proj(acc, field)
+                    }
+                  }
              }
         }
-      case Expr.Var(name) => lookup(name, stack)
 
       case Expr.Lam(param, tpe, body) =>
         val extended = param :: stack
