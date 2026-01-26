@@ -30,7 +30,17 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       val parser = MapFileParser(CommonTokenStream(lexer))
       parser.removeErrorListeners()
       parser.addErrorListener(listener)
-      syntax.TopoMapVisitor().visitSurfaceDefRootExpr(parser.rootExpr())
+      
+      val surface = parser.surfaceDef()
+      surface match {
+        case ctx: MapFileParser.SurfaceDefRootExprContext =>
+          new syntax.TopoMapVisitor().visitSurfaceDefRootExpr(ctx)
+        case ctx: MapFileParser.SurfaceDefGlobalConfigExprContext => 
+          new syntax.TopoMapVisitor().visitSurfaceDefGlobalConfigExpr(ctx)
+        case ctx: MapFileParser.SurfaceDefTopoMapExprContext => 
+          new syntax.TopoMapVisitor().visitSurfaceDefTopoMapExpr(ctx)
+        case _ => throw new RuntimeException("Unexpected surface definition type")
+      }
     }
 
     println(rootProgram)

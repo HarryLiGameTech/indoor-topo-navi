@@ -9,7 +9,6 @@ trait SurfaceSyntax
 type Params = List[(String, Type)]
 type Data = Expr.Record
 
-// TODO: Refactor
 trait SyntaxNameSpace {
   def env: Environment[Identifier, Type, Expr]
 
@@ -20,10 +19,10 @@ trait SyntaxNameSpace {
 
   final def synthesisEnv(using topoEnv: TopoEnvironment): Environment[Identifier, Type, Value] = {
     val currentEnv = this.env
-    
+
     // 1. Start with the incoming environment's type context + local types
     val typeEnvWithLocals = TypeOnlyEnvironment(topoEnv.env.typeEnv.types ++ currentEnv.typeEnv.types)
-    
+
     // 2. Evaluate each definition in the local environment
     val localValues = currentEnv.values.map { case (id, expr) =>
        val term = expr.toTerm(typeEnvWithLocals)
@@ -33,7 +32,7 @@ trait SyntaxNameSpace {
 
     // 3. Create a new Env with these values
     Environment[Identifier, Type, Value](
-      types = currentEnv.types, 
+      types = currentEnv.types,
       values = localValues
     )
   }
@@ -71,7 +70,7 @@ case class RootExpr(
     RootValue(
       name = name,
       params = params,
-      context = evaluatedEnv 
+      context = evaluatedEnv
     )
   }
 }
@@ -85,16 +84,18 @@ case class SubTopoMapExpr(
   nodes: List[TopoNodeExpr] = List.empty,
   paths: List[AtomicPathExpr] = List.empty
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue] {
-  
+
+  // TODO: Verify correctness of context
   override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = {
     val newEnvValues = this.synthesisEnv
 
-    given newTopoEnv: TopoEnvironment = topoEnv.merge(newEnvValues)
+    // TODO: Do we really need this merge()?
+//    given newTopoEnv: TopoEnvironment = topoEnv.merge(newEnvValues)
     TopoMapValue(
       name = name,
       nodes = nodes.map(_.elaborate).toSet,
       paths = paths.flatMap(_.elaborate).toSet,
-      context = newTopoEnv.env,
+      context = newEnvValues,
     )
   }
 }
