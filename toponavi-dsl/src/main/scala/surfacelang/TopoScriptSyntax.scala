@@ -1,7 +1,7 @@
 package surfacelang
 
 import corelang.Value.BoolVal
-import corelang.{Env, Environment, Expr, Identifier, Interpreter, Term, Type, Value}
+import corelang.{Env, Environment, Expr, Identifier, Interpreter, Term, Type, TypeOnlyEnvironment, Value}
 
 trait SurfaceSyntax
 
@@ -11,22 +11,31 @@ type Data = Expr.Record
 
 // TODO: Refactor
 trait SyntaxNameSpace {
-  def types: List[(String, Type)]
-  def defns: List[(String, Expr)]
+  def env: Environment[Identifier, Type, Expr]
 
   final def lookup(name: String): Expr = {
-    defns.toMap.getOrElse(name, throw new RuntimeException(s"Term '$name' not found"))
+    env.getValue(Identifier.Symbol(name))
+      .getOrElse(throw new RuntimeException(s"Term '$name' not found in env"))
   }
-  
-  lazy val synthesisEnv: Env = {
-    val typeEnv = types.foldLeft(Environment.empty[Identifier, Type, Value]) { 
-      case (env, (name, tpe)) => env.addTypeVar(Identifier.Symbol(name), tpe)
+
+  final def synthesisEnv(using topoEnv: TopoEnvironment): Environment[Identifier, Type, Value] = {
+    val currentEnv = this.env
+    
+    // 1. Start with the incoming environment's type context + local types
+    val typeEnvWithLocals = TypeOnlyEnvironment(topoEnv.env.typeEnv.types ++ currentEnv.typeEnv.types)
+    
+    // 2. Evaluate each definition in the local environment
+    val localValues = currentEnv.values.map { case (id, expr) =>
+       val term = expr.toTerm(typeEnvWithLocals)
+       val value = Interpreter.eval(term)(using topoEnv.env)
+       (id, value)
     }
-    val defnTerms = defns.map { case (n, e) => (n, e.toTerm(typeEnv)) }.toMap
-    defnTerms.foldLeft(typeEnv) { case (env, (name, term)) =>
-      val value = Interpreter.eval(term)(using env)
-      env.addValueVar(Identifier.Symbol(name), value)
-    }
+
+    // 3. Create a new Env with these values
+    Environment[Identifier, Type, Value](
+      types = currentEnv.types, 
+      values = localValues
+    )
   }
 }
 
@@ -57,13 +66,13 @@ case class RootExpr(
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[RootValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): RootValue = {
-    val env = this.synthesisEnv
+    val evaluatedEnv = this.synthesisEnv
+
     RootValue(
       name = name,
       params = params,
-      context = env
+      context = evaluatedEnv 
     )
-    
   }
 }
 
@@ -78,7 +87,9 @@ case class SubTopoMapExpr(
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = {
-    given newTopoEnv: TopoEnvironment = topoEnv.merge(this.synthesisEnv)
+    val newEnvValues = this.synthesisEnv
+
+    given newTopoEnv: TopoEnvironment = topoEnv.merge(newEnvValues)
     TopoMapValue(
       name = name,
       nodes = nodes.map(_.elaborate).toSet,
@@ -151,13 +162,15 @@ case class AtomicPathExpr(
 case class TopoMapRef(
   name: String
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapRefValue]{
+  val env: Environment[Identifier, Type, Expr] = Environment.empty
   override def elaborate(using topoEnv: TopoEnvironment): TopoMapRefValue = TopoMapRefValue(name)
 }
 
 case class VehicleRef(
   name: String
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue]{
-  override def elaborate(using topoEnv: TopoEnvironment): Any // TODO
+  val env: Environment[Identifier, Type, Expr] = Environment.empty
+  override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = ??? // TODO
 }
 
 case class GlobalConfigExpr(

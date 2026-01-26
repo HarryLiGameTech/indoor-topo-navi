@@ -80,7 +80,7 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       )
     ) { (acc, element) => element match
       case stationCtx: SurfaceElementStationContext =>
-        val stationNodeTri = visitSurfaceElementStation(stationCtx)
+        val stationNodeTri = parseSurfaceElementStation(stationCtx)
         acc.copy(
           stationNodes = acc.stationNodes + (stationNodeTri._1 -> stationNodeTri._2),
           stationLocations = acc.stationLocations + (stationNodeTri._1 -> stationNodeTri._3)
@@ -177,11 +177,11 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
   }
 
   // Use as an intermediate function
-  override def visitSurfaceElementStation(ctx: SurfaceElementStationContext): (TopoMapRef, TopoNodeExpr, Double) = {
+  private def parseSurfaceElementStation(ctx: SurfaceElementStationContext): (TopoMapRef, TopoNodeExpr, Double) = {
     val mapRef = TopoMapRef(
       name = ctx.ID().getText
     )
-    
+
     val nodeExpr = ??? // TODO: get the node expression from the context
 
     (mapRef, nodeExpr, ctx.expr(1).visit.asInstanceOf[Expr.FloatLit].value) // TODO: Correct?
