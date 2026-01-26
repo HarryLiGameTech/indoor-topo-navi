@@ -2,7 +2,7 @@ import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import topomap.grammar.{MapFileLexer, MapFileParser, MapFileVisitor}
-import corelang.{Expr, OpKind, Type}
+import corelang.{Expr, Identifier, OpKind, Type}
 import syntax.TopoMapVisitor
 
 class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
@@ -21,7 +21,7 @@ class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
     val tree = parser.expr()
 
     val visitor = new TopoMapVisitor()
-    visitor.visitE(tree)
+    visitor.visit(tree)
   }
 
   /**
@@ -40,7 +40,14 @@ class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
     // Manually dispatch based on the specific context type
     tree match {
       case ctx: MapFileParser.FuncDefContext =>
-        visitor.visitFuncDef(ctx)
+        val env = visitor.visitFuncDef(ctx)
+        val (id, expr) = env.values.head
+        val name = id match {
+          case Identifier.Symbol(n) => n
+          case Identifier.Path(paths) => ??? // TODO: Test path identifiers
+          case _ => throw new RuntimeException(s"Unexpected identifier type: $id")
+        }
+        (name, expr)
 
       case ctx: MapFileParser.TypeDefContext =>
         // This helper expects a (String, Expr), but TypeDef returns (String, Type).

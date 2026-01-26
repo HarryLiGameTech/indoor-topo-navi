@@ -9,7 +9,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     val rootCode =
       """
       root TestBuilding{
-          def a = 1
+          let a: Int = 1
       }
       """
       
@@ -30,14 +30,14 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       val parser = MapFileParser(CommonTokenStream(lexer))
       parser.removeErrorListeners()
       parser.addErrorListener(listener)
-      
+
       val surface = parser.surfaceDef()
       surface match {
         case ctx: MapFileParser.SurfaceDefRootExprContext =>
           new syntax.TopoMapVisitor().visitSurfaceDefRootExpr(ctx)
-        case ctx: MapFileParser.SurfaceDefGlobalConfigExprContext => 
+        case ctx: MapFileParser.SurfaceDefGlobalConfigExprContext =>
           new syntax.TopoMapVisitor().visitSurfaceDefGlobalConfigExpr(ctx)
-        case ctx: MapFileParser.SurfaceDefTopoMapExprContext => 
+        case ctx: MapFileParser.SurfaceDefTopoMapExprContext =>
           new syntax.TopoMapVisitor().visitSurfaceDefTopoMapExpr(ctx)
         case _ => throw new RuntimeException("Unexpected surface definition type")
       }

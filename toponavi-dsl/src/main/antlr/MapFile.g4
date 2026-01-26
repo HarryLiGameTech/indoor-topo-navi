@@ -118,7 +118,7 @@ fieldAssign
 // Example: { let pi = 3.14; pi * r }
 // Allows statements terminated by semicolon, ending with an optional expression.
 block
-    : '{' (stmt ';')* expr? '}'
+    : '{' NL* (stmt ';' NL*)* (expr NL*)? '}'
     ;
 
 stmt
