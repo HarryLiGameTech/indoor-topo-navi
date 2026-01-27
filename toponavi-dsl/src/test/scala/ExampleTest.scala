@@ -6,16 +6,24 @@ import util.catchError
 
 class ExampleTest extends AnyFunSuite with should.Matchers{
   test("example test"){
+    // TODO: LetStmt now has to be with another braces-pair, try to remove this limit
     val rootCode =
       """
-      root TestBuilding{
-          let a: Int = 1
+      root TestBuilding(p1: String){
+        {
+          let a: Int = 1;
+          let b: String = "Tester";
+        }
+
+        def magicFunc(): Int = {
+          a + 114514
+        }
       }
       """
       
     val subMapCode =
       """
-      topo-map TestSubMap{
+      topo-map TestSubMap(){
           topo-node tt1
           topo-node tt2
           atomic-path [tt1 <-> tt2] {cose = 114}
@@ -35,14 +43,30 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       surface match {
         case ctx: MapFileParser.SurfaceDefRootExprContext =>
           new syntax.TopoMapVisitor().visitSurfaceDefRootExpr(ctx)
-        case ctx: MapFileParser.SurfaceDefGlobalConfigExprContext =>
-          new syntax.TopoMapVisitor().visitSurfaceDefGlobalConfigExpr(ctx)
+        case _ => throw new RuntimeException("Unexpected surface definition type")
+      }
+    }
+
+    println(rootProgram)
+
+    val submapProgram = catchError(subMapCode.strip) { listener =>
+      val stripedCode = subMapCode.strip()
+      val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
+      lexer.removeErrorListeners()
+      lexer.addErrorListener(listener)
+      val parser = MapFileParser(CommonTokenStream(lexer))
+      parser.removeErrorListeners()
+      parser.addErrorListener(listener)
+
+      val surface = parser.surfaceDef()
+      surface match {
         case ctx: MapFileParser.SurfaceDefTopoMapExprContext =>
           new syntax.TopoMapVisitor().visitSurfaceDefTopoMapExpr(ctx)
         case _ => throw new RuntimeException("Unexpected surface definition type")
       }
     }
 
-    println(rootProgram)
+    println(submapProgram)
+
   }
 }

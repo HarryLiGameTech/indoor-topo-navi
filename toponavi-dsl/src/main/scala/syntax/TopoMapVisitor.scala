@@ -121,20 +121,46 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     ctx.coreDef match {
       case c: TypeDefContext => visitTypeDef(c)
       case c: FuncDefContext => visitFuncDef(c)
-      case c: ScriptExprContext => Environment.empty
+      // TODO: Possibly need refactoring, to move them into somewhere else
+      case c: ScriptExprContext =>
+        c.expr() match {
+          case atomExpr: AtomExprContext if atomExpr.atom().block() != null =>
+            val blockCtx = atomExpr.atom().block()
+            blockCtx.stmt().asScala.foldLeft(Environment.empty[Identifier, Type, Expr]) { (env, stmt) =>
+              stmt match {
+                case letStmt: LetStmtContext =>
+                  val name = letStmt.ID().getText
+                  val expr = letStmt.expr().visit
+                  val envWithVal = env.addValueVar(Identifier(name), expr)
+                  if (letStmt.typeExpr() != null) {
+                    envWithVal.addTypeVar(Identifier(name), visitTypeExpr(letStmt.typeExpr()))
+                  } else {
+                    envWithVal
+                  }
+                case _ => env
+              }
+            }
+          case _ => Environment.empty
+        }
     }
   }
 
   override def visitSurfaceElementTopoNode(ctx: SurfaceElementTopoNodeContext): TopoNodeExpr = {
-    val recordCtx = ctx.recordAssign()
-    val assignments = if (recordCtx.fieldAssign() == null) Seq.empty
-    else recordCtx.fieldAssign().asScala
-    val fields = assignments.map { fieldAssignment =>
-      (fieldAssignment.ID().getText, fieldAssignment.expr.visit)
-    }.toMap
+    val recordFields = Option(ctx.recordAssign()) match {
+      case Some(recordCtx) =>
+        val assignments = if (recordCtx.fieldAssign() == null) Seq.empty
+        else recordCtx.fieldAssign().asScala
+
+        assignments.map { fieldAssignment =>
+          (fieldAssignment.ID().getText, fieldAssignment.expr.visit)
+        }.toMap
+
+      case None => Map.empty
+    }
+
     TopoNodeExpr(
       name = ctx.ID().getText,
-      data = Expr.Record(fields)
+      data = Expr.Record(recordFields)
     )
   }
 
@@ -163,9 +189,11 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     // 'requires' ID
     // 'requires' '<' (ID ('&&' ID)*)? '>'
     // ANTLR collects all matching IDs into a list automatically.
-    val constraintExprs = reqCtx.ID().asScala.map { idNode =>
-      Expr.Var(idNode.getText)
-    }.toList
+    val constraintExprs = Option(reqCtx).map { rCtx =>
+      rCtx.ID().asScala.map { idNode =>
+        Expr.Var(idNode.getText)
+      }.toList
+    }.getOrElse(List.empty)
 
     AtomicPathExpr(
       from = from,
