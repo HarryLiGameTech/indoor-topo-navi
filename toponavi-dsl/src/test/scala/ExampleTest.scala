@@ -26,7 +26,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       topo-map TestSubMap(){
           topo-node tt1
           topo-node tt2
-          atomic-path [tt1 <-> tt2] {cose = 114}
+          atomic-path [tt1 <-> tt2] {cost = 114+5}
       }
       """
 
