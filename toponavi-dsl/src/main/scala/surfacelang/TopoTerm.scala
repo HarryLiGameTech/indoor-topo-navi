@@ -15,8 +15,10 @@ case class RootValue(
   
 }
 
-case class TopoTransportationValue(
+case class TransportValue(
   name: String,
+  stations: List[(TopoNodeRefValue, Value.RecordVal)],
+  data: Value.RecordVal,
   context: Context,
 )
 
@@ -45,13 +47,9 @@ case class AtomicPathValue(
   
 }
 
-case class TopoMapRefValue(name: String)
+case class TopoNodeRefValue(
+  fromMapName: String,
+  nodeName: String
+)
 
-case class TransportValue(
-  name: String,
-  stations: Map[TopoMapRefValue, TopoNodeValue],
-  stationLocations: Map[TopoMapRefValue, Double],
-  context: Context,
-) {
-  
-}
+case class TopoMapRefValue(name: String)

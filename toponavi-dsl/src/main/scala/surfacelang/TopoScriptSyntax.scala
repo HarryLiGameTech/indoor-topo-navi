@@ -109,23 +109,30 @@ case class SubTopoMapExpr(
   }
 }
 
+case class StationDef(
+  node: TopoNodeRef,
+  data: Data
+)
+
 case class TransportExpr(
   name: String,
-  stationNodes: Map[TopoMapRef, TopoNodeExpr],
-  stationLocations: Map[TopoMapRef, Double],
+  stations: List[StationDef],
   data: Data
 ) extends SurfaceSyntax with Elaborateable[TransportValue] {
   override def elaborate(using topoEnv: TopoEnvironment): TransportValue = {
     TransportValue(
       name = name,
-      stations = stationNodes.map { case (mapExpr, nodeExpr) =>
-        val mapValue = TopoMapRefValue(mapExpr.name)
-        val nodeValue = nodeExpr.elaborate
-        (mapValue, nodeValue)
+      stations = stations.map { station =>
+        val nodeValue = station.node.elaborate
+        val stationDataVal = Interpreter.eval(station.data.toTerm(topoEnv.env))(using topoEnv.env) match {
+          case rv: Value.RecordVal => rv
+          case other => throw new RuntimeException(s"Station data must evaluate to RecordVal, got: $other")
+        }
+        (nodeValue, stationDataVal)
       },
-      stationLocations = stationLocations.map { case (mapExpr, location) =>
-        val mapValue = TopoMapRefValue(mapExpr.name)
-        (mapValue, location)
+      data = Interpreter.eval(data.toTerm(topoEnv.env))(using topoEnv.env) match {
+        case rv: Value.RecordVal => rv
+        case other => throw new RuntimeException(s"Transport data must evaluate to RecordVal, got: $other")
       },
       context = topoEnv.env,
     )
@@ -172,6 +179,14 @@ case class AtomicPathExpr(
   }
 }
 
+case class TopoNodeRef(
+  fromMapName: String,
+  nodeName: String
+) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoNodeRefValue]{
+  val env: Environment[Identifier, Type, Expr] = Environment.empty
+  override def elaborate(using topoEnv: TopoEnvironment): TopoNodeRefValue =
+    TopoNodeRefValue(fromMapName, nodeName)
+}
 
 case class TopoMapRef(
   name: String

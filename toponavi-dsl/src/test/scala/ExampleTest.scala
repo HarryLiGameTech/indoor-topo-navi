@@ -6,6 +6,7 @@ import surfacelang.TopoEnvironment
 import topomap.grammar.{MapFileLexer, MapFileParser}
 import util.catchError
 import pprint.pprintln
+import syntax.TopoMapVisitor
 
 class ExampleTest extends AnyFunSuite with should.Matchers{
   test("example test"){
@@ -36,6 +37,14 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       }
       """
 
+    val vehicleCode =
+      """
+      transport OP1 is Elevator{
+          station Lobby at TestSubMap::tt1 {location = 0.0}
+          station UpperLobby at TestSubMap2::tt1 {location = 5.0}
+      }
+      """
+
     val rootProgram = catchError(rootCode.strip) { listener =>
       val stripedCode = rootCode.strip()
       val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
@@ -48,7 +57,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       val surface = parser.surfaceDef()
       surface match {
         case ctx: MapFileParser.SurfaceDefRootExprContext =>
-          new syntax.TopoMapVisitor().visitSurfaceDefRootExpr(ctx)
+          new TopoMapVisitor().visitSurfaceDefRootExpr(ctx)
         case _ => throw new RuntimeException("Unexpected surface definition type")
       }
     }
@@ -67,17 +76,38 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       val surface = parser.surfaceDef()
       surface match {
         case ctx: MapFileParser.SurfaceDefTopoMapExprContext =>
-          new syntax.TopoMapVisitor().visitSurfaceDefTopoMapExpr(ctx)
+          new TopoMapVisitor().visitSurfaceDefTopoMapExpr(ctx)
         case _ => throw new RuntimeException("Unexpected surface definition type")
       }
     }
 
     val submapElaborated = submapProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty))
 
+
+    val vehicleProgram = catchError(vehicleCode.strip) { listener =>
+      val stripedCode = vehicleCode.strip()
+      val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
+      lexer.removeErrorListeners()
+      lexer.addErrorListener(listener)
+      val parser = MapFileParser(CommonTokenStream(lexer))
+      parser.removeErrorListeners()
+      parser.addErrorListener(listener)
+
+      val surface = parser.surfaceDef()
+      surface match {
+        case ctx: MapFileParser.SurfaceDefTransportExprContext =>
+          new TopoMapVisitor().visitSurfaceDefTransportExpr(ctx)
+        case _ => throw new RuntimeException("Unexpected surface definition type")
+      }
+    }
+
     println("=== Submap Expr ===")
     pprint.pprintln(submapProgram)
     println("=== Submap Elaborated ===")
     pprint.pprintln(submapElaborated)
+
+    println("=== Vehicle Expr===")
+    pprint.pprintln(vehicleProgram)
 
   }
 }
