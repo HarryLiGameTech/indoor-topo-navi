@@ -89,12 +89,21 @@ case class SubTopoMapExpr(
   override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = {
     val newEnvValues = this.synthesisEnv
 
-    // TODO: Do we really need this merge()?
-//    given newTopoEnv: TopoEnvironment = topoEnv.merge(newEnvValues)
+    // We merge the new environment values into the current topological environment
+    // to ensure that nodes and paths can access the variables defined in this scope.
+    val envWithCore = topoEnv.merge(newEnvValues)
+
+    val elaboratedNodes = nodes.map(_.elaborate(using envWithCore))
+    
+    // Add nodes to environment so paths can find them
+    val envWithNodes = envWithCore.copy(
+      nodes = envWithCore.nodes ++ elaboratedNodes.map(n => n.name -> n)
+    )
+
     TopoMapValue(
       name = name,
-      nodes = nodes.map(_.elaborate).toSet,
-      paths = paths.flatMap(_.elaborate).toSet,
+      nodes = elaboratedNodes.toSet,
+      paths = paths.flatMap(_.elaborate(using envWithNodes)).toSet,
       context = newEnvValues,
     )
   }

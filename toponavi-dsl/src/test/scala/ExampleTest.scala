@@ -1,8 +1,11 @@
+import corelang.Environment
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
+import surfacelang.TopoEnvironment
 import topomap.grammar.{MapFileLexer, MapFileParser}
 import util.catchError
+import pprint.pprintln
 
 class ExampleTest extends AnyFunSuite with should.Matchers{
   test("example test"){
@@ -24,9 +27,12 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     val subMapCode =
       """
       topo-map TestSubMap(){
-          topo-node tt1
+          {
+              let a: Int = 114;
+          }
+          topo-node tt1 {number = a}
           topo-node tt2
-          atomic-path [tt1 <-> tt2] {cost = 114+5}
+          atomic-path [tt1 <-> tt2] {cost = a+5}
       }
       """
 
@@ -66,7 +72,12 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       }
     }
 
-    println(submapProgram)
+    val submapElaborated = submapProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty))
+
+    println("=== Submap Expr ===")
+    pprint.pprintln(submapProgram)
+    println("=== Submap Elaborated ===")
+    pprint.pprintln(submapElaborated)
 
   }
 }
