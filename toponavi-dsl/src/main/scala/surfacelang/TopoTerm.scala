@@ -39,6 +39,7 @@ case class AtomicPathValue(
   from: TopoNodeValue,
   to: TopoNodeValue,
   bidirectional: Boolean,
+  data: Value.RecordVal,
   context: Context,
 ) {
   

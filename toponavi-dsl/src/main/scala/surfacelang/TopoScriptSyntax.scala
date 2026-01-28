@@ -94,7 +94,7 @@ case class SubTopoMapExpr(
     val envWithCore = topoEnv.merge(newEnvValues)
 
     val elaboratedNodes = nodes.map(_.elaborate(using envWithCore))
-    
+
     // Add nodes to environment so paths can find them
     val envWithNodes = envWithCore.copy(
       nodes = envWithCore.nodes ++ elaboratedNodes.map(n => n.name -> n)
@@ -139,7 +139,7 @@ case class TopoNodeExpr(
 ) extends SurfaceSyntax with Elaborateable[TopoNodeValue] {
 
   override def elaborate(using topoEnv: TopoEnvironment): TopoNodeValue = {
-    Interpreter.eval(data.toTerm(topoEnv.env)) match {
+    Interpreter.eval(data.toTerm(topoEnv.env))(using topoEnv.env) match {
       case rv: Value.RecordVal => TopoNodeValue(
         name = name,
         context = topoEnv.env,
@@ -159,12 +159,16 @@ case class AtomicPathExpr(
   override val constraints: List[Expr]
 ) extends SurfaceSyntax with ConstrainedElaborateable[AtomicPathValue] {
   override def constrainedElaborate(using topoEnv: TopoEnvironment): AtomicPathValue = {
-    AtomicPathValue(
-      from = topoEnv.nodes.getOrElse(from, throw RuntimeException(s"Fuck, no such node: $from")),
-      to = topoEnv.nodes.getOrElse(to, throw RuntimeException(s"Fuck, no such node: $to")),
-      bidirectional = bidirectional,
-      context = topoEnv.env,
-    )
+    Interpreter.eval(data.toTerm(topoEnv.env))(using topoEnv.env) match {
+      case rv: Value.RecordVal => AtomicPathValue(
+        from = topoEnv.nodes.getOrElse(from, throw RuntimeException(s"Fuck, no such node: $from")),
+        to = topoEnv.nodes.getOrElse(to, throw RuntimeException(s"Fuck, no such node: $to")),
+        bidirectional = bidirectional,
+        data = rv,
+        context = topoEnv.env,
+      )
+      case other => throw new RuntimeException(s"Path data must evaluate to RecordVal, got: $other")
+    }
   }
 }
 
