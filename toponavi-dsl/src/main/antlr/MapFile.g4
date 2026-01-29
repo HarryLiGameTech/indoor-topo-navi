@@ -29,11 +29,11 @@ surfaceBodyElement
     : coreDef                                             # SurfaceElementCoreDef
     | 'topo-node' ID recordAssign?                         # SurfaceElementTopoNode
     | 'atomic-path' pathSpec recordAssign requirements?   # SurfaceElementAtomicPath
-    | 'station' ID 'at' expr ('at' expr)* recordAssign (requirements ('on' expr)?)?  # SurfaceElementStation
+    | 'station' ID 'at' identifier ('at' expr)* recordAssign (requirements ('on' expr)?)?  # SurfaceElementStation
+    | 'arrow' arrowSpec arrowHeading '>>' expr            # SurfaceElementArrow
     ;
 
-// Restricted expression for station references to avoid ambiguity with record literal
-    // Core language
+// Core language
 coreDef
     : 'type' ID '=' typeExpr                                    # TypeDef
     | 'def' ID '(' paramList? ')' (':' typeExpr)? '=' expr      # FuncDef
@@ -191,3 +191,4 @@ COMMENT
 BLOCK_COMMENT
     : '/*' .*? '*/' -> skip
     ;
+

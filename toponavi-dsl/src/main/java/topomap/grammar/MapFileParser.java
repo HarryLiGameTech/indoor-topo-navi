@@ -695,14 +695,17 @@ public class MapFileParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class SurfaceElementStationContext extends SurfaceBodyElementContext {
 		public TerminalNode ID() { return getToken(MapFileParser.ID, 0); }
+		public IdentifierContext identifier() {
+			return getRuleContext(IdentifierContext.class,0);
+		}
+		public RecordAssignContext recordAssign() {
+			return getRuleContext(RecordAssignContext.class,0);
+		}
 		public List<ExprContext> expr() {
 			return getRuleContexts(ExprContext.class);
 		}
 		public ExprContext expr(int i) {
 			return getRuleContext(ExprContext.class,i);
-		}
-		public RecordAssignContext recordAssign() {
-			return getRuleContext(RecordAssignContext.class,0);
 		}
 		public RequirementsContext requirements() {
 			return getRuleContext(RequirementsContext.class,0);
@@ -900,7 +903,7 @@ public class MapFileParser extends Parser {
 				setState(150);
 				match(T__14);
 				setState(151);
-				expr(0);
+				identifier();
 				setState(156);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -3224,7 +3227,7 @@ public class MapFileParser extends Parser {
 		"\u0093\u0003(\u0014\u0000\u0092\u0091\u0001\u0000\u0000\u0000\u0092\u0093"+
 		"\u0001\u0000\u0000\u0000\u0093\u00ae\u0001\u0000\u0000\u0000\u0094\u0095"+
 		"\u0005\u000e\u0000\u0000\u0095\u0096\u0005<\u0000\u0000\u0096\u0097\u0005"+
-		"\u000f\u0000\u0000\u0097\u009c\u0003\u0018\f\u0000\u0098\u0099\u0005\u000f"+
+		"\u000f\u0000\u0000\u0097\u009c\u0003,\u0016\u0000\u0098\u0099\u0005\u000f"+
 		"\u0000\u0000\u0099\u009b\u0003\u0018\f\u0000\u009a\u0098\u0001\u0000\u0000"+
 		"\u0000\u009b\u009e\u0001\u0000\u0000\u0000\u009c\u009a\u0001\u0000\u0000"+
 		"\u0000\u009c\u009d\u0001\u0000\u0000\u0000\u009d\u009f\u0001\u0000\u0000"+

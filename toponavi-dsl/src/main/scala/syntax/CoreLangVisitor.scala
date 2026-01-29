@@ -15,6 +15,10 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
     def visit: Expr = visitExpr(expr)
   }
 
+  extension (id: IdentifierContext) {
+    def visit: Expr = visitIdentifier(id)
+  }
+
   def visitExpr(expr: ExprContext): Expr = expr match {
     case ctx: AtomExprContext     => visitAtomExpr(ctx)
     case ctx: ProjExprContext     => visitProjExpr(ctx)
@@ -240,5 +244,11 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
           Expr.Let("_", visitExpr(s.expr()), acc)
       }
     }
+  }
+
+  override def visitIdentifier(ctx: IdentifierContext): Expr = {
+    val ids = ctx.path.asScala.map(_.getText).toList
+    if (ids.size == 1) Expr.Var(Identifier.Symbol(ids.head))
+    else Expr.Var(Identifier.Path(ids))
   }
 }

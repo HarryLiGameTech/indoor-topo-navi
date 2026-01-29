@@ -199,10 +199,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
   private def parseStationDef(ctx: SurfaceElementStationContext): StationDef = {
     val stationName = ctx.ID().getText
 
-    val nodeRefExpr = ctx.expr(0).visit
+    val nodeRefExpr = ctx.identifier().visit
     val nodeRef = nodeRefExpr match {
-//      case Expr.Proj(Expr.Var(Identifier.Symbol(mapName)), nodeName) =>
-//        TopoNodeRef(mapName, nodeName)
       case Expr.Var(Identifier.Path(parts)) if parts.length == 2 =>
         TopoNodeRef(parts.head, parts.last)
       case _ =>
