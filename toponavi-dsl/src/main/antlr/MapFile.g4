@@ -25,17 +25,16 @@ globalConfigElement
     | 'submap' ID                                         # GlobalConfigElementSubmapRef
     ;
 
-// station Floor4 at FloorZ1.OP1_hall at 17.5 {} requires haveStaffCard on Arrive
 surfaceBodyElement
     : coreDef                                             # SurfaceElementCoreDef
     | 'topo-node' ID recordAssign?                         # SurfaceElementTopoNode
     | 'atomic-path' pathSpec recordAssign requirements?   # SurfaceElementAtomicPath
     | 'station' ID 'at' expr ('at' expr)* recordAssign (requirements ('on' expr)?)?  # SurfaceElementStation
-    | 'arrow' arrowSpec arrowHeading '>>' expr            # SurfaceElementArrow
     ;
 
-coreDef
+// Restricted expression for station references to avoid ambiguity with record literal
     // Core language
+coreDef
     : 'type' ID '=' typeExpr                                    # TypeDef
     | 'def' ID '(' paramList? ')' (':' typeExpr)? '=' expr      # FuncDef
     | expr                                                      # ScriptExpr

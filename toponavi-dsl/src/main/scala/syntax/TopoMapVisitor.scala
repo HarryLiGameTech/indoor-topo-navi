@@ -2,7 +2,7 @@ package syntax
 
 import corelang.{Environment, Expr, Identifier, OpKind, Type}
 import org.antlr.v4.runtime.tree.ParseTree
-import surfacelang.{AtomicPathExpr, GlobalConfigExpr, RootExpr, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TransportExpr, VehicleRef}
+import surfacelang.{AtomicPathExpr, GlobalConfigExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, VehicleRef}
 import topomap.grammar.MapFileParser.*
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser, MapFileVisitor}
 
@@ -63,28 +63,19 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
 
   override def visitSurfaceDefTransportExpr(ctx: SurfaceDefTransportExprContext): TransportExpr = {
     val name = ctx.ID().getText
-    
-    if (ctx.expr() != null) {
-      // TODO: Should that one really be an expr?
-//      if (ctx.expr().getText != "Elevator") // not "Elevator" or "Stairs" or "Escalator" or "Tram"{
-//        throw RuntimeException(s"Unsupported transport type: ${ctx.expr().getText}")
-//      }
-    }
+
+    // TODO: Need more consideration on this, so ditch this feat for now
+    val transportData: Expr.Record = Expr.Record(Map.empty) // Why does explicit type required here? (otherwise "requires Data but found Expr.Record", wtf)
 
     ctx.surfaceBody().surfaceBodyElement().asScala.foldLeft(
       TransportExpr(
         name = name,
-        stationNodes = Map.empty,
-        stationLocations = Map.empty,
-        data = Expr.Record(Map.empty)
+        stations = List.empty,
+        data = transportData
       )
     ) { (acc, element) => element match
       case stationCtx: SurfaceElementStationContext =>
-        val stationNodeTri = parseSurfaceElementStation(stationCtx)
-        acc.copy(
-          stationNodes = acc.stationNodes + (stationNodeTri._1 -> stationNodeTri._2),
-          stationLocations = acc.stationLocations + (stationNodeTri._1 -> stationNodeTri._3)
-        )
+        acc.copy(stations = acc.stations :+ parseStationDef(stationCtx))
       case _ => acc // Ignore other elements for now
     }
   }
@@ -205,14 +196,25 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
   }
 
   // Use as an intermediate function
-  private def parseSurfaceElementStation(ctx: SurfaceElementStationContext): (TopoMapRef, TopoNodeExpr, Double) = {
-    val mapRef = TopoMapRef(
-      name = ctx.ID().getText
-    )
+  private def parseStationDef(ctx: SurfaceElementStationContext): StationDef = {
+    val stationName = ctx.ID().getText
 
-    val nodeExpr = ??? // TODO: get the node expression from the context
+    val nodeRefExpr = ctx.expr(0).visit
+    val nodeRef = nodeRefExpr match {
+//      case Expr.Proj(Expr.Var(Identifier.Symbol(mapName)), nodeName) =>
+//        TopoNodeRef(mapName, nodeName)
+      case Expr.Var(Identifier.Path(parts)) if parts.length == 2 =>
+        TopoNodeRef(parts.head, parts.last)
+      case _ =>
+        throw new RuntimeException(s"Invalid station node reference '$nodeRefExpr'. Expected 'MapName::NodeName'")
+    }
 
-    (mapRef, nodeExpr, ctx.expr(1).visit.asInstanceOf[Expr.FloatLit].value) // TODO: Correct?
+    val recordFields = Option(ctx.recordAssign())
+      .flatMap(rc => Option(rc.fieldAssign()))
+      .map(_.asScala.map(f => (f.ID().getText, f.expr().visit)).toMap)
+      .getOrElse(Map.empty)
+
+    StationDef(nodeRef, Expr.Record(recordFields))
   }
   
   // TODO: to-be-updated for implementation

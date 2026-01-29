@@ -37,6 +37,14 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       }
       """
 
+    val subMapCode2 =
+      """
+      topo-map TestSubMap2(){
+          topo-node tt1
+      }
+      """
+
+    // 'station' ID 'at' expr ('at' expr)* recordAssign (requirements ('on' expr)?)?
     val vehicleCode =
       """
       transport OP1 is Elevator{
