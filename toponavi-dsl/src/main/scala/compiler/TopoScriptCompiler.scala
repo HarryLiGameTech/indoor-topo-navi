@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import data.{NavigationGraph, TransportGraph, LinearTransport, ElevatorBank}
 import corelang.{Environment, Value}
 import surfacelang.{TopoMapValue, TransportValue}
+import pprint.pprintln
 
 import java.io.File
 import scala.collection.mutable
@@ -50,18 +51,17 @@ class TopoScriptCompiler() {
     val elaboratedTransports = mutable.ListBuffer[TransportValue]()
     
     // Create a base environment with common definitions like "Elevator"
-    val baseValues = Map(
-       corelang.Identifier.Symbol("Elevator") -> Value.RecordVal(Map(
-         "maxVelocity" -> Value.FloatVal(2.5), // Defaults
-         "acceleration" -> Value.FloatVal(1.0),
-         "capacity" -> Value.IntVal(21),
-         "duty" -> Value.IntVal(1600)
-       ))
-    )
-    val baseEnv = Environment[corelang.Identifier, corelang.Type, Value](Map.empty, baseValues)
+//    val baseValues = Map(
+//       corelang.Identifier.Symbol("Elevator") -> Value.RecordVal(Map(
+//         "maxVelocity" -> Value.FloatVal(2.5), // Defaults
+//         "acceleration" -> Value.FloatVal(1.0),
+//         "capacity" -> Value.IntVal(21),
+//         "duty" -> Value.IntVal(1600)
+//       ))
+//    )
+//    val baseEnv = Environment[corelang.Identifier, corelang.Type, Value](Map.empty, baseValues)
     
-    // Combine baseEnv with maps
-    val topoEnvForTransport = TopoEnvironment(baseEnv, Map.empty, Map.empty, elaboratedMaps.toMap)
+    val topoEnvForTransport = TopoEnvironment(Environment.empty, Map.empty, Map.empty, elaboratedMaps.toMap)
 
     for (transName <- transFiles) {
       val transFile = new File(targetDirectory, transName + ".ttr")
@@ -72,22 +72,27 @@ class TopoScriptCompiler() {
       
       val transCode = scala.io.Source.fromFile(fileToRead).mkString
       val transExpr = parseTransportFile(transCode)
-      val elaboratedTrans = transExpr.elaborate(using topoEnvForTransport)
-      elaboratedTransports += elaboratedTrans
+      val elaboratedTransport = transExpr.elaborate(using topoEnvForTransport)
+      elaboratedTransports += elaboratedTransport
     }
-
-    // 4. Convert to Core Data Structures
-    val navigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
-      name -> buildNavigationGraph(mapVal)
-    }.toMap
     
-    val linearTransports = elaboratedTransports.map { transVal =>
-      buildLinearTransport(transVal, navigationGraphs)
-    }.toList
+    pprintln(elaboratedTransports)
+    
+    CompilationResult(Map.empty, List.empty) // Placeholder!
 
-    val transportGraph = TransportGraph(linearTransports)
-
-    CompilationResult(navigationGraphs, transportGraph)
+    // TODO: Verify the prev. 3 steps first
+    // 4. Convert to Core Data Structures
+//    val navigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
+//      name -> buildNavigationGraph(mapVal)
+//    }.toMap
+//    
+//    val linearTransports = elaboratedTransports.map { transVal =>
+//      buildLinearTransport(transVal, navigationGraphs)
+//    }.toList
+//
+//    val transportGraph = TransportGraph(linearTransports)
+//
+//    CompilationResult(navigationGraphs, transportGraph)
   }
   
   def parseConfigFile(rawCode: String): Any = {
