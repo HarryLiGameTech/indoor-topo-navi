@@ -78,7 +78,7 @@ class TopoScriptCompiler() {
     
     pprintln(elaboratedTransports)
     
-    CompilationResult(Map.empty, List.empty) // Placeholder!
+    CompilationResult(Map.empty, TransportGraph(List.empty)) // Placeholder!
 
     // TODO: Verify the prev. 3 steps first
     // 4. Convert to Core Data Structures
@@ -107,7 +107,7 @@ class TopoScriptCompiler() {
 
       val surface = parser.surfaceDef()
       surface match {
-        case ctx: MapFileParser.SurfaceDefGlobalConfigExpr =>
+        case ctx: MapFileParser.SurfaceDefGlobalConfigExprContext =>
           new TopoMapVisitor().visitSurfaceDefGlobalConfigExpr(ctx)
         case _ => throw new RuntimeException("Unexpected surface definition type. Need Global Config here!")
       }

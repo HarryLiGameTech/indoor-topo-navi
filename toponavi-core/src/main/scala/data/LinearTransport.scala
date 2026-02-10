@@ -119,15 +119,15 @@ case class ElevatorBank(
   }
   
   private def upTime(): Double = {
-    
+    100.0 // TODO: Implement
   }
   
   private def upPathCandidateProbability(start: NavigationGraph, end: NavigationGraph): Double = {
-    
+    0.05 // TODO: Implement
   }
   
   private def downTime(): Double = {
-    
+    50.0 // TODO: Implement
   }
   
   private def stops(): Int = {

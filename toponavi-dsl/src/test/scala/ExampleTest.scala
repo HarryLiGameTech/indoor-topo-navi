@@ -48,6 +48,8 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     val vehicleCode =
       """
       transport OP1 is Elevator{
+          {let bb: String = "aaa";}
+          {let params = {velocity = 2.5, accl = 0.8};}
           station Lobby at TestSubMap::tt1 {location = 0.0}
           station UpperLobby at TestSubMap2::tt1 {location = 5.0}
       }
