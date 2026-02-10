@@ -123,6 +123,11 @@ case class TransportExpr(
     TransportValue(
       name = name,
       stations = stations.map { station =>
+        // Strict Validation: Ensure the referenced node exists
+        if (topoEnv.resolveNode(station.node.fromMapName, station.node.nodeName).isEmpty) {
+          throw new RuntimeException(s"Station refers to unknown node: ${station.node.fromMapName}::${station.node.nodeName}")
+        }
+        
         val nodeValue = station.node.elaborate
         val stationDataVal = Interpreter.eval(station.data.toTerm(topoEnv.env))(using topoEnv.env) match {
           case rv: Value.RecordVal => rv

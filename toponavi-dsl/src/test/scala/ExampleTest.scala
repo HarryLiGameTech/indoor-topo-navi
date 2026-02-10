@@ -89,7 +89,25 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       }
     }
 
-    val submapElaborated = submapProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty))
+    val submapElaborated = submapProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+
+    val submap2Program = catchError(subMapCode2.strip) { listener =>
+      val stripedCode = subMapCode2.strip()
+      val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
+      lexer.removeErrorListeners()
+      lexer.addErrorListener(listener)
+      val parser = MapFileParser(CommonTokenStream(lexer))
+      parser.removeErrorListeners()
+      parser.addErrorListener(listener)
+
+      val surface = parser.surfaceDef()
+      surface match {
+        case ctx: MapFileParser.SurfaceDefTopoMapExprContext =>
+          new TopoMapVisitor().visitSurfaceDefTopoMapExpr(ctx)
+        case _ => throw new RuntimeException("Unexpected surface definition type")
+      }
+    }
+    val submap2Elaborated = submap2Program.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
 
 
     val vehicleProgram = catchError(vehicleCode.strip) { listener =>
@@ -110,7 +128,15 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     }
 
     val vehicleElaborated = vehicleProgram.elaborate(
-      using TopoEnvironment(Environment.empty, Map.empty, Map.empty)
+      using TopoEnvironment(
+        Environment.empty,
+        Map.empty,
+        Map.empty,
+        Map(
+          submapElaborated.name -> submapElaborated,
+          submap2Elaborated.name -> submap2Elaborated
+        )
+      )
     )
 
     println("=== Submap Expr ===")
