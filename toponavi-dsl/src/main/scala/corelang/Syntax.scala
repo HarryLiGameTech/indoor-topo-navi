@@ -1,7 +1,6 @@
 package corelang
 
 import corelang.Identifier.Index
-import corelang.Value
 import corelang.{Environment, Identified, TypeEnvironment, TypeOnlyEnvironment}
 
 enum Identifier {

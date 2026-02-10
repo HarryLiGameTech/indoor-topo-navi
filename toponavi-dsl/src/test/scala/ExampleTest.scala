@@ -109,6 +109,10 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       }
     }
 
+    val vehicleElaborated = vehicleProgram.elaborate(
+      using TopoEnvironment(Environment.empty, Map.empty, Map.empty)
+    )
+
     println("=== Submap Expr ===")
     pprint.pprintln(submapProgram)
     println("=== Submap Elaborated ===")
@@ -117,5 +121,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     println("=== Vehicle Expr===")
     pprint.pprintln(vehicleProgram)
 
+    println("=== Vehicle Elaborated===")
+    pprint.pprintln(vehicleElaborated)
   }
 }
