@@ -70,7 +70,10 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       }
     }
 
-    println(rootProgram)
+    pprintln(rootProgram)
+    
+    val rootElaborated = rootProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+    pprintln(rootElaborated)
 
     val submapProgram = catchError(subMapCode.strip) { listener =>
       val stripedCode = subMapCode.strip()
