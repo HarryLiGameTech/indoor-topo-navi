@@ -114,6 +114,13 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitFuncDef(MapFileParser.FuncDefContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code LetDef}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLetDef(MapFileParser.LetDefContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ScriptExpr}
 	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree

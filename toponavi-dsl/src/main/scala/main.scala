@@ -9,8 +9,10 @@ def main(): Unit = {
     TopoMap Test{}
     """
 
-  val program = catchError(code.strip) { listener =>
-    val stripedCode = code.strip()
+  val stripedCode = code.strip()
+
+  val program: Unit = catchError(stripedCode) { listener =>
+
     val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
     lexer.removeErrorListeners()
     lexer.addErrorListener(listener)

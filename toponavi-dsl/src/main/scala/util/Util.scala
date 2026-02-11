@@ -1,6 +1,7 @@
 package util
 
 import org.antlr.v4.runtime.{BaseErrorListener, ParserRuleContext, RecognitionException, Recognizer}
+import pprint.pprintln
 
 case class SourceSpan(start: Int, end: Int) {
   def contains(other: SourceSpan): Boolean = {
@@ -151,18 +152,21 @@ class ErrorListener(code: String) extends BaseErrorListener {
 
 def printSourceWithHighlight(source: String, span: SourceSpan, info: String): Unit = {
   // Split source by lines for display
-  val lines = source.split("\n").zipWithIndex
+//  val lines = source.split("\n").zipWithIndex
+  val lines = source.split("\r?\n").zipWithIndex // Windows-safe option
+
   // Calculate the line and character positions of the error
   val (startLine, endLine) = {
     val (start, end) = (span.start, span.end)
     val startLine = source.substring(0, start).count(_ == '\n')
     val endLine = source.substring(0, end).count(_ == '\n')
+    println(f"Error at lines $startLine to $endLine:\n")
     (startLine, endLine)
   }
   // Print each line, and highlight the range containing the error
   lines.foreach {
     case (line, idx) if idx >= startLine && idx <= endLine => {
-      println(f"$idx%4d: $line")
+      println(f"$idx%4d: ${line.stripLineEnd}")
       // Highlight the error within the line
       if (idx == startLine) {
         val highlightStart = span.start - source.substring(0, span.start).lastIndexOf('\n') - 1

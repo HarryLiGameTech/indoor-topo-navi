@@ -36,7 +36,8 @@ surfaceBodyElement
 // Core language
 coreDef
     : 'type' ID '=' typeExpr                                    # TypeDef
-    | 'def' ID '(' paramList? ')' (':' typeExpr)? '=' expr      # FuncDef
+    | 'def' ID ('(' paramList? ')')? (':' typeExpr)? '=' expr    # FuncDef
+    | 'let' ID (':' typeExpr)? '=' expr                         # LetDef
     | expr                                                      # ScriptExpr
     ;
 

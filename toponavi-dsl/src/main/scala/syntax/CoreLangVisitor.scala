@@ -82,6 +82,26 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
       .build()
   }
 
+  override def visitLetDef(ctx: LetDefContext): Environment[Identifier, Type, Expr] = {
+    // let x: Int = 114514
+
+    val name = ctx.ID().getText
+    val bodyRaw = ctx.expr.visit
+
+    val bodyWithTypes = ctx.typeExpr() match {
+      // If return type is explicit, we might assume the body satisfies it.
+      // In corelang, Lambda takes arg type, but return type is inferred.
+      // We do not wrap body in a type check node as Expr doesn't have one (only Fix does).
+      case null => bodyRaw
+      case _ => bodyRaw // Return type ignored in AST construction, handled by checker
+    }
+
+    Environment
+      .builder[Identifier, Type, Expr]
+      .valueVar(Identifier(name), bodyWithTypes)
+      .build()
+  }
+
   // --- Types ---
   override def visitTypeExpr(ctx: TypeExprContext): Type = {
     if (ctx.typeExpr() != null) {

@@ -184,6 +184,18 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitFuncDef(MapFileParser.FuncDefContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code LetDef}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
+	 * @param ctx the parse tree
+	 */
+	void enterLetDef(MapFileParser.LetDefContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code LetDef}
+	 * labeled alternative in {@link MapFileParser#coreDef}.
+	 * @param ctx the parse tree
+	 */
+	void exitLetDef(MapFileParser.LetDefContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ScriptExpr}
 	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree

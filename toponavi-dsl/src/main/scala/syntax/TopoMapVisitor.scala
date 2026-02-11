@@ -115,27 +115,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     ctx.coreDef match {
       case c: TypeDefContext => visitTypeDef(c)
       case c: FuncDefContext => visitFuncDef(c)
-      // TODO: Possibly need refactoring, to move them into somewhere else
-      case c: ScriptExprContext =>
-        c.expr() match {
-          case atomExpr: AtomExprContext if atomExpr.atom().block() != null =>
-            val blockCtx = atomExpr.atom().block()
-            blockCtx.stmt().asScala.foldLeft(Environment.empty[Identifier, Type, Expr]) { (env, stmt) =>
-              stmt match {
-                case letStmt: LetStmtContext =>
-                  val name = letStmt.ID().getText
-                  val expr = letStmt.expr().visit
-                  val envWithVal = env.addValueVar(Identifier(name), expr)
-                  if (letStmt.typeExpr() != null) {
-                    envWithVal.addTypeVar(Identifier(name), visitTypeExpr(letStmt.typeExpr()))
-                  } else {
-                    envWithVal
-                  }
-                case _ => env
-              }
-            }
-          case _ => Environment.empty
-        }
+      case c: LetDefContext => visitLetDef(c)
+      case c: ScriptExprContext => throw RuntimeException("ScriptExprContext should not appear here")
     }
   }
 

@@ -96,8 +96,8 @@ class TopoScriptCompiler() {
   }
   
   def parseConfigFile(rawCode: String): Any = {
-    catchError(rawCode.strip) { listener =>
-      val stripedCode = rawCode.strip()
+    val stripedCode = rawCode.strip()
+    catchError(stripedCode) { listener =>
       val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
       lexer.removeErrorListeners()
       lexer.addErrorListener(listener)
@@ -115,8 +115,8 @@ class TopoScriptCompiler() {
   }
 
   def parseMapFile(rawCode: String): surfacelang.SubTopoMapExpr = {
-    catchError(rawCode.strip) { listener =>
-      val stripedCode = rawCode.strip()
+    val stripedCode = rawCode.strip()
+    catchError(stripedCode) { listener =>
       val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
       lexer.removeErrorListeners()
       lexer.addErrorListener(listener)

@@ -10,31 +10,37 @@ import syntax.TopoMapVisitor
 
 class ExampleTest extends AnyFunSuite with should.Matchers{
   test("example test"){
-    // TODO: LetStmt now has to be with another braces-pair, try to remove this limit
     val rootCode =
       """
       root TestBuilding(p1: String){
-        {
-          let a: Int = 1;
-          let b: String = "Tester";
-        }
+        let a: Int = 1
+//        {
+//          let a: Int = 1;
+//        }
 
         def magicFunc(): Int = {
-          a + 114514
+            a + 114514
         }
+
       }
       """
       
-    val subMapCode =
+    val subMapCode = // Unbound a
       """
       topo-map TestSubMap(){
-          {
-              let a: Int = 114;
-          }
+          let a: Int = 114
+          let b: Int = a + 400
+
+
+
+//          def magicFunc(): Int = {
+//            a + 114514
+//          }
+
           topo-node tt1 {number = a}
           topo-node tt2
           atomic-path [tt1 <-> tt2] {cost = a+5}
-          {let params: {area: Int} = {area = 114514};}
+          let params: {area: Int} = {area = 114514}
       }
       """
 
@@ -42,7 +48,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       """
       topo-map TestSubMap2(){
           topo-node tt1
-          {let params: {area: Int} = {area = 114514};}
+          let params: {area: Int} = {area = 114514}
       }
       """
 
@@ -50,15 +56,16 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     val vehicleCode =
       """
       transport OP1 is Elevator{
-          {let bb: String = "aaa";}
-          {let params: {velocity: Float, accl: Float} = {velocity = 2.5, accl = 0.8};}
+          let bb: String = "aaa"
+          let params: {velocity: Float, accl: Float} = {velocity = 2.5, accl = 0.8}
           station Lobby at TestSubMap::tt1 {location = 0.0}
           station UpperLobby at TestSubMap2::tt1 {location = 5.0}
       }
       """
 
-    val rootProgram = catchError(rootCode.strip) { listener =>
-      val stripedCode = rootCode.strip()
+    val stripedCode = rootCode.strip()
+
+    val rootProgram = catchError(stripedCode) { listener =>
       val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
       lexer.removeErrorListeners()
       lexer.addErrorListener(listener)
@@ -80,9 +87,10 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
 //    val rootElaborated = rootProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
 //    pprintln(rootElaborated)
 
-    val submapProgram = catchError(subMapCode.strip) { listener =>
-      val stripedCode = subMapCode.strip()
-      val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
+    val stripedCode1 = subMapCode.strip()
+
+    val submapProgram = catchError(stripedCode1) { listener =>
+      val lexer = MapFileLexer(CharStreams.fromString(stripedCode1))
       lexer.removeErrorListeners()
       lexer.addErrorListener(listener)
       val parser = MapFileParser(CommonTokenStream(lexer))
@@ -99,9 +107,9 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
 
     val submapElaborated = submapProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
 
-    val submap2Program = catchError(subMapCode2.strip) { listener =>
-      val stripedCode = subMapCode2.strip()
-      val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
+    val stripedCode2 = subMapCode2.strip()
+    val submap2Program = catchError(stripedCode2) { listener =>
+      val lexer = MapFileLexer(CharStreams.fromString(stripedCode2))
       lexer.removeErrorListeners()
       lexer.addErrorListener(listener)
       val parser = MapFileParser(CommonTokenStream(lexer))
@@ -117,10 +125,9 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     }
     val submap2Elaborated = submap2Program.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
 
-
-    val vehicleProgram = catchError(vehicleCode.strip) { listener =>
-      val stripedCode = vehicleCode.strip()
-      val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
+    val stripedCode3 = vehicleCode.strip()
+    val vehicleProgram = catchError(stripedCode3) { listener =>
+      val lexer = MapFileLexer(CharStreams.fromString(stripedCode3))
       lexer.removeErrorListeners()
       lexer.addErrorListener(listener)
       val parser = MapFileParser(CommonTokenStream(lexer))
