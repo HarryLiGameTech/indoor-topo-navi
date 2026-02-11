@@ -74,6 +74,9 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
         data = transportData
       )
     ) { (acc, element) => element match
+      case coreDefCtx: SurfaceElementCoreDefContext =>
+        val envUpdate = visitSurfaceElementCoreDef(coreDefCtx)
+        acc.copy(env = acc.env.merge(envUpdate))
       case stationCtx: SurfaceElementStationContext =>
         acc.copy(stations = acc.stations :+ parseStationDef(stationCtx))
       case _ => acc // Ignore other elements for now

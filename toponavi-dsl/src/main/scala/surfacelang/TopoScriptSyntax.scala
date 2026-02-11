@@ -117,6 +117,7 @@ case class StationDef(
 case class TransportExpr(
   name: String,
   stations: List[StationDef],
+  env: Environment[Identifier, Type, Expr] = Environment.empty,
   data: Data
 ) extends SurfaceSyntax with Elaborateable[TransportValue] {
   override def elaborate(using topoEnv: TopoEnvironment): TransportValue = {

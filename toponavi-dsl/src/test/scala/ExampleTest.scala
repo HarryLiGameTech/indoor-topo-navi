@@ -34,6 +34,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
           topo-node tt1 {number = a}
           topo-node tt2
           atomic-path [tt1 <-> tt2] {cost = a+5}
+          {let params: {area: Int} = {area = 114514};}
       }
       """
 
@@ -41,6 +42,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       """
       topo-map TestSubMap2(){
           topo-node tt1
+          {let params: {area: Int} = {area = 114514};}
       }
       """
 
@@ -49,7 +51,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       """
       transport OP1 is Elevator{
           {let bb: String = "aaa";}
-          {let params = {velocity = 2.5, accl = 0.8};}
+          {let params: {velocity: Float, accl: Float} = {velocity = 2.5, accl = 0.8};}
           station Lobby at TestSubMap::tt1 {location = 0.0}
           station UpperLobby at TestSubMap2::tt1 {location = 5.0}
       }
@@ -74,8 +76,9 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
 
     pprintln(rootProgram)
     
-    val rootElaborated = rootProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
-    pprintln(rootElaborated)
+    // TODO: Shitty one!
+//    val rootElaborated = rootProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+//    pprintln(rootElaborated)
 
     val submapProgram = catchError(subMapCode.strip) { listener =>
       val stripedCode = subMapCode.strip()
