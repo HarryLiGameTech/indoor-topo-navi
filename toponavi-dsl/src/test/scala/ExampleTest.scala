@@ -31,8 +31,6 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
           let a: Int = 114
           let b: Int = a + 400
 
-
-
 //          def magicFunc(): Int = {
 //            a + 114514
 //          }

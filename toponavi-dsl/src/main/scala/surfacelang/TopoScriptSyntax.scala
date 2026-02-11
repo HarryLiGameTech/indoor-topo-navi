@@ -22,13 +22,20 @@ trait SyntaxNameSpace {
 
     // 1. Start with the incoming environment's type context + local types
     val typeEnvWithLocals = TypeOnlyEnvironment(topoEnv.env.typeEnv.types ++ currentEnv.typeEnv.types)
-
+    
     // 2. Evaluate each definition in the local environment
-    val localValues = currentEnv.values.map { case (id, expr) =>
-       val term = expr.toTerm(typeEnvWithLocals)
-       val value = Interpreter.eval(term)(using topoEnv.env)
-       (id, value)
-    }
+    val localTerms = currentEnv.values.map { (id, expr) => (id, expr.toTerm(typeEnvWithLocals)) }
+
+    // TODO: Implement collectSymbols(): Set[String], inside the Term class to track dependencies between terms, and use it to determine the correct evaluation order (topological sort) to handle dependencies correctly.
+    val mapForGraph: Map[String, List[String]] = localTerms.map { (id, term) => (id, term.collectSymbols) }.toMap
+
+    // TODO: Use this mapForGraph to input into the graph.scala for concrete topological sort
+    
+//        val localValues = currentEnv.values.map { case (id, expr) =>
+//       val term = expr.toTerm(typeEnvWithLocals)
+//       val value = Interpreter.eval(term)(using topoEnv.env)
+//       (id, value)
+//    }
 
     // 3. Create a new Env with these values
     Environment[Identifier, Type, Value](
