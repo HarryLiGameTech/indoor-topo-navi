@@ -2,6 +2,7 @@ package surfacelang
 
 import corelang.Value.BoolVal
 import corelang.{Env, Environment, Expr, Identifier, Interpreter, Term, Type, TypeOnlyEnvironment, Value}
+import cp.util.Graph
 
 trait SurfaceSyntax
 
@@ -26,16 +27,42 @@ trait SyntaxNameSpace {
     // 2. Evaluate each definition in the local environment
     val localTerms = currentEnv.values.map { (id, expr) => (id, expr.toTerm(typeEnvWithLocals)) }
 
-    // TODO: Implement collectSymbols(): Set[String], inside the Term class to track dependencies between terms, and use it to determine the correct evaluation order (topological sort) to handle dependencies correctly.
-    val mapForGraph: Map[String, List[String]] = localTerms.map { (id, term) => (id, term.collectSymbols) }.toMap
+    // Collect symbols to determining the evaluation order (topological sort)
+    val localSymbolNames = localTerms.keys.collect { case Identifier.Symbol(name) => name }.toSet
 
-    // TODO: Use this mapForGraph to input into the graph.scala for concrete topological sort
-    
-//        val localValues = currentEnv.values.map { case (id, expr) =>
-//       val term = expr.toTerm(typeEnvWithLocals)
-//       val value = Interpreter.eval(term)(using topoEnv.env)
-//       (id, value)
-//    }
+    var graph = Graph.directed[String].addVertices(localSymbolNames)
+
+    localTerms.foreach {
+      case (Identifier.Symbol(name), term) =>
+        term.collectSymbols.foreach { dep =>
+           if (localSymbolNames.contains(dep)) {
+             // dependency 'dep' must be evaluated before 'name'
+             graph = graph.addEdge(dep, name)
+           }
+        }
+      case _ => // Should not happen for definitions in Surface syntax usually
+    }
+
+    val sortedNames = graph.topologicalSort.getOrElse(
+      throw new RuntimeException("Cycle detected or sorting failed in definitions: " + graph.toString)
+    )
+
+    // Evaluate in topological order
+    // Accessing `topoEnv.env` gives the base environment (globals/imports)
+    // We accumulate local values
+    val localValues = sortedNames.foldLeft(Map.empty[Identifier, Value]) { (accValues, name) =>
+      val id = Identifier.Symbol(name)
+      val term = localTerms(id)
+      
+      // Evaluation environment includes base env + currently evaluated local values
+      val evalEnv = Environment(
+        types = typeEnvWithLocals.types,
+        values = topoEnv.env.values ++ accValues
+      )
+      
+      val value = term.eval(using evalEnv)
+      accValues + (id -> value)
+    }
 
     // 3. Create a new Env with these values
     Environment[Identifier, Type, Value](

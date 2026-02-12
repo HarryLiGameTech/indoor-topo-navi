@@ -308,4 +308,21 @@ enum Term {
   }
   
   def eval(using env: Env): Value = Interpreter.eval(this)(using env)
+
+  def collectSymbols: Set[String] = this match {
+    case Term.Var(_) => Set.empty
+    case Term.Sym(ident) => Set(ident)
+    case Term.Lam(_, body) => body.collectSymbols
+    case Term.App(l, r) => l.collectSymbols ++ r.collectSymbols
+    case Term.IntLit(_) | Term.FloatLit(_) | Term.BoolLit(_) | Term.StringLit(_) => Set.empty
+    case Term.Proposition(preds) => preds.flatMap(_.collectSymbols)
+    case Term.ListLit(_, elements) => elements.flatMap(_.collectSymbols).toSet
+    case Term.BinOp(_, l, r) => l.collectSymbols ++ r.collectSymbols
+    case Term.If(c, t, e) => c.collectSymbols ++ t.collectSymbols ++ e.collectSymbols
+    case Term.Fix(_, body) => body.collectSymbols
+    case Term.Record(fields) => fields.values.flatMap(_.collectSymbols).toSet
+    case Term.Proj(r, _) => r.collectSymbols
+    case Term.EnumLit(_, _) => Set.empty
+    case Term.Match(s, cases) => s.collectSymbols ++ cases.flatMap(_._2.collectSymbols).toSet
+  }
 }
