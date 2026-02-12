@@ -161,7 +161,7 @@ class Graph[T](
   
   def topologicalSort: Option[Seq[T]] = this.stronglyConnectedComponents.find(_.size > 1) match {
     case Some(_) => None // Graph has cycles, topological sort not possible
-    case None => Some(this.stronglyConnectedComponents.reverse.flatten)
+    case None => Some(this.stronglyConnectedComponents.flatten) // TODO: Not .reverse.flatten ?
   }
 
   /**

@@ -53,13 +53,13 @@ trait SyntaxNameSpace {
     val localValues = sortedNames.foldLeft(Map.empty[Identifier, Value]) { (accValues, name) =>
       val id = Identifier.Symbol(name)
       val term = localTerms(id)
-      
+
       // Evaluation environment includes base env + currently evaluated local values
       val evalEnv = Environment(
         types = typeEnvWithLocals.types,
         values = topoEnv.env.values ++ accValues
       )
-      
+
       val value = term.eval(using evalEnv)
       accValues + (id -> value)
     }
