@@ -95,6 +95,27 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
   }
 
   test("Compiler should parse and elaborate real project"){
-    // TODO: Something quite similar to the prev test, but read a REAL directory inside the PC (e.g. Documents/topo-navi/)
+    // Try to locate the examples directory relative to the module or project root
+    val possiblePaths = List(
+      new File("../examples"),
+      new File("examples"),
+      new File("H:/Academic/UNNC/FoSE/Y4/FYP/indoor-topo-navi/examples")
+    )
+
+    val examplesDir = possiblePaths.find(_.exists()).getOrElse(new File("../examples"))
+
+    if (examplesDir.exists() && examplesDir.isDirectory) {
+      println(s"Compiling real project at: ${examplesDir.getAbsolutePath}")
+
+      val compiler = new TopoScriptCompiler()
+      val result = compiler.compile(examplesDir.getAbsolutePath)
+
+      assert(result != null)
+      println("Real project compilation result: ")
+      pprintln(result)
+      println("Real project compilation successful!")
+    } else {
+      println(s"Skipping real project test: 'examples' directory not found. Checked: ${possiblePaths.map(_.getAbsolutePath).mkString(", ")}")
+    }
   }
 }

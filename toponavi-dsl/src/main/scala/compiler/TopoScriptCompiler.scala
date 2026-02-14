@@ -18,11 +18,14 @@ class TopoScriptCompiler() {
   def compile(targetDirectory: String): CompilationResult = {
     // 1. Parse Global Config
     val configFile = new File(targetDirectory, "configuration.tcfg")
-    if (!configFile.exists()) {
-      throw new RuntimeException(s"Configuration file not found at: ${configFile.getAbsolutePath}")
+    val configFileNoExt = new File(targetDirectory, "configuration")
+    val validConfigFile = if (configFile.exists()) configFile else configFileNoExt
+
+    if (!validConfigFile.exists()) {
+      throw new RuntimeException(s"Configuration file not found at: ${configFile.getAbsolutePath} (or without extension)")
     }
     
-    val globalConfig = parseConfigFile(scala.io.Source.fromFile(configFile).mkString) match {
+    val globalConfig = parseConfigFile(scala.io.Source.fromFile(validConfigFile).mkString) match {
       case config: GlobalConfigExpr => config
       case _ => throw new RuntimeException("Global config parsing did not return a GlobalConfigExpr")
     }
