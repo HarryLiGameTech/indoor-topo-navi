@@ -155,6 +155,11 @@ case class TransportExpr(
   data: Data
 ) extends SyntaxNameSpace with SurfaceSyntax with Elaborateable[TransportValue] {
   override def elaborate(using topoEnv: TopoEnvironment): TransportValue = {
+    // Evaluate local definitions (e.g., let bindings inside the transport block)
+    val localCtx = this.synthesisEnv
+    // Create an environment that includes both global values and local definitions
+    val envWithLocals = topoEnv.merge(localCtx)
+
     TransportValue(
       name = name,
       stations = stations.map { station =>
@@ -164,18 +169,19 @@ case class TransportExpr(
         }
         
         val nodeValue = station.node.elaborate
-        val stationDataVal = Interpreter.eval(station.data.toTerm(topoEnv.env))(using topoEnv.env) match {
+        // Use envWithLocals to allow station data to reference local variables
+        val stationDataVal = Interpreter.eval(station.data.toTerm(envWithLocals.env))(using envWithLocals.env) match {
           case rv: Value.RecordVal => rv
           case other => throw new RuntimeException(s"Station data must evaluate to RecordVal, got: $other")
         }
         (nodeValue, stationDataVal)
       },
-      data = Interpreter.eval(data.toTerm(topoEnv.env))(using topoEnv.env) match {
+      // Use envWithLocals to allow transport data to reference local variables
+      data = Interpreter.eval(data.toTerm(envWithLocals.env))(using envWithLocals.env) match {
         case rv: Value.RecordVal => rv
         case other => throw new RuntimeException(s"Transport data must evaluate to RecordVal, got: $other")
       },
-//      context = topoEnv.env,
-      context = this.synthesisEnv
+      context = localCtx
     )
   }
 }
