@@ -4,6 +4,8 @@ import org.scalatest.matchers.should
 import java.io.{File, PrintWriter}
 import java.nio.file.Files
 
+import pprint.pprintln
+
 class CompilerTest extends AnyFunSuite with should.Matchers {
 
   test("Compiler should parse and elaborate example project") {
@@ -18,6 +20,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
         """
           |building-includes{
           |    submap Floor1
+          |    submap Floor2
           |    vehicle Elevator1
           |}
           |""".stripMargin
@@ -35,13 +38,25 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
           |""".stripMargin
       writeToFile(mapFile, mapCode)
 
+      val mapFile2 = new File(tempDir, "Floor2.tmap")
+      val mapCode2 =
+        """
+          |topo-map Floor2() {
+          |    topo-node node1
+          |    topo-node node2
+          |    atomic-path [node1 <-> node2] { cost = 7.0 }
+          |}
+          |""".stripMargin
+      writeToFile(mapFile2, mapCode2)
+
       // 4. Create transport file (Elevator1.ttr)
       val transFile = new File(tempDir, "Elevator1.ttr")
       val vehicleCode =
         """
           |transport Elevator1 is Elevator {
-          |    let params: {velocity: Float, accl: Float} = {velocity = 2.5, accl = 0.8}
+          |    let params: {velocity: Float, accl: Float, carAmount: Int, duty: Int} = {velocity = 2.5, accl = 0.8, carAmount = 4, duty = 1350}
           |    station s1 at Floor1::node1 { location = 0.0 }
+          |    station s2 at Floor2::node1 { location = 5.0 }
           |}
           |""".stripMargin
       writeToFile(transFile, vehicleCode)
@@ -55,6 +70,8 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       // Since the current implementation returns a placeholder, we just check it's not null
       // In the future, we would assert on result.graphs and result.transportGraph
       assert(result != null)
+      println("Compilation result: ")
+      pprintln(result)
       println("Compilation successful!")
 
     } finally {

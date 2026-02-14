@@ -78,7 +78,7 @@ class TopoScriptCompiler() {
     
     pprintln(elaboratedTransports)
     
-    CompilationResult(Map.empty, TransportGraph(List.empty)) // Placeholder!
+//    CompilationResult(Map.empty, TransportGraph(List.empty)) // Placeholder!
 
     // 4. Convert to Core Data Structures
     val navigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
@@ -90,6 +90,13 @@ class TopoScriptCompiler() {
     }.toList
 
     val transportGraph = TransportGraph(linearTransports)
+
+    println("=== navigationGraphs ===")
+    pprintln(navigationGraphs)
+    println("=== linearTransports ===")
+    pprintln(linearTransports)
+    println("=== transportGraph ===")
+    pprintln(transportGraph)
 
     CompilationResult(navigationGraphs, transportGraph)
   }
@@ -207,7 +214,7 @@ class TopoScriptCompiler() {
      
      // Retrieve 'params' from the context, which is expected to be a RecordVal
      val paramsOption = transVal.context.values.get(corelang.Identifier.Symbol("params"))
-     
+
      val d = paramsOption match {
        case Some(Value.RecordVal(fields)) => fields
        case Some(_) => throw new RuntimeException(s"Symbol 'params' in transport ${transVal.name} must be a RecordVal")
@@ -219,7 +226,7 @@ class TopoScriptCompiler() {
      val duty = d.get("duty").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("duty must be Int") }.getOrElse(1000)
      val cap = d.get("capacity").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("capacity must be Int") }.getOrElse(13)
      val carAmount = d.get("carAmount").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("carAmount must be Int") }.getOrElse(1)
-    
+
      val stations = transVal.stations.map { case (nodeRef, stationData) =>
        val loopGraph = graphs(nodeRef.fromMapName)
        val loopNode = loopGraph.nodes.find(n => n.identifier == nodeRef.nodeName)
@@ -259,7 +266,8 @@ class TopoScriptCompiler() {
        maxVelocity = maxV,
        acceleration = acc,
        carAmount = carAmount,
-       capacity = cap
+       capacity = cap,
+       duty = duty
      )
   }
 
