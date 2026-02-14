@@ -80,19 +80,18 @@ class TopoScriptCompiler() {
     
     CompilationResult(Map.empty, TransportGraph(List.empty)) // Placeholder!
 
-    // TODO: Verify the prev. 3 steps first
     // 4. Convert to Core Data Structures
-//    val navigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
-//      name -> buildNavigationGraph(mapVal)
-//    }.toMap
-//    
-//    val linearTransports = elaboratedTransports.map { transVal =>
-//      buildLinearTransport(transVal, navigationGraphs)
-//    }.toList
-//
-//    val transportGraph = TransportGraph(linearTransports)
-//
-//    CompilationResult(navigationGraphs, transportGraph)
+    val navigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
+      name -> buildNavigationGraph(mapVal)
+    }.toMap
+
+    val linearTransports = elaboratedTransports.map { transVal =>
+      buildLinearTransport(transVal, navigationGraphs)
+    }.toList
+
+    val transportGraph = TransportGraph(linearTransports)
+
+    CompilationResult(navigationGraphs, transportGraph)
   }
   
   def parseConfigFile(rawCode: String): Any = {
@@ -172,9 +171,14 @@ class TopoScriptCompiler() {
        val cost = pathVal.data.fields.get("cost") match {
          case Some(Value.FloatVal(v)) => v
          case Some(Value.IntVal(v)) => v.toDouble
-         case _ => 1.0 // Default cost
+         case _ => throw RuntimeException("Must contain a 'cost' field of type int or float in path data")
        }
-       val costs = Map(enums.VisitingMode.Normal -> cost)
+       val costs = Map(
+         enums.VisitingMode.Normal -> cost,
+         enums.VisitingMode.Emergency -> cost * 0.5,
+         enums.VisitingMode.Prioritized -> cost * 0.7,
+         enums.VisitingMode.Wheeled -> cost * 2.0
+       )
        
        val forward = data.AtomicPath(source, target, attrs, costs, enums.PathType.General)
        
@@ -201,11 +205,21 @@ class TopoScriptCompiler() {
      // Assuming Elevator based on data fields
      // data should contain maxVelocity etc.
      
-     val d = transVal.data.fields
-     val maxV = d.get("maxVelocity").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => 2.5 }.getOrElse(2.5)
-     val acc = d.get("acceleration").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => 1.0 }.getOrElse(1.0)
-     val cap = d.get("capacity").map { case Value.IntVal(v) => v.toInt; case _ => 21 }.getOrElse(21)
+     // Retrieve 'params' from the context, which is expected to be a RecordVal
+     val paramsOption = transVal.context.values.get(corelang.Identifier.Symbol("params"))
      
+     val d = paramsOption match {
+       case Some(Value.RecordVal(fields)) => fields
+       case Some(_) => throw new RuntimeException(s"Symbol 'params' in transport ${transVal.name} must be a RecordVal")
+       case None => throw new RuntimeException("Must contain a 'params' record in transport context for transport data")
+     }
+
+     val maxV = d.get("maxVelocity").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => throw RuntimeException("maxVelocity must be either Int or Float") }.getOrElse(2.5)
+     val acc = d.get("acceleration").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => throw RuntimeException("acceleration must be either Int or Float") }.getOrElse(0.8)
+     val duty = d.get("duty").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("duty must be Int") }.getOrElse(1000)
+     val cap = d.get("capacity").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("capacity must be Int") }.getOrElse(13)
+     val carAmount = d.get("carAmount").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("carAmount must be Int") }.getOrElse(1)
+    
      val stations = transVal.stations.map { case (nodeRef, stationData) =>
        val loopGraph = graphs(nodeRef.fromMapName)
        val loopNode = loopGraph.nodes.find(n => n.identifier == nodeRef.nodeName)
@@ -222,13 +236,15 @@ class TopoScriptCompiler() {
        }
        (loopGraph, loc)
      }.toMap
-     
+
+     // TODO: Awaiting constraint system to determine permissions properly. For now, default to FullyGranted for all graphs.
      // Determine permissions from stationData if needed, or default
      val permissions = graphs.keys.map { gName =>
        (graphs(gName), enums.TransportServicePermission.FullyGranted)
      }.toMap
-     
-     // We need permissions only for station graphs
+
+    // TODO: Awaiting constraint system to determine permissions properly. For now, default to FullyGranted for all graphs.
+    // We need permissions only for station graphs
      val stPermissions = stations.keys.map { g =>
          g -> enums.TransportServicePermission.FullyGranted
      }.toMap
@@ -238,11 +254,11 @@ class TopoScriptCompiler() {
        stationNodes = stations,
        stationLocations = locations,
        stationPermissions = stPermissions,
-       stationPopulations = stations.keys.map(_ -> 0).toMap,
-       departureRate = stations.keys.map(_ -> 0.0).toMap,
+       stationPopulations = stations.keys.map(_ -> 50).toMap, // TODO: Change 50 default
+       departureRate = stations.keys.map(_ -> 1.0 / stations.size).toMap, // Assuming all stations shares the same dep. rate
        maxVelocity = maxV,
        acceleration = acc,
-       carAmount = 1, // Default
+       carAmount = carAmount,
        capacity = cap
      )
   }

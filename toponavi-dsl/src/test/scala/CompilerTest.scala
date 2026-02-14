@@ -28,8 +28,8 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       val mapCode =
         """
           |topo-map Floor1() {
-          |    topo-node node1 { x = 0.0, y = 0.0 }
-          |    topo-node node2 { x = 10.0, y = 0.0 }
+          |    topo-node node1
+          |    topo-node node2
           |    atomic-path [node1 <-> node2] { cost = 10.0 }
           |}
           |""".stripMargin
