@@ -37,13 +37,13 @@ class TopoScriptCompiler() {
       val fileToRead = if (mapFile.exists()) mapFile else new File(targetDirectory, mapName)
       
       if (!fileToRead.exists()) {
-         throw new RuntimeException(s"Map file not found: ${mapFile.getAbsolutePath} (or without extension)")
+         println(s"${Console.YELLOW}Warning: Map file not found: ${mapFile.getAbsolutePath} (or without extension)${Console.RESET}")
+      } else {
+        val mapCode = scala.io.Source.fromFile(fileToRead).mkString
+        val topoMapExpr = parseMapFile(mapCode)
+        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+        elaboratedMaps.put(mapName, elaboratedMap)
       }
-
-      val mapCode = scala.io.Source.fromFile(fileToRead).mkString
-      val topoMapExpr = parseMapFile(mapCode)
-      val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
-      elaboratedMaps.put(mapName, elaboratedMap)
     }
 
     // 3. Parse each transport files, and link them with the topo-maps
@@ -66,21 +66,18 @@ class TopoScriptCompiler() {
     for (transName <- transFiles) {
       val transFile = new File(targetDirectory, transName + ".ttr")
       val fileToRead = if (transFile.exists()) transFile else new File(targetDirectory, transName)
-       if (!fileToRead.exists()) {
-         throw new RuntimeException(s"Transport file not found: ${transFile.getAbsolutePath} (or without extension)")
+      if (!fileToRead.exists()) {
+         println(s"${Console.YELLOW}Warning: Transport file not found: ${transFile.getAbsolutePath} (or without extension)${Console.RESET}")
+      } else {
+        val transCode = scala.io.Source.fromFile(fileToRead).mkString
+        val transExpr = parseTransportFile(transCode)
+        val elaboratedTransport = transExpr.elaborate(using topoEnvForTransport)
+        elaboratedTransports += elaboratedTransport
       }
-      
-      val transCode = scala.io.Source.fromFile(fileToRead).mkString
-      val transExpr = parseTransportFile(transCode)
-      val elaboratedTransport = transExpr.elaborate(using topoEnvForTransport)
-      elaboratedTransports += elaboratedTransport
     }
-    
     pprintln(elaboratedTransports)
-    
-//    CompilationResult(Map.empty, TransportGraph(List.empty)) // Placeholder!
 
-    // 4. Convert to Core Data Structures
+    // 4. Convert to toponavi-core Data Structures
     val navigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
       name -> buildNavigationGraph(mapVal)
     }.toMap
@@ -180,6 +177,7 @@ class TopoScriptCompiler() {
          case Some(Value.IntVal(v)) => v.toDouble
          case _ => throw RuntimeException("Must contain a 'cost' field of type int or float in path data")
        }
+       // TODO: Refactor?
        val costs = Map(
          enums.VisitingMode.Normal -> cost,
          enums.VisitingMode.Emergency -> cost * 0.5,
@@ -209,9 +207,6 @@ class TopoScriptCompiler() {
   }
 
   private def buildLinearTransport(transVal: TransportValue, graphs: Map[String, NavigationGraph]): LinearTransport = {
-     // Assuming Elevator based on data fields
-     // data should contain maxVelocity etc.
-     
      // Retrieve 'params' from the context, which is expected to be a RecordVal
      val paramsOption = transVal.context.values.get(corelang.Identifier.Symbol("params"))
 

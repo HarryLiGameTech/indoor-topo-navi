@@ -21,7 +21,9 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
           |building-includes{
           |    submap Floor1
           |    submap Floor2
+          |    submap Floor3
           |    vehicle Elevator1
+          |    vehicle OPS
           |}
           |""".stripMargin
       writeToFile(configFile, configCode)
@@ -90,5 +92,9 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
     } finally {
       writer.close()
     }
+  }
+
+  test("Compiler should parse and elaborate real project"){
+    // TODO: Something quite similar to the prev test, but read a REAL directory inside the PC (e.g. Documents/topo-navi/)
   }
 }
