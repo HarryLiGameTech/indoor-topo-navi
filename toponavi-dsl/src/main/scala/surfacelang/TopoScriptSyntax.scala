@@ -153,7 +153,7 @@ case class TransportExpr(
   stations: List[StationDef],
   env: Environment[Identifier, Type, Expr] = Environment.empty,
   data: Data
-) extends SurfaceSyntax with Elaborateable[TransportValue] {
+) extends SyntaxNameSpace with SurfaceSyntax with Elaborateable[TransportValue] {
   override def elaborate(using topoEnv: TopoEnvironment): TransportValue = {
     TransportValue(
       name = name,
@@ -174,7 +174,8 @@ case class TransportExpr(
         case rv: Value.RecordVal => rv
         case other => throw new RuntimeException(s"Transport data must evaluate to RecordVal, got: $other")
       },
-      context = topoEnv.env,
+//      context = topoEnv.env,
+      context = this.synthesisEnv
     )
   }
 }

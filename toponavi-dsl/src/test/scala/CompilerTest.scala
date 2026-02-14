@@ -40,7 +40,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       val vehicleCode =
         """
           |transport Elevator1 is Elevator {
-          |    {let params = {velocity = 2.5, accl = 0.8};}
+          |    let params: {velocity: Float, accl: Float} = {velocity = 2.5, accl = 0.8}
           |    station s1 at Floor1::node1 { location = 0.0 }
           |}
           |""".stripMargin
