@@ -1,0 +1,9 @@
+topo-map FloorB2() { 
+
+    let params: {permResident: Int} = {
+        permResident = 5
+    } 
+
+    topo-node OPS_hall 
+
+}

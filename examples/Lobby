@@ -36,7 +36,7 @@ topo-map Lobby(){
     topo-node OEX_hall_low
     topo-node OEX_hall_upp
     topo-node OEX_hall_upp_outside
-    topo-node OPS_hall_1
+    topo-node OPS_hall
     topo-node OPS_hall_1M
     topo-node OS_hall
 
@@ -68,17 +68,17 @@ topo-map Lobby(){
 
 
     // Normal paths on the south
-    atomic-path [SouthExitOutside <-> SouthExitInside] {cost = 5} requires InOpenTime
+    atomic-path [SouthExitOutside <-> SouthExitInside] {cost = 5} //requires InOpenTime
 
-    atomic-path [SW_corner <-> SouthExitInside] {cost = 8} requires InOpenTime
-    atomic-path [SE_corner <-> SouthExitInside] {cost = 8} requires InOpenTime
+    atomic-path [SW_corner <-> SouthExitInside] {cost = 8} //requires InOpenTime
+    atomic-path [SE_corner <-> SouthExitInside] {cost = 8} //requires InOpenTime
     
 
     // Normal paths on the west
     atomic-path [WestExitOutside <-> WestExitInside] {cost = 5}
     atomic-path [SW_corner <-> OP1_hall_outside] {cost = 5}
     atomic-path [escalator_high <-> OP1_hall_outside] {cost = 15} // Take the escalator
-    atomic-path [west_intersact_1 <-> OPS_hall_1] {cost = 3}
+    atomic-path [west_intersact_1 <-> OPS_hall] {cost = 3}
     atomic-path [west_intersact_1 <-> WestExitInside] {cost = 3}
     atomic-path [OP1_hall_outside <-> WestExitInside] {cost = 3}
     atomic-path [OP1_hall_outside <-> west_intersact_2] {cost = 3}
@@ -93,26 +93,26 @@ topo-map Lobby(){
     atomic-path [hankyu_exit_inside <-> hankyu_exit_outside] {cost = 3}
     atomic-path [EastExitOutside <-> staircase_E_outside] {cost = 12}
 
-    // Stange stuff
+    // Strange stuff
     atomic-path [OEX_hall_upp <-> staircase_A_1M] {cost = 8}
     atomic-path [OS_hall <-> staircase_A_1] {cost = 5}
 
 
     // Restricted paths
-    atomic-path [OP1_hall_outside <-> OP1_hall] {cost = 5} requires TenantsOnly
-    atomic-path [OP2_hall_outside <-> OP2_hall] {cost = 5} requires TenantsOnly
-    atomic-path [EastExitInside -> OPS_hall_1] {cost = 5} requires TenantsOnly
+    atomic-path [OP1_hall_outside <-> OP1_hall] {cost = 5} //requires TenantsOnly
+    atomic-path [OP2_hall_outside <-> OP2_hall] {cost = 5} //requires TenantsOnly
+    atomic-path [EastExitInside -> OPS_hall] {cost = 5} //requires TenantsOnly
     atomic-path [OS_hall -> EastExitInside] {cost = 4} // Door opens outward, no restriction
-    atomic-path [OEX_hall_low <-> west_intersact_1] {cost = 5} requires TenantsOnly
-    atomic-path [OEX_hall_upp <-> OEX_hall_upp_outside] {cost = 5} requires TenantsOnly
-    atomic-path [west_intersact_2 <-> OEX_hall_upp_outside] {cost = 6} requires TenantsOnly
-    atomic-path [west_intersact_2 -> staircase_D] {cost = 10} requires TenantsOnly
-    atomic-path [east_intersact_1 -> staircase_B] {cost = 7} requires TenantsOnly
+    atomic-path [OEX_hall_low <-> west_intersact_1] {cost = 5} //requires TenantsOnly
+    atomic-path [OEX_hall_upp <-> OEX_hall_upp_outside] {cost = 5} //requires TenantsOnly
+    atomic-path [west_intersact_2 <-> OEX_hall_upp_outside] {cost = 6} //requires TenantsOnly
+    atomic-path [west_intersact_2 -> staircase_D] {cost = 10} //requires TenantsOnly
+    atomic-path [east_intersact_1 -> staircase_B] {cost = 7} //requires TenantsOnly
     atomic-path [staircase_B -> east_intersact_1] {cost = 5}
     atomic-path [staircase_C -> SouthExitInside] {cost = 5}
-    atomic-path [SouthExitInside -> staircase_C] {cost = 6} requires TenantsOnly
+    atomic-path [SouthExitInside -> staircase_C] {cost = 6} //requires TenantsOnly
     atomic-path [staircase_D -> west_intersact_2] {cost = 8}
-    atomic-path [staircase_E_outside -> staircase_E] {cost = 3} requires TenantsOnly
+    atomic-path [staircase_E_outside -> staircase_E] {cost = 3} //requires TenantsOnly
 
     // Passengers' elevator hall is on the RHS of the peh_crossing when heading to the north-west corner 
     // Direction(passenger_elevator_hall, passenger_elevator_hall_crossing, NW_corner, RIGHT) 

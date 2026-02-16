@@ -1,18 +1,18 @@
 transport OEX_UPPER is Elevator{
-    default-access = TenantsOnly
+    // default-access = TenantsOnly
 
     // Params
-    config {
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
         maxSpeed = 6.0, // 6 meters a second
         acceleration = 0.9, // 0.9m/s2
-        cars = [OEX_1, OEX_2, OEX_3, OEX_4, OEX_5]
+        cars = 5
     }
 
     // Topo directions
     // TODO
 
     // Stations
-    station Floor1M at Floor1M.OEX_hall {relativeLocation = 0.0} requires null
-    station Floor30 at Floor30.OEX_hall {relativeLocation = 137.5} requires null
+    station Lobby at Lobby::OEX_hall_upp {relativeLocation = 0.0} // requires null
+    station Floor30 at Floor30::OEX_hall {relativeLocation = 137.5} // requires null
     
 }

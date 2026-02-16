@@ -1,19 +1,19 @@
 transport OPS is Elevator{
-    default-access = null
+    // default-access = null
 
     // Params
-    params {
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
         maxSpeed = 1.5, // 1.5 meters a second
         acceleration = 0.7, // 0.7m/s2
-        cars = [OPS_1, OPS_2]
+        cars = 2
     }
 
     // Topo directions
     // TODO
 
     // Stations
-    station FloorB3 at FloorB3.OPS_hall {relativeLocation = 0.0}
-    station FloorB2 at FloorB2.Lobby.OPS_hall {relativeLocation = 3.5}
-    station Lobby at Lobby.OPS_hall {relativeLocation = 11.0} requires InOpenTime
-    station Lobby at UpperLobby.OPS_hall {relativeLocation = 14.5} requires InOpenTime
+    station FloorB3 at FloorB3::OPS_hall {relativeLocation = 0.0}
+    station FloorB2 at FloorB2::OPS_hall {relativeLocation = 3.5}
+    station Lobby at Lobby::OPS_hall {relativeLocation = 11.0} // requires InOpenTime
+    // station Lobby at UpperLobby::OPS_hall {relativeLocation = 14.5} requires InOpenTime
 }

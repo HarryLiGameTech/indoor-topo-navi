@@ -8,12 +8,18 @@ building-includes{
     submap Floor29
     submap Floor30
 
-    vehicle OP1
-    vehicle OP2
-    vehicle OP3
-    vehicle OP4
-    vehicle OEX // Express
-    vehicle OFR // 29/30
-    vehicle OS
+    submap FloorB3
+    submap FloorB2
+
+    vehicle OPS
+    vehicle OEX_UPPER
+
+    // vehicle OP1
+    // vehicle OP2
+    // vehicle OP3
+    // vehicle OP4
+    // vehicle OEX // Express
+    // vehicle OFR // 29/30
+    // vehicle OS
 }
 

@@ -215,8 +215,8 @@ case class AtomicPathExpr(
   override def constrainedElaborate(using topoEnv: TopoEnvironment): AtomicPathValue = {
     Interpreter.eval(data.toTerm(topoEnv.env))(using topoEnv.env) match {
       case rv: Value.RecordVal => AtomicPathValue(
-        from = topoEnv.nodes.getOrElse(from, throw RuntimeException(s"Fuck, no such node: $from")),
-        to = topoEnv.nodes.getOrElse(to, throw RuntimeException(s"Fuck, no such node: $to")),
+        from = topoEnv.nodes.getOrElse(from, throw RuntimeException(s"No such node in topoEnv: $from")),
+        to = topoEnv.nodes.getOrElse(to, throw RuntimeException(s"No such node in topoEnv: $to")),
         bidirectional = bidirectional,
         data = rv,
         context = topoEnv.env,

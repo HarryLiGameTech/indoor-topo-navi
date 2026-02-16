@@ -1,8 +1,8 @@
 topo-map Floor27() { // Each floor in Zone 2
 
     let params: {permResident: Int} = {
-        permResident = 120 // 120 people always live here
-    }
+        permResident = 120
+    } // 120 people always live here
 
     topo-node inside_room_01F {description = "inside the front door of room 01"}
     topo-node inside_room_01R
@@ -122,16 +122,16 @@ topo-map Floor27() { // Each floor in Zone 2
 
     // In/Out staircases or elevators
     atomic-path [staircase_C_outside -> staircase_C] {cost = 3}
-    atomic-path [staircase_C -> staircase_C_outside] {cost = 5} requires TenantsOnly
+    atomic-path [staircase_C -> staircase_C_outside] {cost = 5} //requires TenantsOnly
 
     atomic-path [west_intersact_1 -> staircase_D] {cost = 8}
-    atomic-path [staircase_D -> west_intersact_1] {cost = 10} requires TenantsOnly
+    atomic-path [staircase_D -> west_intersact_1] {cost = 10} //requires TenantsOnly
 
     atomic-path [outside_room_01F -> staircase_B] {cost = 3}
-    atomic-path [staircase_B -> outside_room_01F] {cost = 5} requires TenantsOnly
+    atomic-path [staircase_B -> outside_room_01F] {cost = 5} //requires TenantsOnly
 
     atomic-path [OS_hall -> staircase_A] {cost = 3}
-    atomic-path [staircase_A -> OS_hall] {cost = 5} requires TenantsOnly
+    atomic-path [staircase_A -> OS_hall] {cost = 5} //requires TenantsOnly
 
     atomic-path [OS_hall <-> OS_hall_outside] {cost = 2}
     atomic-path [OP2_hall <-> OP2_hall_outside] {cost = 2}
