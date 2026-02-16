@@ -1,14 +1,7 @@
-TopoMap FloorZ2 { // Each floor in Zone 2
+topo-map Floor27() { // Each floor in Zone 2
 
-    // TODO: Sparate UpperLobby and Lobby
-
-    params {
-        permResident = 120, // 120 people always live here
-        rushHour = {
-            timePeriod = 7:45~9:45, 
-            gradient = LINEAR, 
-            category = ARRIVE
-        }
+    let params: {permResident: Int} = {
+        permResident = 120 // 120 people always live here
     }
 
     topo-node inside_room_01F {description = "inside the front door of room 01"}

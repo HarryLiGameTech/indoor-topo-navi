@@ -1,20 +1,20 @@
-TopoMap Lobby{ // Lobby
+topo-map Lobby(){
 
-    // TODO: Sparate UpperLobby and Lobby
+    // TODO: Separate UpperLobby and Lobby
 
-    params {
-        map_type = "TransHub",
-        permResident = 5, // 5 people always live here
-        rushHour = {
-            timePeriod = 7:45~9:45, 
-            gradient = EXPONENTIAL, 
-            category = DEPART
-        }, // In this period of time, people exponentially leaves this floor
-        rushHour = {
-            timePeriod = 16:30~19:15,
-            gradient = LINEAR,
-            category = ARRIVE
-        } // In this period of time, people linearly reaches this floor
+    let params: {permResident: Int} = {
+        //map_type = "TransHub",
+        permResident = 5 // 5 people always live here
+        // rushHour = {
+        //    timePeriod = 7:45~9:45,
+        //    gradient = EXPONENTIAL,
+        //    category = DEPART
+        // }, // In this period of time, people exponentially leaves this floor
+        // rushHour = {
+        //     timePeriod = 16:30~19:15,
+        //     gradient = LINEAR,
+        //     category = ARRIVE
+        // } // In this period of time, people linearly reaches this floor
     }
     
     topo-node SW_corner
