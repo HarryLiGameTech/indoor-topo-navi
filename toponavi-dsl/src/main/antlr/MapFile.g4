@@ -105,7 +105,7 @@ atom
     | 'true'
     | 'false'
     | identifier
-    | '{' (fieldAssign (',' fieldAssign)*)? '}'   // Record Literal
+    | '{' NL* (fieldAssign (',' NL* fieldAssign)*)? NL* '}'   // Record Literal
     | block                                       // Code Block
     | '(' expr ')'
     ;
@@ -145,7 +145,7 @@ requirements
     ;
 
 recordAssign
-    : '{' (fieldAssign (',' fieldAssign)*)? '}'
+    : '{' NL* (fieldAssign (',' NL* fieldAssign)*)? NL* '}'
     ;
 
 identifier
