@@ -13,6 +13,9 @@ import pprint.pprintln
 import java.io.File
 import scala.collection.mutable
 
+import java.util.{Map => JMap}
+import scala.jdk.CollectionConverters._
+
 class TopoScriptCompiler() {
 
   def compile(targetDirectory: String): CompilationResult = {
@@ -98,6 +101,92 @@ class TopoScriptCompiler() {
     println("=== transportGraph ===")
     pprintln(transportGraph)
 
+    CompilationResult(navigationGraphs, transportGraph)
+  }
+
+  // Java-friendly overload
+  def compileProject(files: JMap[String, String]): CompilationResult = {
+    // Convert Java Map to Scala Map
+    val scalaFiles = files.asScala.toMap
+
+    // Reuse logic (or implement here) to parse config from string content
+    val configContent = scalaFiles.getOrElse("configuration.tcfg",
+      scalaFiles.getOrElse("configuration", throw new RuntimeException("Missing configuration.tcfg")))
+
+    val globalConfig = parseConfigFile(configContent) match {
+      case config: GlobalConfigExpr => config
+      case _ => throw new RuntimeException("Global config parsing failed")
+    }
+
+    // 2. Parse and Elaborate each topo-map file
+    val topoMapFiles = globalConfig.submaps.map(_.name)
+    val elaboratedMaps = mutable.Map[String, TopoMapValue]()
+
+    for (mapName <- topoMapFiles) {
+      val mapCodeOption = scalaFiles.get(mapName + ".tmap").orElse(scalaFiles.get(mapName))
+      
+      if (mapCodeOption.isEmpty) {
+        println(s"${Console.YELLOW}Warning: Map file not found: ${mapName}.tmap (or without extension)${Console.RESET}")
+      } else {
+        val mapCode = mapCodeOption.get
+        val topoMapExpr = parseMapFile(mapCode)
+        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+        elaboratedMaps.put(mapName, elaboratedMap)
+      }
+    }
+
+    // 3. Parse each transport files, and link them with the topo-maps
+    val transFiles = globalConfig.vehicles.map(_.name)
+    val elaboratedTransports = mutable.ListBuffer[TransportValue]()
+
+    // Create a base environment with common definitions like "Elevator"
+    //    val baseValues = Map(
+    //       corelang.Identifier.Symbol("Elevator") -> Value.RecordVal(Map(
+    //         "maxVelocity" -> Value.FloatVal(2.5), // Defaults
+    //         "acceleration" -> Value.FloatVal(1.0),
+    //         "capacity" -> Value.IntVal(21),
+    //         "duty" -> Value.IntVal(1600)
+    //       ))
+    //    )
+    //    val baseEnv = Environment[corelang.Identifier, corelang.Type, Value](Map.empty, baseValues)
+
+    val topoEnvForTransport = TopoEnvironment(Environment.empty, Map.empty, Map.empty, elaboratedMaps.toMap)
+
+    for (transName <- transFiles) {
+      val transCodeOption = scalaFiles.get(transName + ".ttr").orElse(scalaFiles.get(transName))
+
+      if (transCodeOption.isEmpty) {
+        println(s"${Console.YELLOW}Warning: Transport file not found: ${transName}.ttr (or without extension)${Console.RESET}")
+      } else {
+        val transCode = transCodeOption.get
+        val transExpr = parseTransportFile(transCode)
+        val elaboratedTransport = transExpr.elaborate(using topoEnvForTransport)
+        elaboratedTransports += elaboratedTransport
+      }
+    }
+    pprintln(elaboratedTransports)
+
+    // 4. Convert to toponavi-core Data Structures
+    val navigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
+      name -> buildNavigationGraph(mapVal)
+    }.toMap
+
+    val linearTransports = elaboratedTransports.map { transVal =>
+      buildLinearTransport(transVal, navigationGraphs)
+    }.toList
+
+    val transportGraph = TransportGraph(linearTransports)
+
+    println("=== navigationGraphs ===")
+    pprintln(navigationGraphs)
+    println("=== linearTransports ===")
+    pprintln(linearTransports)
+    println("=== transportGraph ===")
+    pprintln(transportGraph)
+
+    // Return result
+    // Note: ensure CompilationResult and its fields are accessible to Java 
+    // (Case classes work fine, but Java sees them as normal classes with getters)
     CompilationResult(navigationGraphs, transportGraph)
   }
   

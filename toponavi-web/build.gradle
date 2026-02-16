@@ -1,0 +1,14 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.2' // Use latest stable
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation project(':toponavi-dsl') // Depend on your DSL compiler
+    implementation project(':toponavi-core') // Depend on core data structures
+
+    // Scala library is needed at runtime since the dependency is in Scala
+    implementation 'org.scala-lang:scala3-library_3:3.3.4'
+}

@@ -1,4 +1,4 @@
 rootProject.name = 'TopoNavi'
 include 'toponavi-dsl'
 include 'toponavi-core'
-
+include 'toponavi-web'
