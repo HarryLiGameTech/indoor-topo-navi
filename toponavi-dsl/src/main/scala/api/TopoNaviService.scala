@@ -2,8 +2,9 @@ package api
 
 import compiler.TopoScriptCompiler
 import compiler.CompilationResult
-import data.NavigationGraph
 // Import your pathfinding logic here (e.g. from toponavi-core)
+
+// TODO: Complete this file
 
 object TopoNaviService {
   private val compiler = new TopoScriptCompiler()
@@ -11,9 +12,9 @@ object TopoNaviService {
   // 1. Compilation Check
   // Returns "Success" or throws Exception with error message
   def validateCode(files: java.util.Map[String, String]): String = {
-    import scala.jdk.CollectionConverters._
+    // import scala.jdk.CollectionConverters._
     try {
-      compiler.compileProject(files.asScala.toMap)
+      compiler.compileProject(files)
       "Compilation Successful"
     } catch {
       case e: Exception => throw new RuntimeException(e.getMessage)
@@ -28,10 +29,9 @@ object TopoNaviService {
     startNode: String,
     endNode: String
   ): String = {
-    import scala.jdk.CollectionConverters._
 
     // Step A: Compile
-    val result: CompilationResult = compiler.compileProject(files.asScala.toMap)
+    val result: CompilationResult = compiler.compileProject(files)
 
     // Step B: Locate Nodes in the compiled graphs
     // (You'll need logic to find which graph contains the start/end nodes)
