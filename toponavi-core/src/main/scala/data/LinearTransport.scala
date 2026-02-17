@@ -96,7 +96,7 @@ case class ElevatorBank(
   }
 
   private def waitingTime(trafficPattern: ElevatorTrafficPattern): Double = {
-    if trafficPattern == Flat then 40.0
+    if trafficPattern == Flat then 40.0 // TODO: Modify to idealistic elevator idle-position distribution
     else roundTripTime(trafficPattern) / (carAmount * 2)
   }
   
@@ -105,7 +105,7 @@ case class ElevatorBank(
     else{
       trafficPattern match {
         case UpRush => {
-          upTime() + downTime() + stops() * 15
+          upTime() + downTime() + stops() * 15 // 15-second dwell time per stop
         }
         case DownRush => {
           999
@@ -119,11 +119,38 @@ case class ElevatorBank(
   }
   
   private def upTime(): Double = {
-    100.0 // TODO: Implement
+    val stations = orderedStations() // Sorted station list according to height
+    val n = stations.length
+    var time = 0.0
+
+    for (i <- 0 until n - 1 ) {
+      for (j <- i + 1 until n) {
+        val start = stations(i)
+        val end = stations(j)
+        time += upPathCandidateProbability(i, j) * netTimeBetweenStations(start, end)
+      }
+    }
+    time
   }
-  
-  private def upPathCandidateProbability(start: NavigationGraph, end: NavigationGraph): Double = {
-    0.05 // TODO: Implement
+
+  // The single-probability that the elevator will travel non-stop
+  private def upPathCandidateProbability(start: Int, end: Int, expectedPassengerLoad: Int = 13): Double = {
+    val stations = orderedStations()
+    val c = expectedPassengerLoad
+
+    val l1 = notDepartingWithinRangeProbability(start+1, end-1)
+    val l2 = notDepartingWithinRangeProbability(start, end-1)
+    val l3 = notDepartingWithinRangeProbability(start+1, end)
+    val l4 = notDepartingWithinRangeProbability(start, end)
+
+    // Probability that ONE passenger does NOT want to go to any of the intermediate floors?
+    // The comment says: 1 - sum...
+    // Raising to power 'c' (number of passengers) suggests this is the probability that NONE of the 'c' passengers stop at intermediate floors.
+
+    Math.pow((1.0 - l1) * (1.0 - r1), c)
+      - Math.pow((1.0 - l2) * (1.0 - r2), c)
+        - Math.pow((1.0 - l3) * (1.0 - r3), c)
+          + Math.pow((1.0 - l4) * (1.0 - r4), c)
   }
   
   private def downTime(): Double = {
@@ -139,6 +166,33 @@ case class ElevatorBank(
 
   private def populationSum(): Int = {
     stationPopulations.values.sum
+  }
+
+  // Lower station to higher station
+  private def orderedStations(): List[NavigationGraph] = {
+    stationLocations.toList.sortBy(_._2).map(_._1)
+  }
+
+  private def notDepartingWithinRangeProbability(i: Int, j: Int): Double = {
+    val stations = orderedStations()
+
+    // Calculate P(no stop between start and end)
+    // We sum the departure rates of all intermediate stations k where start < k < end
+    var sumDepartureRates = 0.0
+    for (k <- i until j + 1) {
+      val intermediateStation = stations(k)
+      // Assuming departureRate is normalized (probability), strictly it might be rate.
+      // Based on context commonly seeing such formulas, we treat it as probability mass for that floor.
+      if (departureRate.contains(intermediateStation)) {
+        sumDepartureRates += departureRate(intermediateStation)
+      }
+    }
+
+    // Probability that ONE passenger does NOT want to go to any of the intermediate floors?
+    // The comment says: 1 - sum...
+    // Raising to power 'c' (number of passengers) suggests this is the probability that NONE of the 'c' passengers stop at intermediate floors.
+
+    1.0 - sumDepartureRates
   }
   
 }
