@@ -12,9 +12,12 @@ repositories {
 
 dependencies {
     implementation 'org.scala-lang:scala3-library_3:3.3.4'
-    implementation 'org.typelevel:cats-effect_3:3.5.2'
+    implementation 'org.typelevel:cats-effect_3:3.5.4'
 
     testImplementation 'org.scalatest:scalatest_3:3.2.19'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.junit.vintage:junit-vintage-engine:5.11.0'
+    testImplementation 'org.scalatestplus:junit-4-13_3:3.2.19.0'
 }
 
 test {

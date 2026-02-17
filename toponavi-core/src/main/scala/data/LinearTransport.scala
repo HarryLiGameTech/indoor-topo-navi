@@ -126,7 +126,7 @@ case class ElevatorBank(
       for (j <- i + 1 until n) {
         val start = stations(i)
         val end = stations(j)
-        time += upPathCandidateProbability(i, j) * netTimeBetweenStations(start, end)
+        time += upPathCandidateProbability(i, j, capacity) * netTimeBetweenStations(start, end)
       }
     }
     time
@@ -172,7 +172,7 @@ case class ElevatorBank(
   }
 
   // Lower station to higher station
-  private def orderedStations(): List[NavigationGraph] = {
+  def orderedStations(): List[NavigationGraph] = {
     stationLocations.toList.sortBy(_._2).map(_._1)
   }
 
