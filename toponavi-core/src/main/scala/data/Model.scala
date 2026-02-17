@@ -12,7 +12,7 @@ case class TopoNodeAttribute(
 
 case class TopoNode(
   identifier: String,
-  attributes: Map[String, AttributeValue]
+  attributes: Map[String, AttributeValue] = Map.empty
 ){
   override def toString: String = identifier
 }

@@ -15,7 +15,7 @@ trait LinearTransport {
 
   // Abstract methods
   def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double // Net-moving time, for heuristics use
-  def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double // Includes waiting time
+  def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern = Flat): Double // Includes waiting time // TODO: Refactor with better type constraint
   def canArriveAt(target: NavigationGraph): Boolean // eg. An elevator canServe the floor input iff hasStation && hasPermission
   def canDepartFrom(source: NavigationGraph): Boolean
 }
@@ -25,11 +25,11 @@ case class ElevatorBank(
   stationNodes: Map[NavigationGraph, TopoNode],
   stationLocations: Map[NavigationGraph, Double],
   stationPermissions: Map[NavigationGraph, TransportServicePermission],
-  stationPopulations: Map[NavigationGraph, Int],
-  departureRate: Map[NavigationGraph, Double],
+  stationPopulations: Map[NavigationGraph, Int] = Map.empty,
+  departureRate: Map[NavigationGraph, Double] = Map.empty,
   maxVelocity: Double,
   acceleration: Double,
-  carAmount: Int,
+  carAmount: Int = 1,
   capacity: Int = 21,
   duty: Int = 1600
 ) extends LinearTransport {
@@ -91,8 +91,8 @@ case class ElevatorBank(
   }
 
   // TODO: Substitute netTimeBetweenStations(src, dst)
-  override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
-    waitingTime(Flat) + netTimeBetweenStations(src, dst)
+  override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern = Flat): Double = {
+    waitingTime(trafficPattern) + netTimeBetweenStations(src, dst)
   }
 
   private def waitingTime(trafficPattern: ElevatorTrafficPattern): Double = {
@@ -101,21 +101,20 @@ case class ElevatorBank(
   }
   
   private def roundTripTime(trafficPattern: ElevatorTrafficPattern): Double = {
-    if true then 120
-    else{
-      trafficPattern match {
-        case UpRush => {
-          upTime() + downTime() + stops() * 15 // 15-second dwell time per stop
-        }
-        case DownRush => {
-          999
-        } // TODO: Implement
-        case BidirectionalRush => {
-          999
-        }
-        case _ => 120
+
+    trafficPattern match {
+      case UpRush => {
+        upTime() + downTime() + stops() * 15 // 15-second dwell time per stop
       }
+      case DownRush => {
+        999
+      } // TODO: Implement
+      case BidirectionalRush => {
+        999
+      }
+      case _ => throw new RuntimeException("Illegal traffic pattern for round trip time calculation")
     }
+
   }
   
   private def upTime(): Double = {
@@ -151,14 +150,14 @@ case class ElevatorBank(
     // The comment says: 1 - sum...
     // Raising to power 'c' (number of passengers) suggests this is the probability that NONE of the 'c' passengers stop at intermediate floors.
 
-    Math.pow((1.0 - l1) * (1.0 - r1), c)
-      - Math.pow((1.0 - l2) * (1.0 - r2), c)
-        - Math.pow((1.0 - l3) * (1.0 - r3), c)
-          + Math.pow((1.0 - l4) * (1.0 - r4), c)
+    Math.pow(l1 * r1, c)
+      - Math.pow(l2 * r2, c)
+        - Math.pow(l3 * r3, c)
+          + Math.pow(l4 * r4, c)
   }
   
   private def downTime(): Double = {
-    50.0 // TODO: Implement
+    1.0 // TODO: Implement
   }
   
   private def stops(): Int = {

@@ -7,9 +7,9 @@ import scala.collection.mutable
 
 class NavigationGraph private(
   val identifier: String,
-  val nodes: List[TopoNode],
-  val adjacencyList: List[AtomicPath], // Single direction!
-  val reverseAdjacency: Map[TopoNode, List[AtomicPath]]
+  val nodes: List[TopoNode] = List.empty,
+  val adjacencyList: List[AtomicPath] = List.empty, // Single direction!
+  val reverseAdjacency: Map[TopoNode, List[AtomicPath]] = Map.empty
 ) {
   
   private def getOutgoingEdges(originNode: TopoNode): List[AtomicPath] = {
