@@ -138,11 +138,15 @@ case class ElevatorBank(
     val stations = orderedStations()
     val c = expectedPassengerLoad
 
-    val l1 = notDepartingWithinRangeProbability(start+1, end-1)
-    val l2 = notDepartingWithinRangeProbability(start, end-1)
-    val l3 = notDepartingWithinRangeProbability(start+1, end)
-    val l4 = notDepartingWithinRangeProbability(start, end)
+    val l1 = noPassengerBoardingWithinFloorRangeProbability(start+1, end-1)
+    val l2 = noPassengerBoardingWithinFloorRangeProbability(start, end-1)
+    val l3 = noPassengerBoardingWithinFloorRangeProbability(start+1, end)
+    val l4 = noPassengerBoardingWithinFloorRangeProbability(start, end)
 
+    val r1 = noPassengerAlightingWithinFloorRangeProbability(start+1, end-1)
+    val r2 = noPassengerAlightingWithinFloorRangeProbability(start, end-1)
+    val r3 = noPassengerAlightingWithinFloorRangeProbability(start+1, end)
+    val r4 = noPassengerAlightingWithinFloorRangeProbability(start, end)
     // Probability that ONE passenger does NOT want to go to any of the intermediate floors?
     // The comment says: 1 - sum...
     // Raising to power 'c' (number of passengers) suggests this is the probability that NONE of the 'c' passengers stop at intermediate floors.
@@ -173,26 +177,39 @@ case class ElevatorBank(
     stationLocations.toList.sortBy(_._2).map(_._1)
   }
 
-  private def notDepartingWithinRangeProbability(i: Int, j: Int): Double = {
+  private def noPassengerBoardingWithinFloorRangeProbability(i: Int, j: Int): Double = {
     val stations = orderedStations()
 
     // Calculate P(no stop between start and end)
     // We sum the departure rates of all intermediate stations k where start < k < end
-    var sumDepartureRates = 0.0
+    var sumBoardingRates = 0.0
     for (k <- i until j + 1) {
       val intermediateStation = stations(k)
       // Assuming departureRate is normalized (probability), strictly it might be rate.
       // Based on context commonly seeing such formulas, we treat it as probability mass for that floor.
       if (departureRate.contains(intermediateStation)) {
-        sumDepartureRates += departureRate(intermediateStation)
+        sumBoardingRates += departureRate(intermediateStation)
       }
     }
 
-    // Probability that ONE passenger does NOT want to go to any of the intermediate floors?
-    // The comment says: 1 - sum...
-    // Raising to power 'c' (number of passengers) suggests this is the probability that NONE of the 'c' passengers stop at intermediate floors.
+    1.0 - sumBoardingRates
+  }
 
-    1.0 - sumDepartureRates
+  private def noPassengerAlightingWithinFloorRangeProbability(i: Int, j: Int): Double = {
+    val stations = orderedStations()
+
+    // Calculate P(no stop between start and end)
+    // We sum the departure rates of all intermediate stations k where start < k < end
+    var sumAlightingRates = 0.0
+    for (k <- i until j + 1) {
+      val intermediateStation = stations(k)
+
+      if (departureRate.contains(intermediateStation)) {
+        sumAlightingRates += stationPopulations(stations(k)) / populationSum()
+      }
+    }
+
+    1.0 - sumAlightingRates
   }
   
 }
