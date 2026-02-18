@@ -48,6 +48,7 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
       ),
       stationPopulations = Map(floor1 -> 2, floor2 -> 14, floor3 -> 14, floor4 -> 14, floor5 -> 14, floor6 -> 14, floor7 -> 14, floor8 -> 14),
       departureRate = Map(floor1 -> 0.93, floor2 -> 0.01, floor3 -> 0.01, floor4 -> 0.01, floor5 -> 0.01, floor6 -> 0.01, floor7 -> 0.01, floor8 -> 0.01),
+      stationCategories = Map(floor1 -> enums.ElevatorStationCategory.Entrance, floor2 -> enums.ElevatorStationCategory.Occupant, floor3 -> enums.ElevatorStationCategory.Occupant, floor4 -> enums.ElevatorStationCategory.Occupant, floor5 -> enums.ElevatorStationCategory.Occupant, floor6 -> enums.ElevatorStationCategory.Occupant, floor7 -> enums.ElevatorStationCategory.Occupant, floor8 -> enums.ElevatorStationCategory.Occupant),
       capacity = 18,
       maxVelocity = 2.5,
       acceleration = 1.0,
@@ -61,26 +62,6 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
 //    println(s"Net time between Floor1 and Floor3: $netTime seconds")
 //    println(s"Travel time between Floor1 and Floor3: $travelTime seconds")
 //
-//    // Test upTime() separately with "elevator" value's specification
-//    val upTimeMethod = classOf[ElevatorBank].getDeclaredMethod("upTime")
-//    upTimeMethod.setAccessible(true)
-//    val upTime = upTimeMethod.invoke(elevator).asInstanceOf[Double]
-////    println(s"Calculated upTime: $upTime seconds")
-//
-//    val probMatrix = classOf[ElevatorBank].getDeclaredMethod("upPathCandidateProbability", classOf[Int], classOf[Int], classOf[Int])
-//
-//    probMatrix.setAccessible(true)
-//    // Invoking for all pairs to check values
-//    val stations = elevator.orderedStations()
-//    val n = stations.length
-//    val probabilities = for {
-//      i <- 0 until n - 1
-//      j <- i + 1 until n
-//    } yield {
-//      val prob = probMatrix.invoke(elevator, i: java.lang.Integer, j: java.lang.Integer, elevator.capacity: java.lang.Integer).asInstanceOf[Double]
-////      println(s"Probability for pair (${stations(i)}, ${stations(j)}): $prob")
-//      prob
-//    }
 //
 //    // Add assertions to verify correctness
 //    netTime should be > 0.0
@@ -93,25 +74,6 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
 
     println(s"Net time between Floor1 and Floor8: $netTime2 seconds")
     println(s"Travel time between Floor1 and Floor8: $travelTime2 seconds")
-
-    // Test upTime() separately with "elevator" value's specification
-    val upTimeMethod2 = classOf[ElevatorBank].getDeclaredMethod("upTime")
-    upTimeMethod2.setAccessible(true)
-    val upTime2 = upTimeMethod2.invoke(elevator2).asInstanceOf[Double]
-
-    val probMatrix2 = classOf[ElevatorBank].getDeclaredMethod("upPathCandidateProbability", classOf[Int], classOf[Int], classOf[Int])
-
-    probMatrix2.setAccessible(true)
-    // Invoking for all pairs to check values
-    val stations2 = elevator2.orderedStations()
-    val n2 = stations2.length
-    val probabilities2 = for {
-      i <- 0 until n2 - 1
-      j <- i + 1 until n2
-    } yield {
-      val prob = probMatrix2.invoke(elevator2, i: java.lang.Integer, j: java.lang.Integer, elevator.capacity: java.lang.Integer).asInstanceOf[Double]
-      prob
-    }
 
     netTime2 should be > 0.0
     travelTime2 should be > netTime2
@@ -140,6 +102,14 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
       ),
       stationPopulations = Map(floorB2 -> 3, floorB1 -> 3, floor2 -> 10, floor3 -> 10, floor94 -> 37, floor95 -> 37),
       departureRate = Map(floorB2 -> 0.25, floorB1 -> 0.25, floor2 -> 0.0, floor3 -> 0.0, floor94 -> 0.25, floor95 -> 0.25),
+      stationCategories = Map(
+        floorB2 -> enums.ElevatorStationCategory.Entrance,
+        floorB1 -> enums.ElevatorStationCategory.Entrance,
+        floor2 -> enums.ElevatorStationCategory.Occupant,
+        floor3 -> enums.ElevatorStationCategory.Occupant,
+        floor94 -> enums.ElevatorStationCategory.Occupant,
+        floor95 -> enums.ElevatorStationCategory.Occupant
+      ),
       capacity = 17,
       maxVelocity = 8.0,
       acceleration = 1.0,
@@ -152,10 +122,5 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
 
     println(s"Net time between FloorB2 and Floor95: $netTime3 seconds")
     println(s"Travel time between FloorB2 and Floor95: $travelTime3 seconds")
-
-    // Test upTime() separately with "elevator" value's specification
-    val upTimeMethod2 = classOf[ElevatorBank].getDeclaredMethod("upTime")
-    upTimeMethod2.setAccessible(true)
-    val upTime2 = upTimeMethod2.invoke(elevator).asInstanceOf[Double]
   }
 }

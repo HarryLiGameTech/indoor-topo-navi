@@ -33,7 +33,8 @@ case class ElevatorBank(
   acceleration: Double,
   carAmount: Int = 1,
   capacity: Int = 21,
-  duty: Int = 1600
+  duty: Int = 1600,
+  dwellTime: Double = 15.0
 ) extends LinearTransport {
 
   override def canArriveAt(target: NavigationGraph): Boolean = {
@@ -106,7 +107,7 @@ case class ElevatorBank(
 
     trafficPattern match {
       case UpRush => {
-        upTime() + downTime() + stops() * 15.0 // 15-second dwell time per stop
+        upTime() + downTime() + stops() * dwellTime // 15-second dwell time per stop
       }
       case DownRush => {
         999
@@ -189,12 +190,15 @@ case class ElevatorBank(
     var expectedNonStopsInOccupantFloors: Double = 0
     var expectedNonStopsInEntranceFloors: Double = 0
 
+    val totalPopulation = populationSum()
+
     for (i <- occupantStations.indices){
-      expectedNonStopsInOccupantFloors += (1.0 - stationPopulations(occupantStations(i)).toDouble / populationSum().toDouble)
+      val prob = if (totalPopulation > 0) stationPopulations.getOrElse(occupantStations(i), 0).toDouble / totalPopulation.toDouble else 0.0
+      expectedNonStopsInOccupantFloors += (1.0 - prob)
     }
 
     for (i <- entranceStations.indices){
-      expectedNonStopsInEntranceFloors += (1.0 - departureRate(entranceStations(i)))
+      expectedNonStopsInEntranceFloors += (1.0 - departureRate.getOrElse(entranceStations(i), 0.0))
     }
 
     val result = (occupantStations.length - expectedNonStopsInOccupantFloors) + (entranceStations.length - expectedNonStopsInEntranceFloors)
@@ -213,12 +217,12 @@ case class ElevatorBank(
 
   // Entrance stations in ascending order of relativeLocation
   def orderedEntranceStations(): List[NavigationGraph] = {
-    stationLocations.toList.filter(s => stationCategories(s._1) == Entrance).sortBy(_._2).map(_._1)
+    stationLocations.toList.filter(s => stationCategories.getOrElse(s._1, throw new RuntimeException("Missing stationCategories data for RTT estimation")) == Entrance).sortBy(_._2).map(_._1)
   }
 
   // Occupant stations in ascending order of relativeLocation
   def orderedOccupantStations(): List[NavigationGraph] = {
-    stationLocations.toList.filter(s => stationCategories(s._1) == Occupant).sortBy(_._2).map(_._1)
+    stationLocations.toList.filter(s => stationCategories.getOrElse(s._1, throw new RuntimeException("Missing stationCategories data for RTT estimation")) == Occupant).sortBy(_._2).map(_._1)
   }
 
   private def noPassengerBoardingWithinFloorRangeProbability(i: Int, j: Int): Double = {
