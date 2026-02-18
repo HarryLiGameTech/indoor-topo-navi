@@ -19,6 +19,7 @@ trait LinearTransport {
   def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern = Flat): Double // Includes waiting time // TODO: Refactor with better type constraint
   def canArriveAt(target: NavigationGraph): Boolean // eg. An elevator canServe the floor input iff hasStation && hasPermission
   def canDepartFrom(source: NavigationGraph): Boolean
+  def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double
 }
 
 case class ElevatorBank(
@@ -61,9 +62,40 @@ case class ElevatorBank(
     val dstLocation = stationLocations(dst)
     val distance = math.abs(dstLocation - srcLocation) // meters
 
+    netTimeToCoverDistance(distance)
+
+//    // 1. Calculate the distance needed to reach max velocity (acceleration phase)
+//    val accelerationDistance = (maxVelocity * maxVelocity) / (2 * acceleration)
+//
+//    // 2. Check if the elevator can reach max velocity for this distance
+//    if (distance >= 2 * accelerationDistance) {
+//      // Case 1: Enough distance for full acceleration + constant velocity + full deceleration
+//      // Time = acceleration_time + constant_velocity_time + deceleration_time
+//      val accelerationTime = maxVelocity / acceleration
+//      val constantVelocityDistance = distance - 2 * accelerationDistance
+//      val constantVelocityTime = constantVelocityDistance / maxVelocity
+//      accelerationTime * 2 + constantVelocityTime
+//    } else {
+//      // Case 2: Not enough distance to reach max velocity
+//      // The elevator will accelerate for half the distance, then decelerate for the other half
+//      val halfDistance = distance / 2.0
+//
+//      // Calculate maximum speed achievable in half the distance
+//      // Using: v² = u² + 2as, where u=0
+//      val maxAchievableVelocity = math.sqrt(2 * acceleration * halfDistance)
+//
+//      // Ensure we don't exceed maxVelocity
+//      val actualMaxVelocity = math.min(maxAchievableVelocity, maxVelocity)
+//
+//      // Time for acceleration phase + deceleration phase
+//      val accelerationTime = actualMaxVelocity / acceleration
+//      accelerationTime * 2
+//    }
+  }
+
+  private def netTimeToCoverDistance(distance: Double): Double = {
     // Kinematic calculations for elevator movement
     // We need to consider acceleration, constant velocity, and deceleration phases
-
     // 1. Calculate the distance needed to reach max velocity (acceleration phase)
     val accelerationDistance = (maxVelocity * maxVelocity) / (2 * acceleration)
 
@@ -179,7 +211,8 @@ case class ElevatorBank(
   }
   
   private def downTime(): Double = {
-    1.0 // TODO: Implement
+    val expectedDistance = downPathHighRevPointToRefPointDistance() + downPathLowRevPointToRefPointDistance()
+    netTimeToCoverDistance(expectedDistance)
   }
   
   private def stops(): Double = {
@@ -225,6 +258,16 @@ case class ElevatorBank(
     stationLocations.toList.filter(s => stationCategories.getOrElse(s._1, throw new RuntimeException("Missing stationCategories data for RTT estimation")) == Occupant).sortBy(_._2).map(_._1)
   }
 
+  override def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double = {
+    Math.abs(stationLocations(a) - stationLocations(b))
+  }
+
+  // Use this one when calculating downTime floorHeight!!
+  private def floorHeight(floorIndex: Int): Double = {
+    val stations = orderedStations()
+    distanceBetweenStations(stations(floorIndex), stations(floorIndex + 1))
+  }
+
   private def noPassengerBoardingWithinFloorRangeProbability(i: Int, j: Int): Double = {
     val stations = orderedStations()
 
@@ -262,6 +305,18 @@ case class ElevatorBank(
     }
 
     1.0 - sumAlightingRates
+  }
+
+  def downPathHighRevPointToRefPointDistance(): Double = {
+    val occupantStations = orderedOccupantStations()
+    var result = 0.0
+    for (i <- 0 until occupantStations.length - 1){
+      // floorHeightOf(occupantStations(i)) * (1 - Math.pow((sumOf(j is_in [0,i), population(occupantStations(j)) / sumOfPopulation()), c))
+    }
+  }
+
+  def downPathLowRevPointToRefPointDistance(): Double = {
+    val entranceStations = orderedEntranceStations()
   }
   
 }
