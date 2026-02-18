@@ -211,6 +211,7 @@ case class ElevatorBank(
   }
   
   private def downTime(): Double = {
+    println("downTime")
     val expectedDistance = downPathHighRevPointToRefPointDistance() + downPathLowRevPointToRefPointDistance()
     netTimeToCoverDistance(expectedDistance)
   }
@@ -250,7 +251,7 @@ case class ElevatorBank(
 
   // Entrance stations in ascending order of relativeLocation
   def orderedEntranceStations(): List[NavigationGraph] = {
-    stationLocations.toList.filter(s => stationCategories.getOrElse(s._1, throw new RuntimeException("Missing stationCategories data for RTT estimation")) == Entrance).sortBy(_._2).map(_._1)
+    stationLocations.toList.filter(s => stationCategories.getOrElse(s._1, throw new RuntimeException("Missing stationCategories data for RTT estimation")) == Entrance).sortBy(_._2).reverse.map(_._1)
   }
 
   // Occupant stations in ascending order of relativeLocation
@@ -356,9 +357,10 @@ case class ElevatorBank(
     result
   }
 
-  // TODO: orderedEntranceStations sort REVERSE
   private def downPathLowRevPointToRefPointDistance(): Double = {
+    println("downPathLowRevPointToRefDistance")
     val entranceStations = orderedEntranceStations() // Sorted by height (low to high)
+    println(s"entranceStations.length = ${entranceStations.length}")
 
     if (entranceStations.length <= 1) return 0.0
 
@@ -368,6 +370,8 @@ case class ElevatorBank(
     for (i <- entranceStations.indices) {
       val currentStation = entranceStations(i)
       val nextStation = entranceStations(i+1)
+
+      println(s"currentStation is ${currentStation}, nextStation is ${nextStation}")
       val dist = distanceBetweenStations(currentStation, nextStation)
 
       // Probability that Low Reversal is HIGHER than i.
