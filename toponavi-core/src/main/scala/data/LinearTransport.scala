@@ -231,8 +231,6 @@ case class ElevatorBank(
       }
     }
 
-    println(s"  Alighting rate is ${1.0 - sumAlightingRates}")
-
     1.0 - sumAlightingRates
   }
   
