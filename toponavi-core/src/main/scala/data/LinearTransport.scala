@@ -307,16 +307,83 @@ case class ElevatorBank(
     1.0 - sumAlightingRates
   }
 
-  def downPathHighRevPointToRefPointDistance(): Double = {
+  private def downPathHighRevPointToRefPointDistance(): Double = {
     val occupantStations = orderedOccupantStations()
+    val allStations = orderedStations()
+    val totalPopulation = populationSum().toDouble
+
     var result = 0.0
-    for (i <- 0 until occupantStations.length - 1){
-      // floorHeightOf(occupantStations(i)) * (1 - Math.pow((sumOf(j is_in [0,i), population(occupantStations(j)) / sumOfPopulation()), c))
+
+    // We iterate through occupant stations to calculate the expected high reversal point
+    // The formula is essentially Sum(h_i * P(H >= i))
+    // We interpret the user's pseudocode:
+    // floorHeightOf(occupantStations(i)) * (1 - Math.pow((sumOf(j is_in [0,i), population(occupantStations(j)) / sumOfPopulation()), c))
+
+    for (i <- 0 until occupantStations.length - 1) { // Iterate up to second to last, as floorHeight is between i and i+1
+       val currentFloor = occupantStations(i)
+       val nextFloor = occupantStations(i+1)
+
+       // Calculate "floor height" which is distance between this floor and next (in the occupant list? or physical?)
+       // The pseudocode implies iterating through floors and adding contribution.
+       // Usually H = Sum_{i=1}^{N} h_i * P(H >= i)
+       // Here "floorHeightOf(occupantStations(i))" likely means the height segment associated with floor i.
+       // Given the loop `0 until occupantStations.length - 1`, it seems to be summing segments between occupant floors.
+
+       val heightOfFloor = distanceBetweenStations(currentFloor, nextFloor)
+
+       // Calculate sum of population for floors below (or equal to?) index i
+       // The pseudocode says: sumOf(j is_in [0,i), ...). Range [0, i) means 0, 1, ..., i-1.
+       // So it is sum of populations of floors strictly below current floor i in the occupant list.
+
+       var populationSumBelow = 0.0
+       for (j <- 0 until i + 1) { // Adjusted to match typical formulas: P(dest <= i). If loop is [0, i), it is P(dest < i).
+         // If term is (1 - (sum/total)^c), then (sum/total)^c is P(all passengers <= i).
+         // So sum should include i.
+         // Let's stick to the user hint: "sumOf(j is_in [0,i)" which usually means excluding i in 0-based indexing if it was an int range,
+         // but wait, if it says "j is_in [0,i)", let's look at mathematical notation. [0, i) usually excludes i.
+         // However, standard formula for Expected Reversal Floor H = Sum ( P(H > i) ) = Sum ( 1 - P(H <= i) ).
+         // P(H <= i) is probability that all passengers align at or below floor i.
+         // So we need sum of populations for floors 0..i.
+
+         populationSumBelow += stationPopulations.getOrElse(occupantStations(j), 0)
+       }
+
+       val probAllPassengersAlightBelowOrAtI = Math.pow(populationSumBelow / totalPopulation, capacity)
+       val probReversalAboveI = 1.0 - probAllPassengersAlightBelowOrAtI
+
+       result += heightOfFloor * probReversalAboveI
     }
+    result
   }
 
-  def downPathLowRevPointToRefPointDistance(): Double = {
-    val entranceStations = orderedEntranceStations()
+  // TODO: orderedEntranceStations sort REVERSE
+  private def downPathLowRevPointToRefPointDistance(): Double = {
+    val entranceStations = orderedEntranceStations() // Sorted by height (low to high)
+
+    if (entranceStations.length <= 1) return 0.0
+
+    var expectedDistance = 0.0
+
+    // We iterate from bottom (0) to top (length-1) of entrance stations.
+    for (i <- entranceStations.indices) {
+      val currentStation = entranceStations(i)
+      val nextStation = entranceStations(i+1)
+      val dist = distanceBetweenStations(currentStation, nextStation)
+
+      // Probability that Low Reversal is HIGHER than i.
+      // i.e. Minimum destination > i.
+      // i.e. NO ONE wants to go to floors 0..i.
+      // i.e. All passengers want to go to floors > i.
+
+      var probNoStopAtOrBelowI = 1.0
+      for (j <- 0 to i) {
+        probNoStopAtOrBelowI *= (1.0 - departureRate.getOrElse(entranceStations(j), 0.0))
+      }
+
+      expectedDistance += dist * probNoStopAtOrBelowI
+    }
+
+    expectedDistance
   }
   
 }
