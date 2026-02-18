@@ -1,7 +1,8 @@
 package data
 
+import enums.ElevatorStationCategory.{Entrance, Occupant}
 import enums.ElevatorTrafficPattern.{BidirectionalRush, DownRush, Flat, UpRush}
-import enums.{ElevatorTrafficPattern, TransportServicePermission}
+import enums.{ElevatorStationCategory, ElevatorTrafficPattern, TransportServicePermission}
 
 trait LinearTransport {
   def identifier: String
@@ -27,6 +28,7 @@ case class ElevatorBank(
   stationPermissions: Map[NavigationGraph, TransportServicePermission],
   stationPopulations: Map[NavigationGraph, Int] = Map.empty,
   departureRate: Map[NavigationGraph, Double] = Map.empty,
+  stationCategories: Map[NavigationGraph, ElevatorStationCategory] = Map.empty,
   maxVelocity: Double,
   acceleration: Double,
   carAmount: Int = 1,
@@ -104,7 +106,7 @@ case class ElevatorBank(
 
     trafficPattern match {
       case UpRush => {
-        upTime() + downTime() + stops() * 15 // 15-second dwell time per stop
+        upTime() + downTime() + stops() * 15.0 // 15-second dwell time per stop
       }
       case DownRush => {
         999
@@ -179,20 +181,44 @@ case class ElevatorBank(
     1.0 // TODO: Implement
   }
   
-  private def stops(): Int = {
-    if true then 0
-    else{
-      -1 // TODO: Implement
+  private def stops(): Double = {
+
+    val entranceStations = orderedEntranceStations()
+    val occupantStations = orderedOccupantStations()
+
+    var expectedNonStopsInOccupantFloors: Double = 0
+    var expectedNonStopsInEntranceFloors: Double = 0
+
+    for (i <- occupantStations.indices){
+      expectedNonStopsInOccupantFloors += (1.0 - stationPopulations(occupantStations(i)).toDouble / populationSum().toDouble)
     }
+
+    for (i <- entranceStations.indices){
+      expectedNonStopsInEntranceFloors += (1.0 - departureRate(entranceStations(i)))
+    }
+
+    val result = (occupantStations.length - expectedNonStopsInOccupantFloors) + (entranceStations.length - expectedNonStopsInEntranceFloors)
+    println(s"Expected Stops: ${result}")
+    result
   }
 
   private def populationSum(): Int = {
     stationPopulations.values.sum
   }
 
-  // Lower station to higher station
+  // Stations in ascending order of relativeLocation
   def orderedStations(): List[NavigationGraph] = {
     stationLocations.toList.sortBy(_._2).map(_._1)
+  }
+
+  // Entrance stations in ascending order of relativeLocation
+  def orderedEntranceStations(): List[NavigationGraph] = {
+    stationLocations.toList.filter(s => stationCategories(s._1) == Entrance).sortBy(_._2).map(_._1)
+  }
+
+  // Occupant stations in ascending order of relativeLocation
+  def orderedOccupantStations(): List[NavigationGraph] = {
+    stationLocations.toList.filter(s => stationCategories(s._1) == Occupant).sortBy(_._2).map(_._1)
   }
 
   private def noPassengerBoardingWithinFloorRangeProbability(i: Int, j: Int): Double = {
