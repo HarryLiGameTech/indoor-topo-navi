@@ -263,7 +263,6 @@ case class ElevatorBank(
     Math.abs(stationLocations(a) - stationLocations(b))
   }
 
-  // Use this one when calculating downTime floorHeight!!
   private def floorHeight(floorIndex: Int): Double = {
     val stations = orderedStations()
     distanceBetweenStations(stations(floorIndex), stations(floorIndex + 1))
@@ -322,7 +321,9 @@ case class ElevatorBank(
 
     for (i <- 0 until occupantStations.length - 1) { // Iterate up to second to last, as floorHeight is between i and i+1
        val currentFloor = occupantStations(i)
-       val nextFloor = occupantStations(i+1)
+       val currentFloorIndex = orderedStations().indexOf(currentFloor)
+
+//       val nextFloor = occupantStations(i+1)
 
        // Calculate "floor height" which is distance between this floor and next (in the occupant list? or physical?)
        // The pseudocode implies iterating through floors and adding contribution.
@@ -330,8 +331,9 @@ case class ElevatorBank(
        // Here "floorHeightOf(occupantStations(i))" likely means the height segment associated with floor i.
        // Given the loop `0 until occupantStations.length - 1`, it seems to be summing segments between occupant floors.
 
-       val heightOfFloor = distanceBetweenStations(currentFloor, nextFloor)
-
+//       val heightOfFloor = distanceBetweenStations(currentFloor, nextFloor)
+       val heightOfFloor = floorHeight(currentFloorIndex) // Height of the floor segment associated with occupant station i
+       println(s"Height of floor ${currentFloor.identifier} is $heightOfFloor")
        // Calculate sum of population for floors below (or equal to?) index i
        // The pseudocode says: sumOf(j is_in [0,i), ...). Range [0, i) means 0, 1, ..., i-1.
        // So it is sum of populations of floors strictly below current floor i in the occupant list.
@@ -354,6 +356,7 @@ case class ElevatorBank(
 
        result += heightOfFloor * probReversalAboveI
     }
+    println(s"dH value = $result")
     result
   }
 
@@ -362,17 +365,22 @@ case class ElevatorBank(
     val entranceStations = orderedEntranceStations() // Sorted by height (low to high)
     println(s"entranceStations.length = ${entranceStations.length}")
 
-    if (entranceStations.length <= 1) return 0.0
+    if (entranceStations.length <= 1) {
+      val currentStation = entranceStations.head
+      val currentStationIndex = orderedStations().indexOf(currentStation)
+      return floorHeight(currentStationIndex)
+    }
 
     var expectedDistance = 0.0
 
     // We iterate from bottom (0) to top (length-1) of entrance stations.
     for (i <- entranceStations.indices) {
       val currentStation = entranceStations(i)
-      val nextStation = entranceStations(i+1)
+      val currentStationIndex = orderedStations().indexOf(currentStation)
+//      val nextStation = entranceStations(i+1)
 
-      println(s"currentStation is ${currentStation}, nextStation is ${nextStation}")
-      val dist = distanceBetweenStations(currentStation, nextStation)
+      val dist = floorHeight(currentStationIndex)
+      println(s"Height of floor ${currentStation.identifier} is $dist")
 
       // Probability that Low Reversal is HIGHER than i.
       // i.e. Minimum destination > i.
@@ -386,6 +394,8 @@ case class ElevatorBank(
 
       expectedDistance += dist * probNoStopAtOrBelowI
     }
+
+    println(s"dL value = $expectedDistance")
 
     expectedDistance
   }

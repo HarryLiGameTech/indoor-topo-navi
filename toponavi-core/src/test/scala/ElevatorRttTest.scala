@@ -49,24 +49,13 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
       stationPopulations = Map(floor1 -> 2, floor2 -> 14, floor3 -> 14, floor4 -> 14, floor5 -> 14, floor6 -> 14, floor7 -> 14, floor8 -> 14),
       departureRate = Map(floor1 -> 0.93, floor2 -> 0.01, floor3 -> 0.01, floor4 -> 0.01, floor5 -> 0.01, floor6 -> 0.01, floor7 -> 0.01, floor8 -> 0.01),
       stationCategories = Map(floor1 -> enums.ElevatorStationCategory.Entrance, floor2 -> enums.ElevatorStationCategory.Occupant, floor3 -> enums.ElevatorStationCategory.Occupant, floor4 -> enums.ElevatorStationCategory.Occupant, floor5 -> enums.ElevatorStationCategory.Occupant, floor6 -> enums.ElevatorStationCategory.Occupant, floor7 -> enums.ElevatorStationCategory.Occupant, floor8 -> enums.ElevatorStationCategory.Occupant),
-      capacity = 18,
+      capacity = 10,
       maxVelocity = 2.5,
       acceleration = 1.0,
       carAmount = 1
     )
 
-    // Test net time and travel time calculations
-//    val netTime = elevator.netTimeBetweenStations(floor1, floor3)
-//    val travelTime = elevator.travelTimeBetweenStations(floor1, floor3, UpRush)
-//
-//    println(s"Net time between Floor1 and Floor3: $netTime seconds")
-//    println(s"Travel time between Floor1 and Floor3: $travelTime seconds")
-//
-//
-//    // Add assertions to verify correctness
-//    netTime should be > 0.0
-//    travelTime should be > netTime
-//    upTime should be > netTime
+
 
     println("=== Complex elevator with 8 stations ===")
     val netTime2 = elevator2.netTimeBetweenStations(floor1, floor8)
