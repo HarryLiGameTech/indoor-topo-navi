@@ -119,16 +119,30 @@ case class ElevatorBank(
   
   private def upTime(): Double = {
     val stations = orderedStations() // Sorted station list according to height
+//    println("Floor Sequence: " + stations.map(_.identifier).mkString(", "))
+//    println("Floor DepartureRate: " + stations.map(s => s"${s.identifier}:${departureRate(s)}").mkString(", "))
+//    println("Floor population: " + stations.map(s => s"${s.identifier}:${stationPopulations(s) / populationSum().toDouble}").mkString(", "))
     val n = stations.length
     var time = 0.0
+    var totalProb = 0.0
 
     for (i <- 0 until n - 1 ) {
       for (j <- i + 1 until n) {
         val start = stations(i)
         val end = stations(j)
-        time += upPathCandidateProbability(i, j, capacity) * netTimeBetweenStations(start, end)
+        val prob = upPathCandidateProbability(i, j, capacity)
+        val netTime = netTimeBetweenStations(start, end)
+        val contribution = prob * netTime
+
+        println(s"${start.identifier}->${end.identifier}: prob=$prob, netTime=$netTime, contribution=$contribution")
+
+        time += contribution
+        totalProb += prob
       }
     }
+
+    println(s"Sum of Probs: $totalProb")
+    println(s"upTime: $time")
     time
   }
 
@@ -136,6 +150,9 @@ case class ElevatorBank(
   private def upPathCandidateProbability(start: Int, end: Int, expectedPassengerLoad: Int = 13): Double = {
     val stations = orderedStations()
     val c = expectedPassengerLoad
+
+//    println(s"\nCalculating Prob for ${stations(start).identifier} -> ${stations(end).identifier}")
+//    println(s"Floor Index: start=$start, end=$end")
 
     val l1 = noPassengerBoardingWithinFloorRangeProbability(start+1, end-1)
     val l2 = noPassengerBoardingWithinFloorRangeProbability(start, end-1)
@@ -149,6 +166,8 @@ case class ElevatorBank(
     // Probability that ONE passenger does NOT want to go to any of the intermediate floors?
     // The comment says: 1 - sum...
     // Raising to power 'c' (number of passengers) suggests this is the probability that NONE of the 'c' passengers stop at intermediate floors.
+
+    println(s"l1=$l1, l2=$l2, l3=$l3, l4=$l4, r1=$r1, r2=$r2, r3=$r3, r4=$r4")
 
     Math.pow(l1 * r1, c)
       - Math.pow(l2 * r2, c)
@@ -203,10 +222,16 @@ case class ElevatorBank(
     for (k <- i until j + 1) {
       val intermediateStation = stations(k)
 
-      if (departureRate.contains(intermediateStation)) {
-        sumAlightingRates += stationPopulations(stations(k)) / populationSum()
+//      println(s"  FloorIndex $k: (${intermediateStation.identifier}): " +
+//        s"Floor Population=${stationPopulations.getOrElse(intermediateStation, "NOT FOUND")}, " +
+//        s"Sum of Population=${populationSum()}")
+
+      if (stationPopulations.contains(intermediateStation)) {
+        sumAlightingRates += stationPopulations(stations(k)).toDouble / populationSum().toDouble
       }
     }
+
+    println(s"  Alighting rate is ${1.0 - sumAlightingRates}")
 
     1.0 - sumAlightingRates
   }
