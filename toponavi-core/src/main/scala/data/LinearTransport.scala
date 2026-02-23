@@ -275,11 +275,11 @@ case class ElevatorBank(
 
     for (i <- occupantStations.indices){
       val prob = if (totalPopulation > 0) stationPopulations.getOrElse(occupantStations(i), 0).toDouble / totalPopulation.toDouble else 0.0
-      expectedNonStopsInOccupantFloors += (1.0 - prob)
+      expectedNonStopsInOccupantFloors += Math.pow(1.0 - prob, capacity)
     }
 
     for (i <- entranceStations.indices){
-      expectedNonStopsInEntranceFloors += (1.0 - departureRate.getOrElse(entranceStations(i), 0.0))
+      expectedNonStopsInEntranceFloors += Math.pow(1.0 - departureRate.getOrElse(entranceStations(i), 0.0), capacity)
     }
 
     val result = (occupantStations.length - expectedNonStopsInOccupantFloors) + (entranceStations.length - expectedNonStopsInEntranceFloors)
