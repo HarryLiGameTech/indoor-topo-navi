@@ -211,8 +211,8 @@ case class ElevatorBank(
   }
   
   private def downTime(): Double = {
-    println("downTime")
     val expectedDistance = downPathHighRevPointToRefPointDistance() + downPathLowRevPointToRefPointDistance()
+    println(s"downTime: ${netTimeToCoverDistance(expectedDistance)}")
     netTimeToCoverDistance(expectedDistance)
   }
   
@@ -333,7 +333,6 @@ case class ElevatorBank(
 
 //       val heightOfFloor = distanceBetweenStations(currentFloor, nextFloor)
        val heightOfFloor = floorHeight(currentFloorIndex) // Height of the floor segment associated with occupant station i
-       println(s"Height of floor ${currentFloor.identifier} is $heightOfFloor")
        // Calculate sum of population for floors below (or equal to?) index i
        // The pseudocode says: sumOf(j is_in [0,i), ...). Range [0, i) means 0, 1, ..., i-1.
        // So it is sum of populations of floors strictly below current floor i in the occupant list.
@@ -361,13 +360,12 @@ case class ElevatorBank(
   }
 
   private def downPathLowRevPointToRefPointDistance(): Double = {
-    println("downPathLowRevPointToRefDistance")
     val entranceStations = orderedEntranceStations() // Sorted by height (low to high)
-    println(s"entranceStations.length = ${entranceStations.length}")
 
     if (entranceStations.length <= 1) {
       val currentStation = entranceStations.head
       val currentStationIndex = orderedStations().indexOf(currentStation)
+      println(s"dL value = ${floorHeight(currentStationIndex)}")
       return floorHeight(currentStationIndex)
     }
 
@@ -377,10 +375,8 @@ case class ElevatorBank(
     for (i <- entranceStations.indices) {
       val currentStation = entranceStations(i)
       val currentStationIndex = orderedStations().indexOf(currentStation)
-//      val nextStation = entranceStations(i+1)
 
       val dist = floorHeight(currentStationIndex)
-      println(s"Height of floor ${currentStation.identifier} is $dist")
 
       // Probability that Low Reversal is HIGHER than i.
       // i.e. Minimum destination > i.
@@ -399,5 +395,4 @@ case class ElevatorBank(
 
     expectedDistance
   }
-  
 }

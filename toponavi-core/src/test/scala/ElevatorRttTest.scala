@@ -35,7 +35,7 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
     val elevator2 = ElevatorBank(
       identifier = "Elevator2",
       stationNodes = Map(floor1 -> TopoNode("s1"), floor2 -> TopoNode("s2")),
-      stationLocations = Map(floor1 -> 0.0, floor2 -> 10.0, floor3 -> 20.0, floor4 -> 30.0, floor5 -> 40.0, floor6 -> 50.0, floor7 -> 60.0, floor8 -> 70.0),
+      stationLocations = Map(floor1 -> 0.0, floor2 -> 4.0, floor3 -> 8.0, floor4 -> 12.0, floor5 -> 16.0, floor6 -> 20.0, floor7 -> 25.0, floor8 -> 30.0),
       stationPermissions = Map(
         floor1 -> TransportServicePermission.FullyGranted,
         floor2 -> TransportServicePermission.FullyGranted,
@@ -49,9 +49,9 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
       stationPopulations = Map(floor1 -> 2, floor2 -> 14, floor3 -> 14, floor4 -> 14, floor5 -> 14, floor6 -> 14, floor7 -> 14, floor8 -> 14),
       departureRate = Map(floor1 -> 0.93, floor2 -> 0.01, floor3 -> 0.01, floor4 -> 0.01, floor5 -> 0.01, floor6 -> 0.01, floor7 -> 0.01, floor8 -> 0.01),
       stationCategories = Map(floor1 -> enums.ElevatorStationCategory.Entrance, floor2 -> enums.ElevatorStationCategory.Occupant, floor3 -> enums.ElevatorStationCategory.Occupant, floor4 -> enums.ElevatorStationCategory.Occupant, floor5 -> enums.ElevatorStationCategory.Occupant, floor6 -> enums.ElevatorStationCategory.Occupant, floor7 -> enums.ElevatorStationCategory.Occupant, floor8 -> enums.ElevatorStationCategory.Occupant),
-      capacity = 10,
+      capacity = 18,
       maxVelocity = 2.5,
-      acceleration = 1.0,
+      acceleration = 0.8,
       carAmount = 1
     )
 
