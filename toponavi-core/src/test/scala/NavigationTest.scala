@@ -35,8 +35,21 @@ object RoutePlanningTester extends App{
     ),
     stationLocations = Map(floorMap("floor100") -> 475, floorMap("floor96") -> 435),
     stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+    stationCategories = Map(
+      floorMap("floor100") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor96") -> enums.ElevatorStationCategory.Entrance
+    ),
+    stationPopulations = Map(
+      floorMap("floor100") -> 5,
+      floorMap("floor96") -> 4
+    ),
+    departureRate = Map(
+      floorMap("floor100") -> 0.5,
+      floorMap("floor96") -> 0.5
+    ),
     maxVelocity = 1.75,
-    acceleration = 1.0
+    acceleration = 1.0,
+    carAmount = 1
   )
 
   val FS8 = ElevatorBank(
@@ -48,8 +61,24 @@ object RoutePlanningTester extends App{
     ),
     stationLocations = Map(floorMap("floor96") -> 435, floorMap("floor94") -> 425, floorMap("floor89") -> 390),
     stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted), 
+    stationCategories = Map(
+      floorMap("floor96") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor94") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor89") -> enums.ElevatorStationCategory.Entrance
+    ),
+    stationPopulations = Map(
+      floorMap("floor96") -> 4,
+      floorMap("floor94") -> 14,
+      floorMap("floor89") -> 2
+    ),
+    departureRate = Map(
+      floorMap("floor96") -> 0.2,
+      floorMap("floor94") -> 0.4,
+      floorMap("floor89") -> 0.4
+    ),
     maxVelocity = 1.75,
-    acceleration = 1.0
+    acceleration = 1.0,
+    carAmount = 1
   )
 
   val GE = ElevatorBank(
@@ -61,8 +90,24 @@ object RoutePlanningTester extends App{
     ),
     stationLocations = Map(floorMap("floor94") -> 425, floorMap("floor3") -> 10, floorMap("floorB1") -> -5),
     stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+    stationCategories = Map(
+      floorMap("floor94") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor3") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floorB1") -> enums.ElevatorStationCategory.Entrance
+    ),
+    stationPopulations = Map(
+      floorMap("floor94") -> 14,
+      floorMap("floor3") -> 10,
+      floorMap("floorB1") -> 1
+    ),
+    departureRate = Map(
+      floorMap("floor94") -> 0.5,
+      floorMap("floor3") -> 0.0,
+      floorMap("floorB1") -> 0.5
+    ),
     maxVelocity = 8.0,
-    acceleration = 1.0
+    acceleration = 1.0,
+    carAmount = 2
   )
 
   val FS4 = ElevatorBank(
@@ -73,13 +118,37 @@ object RoutePlanningTester extends App{
       floorMap("floor52") -> floorMap("floor52").nodes.find(n => n.identifier == "FS4_hall").get,
       floorMap("floor28") -> floorMap("floor28").nodes.find(n => n.identifier == "FS4_hall").get,
       floorMap("floor1") -> floorMap("floor1").nodes.find(n => n.identifier == "FS4_hall").get,
-      floorMap("floorB1") -> floorMap("floorB1").nodes.find(n => n.identifier == "FS4_hall").get,
-
+      floorMap("floorB1") -> floorMap("floorB1").nodes.find(n => n.identifier == "FS4_hall").get
     ),
     stationLocations = Map(floorMap("floor89") -> 390, floorMap("floor72") -> 280, floorMap("floor52") -> 200, floorMap("floor28") -> 100, floorMap("floor1") -> 0, floorMap("floorB1") -> -5),
     stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+    stationCategories = Map(
+      floorMap("floor89") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor72") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor52") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor28") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor1") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floorB1") -> enums.ElevatorStationCategory.Entrance
+    ),
+    stationPopulations = Map(
+      floorMap("floor89") -> 9,
+      floorMap("floor72") -> 20,
+      floorMap("floor52") -> 20,
+      floorMap("floor28") -> 20,
+      floorMap("floor1") -> 1,
+      floorMap("floorB1") -> 10
+    ),
+    departureRate = Map(
+      floorMap("floor89") -> 0.16,
+      floorMap("floor72") -> 0.16,
+      floorMap("floor52") -> 0.16,
+      floorMap("floor28") -> 0.16,
+      floorMap("floor1") -> 0.16,
+      floorMap("floorB1") -> 0.2
+    ),
     maxVelocity = 6.0,
-    acceleration = 1.0
+    acceleration = 1.0,
+    carAmount = 1
   )
 
   val S1 = ElevatorBank(
@@ -90,8 +159,21 @@ object RoutePlanningTester extends App{
     ),
     stationLocations = Map(floorMap("floor1") -> 0, floorMap("floor28") -> 100),
     stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+    stationCategories = Map(
+      floorMap("floor1") -> enums.ElevatorStationCategory.Entrance,
+      floorMap("floor28") -> enums.ElevatorStationCategory.Occupant
+    ),
+    stationPopulations = Map(
+      floorMap("floor28") -> 20,
+      floorMap("floor1") -> 20
+    ),
+    departureRate = Map(
+      floorMap("floor28") -> 0.5,
+      floorMap("floor1") -> 0.5
+    ),
     maxVelocity = 6.0,
-    acceleration = 1.0
+    acceleration = 1.0,
+    carAmount = 4
   )
 
   val S2 = ElevatorBank(
@@ -102,8 +184,21 @@ object RoutePlanningTester extends App{
     ),
     stationLocations = Map(floorMap("floor1") -> 0, floorMap("floor52") -> 200),
     stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+    stationCategories = Map(
+      floorMap("floor1") -> enums.ElevatorStationCategory.Entrance,
+      floorMap("floor52") -> enums.ElevatorStationCategory.Occupant
+    ),
+    stationPopulations = Map(
+      floorMap("floor52") -> 20,
+      floorMap("floor1") -> 20
+    ),
+    departureRate = Map(
+      floorMap("floor52") -> 0.5,
+      floorMap("floor1") -> 0.5
+    ),
     maxVelocity = 10.0,
-    acceleration = 1.0
+    acceleration = 1.0,
+    carAmount = 4
   )
 
   val LS9 = ElevatorBank(
@@ -141,8 +236,57 @@ object RoutePlanningTester extends App{
       floorMap("floor65") -> 252
     ),
     stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted), // DONT GIVE A SHIT
+    stationCategories = Map(
+      floorMap("floor52") -> enums.ElevatorStationCategory.Entrance,
+      floorMap("floor53") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor54") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor55") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor56") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor57") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor58") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor59") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor60") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor61") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor62") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor63") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor64") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor65") -> enums.ElevatorStationCategory.Occupant
+    ),
+    stationPopulations = Map(
+      floorMap("floor52") -> 30,
+      floorMap("floor53") -> 20,
+      floorMap("floor54") -> 20,
+      floorMap("floor55") -> 20,
+      floorMap("floor56") -> 20,
+      floorMap("floor57") -> 20,
+      floorMap("floor58") -> 20,
+      floorMap("floor59") -> 20,
+      floorMap("floor60") -> 20,
+      floorMap("floor61") -> 20,
+      floorMap("floor62") -> 20,
+      floorMap("floor63") -> 20,
+      floorMap("floor64") -> 20,
+      floorMap("floor65") -> 20
+    ),
+    departureRate = Map(
+      floorMap("floor52") -> 0.133,
+      floorMap("floor53") -> 0.067,
+      floorMap("floor54") -> 0.067,
+      floorMap("floor55") -> 0.067,
+      floorMap("floor56") -> 0.067,
+      floorMap("floor57") -> 0.067,
+      floorMap("floor58") -> 0.067,
+      floorMap("floor59") -> 0.067,
+      floorMap("floor60") -> 0.067,
+      floorMap("floor61") -> 0.067,
+      floorMap("floor62") -> 0.067,
+      floorMap("floor63") -> 0.067,
+      floorMap("floor64") -> 0.067,
+      floorMap("floor65") -> 0.067
+    ),
     maxVelocity = 1.25,
-    acceleration = 0.7
+    acceleration = 0.7,
+    carAmount = 1
   )
 
   val CP = ElevatorBank(
@@ -154,8 +298,24 @@ object RoutePlanningTester extends App{
     ),
     stationLocations = Map(floorMap("floor3") -> 10, floorMap("floor1") -> 0, floorMap("floorB1") -> -5),
     stationPermissions = Map.empty.withDefaultValue(TransportServicePermission.FullyGranted),
+    stationCategories = Map(
+      floorMap("floor3") -> enums.ElevatorStationCategory.Occupant,
+      floorMap("floor1") -> enums.ElevatorStationCategory.Entrance,
+      floorMap("floorB1") -> enums.ElevatorStationCategory.Entrance
+    ),
+    stationPopulations = Map(
+      floorMap("floor3") -> 20,
+      floorMap("floor1") -> 20,
+      floorMap("floorB1") -> 20
+    ),
+    departureRate = Map(
+      floorMap("floor3") -> 0.33,
+      floorMap("floor1") -> 0.33,
+      floorMap("floorB1") -> 0.33
+    ),
     maxVelocity = 1.5,
-    acceleration = 0.8
+    acceleration = 0.8,
+    carAmount = 2
   )
 
   val transportGraph = TransportGraph(List(FS10, FS8, GE, FS4, S1, S2, LS9, CP))

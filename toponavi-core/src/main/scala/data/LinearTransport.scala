@@ -126,7 +126,7 @@ case class ElevatorBank(
   }
 
   // TODO: Substitute netTimeBetweenStations(src, dst)
-  override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern = Flat): Double = {
+  override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern = UpRush): Double = {
     waitingTime(trafficPattern, src) + netTimeBetweenStations(src, dst)
   }
 
@@ -186,7 +186,7 @@ case class ElevatorBank(
 
     trafficPattern match {
       case UpRush => {
-        upTime() + downTime() + stops() * dwellTime // 15-second dwell time per stop
+        upTime() + downTime() + stops() * dwellTime
       }
       case DownRush => {
         999
@@ -233,8 +233,6 @@ case class ElevatorBank(
     val stations = orderedStations()
     val c = expectedPassengerLoad
 
-//    println(s"\nCalculating Prob for ${stations(start).identifier} -> ${stations(end).identifier}")
-//    println(s"Floor Index: start=$start, end=$end")
 
     val l1 = noPassengerBoardingWithinFloorRangeProbability(start+1, end-1)
     val l2 = noPassengerBoardingWithinFloorRangeProbability(start, end-1)
@@ -342,10 +340,6 @@ case class ElevatorBank(
     for (k <- i until j + 1) {
       val intermediateStation = stations(k)
 
-//      println(s"  FloorIndex $k: (${intermediateStation.identifier}): " +
-//        s"Floor Population=${stationPopulations.getOrElse(intermediateStation, "NOT FOUND")}, " +
-//        s"Sum of Population=${populationSum()}")
-
       if (stationPopulations.contains(intermediateStation)) {
         sumAlightingRates += stationPopulations(stations(k)).toDouble / populationSum().toDouble
       }
@@ -370,7 +364,6 @@ case class ElevatorBank(
        val currentFloor = occupantStations(i)
        val currentFloorIndex = orderedStations().indexOf(currentFloor)
 
-//       val nextFloor = occupantStations(i+1)
 
        // Calculate "floor height" which is distance between this floor and next (in the occupant list? or physical?)
        // The pseudocode implies iterating through floors and adding contribution.
