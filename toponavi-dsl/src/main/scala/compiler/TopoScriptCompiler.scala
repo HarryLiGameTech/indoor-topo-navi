@@ -16,7 +16,9 @@ import scala.collection.mutable
 import java.util.{Map => JMap}
 import scala.jdk.CollectionConverters._
 
-class TopoScriptCompiler() {
+class TopoScriptCompiler(
+  floorPopulation: Map[NavigationGraph, Int] // This is an intermediate data parsed and collected from topo-map scripts, shall I wrap it (them, later with more of similar stuff) into a class?
+) {
 
   def compile(targetDirectory: String): CompilationResult = {
     // 1. Parse Global Config
@@ -326,15 +328,19 @@ class TopoScriptCompiler() {
        val loc = stationData.fields.get("location") match {
          case Some(Value.FloatVal(v)) => v
          case Some(Value.IntVal(v)) => v.toDouble
-         case _ => 0.0
+         case _ => throw RuntimeException("location must be specified as an int or float for each station")
        }
        (loopGraph, loc)
      }.toMap
 
-     // TODO: Awaiting constraint system to determine permissions properly. For now, default to FullyGranted for all graphs.
-     // Determine permissions from stationData if needed, or default
-     val permissions = graphs.keys.map { gName =>
-       (graphs(gName), enums.TransportServicePermission.FullyGranted)
+
+     val depRates = transVal.stations.map { case (nodeRef, stationData) =>
+       val loopGraph = graphs(nodeRef.fromMapName)
+       val depRate = stationData.fields.get("departureRate") match {
+         case Some(Value.FloatVal(v)) => v
+         case _ => throw RuntimeException("departureRate must be specified as a float for each station") // TODO: Only applicable for elevator
+       }
+       (loopGraph, depRate)
      }.toMap
 
     // TODO: Awaiting constraint system to determine permissions properly. For now, default to FullyGranted for all graphs.
@@ -371,4 +377,9 @@ class TopoScriptCompiler() {
     }
   }
 
+}
+
+class CompilerMetadataContext() {
+  def floorPopulation: Map[NavigationGraph, Int]
+  // Sth else in the future
 }
