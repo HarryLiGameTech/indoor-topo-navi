@@ -127,12 +127,59 @@ case class ElevatorBank(
 
   // TODO: Substitute netTimeBetweenStations(src, dst)
   override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern = Flat): Double = {
-    waitingTime(trafficPattern) + netTimeBetweenStations(src, dst)
+    waitingTime(trafficPattern, src) + netTimeBetweenStations(src, dst)
   }
 
+  // TODO: Consider deleting this overload?
   private def waitingTime(trafficPattern: ElevatorTrafficPattern): Double = {
-    if trafficPattern == Flat then 40.0 // TODO: Modify to idealistic elevator idle-position distribution
+    if trafficPattern == Flat then idleStateWaitingTime()
     else roundTripTime(trafficPattern) / (carAmount * 2)
+  }
+
+  private def waitingTime(trafficPattern: ElevatorTrafficPattern, departureFloor: NavigationGraph): Double = {
+    if trafficPattern == Flat then idleStateWaitingTime(departureFloor)
+    else roundTripTime(trafficPattern) / (carAmount * 2)
+  }
+
+  private def idleStateWaitingTime(): Double = {
+    val expectedNearestElevatorFloorDiff = stationLocations.size / (carAmount * 4) // Assume all elevator cars uniformly distributed across the building
+    println(s"Nearest elevator expected to be ${expectedNearestElevatorFloorDiff} floors away")
+    val stations = orderedStations()
+    if (stations.isEmpty || stations.size == 1) then throw RuntimeException("Elevator must have at least 2 stations")
+
+    var totalHeight = 0.0
+    for (i <- 0 until stations.size - 1) {
+      totalHeight += floorHeight(i)
+    }
+    val avgFloorHeight = totalHeight / (stations.size - 1)
+
+    println(s"Static idleWaitingTime: ${netTimeToCoverDistance(expectedNearestElevatorFloorDiff * avgFloorHeight)}")
+    netTimeToCoverDistance(expectedNearestElevatorFloorDiff * avgFloorHeight)
+  }
+
+  private def idleStateWaitingTime(departureFloor: NavigationGraph): Double = {
+    val carDistributionGap = stationLocations.size / carAmount
+
+    // For example, a 25-story building with 5 elevator, then elevator distributed at 2, 7, 12, 17, 22 (at every place, no more than waiting for 25/(5*2) = 2.5 floors)
+    // So calculate this real distribution, and find actualNearestElevatorFloorDiff by finding the nearest elevator to the departureFloor. This is more accurate than the static estimation above.
+    val elevatorPositions = (0 until carAmount).map(i => (i * carDistributionGap + carDistributionGap / 2) % stationLocations.size).toList // Midpoint distribution
+    println(s"elevatorPositions for Flat pattern: $elevatorPositions")
+    // Find the nearest one
+    val stations = orderedStations()
+    val departureFloorIndex = stations.indexOf(departureFloor)
+    val actualNearestElevatorFloorDiff = elevatorPositions.map(pos => Math.abs(pos - departureFloorIndex)).min
+    println(s"Nearest elevator at ${actualNearestElevatorFloorDiff} floors away")
+
+    if (stations.isEmpty || stations.size == 1) then throw RuntimeException("Elevator must have at least 2 stations")
+
+    var totalHeight = 0.0
+    for (i <- 0 until stations.size - 1) {
+      totalHeight += floorHeight(i)
+    }
+    val avgFloorHeight = totalHeight / (stations.size - 1)
+
+    println(s"idleWaitingTime: ${netTimeToCoverDistance(actualNearestElevatorFloorDiff * avgFloorHeight)}")
+    netTimeToCoverDistance(actualNearestElevatorFloorDiff * avgFloorHeight)
   }
   
   private def roundTripTime(trafficPattern: ElevatorTrafficPattern): Double = {

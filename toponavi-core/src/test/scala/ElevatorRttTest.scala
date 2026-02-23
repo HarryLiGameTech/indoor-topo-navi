@@ -1,5 +1,5 @@
 import data.{ElevatorBank, NavigationGraph, TopoNode}
-import enums.ElevatorTrafficPattern.UpRush
+import enums.ElevatorTrafficPattern.{Flat, UpRush}
 import enums.TransportServicePermission
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -52,7 +52,7 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
       capacity = 18,
       maxVelocity = 2.5,
       acceleration = 0.8,
-      carAmount = 1
+      carAmount = 4
     )
 
 
@@ -60,6 +60,8 @@ class ElevatorRttTest extends AnyFlatSpec with Matchers {
     println("=== Complex elevator with 8 stations ===")
     val netTime2 = elevator2.netTimeBetweenStations(floor1, floor8)
     val travelTime2 = elevator2.travelTimeBetweenStations(floor1, floor8, UpRush)
+
+    val travelTime3 = elevator2.travelTimeBetweenStations(floor2, floor8, Flat)
 
     println(s"Net time between Floor1 and Floor8: $netTime2 seconds")
     println(s"Travel time between Floor1 and Floor8: $travelTime2 seconds")
