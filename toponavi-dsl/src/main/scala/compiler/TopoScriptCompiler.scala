@@ -16,9 +16,9 @@ import scala.collection.mutable
 import java.util.{Map => JMap}
 import scala.jdk.CollectionConverters._
 
-class TopoScriptCompiler(
-  floorPopulation: Map[NavigationGraph, Int] // This is an intermediate data parsed and collected from topo-map scripts, shall I wrap it (them, later with more of similar stuff) into a class?
-) {
+class TopoScriptCompiler() {
+
+  private val metadata = new CompilerMetadataContext()
 
   def compile(targetDirectory: String): CompilationResult = {
     // 1. Parse Global Config
@@ -250,6 +250,19 @@ class TopoScriptCompiler(
   }
 
   private def buildNavigationGraph(mapVal: TopoMapValue): NavigationGraph = {
+    val paramsOption = mapVal.context.values.get(corelang.Identifier.Symbol("params"))
+    val d = paramsOption match {
+      case Some(Value.RecordVal(fields)) => fields
+      case Some(_) => throw new RuntimeException(s"Symbol 'params' in transport ${mapVal.name} must be a RecordVal")
+      case None => throw new RuntimeException("Must contain a 'params' record in topo-map context")
+    }
+
+    val floorPopulation = d.get("permResident").map {
+      case Value.IntVal(v) => v.toInt
+      case _ => throw new RuntimeException("permResident must be an Int in topo-map params")
+    }
+
+
     // 1. Convert Nodes
     val coreNodes = mapVal.nodes.map { nodeVal =>
       nodeVal -> data.TopoNode(
@@ -292,12 +305,19 @@ class TopoScriptCompiler(
     // 3. Build Reverse Adjacency
     val reverseAdj = corePaths.groupBy(_.target)
 
-    NavigationGraph(
+    val graph = NavigationGraph(
       identifier = mapVal.name,
       nodes = coreNodes.values.toList,
       adjacencyList = corePaths,
       reverseAdjacency = reverseAdj
     )
+
+    // Append this population data into the CompilerMetadataContext
+    floorPopulation.foreach { pop =>
+      metadata.floorPopulation.put(graph, pop)
+    }
+
+    graph
   }
 
   private def buildLinearTransport(transVal: TransportValue, graphs: Map[String, NavigationGraph]): LinearTransport = {
@@ -349,13 +369,16 @@ class TopoScriptCompiler(
          g -> enums.TransportServicePermission.FullyGranted
      }.toMap
 
+    // TODO: stationCategories?
      ElevatorBank(
        identifier = transVal.name,
        stationNodes = stations,
        stationLocations = locations,
        stationPermissions = stPermissions,
-       stationPopulations = stations.keys.map(_ -> 50).toMap, // TODO: Change 50 default
-       departureRate = stations.keys.map(_ -> 1.0 / stations.size).toMap, // Assuming all stations shares the same dep. rate
+       stationPopulations = stations.keys.map { g =>
+         g -> metadata.floorPopulation.getOrElse(g, 1)
+       }.toMap,
+       departureRate = depRates,
        maxVelocity = maxV,
        acceleration = acc,
        carAmount = carAmount,
@@ -380,6 +403,6 @@ class TopoScriptCompiler(
 }
 
 class CompilerMetadataContext() {
-  def floorPopulation: Map[NavigationGraph, Int]
+  val floorPopulation: mutable.Map[NavigationGraph, Int] = mutable.Map.empty
   // Sth else in the future
 }
