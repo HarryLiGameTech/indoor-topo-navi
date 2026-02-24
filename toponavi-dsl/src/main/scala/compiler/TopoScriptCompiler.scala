@@ -3,18 +3,19 @@ package compiler
 import util.catchError
 import syntax.TopoMapVisitor
 import surfacelang.{GlobalConfigExpr, TopoEnvironment}
-import topomap.grammar.{MapFileLexer, MapFileParser}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
-import data.{NavigationGraph, TransportGraph, LinearTransport, ElevatorBank}
+import data.{ElevatorBank, LinearTransport, NavigationGraph, TransportGraph}
 import corelang.{Environment, Value}
+import enums.ElevatorStationCategory.{Entrance, Occupant}
 import surfacelang.{TopoMapValue, TransportValue}
 import pprint.pprintln
 
+import topomap.grammar.{MapFileLexer, MapFileParser}
+
 import java.io.File
 import scala.collection.mutable
-
-import java.util.{Map => JMap}
-import scala.jdk.CollectionConverters._
+import java.util.Map as JMap
+import scala.jdk.CollectionConverters.*
 
 class TopoScriptCompiler() {
 
@@ -369,11 +370,20 @@ class TopoScriptCompiler() {
          g -> enums.TransportServicePermission.FullyGranted
      }.toMap
 
-    // TODO: stationCategories?
+    // TODO: Refactor with the stationCategories enum values in TopoScript
+     val categories = if (locations.isEmpty) Map.empty else {
+       val entranceStation = locations.minBy(_._2)._1
+       locations.keys.map { g =>
+         if (g == entranceStation) g -> Entrance
+         else g -> Occupant
+       }.toMap
+     }
+
      ElevatorBank(
        identifier = transVal.name,
        stationNodes = stations,
        stationLocations = locations,
+       stationCategories = categories, // Make one pair with value Entrance and others Occupant
        stationPermissions = stPermissions,
        stationPopulations = stations.keys.map { g =>
          g -> metadata.floorPopulation.getOrElse(g, 1)

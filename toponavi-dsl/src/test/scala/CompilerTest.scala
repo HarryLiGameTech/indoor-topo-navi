@@ -33,6 +33,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       val mapCode =
         """
           |topo-map Floor1() {
+          |    let params: {permResident: Int} = {permResident = 2}
           |    topo-node node1
           |    topo-node node2
           |    atomic-path [node1 <-> node2] { cost = 10.0 }
@@ -44,6 +45,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       val mapCode2 =
         """
           |topo-map Floor2() {
+          |    let params: {permResident: Int} = {permResident = 10}
           |    topo-node node1
           |    topo-node node2
           |    atomic-path [node1 <-> node2] { cost = 7.0 }
@@ -57,8 +59,8 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
         """
           |transport Elevator1 is Elevator {
           |    let params: {velocity: Float, accl: Float, carAmount: Int, duty: Int} = {velocity = 2.5, accl = 0.8, carAmount = 4, duty = 1350}
-          |    station s1 at Floor1::node1 { location = 0.0 }
-          |    station s2 at Floor2::node1 { location = 5.0 }
+          |    station s1 at Floor1::node1 { location = 0.0, departureRate = 0.9 }
+          |    station s2 at Floor2::node1 { location = 5.0, departureRate = 0.1 }
           |}
           |""".stripMargin
       writeToFile(transFile, vehicleCode)
