@@ -1,0 +1,15 @@
+transport GE4 is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 6.0,
+        acceleration: 0.8,
+        cars: 1
+    }
+
+    station F95 at Floor95::GE4_hall {location = 430.0, departureRate = 0.15} // No GE3 at this floor
+    station F94 at Floor94::GE3_4_hall {location = 425.0, departureRate = 0.395}
+    station F3 at Floor3::GE3_4_hall {location = 10.0, departureRate = 0.0}
+    station F2 at UpperLobby::GE4_hall {location = 5.0, departureRate = 0.0} // No GE3 at this floor
+    station F1 at LowerLobby::GE3_4_hall {location = 0.0, departureRate = 0.05}
+    station B1 at FloorB1::GE4_hall {location = -5.0, departureRate = 0.395} // No GE3 at this floor
+    station B2 at FloorB2::GE4_hall {location = -10.0, departureRate = 0.01} // GE3 & GE4 are in separate hall!
+}

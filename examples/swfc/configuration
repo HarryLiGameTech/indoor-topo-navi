@@ -1,0 +1,94 @@
+building-includes{
+    submap FloorZ1
+    submap FloorZ2
+    submap FloorZ3
+    submap FloorZ4
+    submap FloorZ5
+    submap FloorZ6
+    submap GuestRoomFloor
+
+    submap LowerLobby
+    submap UpperLobby
+    submap SL28
+    submap SL29
+    submap SL52
+    submap SL53
+    submap HL87
+
+    submap RefugeFloor // Except 89!
+    submap Floor3
+    submap Floor4
+    submap Floor5
+    submap Floor89
+    submap Floor90
+    submap Floor91
+    submap HotelBar // 92 and 93
+
+    submap SkyArena // 94
+    submap Floor95
+    submap Floor96
+    submap SkyWalk97
+    submap BottleOpenerGap // 98 and 99
+    submap SkyWalk100
+
+    submap FloorB1
+    submap FloorB2
+
+
+
+
+
+    // Locals
+    vehicle L1
+    vehicle L2
+    vehicle L3
+    vehicle L4
+    vehicle L5
+    vehicle L6
+    vehicle HL
+    vehicle CP1_2
+    vehicle CP3_4
+    vehicle SP
+    vehicle MP3
+
+    // Expresses
+    vehicle S1_up
+    vehicle S1_lo
+    vehicle S2_lo
+    vehicle S2_lo
+    vehicle SH
+    vehicle GE1_2
+    vehicle GE3
+    vehicle GE4
+    
+    // Fires
+    vehicle GE1
+    vehicle GE3
+    vehicle GE4
+    vehicle GE6
+    vehicle GE7
+    vehicle GE8
+    vehicle GE9
+    vehicle GE10
+
+    // Freight Locals
+    vehicle LS1
+    vehicle LS2
+    vehicle LS1B
+    vehicle LS2B
+    vehicle LS3
+    vehicle LS4
+    vehicle LS5
+    vehicle LS6
+    vehicle LS7
+    vehicle LS8
+    vehicle LS9
+    vehicle LS10
+    vehicle LS11
+    vehicle LS12
+    vehicle LS13
+    vehicle LS14
+    vehicle HS3_4
+    vehicle HS5
+    vehicle HS6
+}

@@ -1,0 +1,10 @@
+transport S1_hi is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 6.0,
+        acceleration: 1.0,
+        cars: 4
+    }
+
+    station F29 at SL29::S1_hall {location = 105.0, departureRate = 0.5} // TODO: Not exactly on 105
+    station F2 at UpperLobby::S1_hall {location = 5.0, departureRate = 0.5}
+}
