@@ -71,10 +71,13 @@ building-includes{
     vehicle GE4
     
     // Fires
-    vehicle FS1
+    vehicle FS1_lo
+    vehicle FS1_hi
     vehicle FS3
-    vehicle FS4
-    vehicle FS6
+    vehicle FS4_lo
+    vehicle FS4_hi
+    // vehicle FS6_lo
+    // vehicle FS6_hi
     vehicle FS7
     vehicle FS8
     vehicle FS9

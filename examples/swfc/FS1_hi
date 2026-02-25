@@ -1,0 +1,16 @@
+transport FS1_hi is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 6.0,
+        acceleration: 0.8,
+        cars: 1
+    }
+
+    station F72 at Floor72::FS1_3_hall {location = 310.5, departureRate = 0.125}
+    station F53 at SL53::FS1_3_hall {location = 229.5, departureRate = 0.125}
+    station F52 at SL52::FS1_3_hall {location = 224.5, departureRate = 0.125}
+    station F29 at SL29::FS1_3_hall {location = 126.0, departureRate = 0.125}
+    station F28 at SL28::FS1_3_hall {location = 121.0, departureRate = 0.125}
+    station F7 at Floor7::FS1_3_hall {location = 32.0, departureRate = 0.125}
+    station F3 at Floor3::FS1_3_hall {location = 10.0, departureRate = 0.125}
+    station B1 at FloorB1::FS1_3_hall {location = -5.0, departureRate = 0.125}
+}
