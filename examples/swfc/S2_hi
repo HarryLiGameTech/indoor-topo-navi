@@ -5,6 +5,6 @@ transport S2_hi is Elevator{
         cars: 4
     }
 
-    station F53 at SL53::S2_hall {location = 205.0, departureRate = 0.5} // TODO: Not exactly on 205
+    station F53 at SL53::S2_hall {location = 229.5, departureRate = 0.5} // TODO: Not exactly on 205
     station F2 at UpperLobby::S2_hall {location = 5.0, departureRate = 0.5}
 }

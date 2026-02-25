@@ -1,0 +1,14 @@
+transport L6_hi is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 6.0,
+        acceleration: 1.0,
+        cars: 4
+    }
+
+    station F76 at Floor76::L6_hall {location = 327.5, departureRate = 0.01}
+    station F74 at Floor74::L6_hall {location = 319.0, departureRate = 0.01}
+    station F72 at Floor72::L6_hall {location = 310.5, departureRate = 0.01}
+    station F70 at Floor70::L6_hall {location = 302.0, departureRate = 0.01}
+    station F68 at Floor68::L6_hall {location = 294.0, departureRate = 0.01}
+    station F53 at SL53::L6_hall {location = 229.5, departureRate = 0.95}
+}

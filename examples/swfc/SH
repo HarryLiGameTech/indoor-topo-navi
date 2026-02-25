@@ -5,7 +5,7 @@ transport SH is Elevator{
         cars: 3
     }
 
-    station F91 at Floor91::SH_hall {location = 405.0, departureRate = 0.3} // TODO: Not exactly on 105
-    station F87 at HL87::SH_hall {location = 387.0, departureRate = 0.35} // TODO: Not exactly on 105
+    station F91 at Floor91::SH_hall {location = 405.0, departureRate = 0.3}
+    station F87 at HL87::SH_hall {location = 386.0, departureRate = 0.35}
     station F1 at LowerLobby::SH_hall {location = 0.0, departureRate = 0.35}
 }

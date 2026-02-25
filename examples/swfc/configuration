@@ -5,7 +5,7 @@ building-includes{
     submap FloorZ4
     submap FloorZ5
     submap FloorZ6
-    submap GuestRoomFloor
+    submap GuestRoomFloor // 79~84, 88
 
     submap LowerLobby
     submap UpperLobby
@@ -19,6 +19,8 @@ building-includes{
     submap Floor3
     submap Floor4
     submap Floor5
+    submap Floor85
+    submap Floor86
     submap Floor89
     submap Floor90
     submap Floor91
@@ -28,7 +30,8 @@ building-includes{
     submap Floor95
     submap Floor96
     submap SkyWalk97
-    submap BottleOpenerGap // 98 and 99
+    submap Floor98 // With lift machine rooms
+    submap Floor99
     submap SkyWalk100
 
     submap FloorB1
@@ -37,14 +40,20 @@ building-includes{
 
 
 
-
     // Locals
-    vehicle L1
-    vehicle L2
-    vehicle L3
-    vehicle L4
-    vehicle L5
-    vehicle L6
+    vehicle L1_lo
+    vehicle L2_lo
+    vehicle L3_lo
+    vehicle L4_lo
+    vehicle L5_lo
+    vehicle L6_lo
+    vehicle L1_hi
+    vehicle L2_hi
+    vehicle L3_hi
+    vehicle L4_hi
+    vehicle L5_hi
+    vehicle L6_hi
+
     vehicle HL
     vehicle CP1_2
     vehicle CP3_4

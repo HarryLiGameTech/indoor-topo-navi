@@ -1,0 +1,12 @@
+transport HS5 is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 1.0,
+        acceleration: 0.7,
+        cars: 1
+    }
+
+    station F93 at Floor93::HS5_hall {location = 417.5, departureRate = 0.333}
+    station F92 at Floor92::HS5_hall {location = 410.0, departureRate = 0.333}
+    station F91 at Floor91::HS5_6_hall {location = 405.0, departureRate = 0.334}
+    // Floor89 to-be-written when "requires" is implemented
+}
