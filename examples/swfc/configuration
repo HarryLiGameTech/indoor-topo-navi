@@ -62,14 +62,14 @@ building-includes{
     vehicle GE4
     
     // Fires
-    vehicle GE1
-    vehicle GE3
-    vehicle GE4
-    vehicle GE6
-    vehicle GE7
-    vehicle GE8
-    vehicle GE9
-    vehicle GE10
+    vehicle FS1
+    vehicle FS3
+    vehicle FS4
+    vehicle FS6
+    vehicle FS7
+    vehicle FS8
+    vehicle FS9
+    vehicle FS10
 
     // Freight Locals
     vehicle LS1

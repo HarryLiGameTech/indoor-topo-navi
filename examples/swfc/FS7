@@ -1,0 +1,16 @@
+transport FS7 is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 1.5,
+        acceleration: 0.8,
+        cars: 1
+    }
+
+    station F96 at Floor96::FS7_hall {location = 435.5, departureRate = 0.143} 
+    station F95 at Floor95::FS7_hall {location = 430.0, departureRate = 0.143} 
+    station F94 at SkyArena::FS7_hall {location = 425.0, departureRate = 0.143} 
+    station F93 at Floor93::FS7_hall {location = 417.5, departureRate = 0.071} 
+    station F92 at Floor92::FS7_hall {location = 410.0, departureRate = 0.071} 
+    station F91 at Floor91::FS7_hall {location = 405.0, departureRate = 0.071} 
+    station F90 at Floor90::FS7_hall {location = 401.0, departureRate = 0.071} 
+    station F89 at Floor89::FS7_hall {location = 397.0, departureRate = 0.287} 
+}

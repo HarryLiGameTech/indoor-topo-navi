@@ -1,0 +1,13 @@
+transport FS9 is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 1.5,
+        acceleration: 0.8,
+        cars: 1
+    }
+
+    station F100 at SkyWalk100::FS9_hall {location = 474.0, departureRate = 0.475}
+    station F99 at Floor99::FS9_hall {location = 460.5, departureRate = 0.0}
+    station F98 at Floor98::FS9_hall {location = 447.0, departureRate = 0.0}
+    station F97 at SkyWalk97::FS9_hall {location = 439.0, departureRate = 0.475}
+    station F96 at Floor96::FS9_hall {location = 435.5, departureRate = 0.0} 
+}
