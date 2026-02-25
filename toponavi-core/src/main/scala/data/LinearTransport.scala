@@ -22,6 +22,49 @@ trait LinearTransport {
   def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double
 }
 
+
+
+
+case class StairCase(
+  identifier: String,
+  stationNodes: Map[NavigationGraph, TopoNode],
+  stationLocations: Map[NavigationGraph, Double]
+) extends LinearTransport {
+
+  override def maxVelocity: Double = 0.0
+  override def acceleration: Double = 0.0
+
+
+  override def canArriveAt(target: NavigationGraph): Boolean = {
+    true // Stairs always allow you to arrive. Constraints are managed by relevant atomic-paths
+  }
+
+  override def canDepartFrom(source: NavigationGraph): Boolean = {
+    true // Stairs always allow you to depart. Constraints are managed by relevant atomic-paths
+  }
+
+  override def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
+    val distance = distanceBetweenStations(src, dst)
+    distance / 0.167 // Assume average vertical speed of 0.167 m/s for stairs (a.k.a. Covering 100m in 10 minutes)
+  }
+
+  def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, verticalSpeed: Double): Double = {
+    val distance = distanceBetweenStations(src, dst)
+    distance / verticalSpeed
+  }
+
+  override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern): Double = {
+    netTimeBetweenStations(src, dst) // Climbing stairs does not involve random waiting time
+  }
+
+  override def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double = {
+    Math.abs(stationLocations(a) - stationLocations(b))
+  }
+}
+
+
+
+
 case class ElevatorBank(
   identifier: String,
   stationNodes: Map[NavigationGraph, TopoNode],
