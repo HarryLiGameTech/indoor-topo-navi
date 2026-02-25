@@ -1,0 +1,19 @@
+transport LS1B is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 1.5,
+        acceleration: 0.7,
+        cars: 1
+    }
+
+    station F17 at Floor17::LS1B_hall {location = 74.0, departureRate = 0.091}
+    station F16 at Floor16::LS1B_hall {location = 70.0, departureRate = 0.091}
+    station F15 at Floor15::LS1B_hall {location = 66.0, departureRate = 0.091}
+    station F14 at Floor14::LS1B_hall {location = 61.5, departureRate = 0.091}
+    station F13 at Floor13::LS1B_hall {location = 57.5, departureRate = 0.091}
+    station F12 at Floor12::LS1B_hall {location = 53.0, departureRate = 0.091}
+    station F11 at Floor11::LS1B_hall {location = 49.0, departureRate = 0.091}
+    station F10 at Floor10::LS1B_hall {location = 45.0, departureRate = 0.091}
+    station F9 at Floor9::LS1B_hall {location = 40.5, departureRate = 0.091}
+    station F8 at Floor8::LS1B_hall {location = 36.5, departureRate = 0.091}
+    station F7 at Floor7::LS1B_hall {location = 32.0, departureRate = 0.09}
+}

@@ -1,0 +1,21 @@
+transport LS5 is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 1.5,
+        acceleration: 0.7,
+        cars: 1
+    }
+
+    station F41 at Floor41::LS5_hall {location = 177.5, departureRate = 0.077}
+    station F40 at Floor40::LS5_hall {location = 173.5, departureRate = 0.077}
+    station F39 at Floor39::LS5_hall {location = 169.5, departureRate = 0.077}
+    station F38 at Floor38::LS5_hall {location = 165.0, departureRate = 0.077}
+    station F37 at Floor37::LS5_hall {location = 161.0, departureRate = 0.077}
+    station F36 at Floor36::LS5_hall {location = 156.5, departureRate = 0.077}
+    station F35 at Floor35::LS5_hall {location = 152.5, departureRate = 0.077}
+    station F34 at Floor34::LS5_hall {location = 148.5, departureRate = 0.077}
+    station F33 at Floor33::LS5_hall {location = 144.0, departureRate = 0.077}
+    station F32 at Floor32::LS5_hall {location = 140.0, departureRate = 0.077}
+    station F31 at Floor31::LS5_hall {location = 135.5, departureRate = 0.077}
+    station F30 at Floor30::LS5_hall {location = 131.0, departureRate = 0.077}
+    station F29 at SL29::LS5_hall {location = 126.0, departureRate = 0.076}
+}

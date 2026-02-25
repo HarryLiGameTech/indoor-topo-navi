@@ -1,0 +1,16 @@
+transport LS2 is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 1.5,
+        acceleration: 0.7,
+        cars: 1
+    }
+
+    station F6 at Floor6::LS2_hall {location = 27.5, departureRate = 0.125}
+    station F5 at Floor5::LS2_hall {location = 21.5, departureRate = 0.125}
+    station F4 at Floor4::LS2_hall {location = 16.0, departureRate = 0.125}
+    station F3 at Floor3::LS2_hall {location = 10.0, departureRate = 0.125}
+    station F2 at UpperLobby::LS2_hall {location = 5.0, departureRate = 0.125}
+    station F1 at LowerLobby::LS2_hall {location = 0.0, departureRate = 0.125}
+    station B1 at FloorB1::LS2_hall {location = -5.0, departureRate = 0.125}
+    station B2 at FloorB2::LS2_hall {location = -10.0, departureRate = 0.125}
+}

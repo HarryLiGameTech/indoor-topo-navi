@@ -1,0 +1,19 @@
+transport LS11 is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed: 1.5,
+        acceleration: 0.7,
+        cars: 1
+    }
+
+    station F77 at Floor77::LS11_hall {location = 331.5, departureRate = 0.091}
+    station F76 at Floor76::LS11_hall {location = 327.5, departureRate = 0.091}
+    station F75 at Floor75::LS11_hall {location = 323.0, departureRate = 0.091}
+    station F74 at Floor74::LS11_hall {location = 319.0, departureRate = 0.091}
+    station F73 at Floor73::LS11_hall {location = 315.0, departureRate = 0.091}
+    station F72 at Floor72::LS11_hall {location = 310.5, departureRate = 0.091}
+    station F71 at Floor71::LS11_hall {location = 306.5, departureRate = 0.091}
+    station F70 at Floor70::LS11_hall {location = 302.0, departureRate = 0.091}
+    station F69 at Floor69::LS11_hall {location = 298.0, departureRate = 0.091}
+    station F68 at Floor68::LS11_hall {location = 294.0, departureRate = 0.091}
+    station F67 at Floor67::LS11_hall {location = 289.5, departureRate = 0.09}
+}
