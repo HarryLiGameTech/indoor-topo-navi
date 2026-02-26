@@ -1,0 +1,29 @@
+topo-map SkyWalk100(){
+    let config: {permResident: Int} = {
+        permResident: 20
+    }
+
+    topo-node FS9_hall
+    topo-node FS10_hall
+    topo-node staircase_U1
+    topo-node staircase_U1_outside
+    topo-node staircase_U2
+    topo-node staircase_U2_outside
+
+    topo-node skywalk_booth_1
+    topo-node skywalk_booth_2
+    topo-node skywalk_booth_3
+    
+    
+
+    atomic-path [FS9_hall <-> skywalk_booth_1] {cost = 9}
+    atomic-path [FS9_hall <-> staircase_U1_outside] {cost = 1} // Move your feet
+    atomic-path [staircase_U1_outside <-> staircase_U1] {cost = 3} // Push door, requires ...
+
+    atomic-path [skywalk_booth_1 <-> skywalk_booth_2] {cost = 9}
+    atomic-path [skywalk_booth_2 <-> skywalk_booth_3] {cost = 9}
+
+    atomic-path [skywalk_booth_3 <-> FS10_hall] {cost = 9}
+    atomic-path [FS10_hall <-> staircase_U2_outside] {cost = 1} // Move your feet
+    atomic-path [staircase_U2_outside <-> staircase_U2] {cost = 3} // Push door, requires ...
+}

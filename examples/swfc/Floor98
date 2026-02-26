@@ -1,0 +1,25 @@
+topo-map Floor98(){
+    let config: {permResident: Int} = {
+        permResident: 0
+    }
+
+    topo-node FS9_hall
+    topo-node FS10_hall
+
+    topo-node staircase_U1
+    topo-node staircase_U2
+
+    topo-node GE1_2_machine_room_outside
+    topo-node GE3_4_machine_room_outside
+    topo-node GE1_2_machine_room {tag = "HIGHLY_RESTRICTED"}
+    topo-node GE3_4_machine_room {tag = "HIGHLY_RESTRICTED"}
+    
+
+    atomic-path [FS9_hall -> staircase_U1] {cost = 3} // Single-way door
+    atomic-path [FS10_hall -> staircase_U2] {cost = 3} // Single-way door
+
+    atomic-path [FS9_hall <-> GE1_2_machine_room_outside] {cost = 3}
+    atomic-path [GE1_2_machine_room_outside <-> GE1_2_machine_room] {cost = 5} // Dedicated-key door
+    atomic-path [FS10_hall <-> GE3_4_machine_room_outside] {cost = 3}
+    atomic-path [GE3_4_machine_room_outside <-> GE3_4_machine_room] {cost = 5} // Dedicated-key door
+}

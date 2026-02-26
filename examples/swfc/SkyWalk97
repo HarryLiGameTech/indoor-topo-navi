@@ -1,0 +1,31 @@
+topo-map SkyWalk97(){
+    let config: {permResident: Int} = {
+        permResident: 20
+    }
+
+    topo-node FS9_hall
+    topo-node FS10_hall
+    topo-node escalator_sw97
+    topo-node staircase_U1
+    topo-node staircase_U2
+
+    topo-node male_toilet_outside
+    topo-node female_toilet_outside
+    topo-node male_toilet_inside
+    topo-node female_toilet_inside
+    topo-node toilet_intersaction
+    
+    
+
+    atomic-path [escalator_sw97 <-> FS9_hall] {cost = 15}
+    atomic-path [FS9_hall <-> staircase_U1] {cost = 3} // Push door, requires ...
+
+    atomic-path [escalator_sw97 <-> toilet_intersaction] {cost = 11}
+    atomic-path [toilet_intersaction <-> FS10_hall] {cost = 3}
+    atomic-path [toilet_intersaction <-> male_toilet_outside] {cost = 2}
+    atomic-path [toilet_intersaction <-> female_toilet_outside] {cost = 2}
+    atomic-path [FS10_hall <-> staircase_U2] {cost = 3} // Push door, requires ...
+
+    atomic-path [male_toilet_outside <-> male_toilet_inside] {cost = 2}
+    atomic-path [female_toilet_outside <-> female_toilet_inside] {cost = 2}
+}
