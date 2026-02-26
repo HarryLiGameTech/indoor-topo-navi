@@ -1,0 +1,34 @@
+// Written based on photos and video of the floor. 
+topo-map Floor95(){
+    let config: {permResident: Int} = {
+        permResident: 20
+    }
+
+    topo-node FS10_hall
+    topo-node FS8_hall
+    topo-node GE4_hall
+    topo-node vip_room_out
+    topo-node vip_room_in
+
+
+    topo-node GE1_2_hall
+    topo-node FS7_hall
+    topo-node FS7_hall_out
+    topo-node escalator_f95
+
+    
+    atomic-path [FS8_hall <-> vip_room_out] {cost = 3}
+    atomic-path [vip_room_out <-> FS10_hall] {cost = 3}
+    atomic-path [GE4_hall -> vip_room_out] {cost = 5} // requires card
+    atomic-path [vip_room_out -> GE4_hall] {cost = 3} 
+
+    atomic-path [vip_room_out -> vip_room_in] {cost = 5} // Dedicated-key door, requries
+    atomic-path [vip_room_in -> vip_room_out] {cost = 2} 
+
+    atomic-path [GE1_2_hall <-> FS7_hall_out] {cost = 4}
+    atomic-path [FS7_hall_out <-> FS7_hall] {cost = 5} // requires card, both directions
+
+    atomic-path [GE1_2_hall <-> escalator_f95] {cost = 8}
+    atomic-path [FS7_hall_out <-> escalator_f95] {cost = 8}
+
+}
