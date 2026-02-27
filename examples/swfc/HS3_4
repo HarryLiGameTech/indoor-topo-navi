@@ -5,19 +5,19 @@ transport HS3_4 is Elevator{
         cars: 2
     }
 
-    station F79 at Floor79::HS_3_4_hall {location = 340.0, departureRate = 0.097}
-    station F80 at Floor80::HS_3_4_hall {location = 345.7, departureRate = 0.032}
-    station F81 at Floor81::HS_3_4_hall {location = 351.3, departureRate = 0.032}
-    station F82 at Floor82::HS_3_4_hall {location = 357.0, departureRate = 0.032}
-    station F83 at Floor83::HS_3_4_hall {location = 362.7, departureRate = 0.032}
-    station F84 at Floor84::HS_3_4_hall {location = 368.3, departureRate = 0.032}
-    station F85 at Floor85::HS_3_4_hall {location = 374.0, departureRate = 0.065}
-    station F86 at Floor86::HS_3_4_hall {location = 380.0, departureRate = 0.032}
-    station F87 at HL87::HS_3_4_hall {location = 386.0, departureRate = 0.194}
-    station F88 at Floor88::HS_3_4_hall {location = 392.0, departureRate = 0.032}
-    station F89 at Floor89::HS_3_4_hall {location = 397.0, departureRate = 0.000}
-    station F90 at Floor90::HS_3_4_hall {location = 401.0, departureRate = 0.129}
-    station F91 at Floor91::HS_3_4_hall {location = 405.0, departureRate = 0.097}
-    station F92 at Floor92::HS_3_4_hall {location = 410.0, departureRate = 0.097}
-    station F93 at Floor93::HS_3_4_hall {location = 417.5, departureRate = 0.097}
+    station F79 at Floor79::HS3_4_hall {location = 340.0, departureRate = 0.097}
+    station F80 at Floor80::HS3_4_hall {location = 345.7, departureRate = 0.032}
+    station F81 at Floor81::HS3_4_hall {location = 351.3, departureRate = 0.032}
+    station F82 at Floor82::HS3_4_hall {location = 357.0, departureRate = 0.032}
+    station F83 at Floor83::HS3_4_hall {location = 362.7, departureRate = 0.032}
+    station F84 at Floor84::HS3_4_hall {location = 368.3, departureRate = 0.032}
+    station F85 at Floor85::HS3_4_hall {location = 374.0, departureRate = 0.065}
+    station F86 at Floor86::HS3_4_hall {location = 380.0, departureRate = 0.032}
+    station F87 at HL87::HS3_4_hall {location = 386.0, departureRate = 0.194}
+    station F88 at Floor88::HS3_4_hall {location = 392.0, departureRate = 0.032}
+    station F89 at Floor89::HS3_4_hall {location = 397.0, departureRate = 0.000}
+    station F90 at Floor90::HS3_4_hall {location = 401.0, departureRate = 0.129}
+    station F91 at Floor91::HS3_4_hall {location = 405.0, departureRate = 0.097}
+    station F92 at Floor92::HS3_4_hall {location = 410.0, departureRate = 0.097}
+    station F93 at Floor93::HS3_4_hall {location = 417.5, departureRate = 0.097}
 }

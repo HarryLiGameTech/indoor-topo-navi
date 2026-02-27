@@ -1,0 +1,121 @@
+// A tough floor that may not be very "infra-free-safe". 
+topo-map Floor89(){
+    let config: {permResident: Int} = {
+        permResident: 5
+    }
+
+
+    topo-node FS1_3_hall
+    topo-node FS4_6_hall
+    topo-node FS7_hall
+    topo-node FS8_hall
+    topo-node HS3_4_hall
+    topo-node HS5_6_hall
+    topo-node HS5_6_hall_intermediate
+    topo-node HS5_6_hall_outside
+    topo-node LS14_hall
+    topo-node Y_hall
+    topo-node Z_hall
+
+    topo-node staircase_A
+    topo-node staircase_B
+    topo-node staircase_U1_outside
+    topo-node staircase_U2_outside
+    topo-node staircase_U1
+    topo-node staircase_U2
+    topo-node staircase_V1_outside
+    topo-node staircase_V2_outside
+    topo-node staircase_V1
+    topo-node staircase_V2
+
+    // These are the ones that I don't know how to name
+    topo-node intersaction1
+    topo-node intersaction2
+    topo-node intersaction3
+    topo-node intersaction4
+    topo-node intersaction5
+    topo-node intersaction6    
+
+    // The connector corridor
+    topo-node conn_south_outside
+    // topo-node intersaction1 already there
+    topo-node conn_south_inside
+    topo-node HL_machine_room_outside
+    topo-node HL_machine_room
+    // topo-node intersaction4 already there
+    // topo-node intersaction5 already there
+    // topo-node intersaction6 already there
+    topo-node B_hall_outside_2
+    topo-node conn_north_inside
+    // topo-node intersaction2 already there
+    topo-node conn_north_outside
+
+
+    // FS Lobbies related
+    topo-node A_hall_outside
+    topo-node B_hall_outside_1
+    topo-node B_hall_inside_1
+    topo-node B_hall_inside_2
+    topo-node A_corridor_outside
+    topo-node B_corridor_outside
+
+
+    atomic-path [HS5_6_hall <-> HS5_6_hall_intermediate] {cost = 2}
+    atomic-path [HS5_6_hall_intermediate <-> HS5_6_hall_outside] {cost = 2}
+
+    atomic-path [HS5_6_hall_outside <-> staircase_U2_outside] {cost = 2}
+    atomic-path [staircase_U2_outside <-> staircase_U2] {cost = 3}
+    atomic-path [staircase_U2_outside <-> Z_hall] {cost = 5}
+    atomic-path [Z_hall <-> FS8_hall] {cost = 4}
+    atomic-path [FS8_hall <-> staircase_V1_outside] {cost = 5}
+    atomic-path [staircase_V1_outside <-> staircase_V1] {cost = 3}
+    atomic-path [staircase_V1_outside <-> A_corridor_outside] {cost = 5}
+    atomic-path [A_corridor_outside <-> HS5_6_hall_outside] {cost = 4}
+
+    atomic-path [A_corridor_outside <-> intersaction3] {cost = 5}
+    atomic-path [intersaction3 <-> A_hall_outside] {cost = 5}
+    atomic-path [A_hall_outside -> LS14_hall] {cost = 3}
+    atomic-path [LS14_hall -> A_hall_outside] {cost = 5} // requires card
+    atomic-path [LS14_hall <-> FS4_6_hall] {cost = 1}
+    atomic-path [FS4_6_hall <-> staircase_A] {cost = 2}
+
+    atomic-path [A_corridor_outside <-> conn_south_outside] {cost = 8}
+    atomic-path [conn_south_outside <-> intersaction1] {cost = 5}
+    atomic-path [intersaction1 <-> conn_south_inside] {cost = 7}
+    atomic-path [conn_south_inside <-> HL_machine_room_outside] {cost = 5}
+    atomic-path [HL_machine_room_outside <-> HL_machine_room] {cost = 5} // Dedicated-key door
+    atomic-path [HL_machine_room_outside <-> intersaction4] {cost = 12}
+
+    atomic-path [intersaction4 <-> intersaction5] {cost = 5}
+    atomic-path [intersaction4 <-> intersaction6] {cost = 6}
+    atomic-path [intersaction5 <-> intersaction6] {cost = 4}
+    atomic-path [intersaction4 <-> B_hall_outside_2] {cost = 6} // Visually obstructed
+    atomic-path [intersaction6 <-> B_hall_outside_2] {cost = 3}
+    atomic-path [intersaction5 <-> intersaction6] {cost = 5}
+
+    atomic-path [B_hall_outside_2 -> B_hall_inside_2] {cost = 3} 
+    atomic-path [B_hall_inside_2 -> B_hall_outside_2] {cost = 5} // Requires card
+
+    atomic-path [intersaction6 <-> conn_north_inside] {cost = 5}
+    atomic-path [conn_north_inside <-> intersaction2] {cost = 5}
+    atomic-path [intersaction2 <-> conn_north_outside] {cost = 3}
+
+    atomic-path [conn_north_outside <-> staircase_U1_outside] {cost = 8}
+    atomic-path [staircase_U1_outside <-> staircase_U1] {cost = 3}
+    atomic-path [staircase_U1_outside <-> Y_hall] {cost = 6}
+    atomic-path [Y_hall <-> FS7_hall] {cost = 4}
+    atomic-path [FS7_hall <-> staircase_V2_outside] {cost = 5}
+    atomic-path [staircase_V2_outside <-> staircase_V2] {cost = 3}
+    atomic-path [staircase_V2_outside <-> B_corridor_outside] {cost = 9}
+    atomic-path [B_corridor_outside <-> conn_north_outside] {cost = 7}
+
+    atomic-path [B_corridor_outside <-> B_hall_outside_1] {cost = 8}
+    atomic-path [B_hall_outside_1 -> B_hall_inside_1] {cost = 3}
+    atomic-path [B_hall_inside_1 -> B_hall_outside_1] {cost = 5} // Requires card
+    atomic-path [B_hall_inside_1 <-> FS1_3_hall] {cost = 3}
+    atomic-path [FS1_3_hall <-> staircase_B] {cost = 2}
+    atomic-path [FS1_3_hall <-> B_hall_inside_2] {cost = 4}
+    atomic-path [B_hall_inside_1 <-> B_hall_inside_2] {cost = 4}
+    atomic-path [B_hall_inside_1 <-> HS3_4_hall] {cost = 3}
+
+}
