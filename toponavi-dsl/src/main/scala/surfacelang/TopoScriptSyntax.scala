@@ -251,5 +251,6 @@ case class VehicleRef(
 
 case class GlobalConfigExpr(
   submaps: List[TopoMapRef],
-  vehicles: List[VehicleRef]
+  vehicles: List[VehicleRef],
+  submapUsages: Map[TopoMapRef, List[String]] = Map.empty
 ) extends SurfaceSyntax

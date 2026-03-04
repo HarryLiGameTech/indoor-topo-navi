@@ -1,8 +1,28 @@
 building-includes{
-    submap FloorZ1
-    submap Floor27
-    submap FloorZ3
-    submap FloorZ4
+    submap Floor4 using Zone1
+    submap Floor5 using Zone1
+    submap Floor6 using Zone1
+    submap Floor7 using Zone1
+    submap Floor8 using Zone1
+    submap Floor9 using Zone1
+    submap Floor10 using Zone1
+    submap Floor11 using Zone1
+    submap Floor12 using Zone1
+    submap Floor13 using Zone1
+    submap Floor14 using Zone1
+    submap Floor15 using Zone1
+    submap Floor16 using Zone1
+    submap Floor17 using Zone1
+    submap Floor19 using Zone2
+    submap Floor20 using Zone2
+    submap Floor21 using Zone2
+    submap Floor22 using Zone2
+    submap Floor23 using Zone2
+    submap Floor24 using Zone2
+    submap Floor25 using Zone2
+    submap Floor26 using Zone2
+    submap Floor27 using Zone2
+
     submap Lobby
     submap Floor3
     submap Floor29

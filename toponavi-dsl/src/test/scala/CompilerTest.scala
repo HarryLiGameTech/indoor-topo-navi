@@ -21,7 +21,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
           |building-includes{
           |    submap Floor1
           |    submap Floor2
-          |    submap Floor3
+          |    submap Floor3 using Floor2
           |    vehicle Elevator1
           |    vehicle OPS
           |}
@@ -61,6 +61,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
           |    let params: {velocity: Float, accl: Float, carAmount: Int, duty: Int} = {velocity = 2.5, accl = 0.8, carAmount = 4, duty = 1350}
           |    station s1 at Floor1::node1 { location = 0.0, departureRate = 0.9 }
           |    station s2 at Floor2::node1 { location = 5.0, departureRate = 0.1 }
+          |    station s3 at Floor3::node1 { location = 10.0, departureRate = 0.0 }
           |}
           |""".stripMargin
       writeToFile(transFile, vehicleCode)
@@ -76,6 +77,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       assert(result != null)
       println("Compilation result: ")
       pprintln(result)
+      pprintln(result.graphs("Floor3").nodes)
       println("Compilation successful!")
 
     } finally {

@@ -35,6 +35,9 @@ class TopoScriptCompiler() {
       case config: GlobalConfigExpr => config
       case _ => throw new RuntimeException("Global config parsing did not return a GlobalConfigExpr")
     }
+
+    // Populate the global SubmapRefRegistry from the parsed config
+    metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
     
     // 2. Parse and Elaborate each topo-map file
     val topoMapFiles = globalConfig.submaps.map(_.name)
@@ -58,19 +61,19 @@ class TopoScriptCompiler() {
     // 3. Parse each transport files, and link them with the topo-maps
     val transFiles = globalConfig.vehicles.map(_.name)
     val elaboratedTransports = mutable.ListBuffer[TransportValue]()
-    
-    // Create a base environment with common definitions like "Elevator"
-//    val baseValues = Map(
-//       corelang.Identifier.Symbol("Elevator") -> Value.RecordVal(Map(
-//         "maxVelocity" -> Value.FloatVal(2.5), // Defaults
-//         "acceleration" -> Value.FloatVal(1.0),
-//         "capacity" -> Value.IntVal(21),
-//         "duty" -> Value.IntVal(1600)
-//       ))
-//    )
-//    val baseEnv = Environment[corelang.Identifier, corelang.Type, Value](Map.empty, baseValues)
-    
-    val topoEnvForTransport = TopoEnvironment(Environment.empty, Map.empty, Map.empty, elaboratedMaps.toMap)
+
+    // Expand elaboratedMaps with registry-derived entries so that copy-ref names
+    // (e.g. "Floor3 using Floor2") are resolvable during transport elaboration.
+    val derivedMaps: Map[String, TopoMapValue] = metadata.submapRefRegistry.submapUsages.flatMap {
+      case (baseRef, userNames) =>
+        elaboratedMaps.get(baseRef.name) match {
+          case Some(baseMapVal) =>
+            userNames.map { userName => userName -> baseMapVal.copy(name = userName) }
+          case None => List.empty
+        }
+    }.toMap
+
+    val topoEnvForTransport = TopoEnvironment(Environment.empty, Map.empty, Map.empty, elaboratedMaps.toMap ++ derivedMaps)
 
     for (transName <- transFiles) {
       val transFile = new File(targetDirectory, transName + ".ttr")
@@ -87,9 +90,32 @@ class TopoScriptCompiler() {
     pprintln(elaboratedTransports)
 
     // 4. Convert to toponavi-core Data Structures
-    val navigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
+    val baseNavigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
       name -> buildNavigationGraph(mapVal)
     }.toMap
+
+    // Apply SubmapRefRegistry: for each "submap X using Y", register X as a copy of Y's graph
+    val navigationGraphs = baseNavigationGraphs ++ metadata.submapRefRegistry.submapUsages.flatMap {
+      case (baseRef, userNames) =>
+        baseNavigationGraphs.get(baseRef.name) match {
+          case Some(baseGraph) =>
+            userNames.map { userName =>
+              val derivedGraph = NavigationGraph(
+                identifier    = userName,
+                nodes         = baseGraph.nodes,
+                adjacencyList = baseGraph.adjacencyList,
+                reverseAdjacency = baseGraph.reverseAdjacency
+              )
+              metadata.floorPopulation.get(baseGraph).foreach { pop =>
+                metadata.floorPopulation.put(derivedGraph, pop)
+              }
+              userName -> derivedGraph
+            }
+          case None =>
+            println(s"${Console.YELLOW}Warning: Base map '${baseRef.name}' referenced in 'using' clause not found${Console.RESET}")
+            List.empty
+        }
+    }
 
     val linearTransports = elaboratedTransports.map { transVal =>
       buildLinearTransport(transVal, navigationGraphs)
@@ -121,6 +147,9 @@ class TopoScriptCompiler() {
       case _ => throw new RuntimeException("Global config parsing failed")
     }
 
+    // Populate the global SubmapRefRegistry from the parsed config
+    metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
+
     // 2. Parse and Elaborate each topo-map file
     val topoMapFiles = globalConfig.submaps.map(_.name)
     val elaboratedMaps = mutable.Map[String, TopoMapValue]()
@@ -142,18 +171,18 @@ class TopoScriptCompiler() {
     val transFiles = globalConfig.vehicles.map(_.name)
     val elaboratedTransports = mutable.ListBuffer[TransportValue]()
 
-    // Create a base environment with common definitions like "Elevator"
-    //    val baseValues = Map(
-    //       corelang.Identifier.Symbol("Elevator") -> Value.RecordVal(Map(
-    //         "maxVelocity" -> Value.FloatVal(2.5), // Defaults
-    //         "acceleration" -> Value.FloatVal(1.0),
-    //         "capacity" -> Value.IntVal(21),
-    //         "duty" -> Value.IntVal(1600)
-    //       ))
-    //    )
-    //    val baseEnv = Environment[corelang.Identifier, corelang.Type, Value](Map.empty, baseValues)
+    // Expand elaboratedMaps with registry-derived entries so that copy-ref names
+    // (e.g. "Floor3 using Floor2") are resolvable during transport elaboration.
+    val derivedMaps: Map[String, TopoMapValue] = metadata.submapRefRegistry.submapUsages.flatMap {
+      case (baseRef, userNames) =>
+        elaboratedMaps.get(baseRef.name) match {
+          case Some(baseMapVal) =>
+            userNames.map { userName => userName -> baseMapVal.copy(name = userName) }
+          case None => List.empty
+        }
+    }.toMap
 
-    val topoEnvForTransport = TopoEnvironment(Environment.empty, Map.empty, Map.empty, elaboratedMaps.toMap)
+    val topoEnvForTransport = TopoEnvironment(Environment.empty, Map.empty, Map.empty, elaboratedMaps.toMap ++ derivedMaps)
 
     for (transName <- transFiles) {
       val transCodeOption = scalaFiles.get(transName + ".ttr").orElse(scalaFiles.get(transName))
@@ -170,9 +199,32 @@ class TopoScriptCompiler() {
     pprintln(elaboratedTransports)
 
     // 4. Convert to toponavi-core Data Structures
-    val navigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
+    val baseNavigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
       name -> buildNavigationGraph(mapVal)
     }.toMap
+
+    // Apply SubmapRefRegistry: for each "submap X using Y", register X as a copy of Y's graph
+    val navigationGraphs = baseNavigationGraphs ++ metadata.submapRefRegistry.submapUsages.flatMap {
+      case (baseRef, userNames) =>
+        baseNavigationGraphs.get(baseRef.name) match {
+          case Some(baseGraph) =>
+            userNames.map { userName =>
+              val derivedGraph = NavigationGraph(
+                identifier       = userName,
+                nodes            = baseGraph.nodes,
+                adjacencyList    = baseGraph.adjacencyList,
+                reverseAdjacency = baseGraph.reverseAdjacency
+              )
+              metadata.floorPopulation.get(baseGraph).foreach { pop =>
+                metadata.floorPopulation.put(derivedGraph, pop)
+              }
+              userName -> derivedGraph
+            }
+          case None =>
+            println(s"${Console.YELLOW}Warning: Base map '${baseRef.name}' referenced in 'using' clause not found${Console.RESET}")
+            List.empty
+        }
+    }
 
     val linearTransports = elaboratedTransports.map { transVal =>
       buildLinearTransport(transVal, navigationGraphs)
@@ -414,5 +466,5 @@ class TopoScriptCompiler() {
 
 class CompilerMetadataContext() {
   val floorPopulation: mutable.Map[NavigationGraph, Int] = mutable.Map.empty
-  // Sth else in the future
+  var submapRefRegistry: SubmapRefRegistry = SubmapRefRegistry(Map.empty)
 }

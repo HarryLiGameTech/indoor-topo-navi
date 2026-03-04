@@ -1,6 +1,6 @@
 topo-map Floor30(){
 
-    let config: {permResident: Int} = {
+    let params: {permResident: Int} = {
         // mapType = MapType::TransHub,
         permResident = 15 // 15 people always live here
         // rushHour = {

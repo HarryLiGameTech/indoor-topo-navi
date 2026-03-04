@@ -21,8 +21,8 @@ surfaceBody
     ;
 
 globalConfigElement
-    : 'vehicle' ID                                        # GlobalConfigElementVehicleRef
-    | 'submap' ID                                         # GlobalConfigElementSubmapRef
+    : 'vehicle' ID                                         # GlobalConfigElementVehicleRef
+    | 'submap' ID ('using' ID)?                            # GlobalConfigElementSubmapRef
     ;
 
 surfaceBodyElement

@@ -91,7 +91,20 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       .foldLeft(GlobalConfigExpr(List.empty, List.empty)) { (acc, elementCtx) =>
         elementCtx match {
           case submapCtx: GlobalConfigElementSubmapRefContext =>
-            acc.copy(submaps = acc.submaps :+ visitGlobalConfigElementSubmapRef(submapCtx))
+            if (submapCtx.ID().size() == 2) {
+              // 'submap X using Y': X has no own .tmap — it reuses Y's compiled graph.
+              // Do NOT add X to submaps (nothing to parse/elaborate for it).
+              // Record the usage in the registry: Y -> List(..., X)
+              val userName = submapCtx.ID(0).getText
+              val baseName = submapCtx.ID(1).getText
+              val baseRef  = TopoMapRef(baseName) // TopoMapRef is a case class, so equality is structural — getOrElse will find an existing key correctly
+              val existing = acc.submapUsages.getOrElse(baseRef, List.empty)
+              acc.copy(submapUsages = acc.submapUsages + (baseRef -> (existing :+ userName)))
+            } else {
+              // Plain 'submap X': has its own .tmap file, add to submaps for parsing
+              val ref = visitGlobalConfigElementSubmapRef(submapCtx)
+              acc.copy(submaps = acc.submaps :+ ref)
+            }
           case vehicleCtx: GlobalConfigElementVehicleRefContext =>
             acc.copy(vehicles = acc.vehicles :+ visitGlobalConfigElementVehicleRef(vehicleCtx))
           case _ => acc // Ignore other elements
@@ -106,9 +119,19 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
   }
 
   override def visitGlobalConfigElementSubmapRef(ctx: GlobalConfigElementSubmapRefContext): TopoMapRef = {
-    TopoMapRef(
-      name = ctx.ID().getText
-    )
+    if (ctx.ID().size() == 2) {
+      // register in SubmapRefRegistry as kv (TopoMapRef created using ID(1) -> ID(0))
+      TopoMapRef(
+        name = ctx.ID(1).getText
+      )
+    }
+    else {
+      // register in SubmapRefRegistry as kv (TopoMapRef created using using the only ID())
+      TopoMapRef(
+        name = ctx.ID(0).getText
+      )
+    }
+
   }
 
   override def visitSurfaceElementCoreDef(ctx: SurfaceElementCoreDefContext): Environment[Identifier, Type, Expr] = {
