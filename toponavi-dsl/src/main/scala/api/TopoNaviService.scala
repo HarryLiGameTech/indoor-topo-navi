@@ -2,7 +2,11 @@ package api
 
 import compiler.TopoScriptCompiler
 import compiler.CompilationResult
-// Import your pathfinding logic here (e.g. from toponavi-core)
+import enums.RoutePlanningPreferences.MinimizeTime
+import enums.VisitingMode.Normal
+import navigation.RoutePlanner
+import data.TopoNode
+import enums.NavigationError.{ConstraintFailure, InvalidData, NoRouteFound} // Import TopoNode
 
 // TODO: Complete this file
 
@@ -21,33 +25,40 @@ object TopoNaviService {
     }
   }
 
-  // TODO: Check correctness
+
   // 2. Navigation Request
-  // Takes the Code AND the start/end points. Compiles on the fly, finds path, returns String.
+  // Takes the Code AND the start/end points. Compiles on-the-fly, finds path, returns String.
   def findPath(
     files: java.util.Map[String, String],
-    startNode: String,
-    endNode: String
+    startNodeName: String,
+    endNodeName: String    // Changed to TopoNode
   ): String = {
 
     // Step A: Compile
     val result: CompilationResult = compiler.compileProject(files)
 
     // Step B: Locate Nodes in the compiled graphs
-    // (You'll need logic to find which graph contains the start/end nodes)
-    // For example:
-    val startGraph = result.graphs.values.find(_.nodes.exists(_.identifier == startNode))
-    val endGraph   = result.graphs.values.find(_.nodes.exists(_.identifier == endNode))
+    val startGraph = result.graphs.values.find(_.nodes.exists(_.identifier == startNodeName)).getOrElse(throw RuntimeException("RoutePlanner: Source graph not found"))
+    val endGraph   = result.graphs.values.find(_.nodes.exists(_.identifier == endNodeName)).getOrElse(throw RuntimeException("RoutePlanner: Source graph not found"))
 
-    if (startGraph.isEmpty || endGraph.isEmpty) {
-      return s"Error: Nodes $startNode or $endNode not found in any map."
-    }
+//    if (startGraph.isEmpty || endGraph.isEmpty) {
+//      return s"Error: Nodes $startNode or $endNode not found in any map."
+//    }
+
+    val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphs.keys.toList, true) // .toList is incorrect, we need to topologically sort them
 
     // Step C: Execute Pathfinding (Mocking your core logic here)
-    // val path = YourPathFinder.findPath(result.transportGraph, startNode, endNode)
+    val navigationPlan = routePlanner.navigate(startGraph.identifier, endGraph.identifier, startNodeName, endNodeName, Normal, MinimizeTime)
 
     // Step D: Pretty Print
-    // return path.toString
-    s"Path found from $startNode to $endNode via [NodeA, NodeB, Elevator1...]"
+    navigationPlan match {
+      case Left(error) => error match {
+        case NoRouteFound(msg) => s"${msg}"
+        case InvalidData(msg) => s"${msg}"
+        case ConstraintFailure(msg) => s"${msg}"
+        case _ => "Unknown error occurred during navigation"
+      }
+      case Right(plan) => s"${plan.prettyPrint}"
+    }
   }
 }

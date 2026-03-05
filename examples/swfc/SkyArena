@@ -1,5 +1,5 @@
 topo-map SkyArena(){
-    let config: {permResident: Int} = {
+    let params: {permResident: Int} = {
         permResident: 30
     }
 
@@ -53,6 +53,4 @@ topo-map SkyArena(){
     atomic-path [booth_SW <-> booth_NW] {cost = 11}
     atomic-path [booth_SE <-> booth_NE] {cost = 11}
     atomic-path [booth_NW <-> booth_NE] {cost = 10}
-
-
 }

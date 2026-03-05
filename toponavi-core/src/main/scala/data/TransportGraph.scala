@@ -121,17 +121,18 @@ class TransportGraph private(
 
   }
 
-  def findPathFuzzy(
-    startGraph: NavigationGraph,
-    goal: StationNode,
-    floorNameList: List[String],
-    preference: RoutePlanningPreferences,
-    returnIndex: Int
-  ): TransportationPath = {
-    val startNodes = nodes.filter(_.ownerGraph == startGraph)
-    // TODO: Try findPath for all possible combinations
-    TransportationPath(List.empty, List.empty)
-  }
+  // Why did I wrote this exactly??
+//  def findPathFuzzy(
+//    startGraph: NavigationGraph,
+//    goal: StationNode,
+//    floorNameList: List[String],
+//    preference: RoutePlanningPreferences,
+//    returnIndex: Int
+//  ): TransportationPath = {
+//    val startNodes = nodes.filter(_.ownerGraph == startGraph)
+//    // TODO: Try findPath for all possible combinations
+//    TransportationPath(List.empty, List.empty)
+//  }
 
 
   private def heuristic(from: StationNode, to: StationNode, stationNameList: List[String]): Double = {
