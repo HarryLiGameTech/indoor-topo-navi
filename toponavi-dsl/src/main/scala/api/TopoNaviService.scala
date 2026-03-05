@@ -5,10 +5,8 @@ import compiler.CompilationResult
 import enums.RoutePlanningPreferences.MinimizeTime
 import enums.VisitingMode.Normal
 import navigation.RoutePlanner
-import data.TopoNode
-import enums.NavigationError.{ConstraintFailure, InvalidData, NoRouteFound} // Import TopoNode
+import enums.NavigationError.{ConstraintFailure, InvalidData, NoRouteFound}
 
-// TODO: Complete this file
 
 object TopoNaviService {
   private val compiler = new TopoScriptCompiler()
@@ -41,11 +39,7 @@ object TopoNaviService {
     val startGraph = result.graphs.values.find(_.nodes.exists(_.identifier == startNodeName)).getOrElse(throw RuntimeException("RoutePlanner: Source graph not found"))
     val endGraph   = result.graphs.values.find(_.nodes.exists(_.identifier == endNodeName)).getOrElse(throw RuntimeException("RoutePlanner: Source graph not found"))
 
-//    if (startGraph.isEmpty || endGraph.isEmpty) {
-//      return s"Error: Nodes $startNode or $endNode not found in any map."
-//    }
-
-    val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphs.keys.toList, true) // .toList is incorrect, we need to topologically sort them
+    val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphs.keys.toList, true) // TODO: .toList is incorrect, we need to topologically sort them
 
     // Step C: Execute Pathfinding (Mocking your core logic here)
     val navigationPlan = routePlanner.navigate(startGraph.identifier, endGraph.identifier, startNodeName, endNodeName, Normal, MinimizeTime)

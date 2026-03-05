@@ -21,8 +21,8 @@ public class TopoController {
         }
     }
 
-    @PostMapping("/navigate")
-    public ResponseEntity<?> navigate(@RequestBody NavigationRequest request) {
+    @PostMapping("/testNavigate")
+    public ResponseEntity<?> testNavigate(@RequestBody NavigationRequest request) {
         try {
             // Stateless: We compile the code sent in THIS request to find the path
             String pathOutput = TopoNaviService.findPath(
