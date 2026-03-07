@@ -53,6 +53,10 @@ tasks.named('compileScala') {
     dependsOn 'generateGrammarSource'
 }
 
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 test {
     useJUnitPlatform()
 }
