@@ -9,11 +9,21 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
 public class TopoController {
+
+    @GetMapping(value = "test-constraints")
+    public ResponseEntity<?> testConstraints() {
+        try {
+            return ResponseEntity.ok(Map.of("constraint_names", List.of("haveCard", "inEmergency", "nowIsWeekday", "nowIsInOfficeHours")));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
+        }
+    }
 
     // Accept JSON body
     @PostMapping(value = "/validate", consumes = {"application/json", "text/plain", "*/*"})
