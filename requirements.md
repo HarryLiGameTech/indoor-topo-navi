@@ -60,11 +60,11 @@ Users interact exclusively through the platform's frontend — they are **never 
                      │ GitHub API (Installation Token)
 ┌────────────────────▼─────────────────────────────────┐
 │           Platform GitHub Organization                │
-│       (e.g., @toponavi-platform)                      │
+│       (e.g., @toponavi-map-store)                      │
 │                                                       │
-│  toponavi-platform/map-{uuid-A}   🔒 private         │
-│  toponavi-platform/map-{uuid-B}   🔒 private         │
-│  toponavi-platform/map-{uuid-C}   🌐 public          │
+│  toponavi-map-store/map-{uuid-A}   🔒 private         │
+│  toponavi-map-store/map-{uuid-B}   🔒 private         │
+│  toponavi-map-store/map-{uuid-C}   🌐 public          │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -73,7 +73,7 @@ Users interact exclusively through the platform's frontend — they are **never 
 ## 4. GitHub Infrastructure Setup
 
 ### 4.1 GitHub Organization
-- Create a dedicated **GitHub Organization** (e.g., `@toponavi-platform`) owned by the platform admin
+- Create a dedicated **GitHub Organization** (e.g., `@toponavi-map-store`) owned by the platform admin
 - All user-generated sketch-map repos are created under this organization
 - The organization is never directly accessible by end users
 
@@ -131,8 +131,8 @@ Users interact exclusively through the platform's frontend — they are **never 
 ### 6.1 Naming Convention
 Each sketch map gets a platform-internal UUID, mapped to a GitHub repo:
 ```
-GitHub Repo:  toponavi-platform/map-{uuid}
-Example:      toponavi-platform/map-a3f9c21b-4d77-4e12-b892-000abc123def
+GitHub Repo:  toponavi-map-store/map-{uuid}
+Example:      toponavi-map-store/map-a3f9c21b-4d77-4e12-b892-000abc123def
 ```
 
 ### 6.2 Repo File Structure
@@ -188,7 +188,7 @@ CREATE TABLE map_permissions (
 CREATE TABLE maps (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     title           VARCHAR(255),
-    github_repo     VARCHAR(255) UNIQUE,  -- 'toponavi-platform/map-{uuid}'
+    github_repo     VARCHAR(255) UNIQUE,  -- 'toponavi-map-store/map-{uuid}'
     visibility      VARCHAR(20) NOT NULL, -- 'private' | 'private_collab' | 'public'
     owner_user_id   UUID        NOT NULL REFERENCES users(id),
     created_at      TIMESTAMP   NOT NULL DEFAULT now(),
@@ -288,7 +288,7 @@ platform:
     app-id: ${GITHUB_APP_ID}
     private-key: ${GITHUB_APP_PRIVATE_KEY}
     installation-id: ${GITHUB_APP_INSTALLATION_ID}
-    org-name: ${GITHUB_ORG_NAME}   # e.g., "toponavi-platform"
+    org-name: ${GITHUB_ORG_NAME}   # e.g., "toponavi-map-store"
 ```
 
 ---
@@ -296,7 +296,7 @@ platform:
 ## 12. Setup Checklist (One-Time, by Platform Admin)
 
 ```
-[ ] 1. Create GitHub Organization (e.g., @toponavi-platform)
+[ ] 1. Create GitHub Organization (e.g., @toponavi-map-store)
 [ ] 2. Create GitHub OAuth App → store client-id + client-secret as secrets
 [ ] 3. Create GitHub App → download private key (.pem)
 [ ] 4. Install GitHub App on the Organization (grant: Contents R/W, Admin R/W)
@@ -312,7 +312,7 @@ platform:
 
 | | GitHub Side | User (Platform) Side |
 |---|---|---|
-| **Repo owner** | `@toponavi-platform` (org) | "Your map: North Wing v3" |
+| **Repo owner** | `@toponavi-map-store` (org) | "Your map: North Wing v3" |
 | **Committer** | `🤖 toponavi-bot` | "Saved by alice at 14:32" |
 | **File contents** | `map.json` (raw JSON/DSL) | Visual sketch-map canvas |
 | **Version** | Git commit SHA | "Version 5 — north wing update" |

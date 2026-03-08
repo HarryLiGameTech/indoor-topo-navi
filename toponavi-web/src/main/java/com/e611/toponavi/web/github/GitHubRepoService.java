@@ -31,6 +31,11 @@ public class GitHubRepoService {
         this.tokenService = tokenService;
     }
 
+    /** Returns the configured platform organisation name. */
+    public String getOrgName() {
+        return orgName;
+    }
+
     /**
      * Creates a private repository under the platform org.
      *
