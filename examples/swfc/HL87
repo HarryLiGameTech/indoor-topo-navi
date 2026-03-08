@@ -1,0 +1,128 @@
+topo-map HL87(){
+   let params: {permResident: Int} = {
+       permResident = 25
+    }
+  topo-node SH_hall_out
+  topo-node SH_hall
+  topo-node HL_hall_out
+  topo-node HL_hall
+  topo-node lobby_alley_end_L
+  topo-node n_a8a3a36503a14ad4841812fa198c23a0
+  topo-node n_1bb786765bef4124a0174b9754f7faba
+  topo-node toilet_C_out
+  topo-node toilet_D_out
+  topo-node small_stairs_R
+  topo-node service_corridor_A
+  topo-node LS14_hall
+  topo-node FS4_6_hall
+  topo-node ST_A
+  topo-node HS3_4_hall
+  topo-node LS13_hall
+  topo-node FS1_3_hall
+  topo-node ST_B
+  topo-node unk_space_2
+  topo-node kitchen_gate_R2
+  topo-node lobby_alley_end_R
+  topo-node loft_stairs_87
+  topo-node small_stairs_L
+  topo-node lounge_L
+  topo-node lounge_M
+  topo-node lounge_R
+  topo-node toilet_A_out
+  topo-node toilet_B_out
+  topo-node toilet_A
+  topo-node toilet_B
+  topo-node service_corridor_B
+  topo-node kitchen_gate_L1_out
+  topo-node kitchen_gate_L
+  topo-node toilet_C
+  topo-node toilet_D
+  topo-node restaurant_entrance
+  topo-node restaurant_reception
+  topo-node n_d822bb2dd7d747ffb92e3948fa1a8577
+  topo-node hotel_reception
+  topo-node seat_area_M
+  topo-node seat_area_R
+  topo-node prv_room_out
+  topo-node n_ff38536b2bbb45a08bef40ffb09e75ca
+  topo-node prv_room_in
+  topo-node big_table
+  topo-node n_15fc91a376dc45eca0d637ad5fb3b535
+  topo-node n_89d4db9de4fa4d2cb28f30e3ec20cd54
+  topo-node n_b46b9cc133ff4f3ea27ed18eee139c89
+  topo-node n_e9ec35e8ec6b4a529469b2652d99f4f5
+  topo-node prv_lounge_out
+  topo-node prv_lounge
+  topo-node unk_space_4
+  topo-node seat_area_L
+  topo-node kitchen_gate_R1_out
+  topo-node kitchen_gate_R1
+  topo-node unk_space_1
+  topo-node unk_space_3
+  topo-node kitchen_gate_L2_out
+  atomic-path [FS1_3_hall <-> LS13_hall] {cost = 1}
+  atomic-path [ST_B <-> FS1_3_hall] {cost = 3}
+  atomic-path [n_a8a3a36503a14ad4841812fa198c23a0 <-> lobby_alley_end_L] {cost = 3}
+  atomic-path [small_stairs_L <-> SH_hall_out] {cost = 2}
+  atomic-path [HL_hall_out <-> HL_hall] {cost = 3}
+  atomic-path [SH_hall_out <-> SH_hall] {cost = 3}
+  atomic-path [HL_hall_out <-> small_stairs_R] {cost = 2}
+  atomic-path [small_stairs_R <-> service_corridor_A] {cost = 2}
+  atomic-path [service_corridor_A <-> LS14_hall] {cost = 5}
+  atomic-path [LS14_hall <-> FS4_6_hall] {cost = 1}
+  atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
+  atomic-path [small_stairs_R <-> lobby_alley_end_R] {cost = 5}
+  atomic-path [toilet_D_out <-> toilet_D] {cost = 2}
+  atomic-path [toilet_D_out <-> toilet_C_out] {cost = 2}
+  atomic-path [toilet_C_out <-> toilet_C] {cost = 2}
+  atomic-path [toilet_C_out <-> n_1bb786765bef4124a0174b9754f7faba] {cost = 2}
+  atomic-path [lobby_alley_end_L <-> restaurant_entrance] {cost = 2}
+  atomic-path [restaurant_entrance <-> n_1bb786765bef4124a0174b9754f7faba] {cost = 3}
+  atomic-path [restaurant_entrance <-> restaurant_reception] {cost = 7}
+  atomic-path [n_d822bb2dd7d747ffb92e3948fa1a8577 <-> restaurant_reception] {cost = 4}
+  atomic-path [n_d822bb2dd7d747ffb92e3948fa1a8577 <-> toilet_D_out] {cost = 1}
+  atomic-path [LS13_hall <-> HS3_4_hall] {cost = 2}
+  atomic-path [HS3_4_hall <-> unk_space_2] {cost = 5}
+  atomic-path [unk_space_2 <-> kitchen_gate_R2] {cost = 5}
+  atomic-path [lobby_alley_end_R <-> loft_stairs_87] {cost = 4}
+  atomic-path [loft_stairs_87 <-> toilet_B_out] {cost = 4}
+  atomic-path [toilet_B_out <-> toilet_B] {cost = 2}
+  atomic-path [lobby_alley_end_R <-> toilet_A_out] {cost = 4}
+  atomic-path [toilet_A_out <-> toilet_A] {cost = 2}
+  atomic-path [small_stairs_R <-> lounge_R] {cost = 3}
+  atomic-path [lounge_R <-> lounge_M] {cost = 4}
+  atomic-path [lounge_M <-> lounge_L] {cost = 4}
+  atomic-path [lounge_L <-> small_stairs_L] {cost = 3}
+  atomic-path [SH_hall_out <-> hotel_reception] {cost = 2}
+  atomic-path [hotel_reception <-> HL_hall_out] {cost = 2}
+  atomic-path [kitchen_gate_L1_out <-> kitchen_gate_L] {cost = 3}
+  atomic-path [kitchen_gate_L1_out <-> service_corridor_B] {cost = 2}
+  atomic-path [restaurant_reception <-> kitchen_gate_L1_out] {cost = 7}
+  atomic-path [kitchen_gate_L <-> kitchen_gate_R2] {cost = 12}
+  atomic-path [seat_area_M <-> seat_area_R] {cost = 9}
+  atomic-path [restaurant_reception <-> seat_area_M] {cost = 8}
+  atomic-path [kitchen_gate_R2 <-> n_ff38536b2bbb45a08bef40ffb09e75ca] {cost = 3}
+  atomic-path [prv_room_out <-> n_ff38536b2bbb45a08bef40ffb09e75ca] {cost = 3}
+  atomic-path [prv_room_out <-> prv_room_in] {cost = 2}
+  atomic-path [seat_area_R <-> prv_room_out] {cost = 3}
+  atomic-path [service_corridor_B <-> LS13_hall] {cost = 5}
+  atomic-path [prv_room_in <-> big_table] {cost = 2}
+  atomic-path [big_table <-> n_15fc91a376dc45eca0d637ad5fb3b535] {cost = 4}
+  atomic-path [n_15fc91a376dc45eca0d637ad5fb3b535 <-> prv_room_in] {cost = 3}
+  atomic-path [n_15fc91a376dc45eca0d637ad5fb3b535 <-> n_89d4db9de4fa4d2cb28f30e3ec20cd54] {cost = 3}
+  atomic-path [n_89d4db9de4fa4d2cb28f30e3ec20cd54 <-> n_b46b9cc133ff4f3ea27ed18eee139c89] {cost = 5}
+  atomic-path [n_b46b9cc133ff4f3ea27ed18eee139c89 <-> n_e9ec35e8ec6b4a529469b2652d99f4f5] {cost = 3}
+  atomic-path [prv_lounge <-> prv_lounge_out] {cost = 3}
+  atomic-path [prv_lounge_out <-> lobby_alley_end_L] {cost = 3}
+  atomic-path [lobby_alley_end_L <-> small_stairs_L] {cost = 4}
+  atomic-path [unk_space_4 <-> SH_hall] {cost = 3}
+  atomic-path [seat_area_L <-> seat_area_M] {cost = 6}
+  atomic-path [kitchen_gate_R1 <-> kitchen_gate_R1_out] {cost = 3}
+  atomic-path [kitchen_gate_L <-> kitchen_gate_R1] {cost = 9}
+  atomic-path [kitchen_gate_R1 <-> kitchen_gate_R2] {cost = 6}
+  atomic-path [seat_area_R <-> kitchen_gate_R1_out] {cost = 3}
+  atomic-path [unk_space_1 <-> n_d822bb2dd7d747ffb92e3948fa1a8577] {cost = 3}
+  atomic-path [unk_space_2 <-> unk_space_3] {cost = 5}
+  atomic-path [seat_area_M <-> kitchen_gate_L2_out] {cost = 3}
+  atomic-path [kitchen_gate_L2_out <-> kitchen_gate_L] {cost = 3}
+}

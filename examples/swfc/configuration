@@ -1,38 +1,108 @@
 building-includes{
-    submap FloorZ1
-    submap FloorZ2
-    submap FloorZ3
-    submap FloorZ4
-    submap FloorZ5
-    submap FloorZ6
-    submap GuestRoomFloor // 79~84, 88
-
-    submap LowerLobby
-    submap UpperLobby
-    submap SL28
-    submap SL29
-    submap SL52
-    submap SL53
-    submap HL87
-
-    submap RefugeFloor // Except 89!
-    submap Floor3
-    submap Floor4
-    submap Floor5
-    submap Floor85
-    submap Floor86
-    submap Floor89
-    submap Floor90
-    submap Floor91
-    submap HotelBar // 92 and 93
-
-    submap SkyArena // 94
-    submap Floor95
-    submap Floor96
-    submap SkyWalk97
-    submap Floor98 // With lift machine rooms
-    submap Floor99
     submap SkyWalk100
+    submap Floor99
+    submap Floor98 // With lift machine rooms
+    submap SkyWalk97
+    submap Floor96
+    submap Floor95
+    submap SkyArena // 94
+
+    submap Floor93 using HotelBar
+    submap Floor92 using HotelBar
+    submap Floor91
+    submap Floor90
+    submap Floor89
+    submap Floor88 using GuestRoomFloor
+    submap HL87
+    submap Floor86
+    submap Floor85
+    submap Floor84 using GuestRoomFloor
+    submap Floor83 using GuestRoomFloor
+    submap Floor82 using GuestRoomFloor
+    submap Floor81 using GuestRoomFloor
+    submap Floor80 using GuestRoomFloor
+    submap Floor79 using GuestRoomFloor
+    submap Floor78
+
+    submap Floor77 using Zone6
+    submap Floor76 using Zone6
+    submap Floor75 using Zone6
+    submap Floor74 using Zone6
+    submap Floor73 using Zone6
+    submap Floor72 using Zone6
+    submap Floor71 using Zone6
+    submap Floor70 using Zone6
+    submap Floor69 using Zone6
+    submap Floor68 using Zone6
+    submap Floor67 using Zone6
+    submap Floor66 using RefugeFloor
+    submap Floor65 using Zone5
+    submap Floor64 using Zone5
+    submap Floor63 using Zone5
+    submap Floor62 using Zone5
+    submap Floor61 using Zone5
+    submap Floor60 using Zone5
+    submap Floor59 using Zone5
+    submap Floor58 using Zone5
+    submap Floor57 using Zone5
+    submap Floor56 using Zone5
+    submap Floor55 using Zone5
+    submap Floor54 using RefugeFloor
+    submap SL53
+    submap SL52
+    submap Floor51 using Zone4
+    submap Floor50 using Zone4
+    submap Floor49 using Zone4
+    submap Floor48 using Zone4
+    submap Floor47 using Zone4
+    submap Floor46 using Zone4
+    submap Floor45 using Zone4
+    submap Floor44 using Zone4
+    submap Floor43 using Zone4
+    submap Floor42 using RefugeFloor
+    submap Floor41 using Zone3
+    submap Floor40 using Zone3
+    submap Floor39 using Zone3
+    submap Floor38 using Zone3
+    submap Floor37 using Zone3
+    submap Floor36 using Zone3
+    submap Floor35 using Zone3
+    submap Floor34 using Zone3
+    submap Floor33 using Zone3
+    submap Floor32 using Zone3
+    submap Floor31 using Zone3
+    submap Floor30 using RefugeFloor
+    submap SL29
+    submap SL28
+    submap Floor27 using Zone2
+    submap Floor26 using Zone2
+    submap Floor25 using Zone2
+    submap Floor24 using Zone2
+    submap Floor23 using Zone2
+    submap Floor22 using Zone2
+    submap Floor21 using Zone2
+    submap Floor20 using Zone2
+    submap Floor19 using Zone2
+    submap Floor18 using RefugeFloor
+    submap Floor17 using Zone1
+    submap Floor16 using Zone1
+    submap Floor15 using Zone1
+    submap Floor14 using Zone1
+    submap Floor13 using Zone1
+    submap Floor12 using Zone1
+    submap Floor11 using Zone1
+    submap Floor10 using Zone1
+    submap Floor9 using Zone1
+    submap Floor8 using Zone1
+    submap Floor7 using Zone1
+    submap Floor6 using RefugeFloor
+
+    submap Floor5
+    submap Floor4
+    submap Floor3
+
+    submap UpperLobby
+    submap LowerLobby
 
     submap FloorB1
     submap FloorB2
