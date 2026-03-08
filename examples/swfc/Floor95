@@ -1,5 +1,5 @@
 // Written based on photos and video of the floor. 
-topo-map Floor95(){
+topo-sketchMap Floor95(){
     let config: {permResident: Int} = {
         permResident: 20
     }

@@ -1,7 +1,7 @@
 package com.e611.toponavi.web.map;
 
 import com.e611.toponavi.web.dto.*;
-import com.e611.toponavi.web.model.Map;
+import com.e611.toponavi.web.model.SketchMap;
 import com.e611.toponavi.web.model.User;
 import com.e611.toponavi.web.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -50,8 +50,8 @@ public class MapController {
     @PostMapping
     public ResponseEntity<MapSummaryDto> createMap(@AuthenticationPrincipal User user,
                                                    @RequestBody CreateMapRequest req) {
-        Map map = mapService.createMap(user, req.title, req.initialMapJson);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toSummary(map));
+        SketchMap sketchMap = mapService.createMap(user, req.title, req.initialMapJson);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toSummary(sketchMap));
     }
 
     /**
@@ -72,9 +72,9 @@ public class MapController {
     @GetMapping("/{id}")
     public ResponseEntity<MapDetailDto> getMap(@AuthenticationPrincipal User user,
                                                @PathVariable UUID id) {
-        Map map = mapService.getMap(user, id);
+        SketchMap sketchMap = mapService.getMap(user, id);
         String content = mapService.getMapContent(user, id);
-        return ResponseEntity.ok(new MapDetailDto(toSummary(map), content));
+        return ResponseEntity.ok(new MapDetailDto(toSummary(sketchMap), content));
     }
 
     /**
@@ -85,8 +85,8 @@ public class MapController {
     public ResponseEntity<MapSummaryDto> saveMap(@AuthenticationPrincipal User user,
                                                   @PathVariable UUID id,
                                                   @RequestBody SaveMapRequest req) {
-        Map map = mapService.saveMap(user, id, req.mapJson, req.label);
-        return ResponseEntity.ok(toSummary(map));
+        SketchMap sketchMap = mapService.saveMap(user, id, req.mapJson, req.label);
+        return ResponseEntity.ok(toSummary(sketchMap));
     }
 
     /**
@@ -112,8 +112,8 @@ public class MapController {
     public ResponseEntity<MapSummaryDto> setVisibility(@AuthenticationPrincipal User user,
                                                         @PathVariable UUID id,
                                                         @RequestBody VisibilityRequest req) {
-        Map map = mapService.setVisibility(user, id, req.visibility);
-        return ResponseEntity.ok(toSummary(map));
+        SketchMap sketchMap = mapService.setVisibility(user, id, req.visibility);
+        return ResponseEntity.ok(toSummary(sketchMap));
     }
 
     // -------------------------------------------------------------------------
@@ -166,8 +166,8 @@ public class MapController {
     public ResponseEntity<Void> addCollaborator(@AuthenticationPrincipal User user,
                                                 @PathVariable UUID id,
                                                 @RequestBody CollaboratorRequest req) {
-        Map map = mapService.requireMap(id);
-        if (!accessService.isOwner(user, map)) {
+        SketchMap sketchMap = mapService.requireMap(id);
+        if (!accessService.isOwner(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can manage collaborators");
         }
         UUID granteeId = UUID.fromString(req.userId);
@@ -186,8 +186,8 @@ public class MapController {
     public ResponseEntity<Void> removeCollaborator(@AuthenticationPrincipal User user,
                                                     @PathVariable UUID id,
                                                     @PathVariable UUID userId) {
-        Map map = mapService.requireMap(id);
-        if (!accessService.isOwner(user, map)) {
+        SketchMap sketchMap = mapService.requireMap(id);
+        if (!accessService.isOwner(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can manage collaborators");
         }
         accessService.revokePermission(id, userId);
@@ -198,14 +198,14 @@ public class MapController {
     // DTO helpers
     // -------------------------------------------------------------------------
 
-    private MapSummaryDto toSummary(Map map) {
+    private MapSummaryDto toSummary(SketchMap sketchMap) {
         return new MapSummaryDto(
-                map.getId(),
-                map.getTitle(),
-                map.getVisibility(),
-                map.getOwner().getGithubLogin(),
-                map.getCreatedAt(),
-                map.getUpdatedAt()
+                sketchMap.getId(),
+                sketchMap.getTitle(),
+                sketchMap.getVisibility(),
+                sketchMap.getOwner().getGithubLogin(),
+                sketchMap.getCreatedAt(),
+                sketchMap.getUpdatedAt()
         );
     }
 

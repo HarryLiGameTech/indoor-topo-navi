@@ -2,10 +2,10 @@ package com.e611.toponavi.web.map;
 
 import com.e611.toponavi.web.github.GitHubContentsService;
 import com.e611.toponavi.web.github.GitHubRepoService;
-import com.e611.toponavi.web.model.Map;
+import com.e611.toponavi.web.model.SketchMap;
 import com.e611.toponavi.web.model.User;
-import com.e611.toponavi.web.repository.MapPermissionRepository;
-import com.e611.toponavi.web.repository.MapRepository;
+import com.e611.toponavi.web.repository.SketchMapPermissionRepository;
+import com.e611.toponavi.web.repository.SketchMapRepository;
 import com.e611.toponavi.web.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,20 +22,20 @@ import java.util.UUID;
 @Service
 public class MapService {
 
-    private final MapRepository mapRepository;
-    private final MapPermissionRepository permissionRepository;
+    private final SketchMapRepository sketchMapRepository;
+    private final SketchMapPermissionRepository permissionRepository;
     private final UserRepository userRepository;
     private final MapAccessService accessService;
     private final GitHubRepoService repoService;
     private final GitHubContentsService contentsService;
 
-    public MapService(MapRepository mapRepository,
-                      MapPermissionRepository permissionRepository,
+    public MapService(SketchMapRepository sketchMapRepository,
+                      SketchMapPermissionRepository permissionRepository,
                       UserRepository userRepository,
                       MapAccessService accessService,
                       GitHubRepoService repoService,
                       GitHubContentsService contentsService) {
-        this.mapRepository = mapRepository;
+        this.sketchMapRepository = sketchMapRepository;
         this.permissionRepository = permissionRepository;
         this.userRepository = userRepository;
         this.accessService = accessService;
@@ -46,8 +46,8 @@ public class MapService {
     /**
      * Lists all maps that the given user can access (owned + shared).
      */
-    public List<Map> listAccessibleMaps(User user) {
-        return mapRepository.findAccessibleByUserId(user.getId());
+    public List<SketchMap> listAccessibleMaps(User user) {
+        return sketchMapRepository.findAccessibleByUserId(user.getId());
     }
 
     /**
@@ -57,7 +57,7 @@ public class MapService {
      * 3. Persists Map entity in the DB
      */
     @Transactional
-    public Map createMap(User owner, String title, String initialMapJson) {
+    public SketchMap createMap(User owner, String title, String initialMapJson) {
         UUID mapId = UUID.randomUUID();
         String repoName = "map-" + mapId;
 
@@ -74,52 +74,52 @@ public class MapService {
                 "[platform] " + owner.getGithubLogin() + " created map");
 
         // Persist
-        Map map = new Map();
-        map.setId(mapId);
-        map.setTitle(title);
-        map.setGithubRepo(repoService.getOrgName() + "/" + repoName);
-        map.setVisibility("private");
-        map.setOwner(owner);
-        return mapRepository.save(map);
+        SketchMap sketchMap = new SketchMap();
+        sketchMap.setId(mapId);
+        sketchMap.setTitle(title);
+        sketchMap.setGithubRepo(repoService.getOrgName() + "/" + repoName);
+        sketchMap.setVisibility("private");
+        sketchMap.setOwner(owner);
+        return sketchMapRepository.save(sketchMap);
     }
 
     /**
      * Returns map data (map.json content) for the given map, if the user has read access.
      */
     public String getMapContent(User user, UUID mapId) {
-        Map map = requireMap(mapId);
-        if (!accessService.canRead(user, map)) {
+        SketchMap sketchMap = requireMap(mapId);
+        if (!accessService.canRead(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
-        String repoName = extractRepoName(map.getGithubRepo());
+        String repoName = extractRepoName(sketchMap.getGithubRepo());
         return contentsService.readFile(repoName, "map.json");
     }
 
     /**
      * Returns the Map entity if the user has read access.
      */
-    public Map getMap(User user, UUID mapId) {
-        Map map = requireMap(mapId);
-        if (!accessService.canRead(user, map)) {
+    public SketchMap getMap(User user, UUID mapId) {
+        SketchMap sketchMap = requireMap(mapId);
+        if (!accessService.canRead(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
-        return map;
+        return sketchMap;
     }
 
     /**
      * Saves (commits) updated map data. Triggers a bot commit to GitHub.
      */
     @Transactional
-    public Map saveMap(User user, UUID mapId, String mapJson, String label) {
-        Map map = requireMap(mapId);
-        if (!accessService.canWrite(user, map)) {
+    public SketchMap saveMap(User user, UUID mapId, String mapJson, String label) {
+        SketchMap sketchMap = requireMap(mapId);
+        if (!accessService.canWrite(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
-        String repoName = extractRepoName(map.getGithubRepo());
+        String repoName = extractRepoName(sketchMap.getGithubRepo());
         String commitMsg = "[platform] " + user.getGithubLogin() + " saved"
                 + (label != null && !label.isBlank() ? ": " + label : "");
         contentsService.writeFile(repoName, "map.json", mapJson, commitMsg);
-        return mapRepository.save(map);
+        return sketchMapRepository.save(sketchMap);
     }
 
     /**
@@ -127,38 +127,38 @@ public class MapService {
      */
     @Transactional
     public void deleteMap(User user, UUID mapId) {
-        Map map = requireMap(mapId);
-        if (!accessService.isOwner(user, map)) {
+        SketchMap sketchMap = requireMap(mapId);
+        if (!accessService.isOwner(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can delete a map");
         }
-        String repoName = extractRepoName(map.getGithubRepo());
+        String repoName = extractRepoName(sketchMap.getGithubRepo());
         repoService.deleteRepo(repoName);
         permissionRepository.deleteByMapId(mapId);
-        mapRepository.delete(map);
+        sketchMapRepository.delete(sketchMap);
     }
 
     /**
      * Changes the visibility of a map, reflected immediately on GitHub.
      */
     @Transactional
-    public Map setVisibility(User user, UUID mapId, String visibility) {
-        Map map = requireMap(mapId);
-        if (!accessService.isOwner(user, map)) {
+    public SketchMap setVisibility(User user, UUID mapId, String visibility) {
+        SketchMap sketchMap = requireMap(mapId);
+        if (!accessService.isOwner(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can change visibility");
         }
         boolean isPublic = "public".equals(visibility);
-        String repoName = extractRepoName(map.getGithubRepo());
+        String repoName = extractRepoName(sketchMap.getGithubRepo());
         repoService.setRepoVisibility(repoName, isPublic);
-        map.setVisibility(visibility);
-        return mapRepository.save(map);
+        sketchMap.setVisibility(visibility);
+        return sketchMapRepository.save(sketchMap);
     }
 
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
-    public Map requireMap(UUID mapId) {
-        return mapRepository.findById(mapId)
+    public SketchMap requireMap(UUID mapId) {
+        return sketchMapRepository.findById(mapId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Map not found"));
     }
 

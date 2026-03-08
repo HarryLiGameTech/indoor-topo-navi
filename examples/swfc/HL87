@@ -1,4 +1,4 @@
-topo-map HL87(){
+topo-sketchMap HL87(){
    let params: {permResident: Int} = {
        permResident = 25
     }

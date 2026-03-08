@@ -6,7 +6,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "maps")
-public class Map {
+public class SketchMap {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -37,7 +37,7 @@ public class Map {
         this.updatedAt = Instant.now();
     }
 
-    public Map() {}
+    public SketchMap() {}
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

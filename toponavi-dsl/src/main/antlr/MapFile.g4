@@ -7,7 +7,7 @@ grammar MapFile;
 // Entry point
 surfaceDef
     : 'root' ID '(' paramList? ')' surfaceBody                        # SurfaceDefRootExpr
-    | 'topo-map' ID '(' paramList? ')' surfaceBody                    # SurfaceDefTopoMapExpr
+    | 'topo-sketchMap' ID '(' paramList? ')' surfaceBody                    # SurfaceDefTopoMapExpr
     | 'transport' ID 'is' expr surfaceBody                            # SurfaceDefTransportExpr
     | 'building-includes' globalConfigBody                            # SurfaceDefGlobalConfigExpr
     ;

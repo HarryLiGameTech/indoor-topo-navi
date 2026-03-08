@@ -1,4 +1,4 @@
-topo-map FloorB2() { 
+topo-sketchMap FloorB2() {
 
     let params: {permResident: Int} = {
         permResident = 5

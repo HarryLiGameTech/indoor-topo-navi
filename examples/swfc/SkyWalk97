@@ -1,4 +1,4 @@
-topo-map SkyWalk97(){
+topo-sketchMap SkyWalk97(){
     let config: {permResident: Int} = {
         permResident: 20
     }

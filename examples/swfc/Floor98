@@ -1,4 +1,4 @@
-topo-map Floor98(){
+topo-sketchMap Floor98(){
     let config: {permResident: Int} = {
         permResident: 0
     }

@@ -1,4 +1,4 @@
-topo-map SL52(){
+topo-sketchMap SL52(){
    let params: {permResident: Int} = {
        permResident = 25
     }

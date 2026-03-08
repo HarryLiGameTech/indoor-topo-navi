@@ -1,4 +1,4 @@
-topo-map Floor91(){
+topo-sketchMap Floor91(){
    let params: {permResident: Int} = {
        permResident = 25
     }

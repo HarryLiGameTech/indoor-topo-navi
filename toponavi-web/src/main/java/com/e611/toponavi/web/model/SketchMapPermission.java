@@ -8,8 +8,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "map_permissions")
-@IdClass(MapPermission.PK.class)
-public class MapPermission {
+@IdClass(SketchMapPermission.PK.class)
+public class SketchMapPermission {
 
     /** "owner" | "editor" | "viewer" */
     public static final String ROLE_OWNER  = "owner";
@@ -30,9 +30,9 @@ public class MapPermission {
     @Column(name = "granted_at", nullable = false, updatable = false)
     private Instant grantedAt = Instant.now();
 
-    public MapPermission() {}
+    public SketchMapPermission() {}
 
-    public MapPermission(UUID mapId, UUID userId, String role) {
+    public SketchMapPermission(UUID mapId, UUID userId, String role) {
         this.mapId = mapId;
         this.userId = userId;
         this.role = role;

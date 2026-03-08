@@ -9,7 +9,7 @@
 
 ## 1. Project Overview
 
-This platform is a **collaborative indoor sketch-map drawing tool** where users can create, edit, share, and version-control topological navigation maps (sketch maps). The platform leverages **GitHub as the storage and version-control engine**, while the application backend retains **full platform control** over all data.
+This platform is a **collaborative indoor sketch-sketchMap drawing tool** where users can create, edit, share, and version-control topological navigation maps (sketch maps). The platform leverages **GitHub as the storage and version-control engine**, while the application backend retains **full platform control** over all data.
 
 Users interact exclusively through the platform's frontend — they are **never exposed to GitHub directly**.
 
@@ -19,11 +19,11 @@ Users interact exclusively through the platform's frontend — they are **never 
 
 | Principle | Description |
 |---|---|
-| **Platform-owned repos** | All sketch-map repos live under a **platform-owned GitHub Organization**, not under individual user accounts |
+| **Platform-owned repos** | All sketch-sketchMap repos live under a **platform-owned GitHub Organization**, not under individual user accounts |
 | **Bot-only Git actor** | All GitHub API calls (push, create, delete repos) are made exclusively by the **platform's GitHub App bot** |
-| **User identity is internal** | Users authenticate via GitHub OAuth to identify themselves, but their GitHub accounts have no direct access to any sketch-map repo |
+| **User identity is internal** | Users authenticate via GitHub OAuth to identify themselves, but their GitHub accounts have no direct access to any sketch-sketchMap repo |
 | **Dual-layer access control** | Permissions are enforced at the **platform DB layer** first, then optionally reflected on GitHub |
-| **GitHub as storage backend** | GitHub repos store sketch-map file content and provide version history; all metadata lives in the platform DB |
+| **GitHub as storage backend** | GitHub repos store sketch-sketchMap file content and provide version history; all metadata lives in the platform DB |
 
 ---
 
@@ -32,7 +32,7 @@ Users interact exclusively through the platform's frontend — they are **never 
 ```
 ┌──────────────────────────────────────────────────────┐
 │                    Frontend (UI)                      │
-│         Sketch-map drawing canvas + controls          │
+│         Sketch-sketchMap drawing canvas + controls          │
 │   Users log in via GitHub OAuth — identity only       │
 └────────────────────┬─────────────────────────────────┘
                      │ REST API
@@ -60,11 +60,11 @@ Users interact exclusively through the platform's frontend — they are **never 
                      │ GitHub API (Installation Token)
 ┌────────────────────▼─────────────────────────────────┐
 │           Platform GitHub Organization                │
-│       (e.g., @toponavi-map-store)                      │
+│       (e.g., @toponavi-sketchMap-store)                      │
 │                                                       │
-│  toponavi-map-store/map-{uuid-A}   🔒 private         │
-│  toponavi-map-store/map-{uuid-B}   🔒 private         │
-│  toponavi-map-store/map-{uuid-C}   🌐 public          │
+│  toponavi-sketchMap-store/sketchMap-{uuid-A}   🔒 private         │
+│  toponavi-sketchMap-store/sketchMap-{uuid-B}   🔒 private         │
+│  toponavi-sketchMap-store/sketchMap-{uuid-C}   🌐 public          │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -73,8 +73,8 @@ Users interact exclusively through the platform's frontend — they are **never 
 ## 4. GitHub Infrastructure Setup
 
 ### 4.1 GitHub Organization
-- Create a dedicated **GitHub Organization** (e.g., `@toponavi-map-store`) owned by the platform admin
-- All user-generated sketch-map repos are created under this organization
+- Create a dedicated **GitHub Organization** (e.g., `@toponavi-sketchMap-store`) owned by the platform admin
+- All user-generated sketch-sketchMap repos are created under this organization
 - The organization is never directly accessible by end users
 
 ### 4.2 GitHub App (Bot)
@@ -129,16 +129,16 @@ Users interact exclusively through the platform's frontend — they are **never 
 ## 6. Sketch-Map Repository Model
 
 ### 6.1 Naming Convention
-Each sketch map gets a platform-internal UUID, mapped to a GitHub repo:
+Each sketch sketchMap gets a platform-internal UUID, mapped to a GitHub repo:
 ```
-GitHub Repo:  toponavi-map-store/map-{uuid}
-Example:      toponavi-map-store/map-a3f9c21b-4d77-4e12-b892-000abc123def
+GitHub Repo:  toponavi-sketchMap-store/sketchMap-{uuid}
+Example:      toponavi-sketchMap-store/sketchMap-a3f9c21b-4d77-4e12-b892-000abc123def
 ```
 
 ### 6.2 Repo File Structure
 ```
-map-{uuid}/
-├── map.json          # Serialized sketch map data (nodes, edges, rooms, etc.)
+sketchMap-{uuid}/
+├── sketchMap.json          # Serialized sketch sketchMap data (nodes, edges, rooms, etc.)
 ├── metadata.json     # Platform metadata (title, created_by, tags)
 └── history/          # Optional: exported snapshots or named versions
 ```
@@ -158,10 +158,10 @@ map-{uuid}/
 
 | User Action | GitHub Action (by bot) |
 |---|---|
-| "Save" sketch map | Commit updated `map.json` to `main` branch |
+| "Save" sketch sketchMap | Commit updated `sketchMap.json` to `main` branch |
 | "Save Draft" | Commit to a feature branch `draft/{uuid}` |
 | "View History" | `GET /repos/{org}/{repo}/commits` — displayed in frontend |
-| "Restore Version" | Bot creates a new commit reverting to target commit's `map.json` |
+| "Restore Version" | Bot creates a new commit reverting to target commit's `sketchMap.json` |
 | "Named Checkpoint" | Bot creates a Git tag `v{n}-{label}` |
 
 Commit messages follow the format:
@@ -188,7 +188,7 @@ CREATE TABLE map_permissions (
 CREATE TABLE maps (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     title           VARCHAR(255),
-    github_repo     VARCHAR(255) UNIQUE,  -- 'toponavi-map-store/map-{uuid}'
+    github_repo     VARCHAR(255) UNIQUE,  -- 'toponavi-sketchMap-store/sketchMap-{uuid}'
     visibility      VARCHAR(20) NOT NULL, -- 'private' | 'private_collab' | 'public'
     owner_user_id   UUID        NOT NULL REFERENCES users(id),
     created_at      TIMESTAMP   NOT NULL DEFAULT now(),
@@ -207,7 +207,7 @@ CREATE TABLE users (
 ```
 
 ### Layer 2: GitHub (storage enforcement)
-- All sketch-map repos are **private by default**
+- All sketch-sketchMap repos are **private by default**
 - The **only actor with write access** is the GitHub App bot
 - GitHub repo visibility is updated by the bot when the platform-level visibility changes
 - End users are **never added as GitHub collaborators** (unless a future "power user" mode is explicitly designed)
@@ -220,8 +220,8 @@ Based on the existing multi-module Gradle structure:
 
 | Module | Responsibility |
 |---|---|
-| `toponavi-core` | Domain model: sketch-map graph, nodes, edges, rooms, topology data structures |
-| `toponavi-dsl` | DSL compiler/parser for sketch-map definitions (existing functionality) |
+| `toponavi-core` | Domain model: sketch-sketchMap graph, nodes, edges, rooms, topology data structures |
+| `toponavi-dsl` | DSL compiler/parser for sketch-sketchMap definitions (existing functionality) |
 | `toponavi-web` | Spring Boot REST API, GitHub integration services, auth, access control |
 
 ### New Services to Implement in `toponavi-web`
@@ -235,8 +235,8 @@ toponavi-web/src/main/java/.../
 ├── github/
 │   ├── GitHubAppTokenService.java       # JWT → Installation Token exchange
 │   ├── GitHubRepoService.java           # Create/delete/update repos
-│   └── GitHubContentsService.java       # Read/write files (map.json)
-├── map/
+│   └── GitHubContentsService.java       # Read/write files (sketchMap.json)
+├── sketchMap/
 │   ├── MapController.java               # REST endpoints for sketch maps
 │   ├── MapService.java                  # Business logic + permission checks
 │   ├── MapVersionService.java           # Version history, restore, tags
@@ -255,14 +255,14 @@ toponavi-web/src/main/java/.../
 |---|---|---|
 | `GET` | `/auth/github` | Redirect to GitHub OAuth |
 | `GET` | `/login/oauth2/code/github` | OAuth callback, returns platform JWT |
-| `POST` | `/api/maps` | Create new sketch map (+ GitHub repo) |
+| `POST` | `/api/maps` | Create new sketch sketchMap (+ GitHub repo) |
 | `GET` | `/api/maps` | List maps accessible to current user |
-| `GET` | `/api/maps/{id}` | Get map data |
-| `PUT` | `/api/maps/{id}` | Save/update map (triggers bot commit) |
-| `DELETE` | `/api/maps/{id}` | Delete map (+ GitHub repo deletion) |
+| `GET` | `/api/maps/{id}` | Get sketchMap data |
+| `PUT` | `/api/maps/{id}` | Save/update sketchMap (triggers bot commit) |
+| `DELETE` | `/api/maps/{id}` | Delete sketchMap (+ GitHub repo deletion) |
 | `GET` | `/api/maps/{id}/versions` | List version history |
 | `POST` | `/api/maps/{id}/restore/{commitSha}` | Restore to a previous version |
-| `PUT` | `/api/maps/{id}/visibility` | Change map visibility |
+| `PUT` | `/api/maps/{id}/visibility` | Change sketchMap visibility |
 | `POST` | `/api/maps/{id}/collaborators` | Add a collaborator |
 | `DELETE` | `/api/maps/{id}/collaborators/{userId}` | Remove a collaborator |
 
@@ -288,7 +288,7 @@ platform:
     app-id: ${GITHUB_APP_ID}
     private-key: ${GITHUB_APP_PRIVATE_KEY}
     installation-id: ${GITHUB_APP_INSTALLATION_ID}
-    org-name: ${GITHUB_ORG_NAME}   # e.g., "toponavi-map-store"
+    org-name: ${GITHUB_ORG_NAME}   # e.g., "toponavi-sketchMap-store"
 ```
 
 ---
@@ -296,7 +296,7 @@ platform:
 ## 12. Setup Checklist (One-Time, by Platform Admin)
 
 ```
-[ ] 1. Create GitHub Organization (e.g., @toponavi-map-store)
+[ ] 1. Create GitHub Organization (e.g., @toponavi-sketchMap-store)
 [ ] 2. Create GitHub OAuth App → store client-id + client-secret as secrets
 [ ] 3. Create GitHub App → download private key (.pem)
 [ ] 4. Install GitHub App on the Organization (grant: Contents R/W, Admin R/W)
@@ -312,9 +312,9 @@ platform:
 
 | | GitHub Side | User (Platform) Side |
 |---|---|---|
-| **Repo owner** | `@toponavi-map-store` (org) | "Your map: North Wing v3" |
+| **Repo owner** | `@toponavi-sketchMap-store` (org) | "Your sketchMap: North Wing v3" |
 | **Committer** | `🤖 toponavi-bot` | "Saved by alice at 14:32" |
-| **File contents** | `map.json` (raw JSON/DSL) | Visual sketch-map canvas |
+| **File contents** | `sketchMap.json` (raw JSON/DSL) | Visual sketch-sketchMap canvas |
 | **Version** | Git commit SHA | "Version 5 — north wing update" |
 | **Visibility** | `private` / `public` GitHub repo | "Private" / "Public" toggle |
 | **Access control** | No collaborators (bot only) | "Share with bob (editor)" |
@@ -324,6 +324,6 @@ platform:
 ## 14. Out of Scope (Current Version)
 
 - Real-time collaborative editing (WebSocket / CRDT) — future feature
-- Users directly cloning/pushing to sketch-map repos via Git CLI
+- Users directly cloning/pushing to sketch-sketchMap repos via Git CLI
 - Self-hosted GitHub Enterprise support
 - Mobile native applications

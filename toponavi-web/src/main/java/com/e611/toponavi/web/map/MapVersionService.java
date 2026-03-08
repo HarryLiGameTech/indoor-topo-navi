@@ -1,7 +1,7 @@
 package com.e611.toponavi.web.map;
 
 import com.e611.toponavi.web.github.GitHubContentsService;
-import com.e611.toponavi.web.model.Map;
+import com.e611.toponavi.web.model.SketchMap;
 import com.e611.toponavi.web.model.User;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,11 +39,11 @@ public class MapVersionService {
      * Each entry: { sha, message, author, date }
      */
     public List<java.util.Map<String, String>> listVersions(User user, UUID mapId) {
-        Map map = mapService.requireMap(mapId);
-        if (!accessService.canRead(user, map)) {
+        SketchMap sketchMap = mapService.requireMap(mapId);
+        if (!accessService.canRead(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
-        String repoName = extractRepoName(map.getGithubRepo());
+        String repoName = extractRepoName(sketchMap.getGithubRepo());
         String rawJson = contentsService.listCommits(repoName);
         return parseCommits(rawJson);
     }
@@ -53,11 +53,11 @@ public class MapVersionService {
      * with that commit's map.json content.
      */
     public void restoreVersion(User user, UUID mapId, String commitSha) {
-        Map map = mapService.requireMap(mapId);
-        if (!accessService.canWrite(user, map)) {
+        SketchMap sketchMap = mapService.requireMap(mapId);
+        if (!accessService.canWrite(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
-        String repoName = extractRepoName(map.getGithubRepo());
+        String repoName = extractRepoName(sketchMap.getGithubRepo());
         String historicContent = contentsService.readFileAtCommit(repoName, "map.json", commitSha);
         if (historicContent == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -72,11 +72,11 @@ public class MapVersionService {
      * Creates a named checkpoint (Git tag) at the latest commit of the map.
      */
     public void createCheckpoint(User user, UUID mapId, String label) {
-        Map map = mapService.requireMap(mapId);
-        if (!accessService.canWrite(user, map)) {
+        SketchMap sketchMap = mapService.requireMap(mapId);
+        if (!accessService.canWrite(user, sketchMap)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
-        String repoName = extractRepoName(map.getGithubRepo());
+        String repoName = extractRepoName(sketchMap.getGithubRepo());
         String latestSha = getLatestCommitSha(repoName);
         String tagName = "checkpoint-" + label.replaceAll("[^a-zA-Z0-9._-]", "-");
         contentsService.createTag(repoName, tagName, latestSha);

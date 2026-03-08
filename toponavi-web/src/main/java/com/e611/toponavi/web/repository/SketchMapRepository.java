@@ -1,6 +1,6 @@
 package com.e611.toponavi.web.repository;
 
-import com.e611.toponavi.web.model.Map;
+import com.e611.toponavi.web.model.SketchMap;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface MapRepository extends JpaRepository<Map, UUID> {
+public interface SketchMapRepository extends JpaRepository<SketchMap, UUID> {
 
-    List<Map> findByOwnerId(UUID ownerId);
+    List<SketchMap> findByOwnerId(UUID ownerId);
 
     /**
      * Returns all maps where the given user has any permission entry
@@ -26,6 +26,6 @@ public interface MapRepository extends JpaRepository<Map, UUID> {
                WHERE p.mapId = m.id AND p.userId = :userId
            )
     """)
-    List<Map> findAccessibleByUserId(@Param("userId") UUID userId);
+    List<SketchMap> findAccessibleByUserId(@Param("userId") UUID userId);
 }
 

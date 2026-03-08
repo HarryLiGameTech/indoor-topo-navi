@@ -42,3 +42,8 @@ bin/
 .DS_Store
 
 .idea
+
+### Secrets — never commit real values ###
+.env
+.env.example
+*.pem

@@ -1,6 +1,6 @@
 package com.e611.toponavi.web.repository;
 
-import com.e611.toponavi.web.model.MapPermission;
+import com.e611.toponavi.web.model.SketchMapPermission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,11 +9,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface MapPermissionRepository extends JpaRepository<MapPermission, MapPermission.PK> {
+public interface SketchMapPermissionRepository extends JpaRepository<SketchMapPermission, SketchMapPermission.PK> {
 
-    List<MapPermission> findByMapId(UUID mapId);
+    List<SketchMapPermission> findByMapId(UUID mapId);
 
-    Optional<MapPermission> findByMapIdAndUserId(UUID mapId, UUID userId);
+    Optional<SketchMapPermission> findByMapIdAndUserId(UUID mapId, UUID userId);
 
     void deleteByMapIdAndUserId(UUID mapId, UUID userId);
 

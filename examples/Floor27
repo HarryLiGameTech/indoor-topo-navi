@@ -1,4 +1,4 @@
-topo-map Floor27() { // Each floor in Zone 2
+topo-sketchMap Floor27() { // Each floor in Zone 2
 
     let params: {permResident: Int} = {
         permResident = 120

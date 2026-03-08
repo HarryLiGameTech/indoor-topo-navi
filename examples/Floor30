@@ -1,4 +1,4 @@
-topo-map Floor30(){
+topo-sketchMap Floor30(){
 
     let params: {permResident: Int} = {
         // mapType = MapType::TransHub,

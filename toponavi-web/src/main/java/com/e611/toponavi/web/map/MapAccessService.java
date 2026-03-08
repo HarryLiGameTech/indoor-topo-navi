@@ -1,10 +1,10 @@
 package com.e611.toponavi.web.map;
 
-import com.e611.toponavi.web.model.Map;
-import com.e611.toponavi.web.model.MapPermission;
+import com.e611.toponavi.web.model.SketchMap;
+import com.e611.toponavi.web.model.SketchMapPermission;
 import com.e611.toponavi.web.model.User;
-import com.e611.toponavi.web.repository.MapPermissionRepository;
-import com.e611.toponavi.web.repository.MapRepository;
+import com.e611.toponavi.web.repository.SketchMapPermissionRepository;
+import com.e611.toponavi.web.repository.SketchMapRepository;
 import com.e611.toponavi.web.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,36 +18,36 @@ import java.util.UUID;
 @Service
 public class MapAccessService {
 
-    private final MapRepository mapRepository;
-    private final MapPermissionRepository permissionRepository;
+    private final SketchMapRepository sketchMapRepository;
+    private final SketchMapPermissionRepository permissionRepository;
     private final UserRepository userRepository;
 
-    public MapAccessService(MapRepository mapRepository,
-                            MapPermissionRepository permissionRepository,
+    public MapAccessService(SketchMapRepository sketchMapRepository,
+                            SketchMapPermissionRepository permissionRepository,
                             UserRepository userRepository) {
-        this.mapRepository = mapRepository;
+        this.sketchMapRepository = sketchMapRepository;
         this.permissionRepository = permissionRepository;
         this.userRepository = userRepository;
     }
 
     /** Returns true if the user can read the map (owner, editor, viewer, or public map). */
-    public boolean canRead(User user, Map map) {
-        if ("public".equals(map.getVisibility())) return true;
-        if (map.getOwner().getId().equals(user.getId())) return true;
-        return permissionRepository.findByMapIdAndUserId(map.getId(), user.getId()).isPresent();
+    public boolean canRead(User user, SketchMap sketchMap) {
+        if ("public".equals(sketchMap.getVisibility())) return true;
+        if (sketchMap.getOwner().getId().equals(user.getId())) return true;
+        return permissionRepository.findByMapIdAndUserId(sketchMap.getId(), user.getId()).isPresent();
     }
 
     /** Returns true if the user can write (save) to the map (owner or editor). */
-    public boolean canWrite(User user, Map map) {
-        if (map.getOwner().getId().equals(user.getId())) return true;
-        return permissionRepository.findByMapIdAndUserId(map.getId(), user.getId())
-                .map(p -> MapPermission.ROLE_EDITOR.equals(p.getRole()))
+    public boolean canWrite(User user, SketchMap sketchMap) {
+        if (sketchMap.getOwner().getId().equals(user.getId())) return true;
+        return permissionRepository.findByMapIdAndUserId(sketchMap.getId(), user.getId())
+                .map(p -> SketchMapPermission.ROLE_EDITOR.equals(p.getRole()))
                 .orElse(false);
     }
 
     /** Returns true if the user is the owner of the map. */
-    public boolean isOwner(User user, Map map) {
-        return map.getOwner().getId().equals(user.getId());
+    public boolean isOwner(User user, SketchMap sketchMap) {
+        return sketchMap.getOwner().getId().equals(user.getId());
     }
 
     /**
@@ -56,9 +56,9 @@ public class MapAccessService {
      */
     @Transactional
     public void grantPermission(UUID mapId, UUID granteeUserId, String role) {
-        MapPermission.PK pk = new MapPermission.PK(mapId, granteeUserId);
-        MapPermission perm = permissionRepository.findById(pk)
-                .orElse(new MapPermission(mapId, granteeUserId, role));
+        SketchMapPermission.PK pk = new SketchMapPermission.PK(mapId, granteeUserId);
+        SketchMapPermission perm = permissionRepository.findById(pk)
+                .orElse(new SketchMapPermission(mapId, granteeUserId, role));
         perm.setRole(role);
         permissionRepository.save(perm);
     }
