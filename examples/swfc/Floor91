@@ -1,0 +1,127 @@
+topo-map Floor91(){
+   let params: {permResident: Int} = {
+       permResident = 25
+    }
+  topo-node SH_hall
+  topo-node reception
+  topo-node HL5_6_hall
+  topo-node side_alley_end_A
+  topo-node storage_2_out
+  topo-node toilet_A_out
+  topo-node toilet_B_out
+  topo-node service_corr_2_out
+  topo-node service_corr_2_interm
+  topo-node FS7_hall
+  topo-node ST_V2
+  topo-node side_alley_end_B
+  topo-node wine_exhibition
+  topo-node prv_room_2_out
+  topo-node prv_room_2
+  topo-node HS3_4_hall
+  topo-node sub_stove
+  topo-node seat_E
+  topo-node seat_area_intsc
+  topo-node seat_D
+  topo-node prv_room_3_out
+  topo-node prv_room_3
+  topo-node n_1ef03417fde345fa9763d8e4e489220f
+  topo-node mid_alley_end_A
+  topo-node mid_alley_end_B
+  topo-node seat_horizontal
+  topo-node seat_B
+  topo-node win_seat_1
+  topo-node seat_C
+  topo-node cashier
+  topo-node seat_A
+  topo-node prv_room_1_out
+  topo-node n_c8abe59dc14948a9a78352beadff266d
+  topo-node service_corr_1_out
+  topo-node service_corr_1_interm
+  topo-node service_corr_2_in
+  topo-node service_corr_1_in
+  topo-node FS8_hall
+  topo-node n_4e41aa057de14327b5bd2769fe13d0da
+  topo-node kitchen_gate
+  topo-node n_14e38a78a3b24ce08fe94eeb72739579
+  topo-node stove_out
+  topo-node stove
+  topo-node HS5_6_hall
+  topo-node storage_1
+  topo-node ST_V1
+  topo-node toilet_B_in
+  topo-node toilet_A_in
+  topo-node prv_room_1
+  topo-node storage_2
+  topo-node main_kitchen
+  topo-node n_3211aa080524428e8242f88bd551355f
+  topo-node win_seat_2
+  topo-node buffet_booth_A
+  topo-node n_f120ed69c1024ebfaeb95f5e7133c3f4
+  topo-node buffet_booth_B
+  topo-node behind_reception
+  atomic-path [mid_alley_end_A <-> reception] {cost = 3}
+  atomic-path [reception <-> HL5_6_hall] {cost = 3}
+  atomic-path [HL5_6_hall <-> cashier] {cost = 3}
+  atomic-path [cashier <-> seat_C] {cost = 5}
+  atomic-path [seat_C <-> win_seat_1] {cost = 3}
+  atomic-path [mid_alley_end_A <-> seat_horizontal] {cost = 3}
+  atomic-path [seat_horizontal <-> seat_B] {cost = 3}
+  atomic-path [prv_room_1_out <-> seat_horizontal] {cost = 5}
+  atomic-path [seat_horizontal <-> seat_A] {cost = 3}
+  atomic-path [seat_A <-> prv_room_1_out] {cost = 4}
+  atomic-path [prv_room_1_out <-> n_c8abe59dc14948a9a78352beadff266d] {cost = 1}
+  atomic-path [n_c8abe59dc14948a9a78352beadff266d <-> service_corr_1_out] {cost = 3}
+  atomic-path [service_corr_1_out <-> service_corr_1_interm] {cost = 3}
+  atomic-path [prv_room_1 <-> prv_room_1_out] {cost = 2}
+  atomic-path [service_corr_1_interm <-> service_corr_1_in] {cost = 3}
+  atomic-path [service_corr_1_in <-> ST_V1] {cost = 3}
+  atomic-path [service_corr_1_in <-> FS8_hall] {cost = 2}
+  atomic-path [cashier <-> side_alley_end_A] {cost = 6}
+  atomic-path [side_alley_end_A <-> storage_2_out] {cost = 2}
+  atomic-path [storage_2_out <-> storage_2] {cost = 3}
+  atomic-path [storage_2_out <-> toilet_A_out] {cost = 2}
+  atomic-path [toilet_A_out <-> toilet_B_in] {cost = 2}
+  atomic-path [toilet_A_out <-> toilet_B_out] {cost = 3}
+  atomic-path [toilet_B_out <-> toilet_A_in] {cost = 2}
+  atomic-path [toilet_B_out <-> service_corr_2_out] {cost = 2}
+  atomic-path [service_corr_2_out <-> service_corr_2_interm] {cost = 3}
+  atomic-path [service_corr_2_interm <-> service_corr_2_in] {cost = 3}
+  atomic-path [service_corr_2_in <-> ST_V2] {cost = 3}
+  atomic-path [service_corr_2_in <-> FS7_hall] {cost = 2}
+  atomic-path [service_corr_2_out <-> side_alley_end_B] {cost = 2}
+  atomic-path [side_alley_end_B <-> wine_exhibition] {cost = 3}
+  atomic-path [wine_exhibition <-> prv_room_2_out] {cost = 3}
+  atomic-path [prv_room_2_out <-> prv_room_2] {cost = 2}
+  atomic-path [prv_room_2_out <-> seat_E] {cost = 3}
+  atomic-path [wine_exhibition <-> HS3_4_hall] {cost = 4}
+  atomic-path [HS3_4_hall <-> sub_stove] {cost = 3}
+  atomic-path [sub_stove <-> seat_area_intsc] {cost = 3}
+  atomic-path [seat_area_intsc <-> seat_E] {cost = 4}
+  atomic-path [seat_D <-> seat_area_intsc] {cost = 8}
+  atomic-path [sub_stove <-> mid_alley_end_B] {cost = 4}
+  atomic-path [n_4e41aa057de14327b5bd2769fe13d0da <-> n_1ef03417fde345fa9763d8e4e489220f] {cost = 2}
+  atomic-path [n_1ef03417fde345fa9763d8e4e489220f <-> prv_room_3_out] {cost = 6}
+  atomic-path [prv_room_3_out <-> prv_room_3] {cost = 2}
+  atomic-path [prv_room_3_out <-> seat_D] {cost = 3}
+  atomic-path [n_1ef03417fde345fa9763d8e4e489220f <-> kitchen_gate] {cost = 3}
+  atomic-path [kitchen_gate <-> n_14e38a78a3b24ce08fe94eeb72739579] {cost = 1}
+  atomic-path [n_14e38a78a3b24ce08fe94eeb72739579 <-> stove_out] {cost = 2}
+  atomic-path [stove_out <-> stove] {cost = 5}
+  atomic-path [kitchen_gate <-> HS5_6_hall] {cost = 4}
+  atomic-path [HS5_6_hall <-> storage_1] {cost = 4}
+  atomic-path [reception <-> SH_hall] {cost = 3}
+  atomic-path [HS5_6_hall <-> main_kitchen] {cost = 3}
+  atomic-path [seat_D <-> win_seat_2] {cost = 3}
+  atomic-path [win_seat_2 <-> prv_room_3_out] {cost = 3}
+  atomic-path [mid_alley_end_B <-> mid_alley_end_A] {cost = 8}
+  atomic-path [mid_alley_end_A <-> seat_B] {cost = 3}
+  atomic-path [n_14e38a78a3b24ce08fe94eeb72739579 <-> n_3211aa080524428e8242f88bd551355f] {cost = 3}
+  atomic-path [kitchen_gate <-> main_kitchen] {cost = 5}
+  atomic-path [prv_room_1_out <-> buffet_booth_A] {cost = 3}
+  atomic-path [buffet_booth_A <-> mid_alley_end_A] {cost = 5}
+  atomic-path [n_f120ed69c1024ebfaeb95f5e7133c3f4 <-> toilet_A_out] {cost = 3}
+  atomic-path [n_4e41aa057de14327b5bd2769fe13d0da <-> buffet_booth_B] {cost = 3}
+  atomic-path [buffet_booth_B <-> mid_alley_end_B] {cost = 2}
+  atomic-path [seat_B <-> behind_reception] {cost = 3}
+  atomic-path [behind_reception <-> win_seat_1] {cost = 4}
+}
