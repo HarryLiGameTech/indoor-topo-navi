@@ -1,0 +1,76 @@
+topo-map Zone6(){
+   let params: {permResident: Int} = {
+       permResident = 50
+    }
+  topo-node G6_out
+  topo-node elevator_hall_end_A
+  topo-node L6_hall
+  topo-node elevator_hall_end_B
+  topo-node G1_out
+  topo-node G1_in
+  topo-node G5_out
+  topo-node G5_in
+  topo-node ST_C_out
+  topo-node G4_out
+  topo-node G4_in
+  topo-node G6_in
+  topo-node G2_out
+  topo-node G2_in
+  topo-node service_corr_A
+  topo-node A_hall_out
+  topo-node FS_4_6_hall
+  topo-node ST_A
+  topo-node ST_C
+  topo-node G3_out
+  topo-node service_corr_B
+  topo-node G3_in
+  topo-node FS_1_3_hall
+  topo-node B_hall_out
+  topo-node ST_B
+  topo-node LS12_hall
+  topo-node LS11_hall
+  topo-node corner_LB
+  topo-node corner_LT
+  topo-node corner_RT
+  topo-node corner_RB
+  topo-node toilet_B_out
+  topo-node toilet_B
+  topo-node toilet_A
+  atomic-path [ST_A <-> FS_4_6_hall] {cost = 3}
+  atomic-path [FS_4_6_hall <-> LS12_hall] {cost = 1}
+  atomic-path [LS12_hall <-> A_hall_out] {cost = 4}
+  atomic-path [A_hall_out <-> service_corr_A] {cost = 5}
+  atomic-path [service_corr_A <-> G6_out] {cost = 3}
+  atomic-path [G6_out <-> G6_in] {cost = 3}
+  atomic-path [G6_out <-> elevator_hall_end_A] {cost = 5}
+  atomic-path [corner_LT <-> G6_in] {cost = 20}
+  atomic-path [G6_in <-> corner_LB] {cost = 20}
+  atomic-path [corner_LB <-> G4_in] {cost = 20}
+  atomic-path [G4_in <-> corner_RB] {cost = 20}
+  atomic-path [corner_RB <-> G3_in] {cost = 20}
+  atomic-path [G3_in <-> corner_RT] {cost = 20}
+  atomic-path [corner_RT <-> G1_in] {cost = 20}
+  atomic-path [G1_in <-> corner_LT] {cost = 20}
+  atomic-path [G1_in <-> G1_out] {cost = 3}
+  atomic-path [G1_out <-> elevator_hall_end_B] {cost = 5}
+  atomic-path [elevator_hall_end_B <-> L6_hall] {cost = 3}
+  atomic-path [L6_hall <-> elevator_hall_end_A] {cost = 14}
+  atomic-path [elevator_hall_end_A <-> G5_out] {cost = 5}
+  atomic-path [G5_out <-> G5_in] {cost = 3}
+  atomic-path [G5_out <-> ST_C_out] {cost = 5}
+  atomic-path [ST_C_out <-> G4_out] {cost = 5}
+  atomic-path [G4_out <-> G4_in] {cost = 3}
+  atomic-path [ST_C_out <-> ST_C] {cost = 3}
+  atomic-path [G3_out <-> G3_in] {cost = 5}
+  atomic-path [toilet_B_out <-> G3_out] {cost = 5}
+  atomic-path [G2_out <-> toilet_B_out] {cost = 5}
+  atomic-path [G2_out <-> G2_in] {cost = 3}
+  atomic-path [elevator_hall_end_B <-> G2_out] {cost = 5}
+  atomic-path [G2_out <-> toilet_A] {cost = 2}
+  atomic-path [toilet_B_out <-> toilet_B] {cost = 2}
+  atomic-path [G3_out <-> service_corr_B] {cost = 4}
+  atomic-path [service_corr_B <-> B_hall_out] {cost = 3}
+  atomic-path [B_hall_out <-> LS11_hall] {cost = 5}
+  atomic-path [LS11_hall <-> FS_1_3_hall] {cost = 1}
+  atomic-path [FS_1_3_hall <-> ST_B] {cost = 3}
+}
