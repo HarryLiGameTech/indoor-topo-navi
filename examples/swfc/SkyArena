@@ -1,6 +1,6 @@
 topo-map SkyArena(){
     let params: {permResident: Int} = {
-        permResident: 30
+        permResident = 30
     }
 
     topo-node GE1_2_hall
@@ -41,8 +41,8 @@ topo-map SkyArena(){
     atomic-path [female_toilet_outside <-> male_toilet_outside] {cost = 3}
     atomic-path [male_toilet_outside <-> staff_hallway] {cost = 4} // Cross that heavy door!
 
-    atomic-path [female_toilet_outside <-> female_toilet] {cost = 2}
-    atomic-path [male_toilet_outside <-> male_toilet] {cost = 2}
+    atomic-path [female_toilet_outside <-> female_toilet_inside] {cost = 2}
+    atomic-path [male_toilet_outside <-> male_toilet_inside] {cost = 2}
 
     atomic-path [arena_center <-> booth_SW] {cost = 8}
     atomic-path [arena_center <-> booth_SE] {cost = 8}

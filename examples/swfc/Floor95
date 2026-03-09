@@ -1,7 +1,8 @@
-// Written based on photos and video of the floor. 
 topo-map Floor95(){
+    // Written based on photos and video of the floor.
+
     let config: {permResident: Int} = {
-        permResident: 20
+        permResident = 20
     }
 
     topo-node FS10_hall

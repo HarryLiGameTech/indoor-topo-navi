@@ -1,6 +1,6 @@
 topo-map Floor98(){
     let config: {permResident: Int} = {
-        permResident: 0
+        permResident = 0
     }
 
     topo-node FS9_hall

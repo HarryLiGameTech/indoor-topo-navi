@@ -1,6 +1,6 @@
 topo-map SkyWalk97(){
     let config: {permResident: Int} = {
-        permResident: 20
+        permResident = 20
     }
 
     topo-node FS9_hall
