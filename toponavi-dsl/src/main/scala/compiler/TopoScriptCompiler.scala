@@ -36,7 +36,10 @@ class TopoScriptCompiler() {
       case _ => throw new RuntimeException("Global config parsing did not return a GlobalConfigExpr")
     }
 
-    pprint.pprintln(globalConfig.submaps)
+    val allSubmapNames: List[String] = globalConfig.submaps.flatMap { ref =>
+      ref.name :: globalConfig.submapUsages.getOrElse(ref, List.empty)
+    }
+    pprint.pprintln(allSubmapNames)
 
     // Populate the global SubmapRefRegistry from the parsed config
     metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
