@@ -16,6 +16,6 @@ transport LS6 is Elevator{
     station F33 at Floor33::LS6_hall {location = 144.0, departureRate = 0.077}
     station F32 at Floor32::LS6_hall {location = 140.0, departureRate = 0.077}
     station F31 at Floor31::LS6_hall {location = 135.5, departureRate = 0.077}
-    station F30 at Floor30::LS6_hall {location = 131.0, departureRate = 0.077}
+    // station F30 at Floor30::LS6_hall {location = 131.0, departureRate = 0.077}
     station F29 at SL29::LS6_hall {location = 126.0, departureRate = 0.076}
 }

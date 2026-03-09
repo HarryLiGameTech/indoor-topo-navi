@@ -1,0 +1,49 @@
+topo-map RefugeFloor(){
+   // Simplified map, some nodes may not be accurate!
+   // For usage illustration only, do NOT put into production use without verifying the map first!
+
+   let params: {permResident: Int} = {
+       permResident = 1
+   }
+  topo-node corr_A_out
+  topo-node ST_A_out
+  topo-node corr_A
+  topo-node A_hall_out
+  topo-node FS4_6_hall
+  topo-node ST_A
+  topo-node mech_entrance_A
+  topo-node S2_escape_exit
+  topo-node ST_C_out
+  topo-node ST_C
+  topo-node ST_B
+  topo-node ST_B_out
+  topo-node FS1_3_hall
+  topo-node B_hall_out
+  topo-node corr_B_out
+  topo-node corr_B
+  topo-node mech_entrance_B
+  topo-node S1_escape_exit
+  topo-node mech_corner
+  topo-node mech_intersact
+  atomic-path [FS1_3_hall <-> B_hall_out] {cost = 3}
+  atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
+  atomic-path [ST_B <-> ST_B_out] {cost = 2}
+  atomic-path [mech_intersact <-> mech_corner] {cost = 16}
+  atomic-path [S1_escape_exit <-> mech_corner] {cost = 4}
+  atomic-path [S1_escape_exit <-> mech_entrance_B] {cost = 6}
+  atomic-path [mech_entrance_B <-> corr_B] {cost = 5}
+  atomic-path [corr_B <-> B_hall_out] {cost = 5}
+  atomic-path [S2_escape_exit <-> mech_intersact] {cost = 4}
+  atomic-path [S2_escape_exit <-> ST_C_out] {cost = 4}
+  atomic-path [ST_C_out <-> ST_C] {cost = 3}
+  atomic-path [mech_intersact <-> mech_entrance_A] {cost = 3}
+  atomic-path [mech_entrance_A <-> corr_A] {cost = 5}
+  atomic-path [corr_A <-> corr_A_out] {cost = 2}
+  atomic-path [corr_A_out <-> ST_A_out] {cost = 10}
+  atomic-path [ST_A_out <-> ST_A] {cost = 2}
+  atomic-path [ST_A <-> FS4_6_hall] {cost = 3}
+  atomic-path [FS4_6_hall <-> A_hall_out] {cost = 3}
+  atomic-path [A_hall_out <-> corr_A] {cost = 5}
+  atomic-path [corr_B_out <-> corr_B] {cost = 2}
+  atomic-path [corr_B_out <-> ST_B_out] {cost = 10}
+}
