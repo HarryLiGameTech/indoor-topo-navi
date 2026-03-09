@@ -1,0 +1,81 @@
+topo-map SL53(){
+   let params: {permResident: Int} = {
+       permResident = 25
+    }
+  topo-node lobby_entrance
+  topo-node S2_hall
+  topo-node escalator_53L
+  topo-node escalator_53R
+  topo-node Gate_R1_out
+  topo-node Gate_R2
+  topo-node Gate_R2_intermediate
+  topo-node G4_out
+  topo-node ST_C_out
+  topo-node ST_C
+  topo-node G5_in
+  topo-node G5_out
+  topo-node L6_hall
+  topo-node L5_hall
+  topo-node G1_2_in
+  topo-node G2_out
+  topo-node Gate_L_intermediate
+  topo-node halls_entrance
+  topo-node G3_out
+  topo-node G3_in
+  topo-node Gate_R1_intermediate
+  topo-node Gate_R1
+  topo-node Gate_L_out
+  topo-node service_corr_B
+  topo-node B_hall_out
+  topo-node LS9_hall
+  topo-node FS1_3_hall
+  topo-node ST_B
+  topo-node ST_A
+  topo-node FS4_6_hall
+  topo-node LS10_hall
+  topo-node A_hall_out
+  topo-node service_corr_A
+  topo-node toilet_out
+  topo-node toilet_A
+  topo-node toilet_B
+  topo-node lobby_intersact
+  atomic-path [G3_in <-> ST_C_out] {cost = 15}
+  atomic-path [ST_C_out <-> toilet_out] {cost = 7}
+  atomic-path [ST_C_out <-> ST_C] {cost = 3}
+  atomic-path [toilet_out <-> toilet_B] {cost = 2}
+  atomic-path [toilet_out <-> toilet_A] {cost = 2}
+  atomic-path [toilet_out <-> G5_in] {cost = 4}
+  atomic-path [G5_in <-> G5_out] {cost = 5}
+  atomic-path [G3_out <-> G3_in] {cost = 5}
+  atomic-path [halls_entrance <-> G3_out] {cost = 5}
+  atomic-path [G1_2_in <-> halls_entrance] {cost = 5}
+  atomic-path [G2_out <-> G1_2_in] {cost = 5}
+  atomic-path [G1_2_in <-> L5_hall] {cost = 2}
+  atomic-path [L6_hall <-> G5_in] {cost = 2}
+  atomic-path [ST_C_out <-> G4_out] {cost = 5}
+  atomic-path [S2_hall <-> halls_entrance] {cost = 4}
+  atomic-path [lobby_entrance <-> S2_hall] {cost = 4}
+  atomic-path [Gate_L_intermediate <-> G2_out] {cost = 3}
+  atomic-path [Gate_L_out <-> Gate_L_intermediate] {cost = 4}
+  atomic-path [escalator_53L <-> Gate_L_out] {cost = 8}
+  atomic-path [lobby_intersact <-> lobby_entrance] {cost = 3}
+  atomic-path [escalator_53L <-> lobby_intersact] {cost = 5}
+  atomic-path [lobby_intersact <-> escalator_53R] {cost = 5}
+  atomic-path [escalator_53R <-> Gate_R1_out] {cost = 8}
+  atomic-path [Gate_R1_out <-> Gate_R2] {cost = 40}
+  atomic-path [service_corr_A <-> G2_out] {cost = 3}
+  atomic-path [service_corr_A <-> A_hall_out] {cost = 3}
+  atomic-path [A_hall_out <-> LS10_hall] {cost = 5}
+  atomic-path [LS10_hall <-> FS4_6_hall] {cost = 1}
+  atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
+  atomic-path [Gate_R1 <-> G3_out] {cost = 4}
+  atomic-path [Gate_R1 <-> Gate_R1_intermediate] {cost = 2}
+  atomic-path [Gate_R1_intermediate <-> Gate_R1_out] {cost = 2}
+  atomic-path [ST_B <-> FS1_3_hall] {cost = 3}
+  atomic-path [LS9_hall <-> FS1_3_hall] {cost = 1}
+  atomic-path [LS9_hall <-> B_hall_out] {cost = 5}
+  atomic-path [B_hall_out <-> service_corr_B] {cost = 3}
+  atomic-path [service_corr_B <-> G4_out] {cost = 3}
+  atomic-path [G4_out <-> Gate_R2_intermediate] {cost = 3}
+  atomic-path [Gate_R2_intermediate <-> Gate_R2] {cost = 4}
+}
