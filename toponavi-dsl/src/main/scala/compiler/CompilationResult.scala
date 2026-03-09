@@ -5,5 +5,5 @@ import data.{NavigationGraph, TransportGraph}
 case class CompilationResult(
   graphs: Map[String, NavigationGraph],
   transportGraph: TransportGraph,
-  graphSequence: List[NavigationGraph] = List.empty
+  graphSequence: List[String] = List.empty
 )

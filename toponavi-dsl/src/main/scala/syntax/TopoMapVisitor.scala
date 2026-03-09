@@ -93,17 +93,21 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
           case submapCtx: GlobalConfigElementSubmapRefContext =>
             if (submapCtx.ID().size() == 2) {
               // 'submap X using Y': X has no own .tmap — it reuses Y's compiled graph.
-              // Do NOT add X to submaps (nothing to parse/elaborate for it).
-              // Record the usage in the registry: Y -> List(..., X)
               val userName = submapCtx.ID(0).getText
               val baseName = submapCtx.ID(1).getText
-              val baseRef  = TopoMapRef(baseName) // TopoMapRef is a case class, so equality is structural — getOrElse will find an existing key correctly
+              val baseRef  = TopoMapRef(baseName)
               val existing = acc.submapUsages.getOrElse(baseRef, List.empty)
-              acc.copy(submapUsages = acc.submapUsages + (baseRef -> (existing :+ userName)))
+              acc.copy(
+                submapUsages = acc.submapUsages + (baseRef -> (existing :+ userName)),
+                orderedSubmapNames = acc.orderedSubmapNames :+ userName
+              )
             } else {
               // Plain 'submap X': has its own .tmap file, add to submaps for parsing
               val ref = visitGlobalConfigElementSubmapRef(submapCtx)
-              acc.copy(submaps = acc.submaps :+ ref)
+              acc.copy(
+                submaps = acc.submaps :+ ref,
+                orderedSubmapNames = acc.orderedSubmapNames :+ ref.name
+              )
             }
           case vehicleCtx: GlobalConfigElementVehicleRefContext =>
             acc.copy(vehicles = acc.vehicles :+ visitGlobalConfigElementVehicleRef(vehicleCtx))

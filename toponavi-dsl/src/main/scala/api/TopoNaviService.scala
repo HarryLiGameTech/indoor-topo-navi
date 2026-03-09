@@ -39,7 +39,7 @@ object TopoNaviService {
     val startGraph = result.graphs.values.find(_.nodes.exists(_.identifier == startNodeName)).getOrElse(throw RuntimeException("RoutePlanner: Source graph not found"))
     val endGraph   = result.graphs.values.find(_.nodes.exists(_.identifier == endNodeName)).getOrElse(throw RuntimeException("RoutePlanner: Source graph not found"))
 
-    val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphs.keys.toList, true) // TODO: .toList is incorrect, we need to topologically sort them
+    val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, true)
 
     // Step C: Execute Pathfinding (Mocking your core logic here)
     val navigationPlan = routePlanner.navigate(startGraph.identifier, endGraph.identifier, startNodeName, endNodeName, Normal, MinimizeTime)
