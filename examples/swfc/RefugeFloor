@@ -1,5 +1,5 @@
 topo-map RefugeFloor(){
-   // Simplified map, some nodes may not be accurate!
+   // Simplified map, some nodes may not be accurate! Actually in SWFC, EVERY refuge floors are different!
    // For usage illustration only, do NOT put into production use without verifying the map first!
 
    let params: {permResident: Int} = {

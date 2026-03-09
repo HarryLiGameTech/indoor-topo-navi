@@ -1,4 +1,4 @@
-topo-sketchMap Floor92(){
+topo-sketchMap HotelBar(){
    let params: {permResident: Int} = {
        permResident = 5
     }
