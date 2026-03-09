@@ -1,4 +1,4 @@
-topo-sketchMap SkyArena(){
+topo-map SkyArena(){
     let params: {permResident: Int} = {
         permResident: 30
     }

@@ -1,4 +1,4 @@
-topo-sketchMap HotelBar(){
+topo-map HotelBar(){
    let params: {permResident: Int} = {
        permResident = 5
     }

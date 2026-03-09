@@ -1,4 +1,4 @@
-topo-sketchMap Zone6(){
+topo-map Zone6(){
    let params: {permResident: Int} = {
        permResident = 50
     }

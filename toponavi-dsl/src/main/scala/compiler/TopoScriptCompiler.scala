@@ -36,6 +36,8 @@ class TopoScriptCompiler() {
       case _ => throw new RuntimeException("Global config parsing did not return a GlobalConfigExpr")
     }
 
+    pprint.pprintln(globalConfig.submaps)
+
     // Populate the global SubmapRefRegistry from the parsed config
     metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
     
@@ -244,8 +246,8 @@ class TopoScriptCompiler() {
     // (Case classes work fine, but Java sees them as normal classes with getters)
     CompilationResult(navigationGraphs, transportGraph)
   }
-  
-  def parseConfigFile(rawCode: String): Any = {
+
+  def parseConfigFile(rawCode: String): GlobalConfigExpr = {
     val stripedCode = rawCode.strip()
     catchError(stripedCode) { listener =>
       val lexer = MapFileLexer(CharStreams.fromString(stripedCode))

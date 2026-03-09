@@ -103,7 +103,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
     val possiblePaths = List(
       new File("../examples"),
       new File("examples"),
-      new File("H:/Academic/UNNC/FoSE/Y4/FYP/indoor-topo-navi/examples")
+      new File("H:/Academic/UNNC/FoSE/Y4/FYP/indoor-topo-navi/examples/swfc")
     )
 
     val examplesDir = possiblePaths.find(_.exists()).getOrElse(new File("../examples"))

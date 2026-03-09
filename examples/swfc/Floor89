@@ -1,5 +1,5 @@
 // A tough floor that may not be very "infra-free-safe". 
-topo-sketchMap Floor89(){
+topo-map Floor89(){
     let config: {permResident: Int} = {
         permResident: 5
     }

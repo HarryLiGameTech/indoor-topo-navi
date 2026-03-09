@@ -48,14 +48,14 @@ public class MapFileParser extends Parser {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'root'", "'('", "')'", "'topo-sketchMap'", "'transport'", "'is'", 
-			"'building-includes'", "'{'", "'}'", "'vehicle'", "'submap'", "'using'", 
-			"'topo-node'", "'atomic-path'", "'station'", "'at'", "'on'", "'arrow'", 
-			"'>>'", "'type'", "'='", "'def'", "':'", "'let'", "','", "'->'", "'Int'", 
-			"'Float'", "'Bool'", "'String'", "'.'", "'-'", "'*'", "'/'", "'+'", "'=='", 
-			"'<'", "'>'", "'<='", "'>='", "'if'", "'then'", "'else'", "'in'", "'rec'", 
-			"'fix'", "'\\'", "'fn'", "'=>'", "'true'", "'false'", "';'", "'['", "'<->'", 
-			"']'", "'^^'", "'\\/'", "'requires'", "'&&'", "'::'"
+			null, "'root'", "'('", "')'", "'topo-map'", "'transport'", "'is'", "'building-includes'", 
+			"'{'", "'}'", "'vehicle'", "'submap'", "'using'", "'topo-node'", "'atomic-path'", 
+			"'station'", "'at'", "'on'", "'arrow'", "'>>'", "'type'", "'='", "'def'", 
+			"':'", "'let'", "','", "'->'", "'Int'", "'Float'", "'Bool'", "'String'", 
+			"'.'", "'-'", "'*'", "'/'", "'+'", "'=='", "'<'", "'>'", "'<='", "'>='", 
+			"'if'", "'then'", "'else'", "'in'", "'rec'", "'fix'", "'\\'", "'fn'", 
+			"'=>'", "'true'", "'false'", "';'", "'['", "'<->'", "']'", "'^^'", "'\\/'", 
+			"'requires'", "'&&'", "'::'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
