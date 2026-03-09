@@ -21,7 +21,7 @@ topo-map Zone1(){
   topo-node LS2B_hall
   topo-node A_hall_out
   topo-node service_corr_A
-  topo-node G4-out
+  topo-node G4_out
   topo-node L1_hall
   topo-node elevator_hall_end_A
   topo-node storage_1_out
@@ -55,13 +55,13 @@ topo-map Zone1(){
   atomic-path [ST_out <-> storage_1_out] {cost = 3}
   atomic-path [storage_1_out <-> storage_1] {cost = 3}
   atomic-path [storage_1_out <-> elevator_hall_end_A] {cost = 4}
-  atomic-path [elevator_hall_end_A <-> G4-out] {cost = 2}
-  atomic-path [G4-out <-> service_corr_A] {cost = 2}
+  atomic-path [elevator_hall_end_A <-> G4_out] {cost = 2}
+  atomic-path [G4_out <-> service_corr_A] {cost = 2}
   atomic-path [service_corr_A <-> A_hall_out] {cost = 5}
   atomic-path [A_hall_out <-> LS2B_hall] {cost = 5}
   atomic-path [LS2B_hall <-> FS4_6_hall] {cost = 1}
   atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
-  atomic-path [G4-out <-> G4_in] {cost = 3}
+  atomic-path [G4_out <-> G4_in] {cost = 3}
   atomic-path [G4_in <-> corner_LT] {cost = 22}
   atomic-path [corner_LT <-> G1_in] {cost = 22}
   atomic-path [G4_in <-> corner_LB] {cost = 18}

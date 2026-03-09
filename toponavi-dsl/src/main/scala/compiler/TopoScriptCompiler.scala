@@ -59,12 +59,28 @@ class TopoScriptCompiler() {
       }
     }
 
+    // 2b. Also parse and elaborate any base maps referenced via "using" that were not
+    //     listed as standalone submaps (e.g. "submap Floor3 using Zone1" requires Zone1.tmap
+    //     to be elaborated even though Zone1 has no standalone "submap Zone1" entry).
+    for (baseRef <- metadata.submapRefRegistry.submapUsages.keys if !elaboratedMaps.contains(baseRef.name)) {
+      val baseMapFile = new File(targetDirectory, baseRef.name + ".tmap")
+      val fileToRead  = if (baseMapFile.exists()) baseMapFile else new File(targetDirectory, baseRef.name)
+      if (!fileToRead.exists()) {
+        println(s"${Console.YELLOW}Warning: Base map file not found: ${baseMapFile.getAbsolutePath} (or without extension)${Console.RESET}")
+      } else {
+        val mapCode     = scala.io.Source.fromFile(fileToRead).mkString
+        val topoMapExpr = parseMapFile(mapCode)
+        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+        elaboratedMaps.put(baseRef.name, elaboratedMap)
+      }
+    }
+
     // 3. Parse each transport files, and link them with the topo-maps
     val transFiles = globalConfig.vehicles.map(_.name)
     val elaboratedTransports = mutable.ListBuffer[TransportValue]()
 
     // Expand elaboratedMaps with registry-derived entries so that copy-ref names
-    // (e.g. "Floor3 using Floor2") are resolvable during transport elaboration.
+    // (e.g. "Floor3 using Zone1") are resolvable during transport elaboration.
     val derivedMaps: Map[String, TopoMapValue] = metadata.submapRefRegistry.submapUsages.flatMap {
       case (baseRef, userNames) =>
         elaboratedMaps.get(baseRef.name) match {
@@ -168,12 +184,26 @@ class TopoScriptCompiler() {
       }
     }
 
+    // 2b. Also parse and elaborate any base maps referenced via "using" that were not
+    //     listed as standalone submaps (e.g. "submap Floor3 using Zone1" requires Zone1
+    //     to be elaborated even though it has no standalone "submap Zone1" entry).
+    for (baseRef <- metadata.submapRefRegistry.submapUsages.keys if !elaboratedMaps.contains(baseRef.name)) {
+      val baseCodeOption = scalaFiles.get(baseRef.name + ".tmap").orElse(scalaFiles.get(baseRef.name))
+      if (baseCodeOption.isEmpty) {
+        println(s"${Console.YELLOW}Warning: Base map file not found in provided files: ${baseRef.name}${Console.RESET}")
+      } else {
+        val topoMapExpr   = parseMapFile(baseCodeOption.get)
+        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+        elaboratedMaps.put(baseRef.name, elaboratedMap)
+      }
+    }
+
     // 3. Parse each transport files, and link them with the topo-maps
     val transFiles = globalConfig.vehicles.map(_.name)
     val elaboratedTransports = mutable.ListBuffer[TransportValue]()
 
     // Expand elaboratedMaps with registry-derived entries so that copy-ref names
-    // (e.g. "Floor3 using Floor2") are resolvable during transport elaboration.
+    // (e.g. "Floor3 using Zone1") are resolvable during transport elaboration.
     val derivedMaps: Map[String, TopoMapValue] = metadata.submapRefRegistry.submapUsages.flatMap {
       case (baseRef, userNames) =>
         elaboratedMaps.get(baseRef.name) match {
