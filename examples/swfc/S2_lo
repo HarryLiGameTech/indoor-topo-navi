@@ -1,8 +1,8 @@
 transport S2_lo is Elevator{
     let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
-        maxSpeed: 10.0,
-        acceleration: 1.0,
-        cars: 4
+        maxSpeed = 10.0,
+        acceleration = 1.0,
+        cars = 4
     }
 
     station F52 at SL52::S2_hall {location = 224.5, departureRate = 0.5} // TODO: Not exactly on 200

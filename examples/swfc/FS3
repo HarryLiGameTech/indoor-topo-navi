@@ -1,8 +1,8 @@
 transport FS3 is Elevator{
     let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
-        maxSpeed: 6.0,
-        acceleration: 0.8,
-        cars: 1
+        maxSpeed = 6.0,
+        acceleration = 0.8,
+        cars = 1
     }
 
     station F88 at Floor88::FS_1_3_hall {location = 392.0, departureRate = 0.143}

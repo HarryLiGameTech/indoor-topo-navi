@@ -1,8 +1,8 @@
 transport FS1_lo is Elevator{
     let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
-        maxSpeed: 6.0,
-        acceleration: 0.8,
-        cars: 1
+        maxSpeed = 6.0,
+        acceleration = 0.8,
+        cars = 1
     }
 
     station F87 at HL87::FS_1_3_hall {location = 386.0, departureRate = 0.2}
