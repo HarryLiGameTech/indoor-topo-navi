@@ -2,7 +2,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/toponavi}
     username: ${SPRING_DATASOURCE_USERNAME:toponavi}
-    password: ${SPRING_DATASOURCE_PASSWORD:toponavi}
+    password: ${SPRING_DATASOURCE_PASSWORD:yourpassword}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
