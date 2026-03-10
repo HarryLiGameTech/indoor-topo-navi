@@ -2,10 +2,10 @@ package com.e611.toponavi.web.auth;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -25,11 +25,14 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final GitHubOAuthSuccessHandler oAuthSuccessHandler;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter,
-                          GitHubOAuthSuccessHandler oAuthSuccessHandler) {
+                          GitHubOAuthSuccessHandler oAuthSuccessHandler,
+                          ClientRegistrationRepository clientRegistrationRepository) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.oAuthSuccessHandler = oAuthSuccessHandler;
+        this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
     @Bean
@@ -38,18 +41,20 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // OAuth endpoints are public
                 .requestMatchers("/auth/github", "/oauth2/authorization/github", "/login/oauth2/code/github").permitAll()
-                // Existing topology / DSL endpoints remain public
                 .requestMatchers("/api/v1/**").permitAll()
-                // New map management API requires authentication
                 .requestMatchers("/api/maps/**").authenticated()
                 .anyRequest().permitAll()
             )
-            .oauth2Login(oauth2 -> oauth2
-                .successHandler(oAuthSuccessHandler)
-            )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Only wire up OAuth2 login if credentials are actually configured
+        if (clientRegistrationRepository.findByRegistrationId("github") != null) {
+            http.oauth2Login(oauth2 -> oauth2
+                .clientRegistrationRepository(clientRegistrationRepository)
+                .successHandler(oAuthSuccessHandler)
+            );
+        }
 
         return http.build();
     }
