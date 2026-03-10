@@ -41,7 +41,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/github", "/oauth2/authorization/github", "/login/oauth2/code/github").permitAll()
+                .requestMatchers("/auth/github", "/auth/callback", "/oauth2/authorization/github", "/login/oauth2/code/github").permitAll()
                 .requestMatchers("/api/v1/**").permitAll()
                 .requestMatchers("/api/maps/**").authenticated()
                 .anyRequest().permitAll()
