@@ -39,7 +39,7 @@ public class SecurityConfig {
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // OAuth endpoints are public
-                .requestMatchers("/auth/github", "/login/oauth2/code/github").permitAll()
+                .requestMatchers("/auth/github", "/oauth2/authorization/github", "/login/oauth2/code/github").permitAll()
                 // Existing topology / DSL endpoints remain public
                 .requestMatchers("/api/v1/**").permitAll()
                 // New map management API requires authentication
