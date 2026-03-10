@@ -39,7 +39,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/github", "/auth/callback", "/oauth2/authorization/github", "/login/oauth2/code/github").permitAll()
                 .requestMatchers("/api/v1/**").permitAll()
@@ -53,6 +53,11 @@ public class SecurityConfig {
             http.oauth2Login(oauth2 -> oauth2
                 .clientRegistrationRepository(clientRegistrationRepository)
                 .successHandler(oAuthSuccessHandler)
+                .failureHandler((request, response, exception) -> {
+                    response.setStatus(400);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"OAuth2 login failed\", \"message\": \"" + exception.getMessage() + "\"}");
+                })
             );
         }
 
