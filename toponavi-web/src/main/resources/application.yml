@@ -35,6 +35,7 @@ platform:
     private-key: ${GITHUB_APP_PRIVATE_KEY:}
     installation-id: ${GITHUB_APP_INSTALLATION_ID:}
     org-name: ${GITHUB_ORG_NAME:toponavi-map-store}
+    oauth-base-url: ${GITHUB_OAUTH_BASE_URL:}
 
 server:
   port: 8080
