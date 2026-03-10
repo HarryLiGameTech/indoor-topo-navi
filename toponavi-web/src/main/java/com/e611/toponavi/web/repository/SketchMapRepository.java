@@ -19,10 +19,10 @@ public interface SketchMapRepository extends JpaRepository<SketchMap, UUID> {
      * (covers maps shared with the user as editor/viewer as well as owned).
      */
     @Query("""
-        SELECT m FROM Map m
+        SELECT m FROM SketchMap m
         WHERE m.owner.id = :userId
            OR EXISTS (
-               SELECT 1 FROM MapPermission p
+               SELECT 1 FROM SketchMapPermission p
                WHERE p.mapId = m.id AND p.userId = :userId
            )
     """)

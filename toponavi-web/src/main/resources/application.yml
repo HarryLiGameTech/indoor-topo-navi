@@ -16,8 +16,8 @@ spring:
       client:
         registration:
           github:
-            client-id: ${GITHUB_OAUTH_CLIENT_ID}
-            client-secret: ${GITHUB_OAUTH_CLIENT_SECRET}
+            client-id: ${GITHUB_OAUTH_CLIENT_ID:}
+            client-secret: ${GITHUB_OAUTH_CLIENT_SECRET:}
             scope: read:user,user:email
         provider:
           github:
@@ -31,9 +31,9 @@ platform:
     secret: ${JWT_SECRET:changeme_replace_in_production_with_a_strong_random_secret}
     expiration-ms: 86400000   # 24 hours
   github:
-    app-id: ${GITHUB_APP_ID}
-    private-key: ${GITHUB_APP_PRIVATE_KEY}
-    installation-id: ${GITHUB_APP_INSTALLATION_ID}
+    app-id: ${GITHUB_APP_ID:}
+    private-key: ${GITHUB_APP_PRIVATE_KEY:}
+    installation-id: ${GITHUB_APP_INSTALLATION_ID:}
     org-name: ${GITHUB_ORG_NAME:toponavi-map-store}
 
 server:
