@@ -1,0 +1,41 @@
+topo-map Floor96(){
+   let params: {permResident: Int} = {
+       permResident = 1
+    }
+  topo-node FS8_hall
+  topo-node FS10_hall
+  topo-node ST_U2
+  topo-node sub_roof_out_2
+  topo-node sub_roof_interm_2
+  topo-node sub_roof_gate_1
+  topo-node corner_1A
+  topo-node corner_1B
+  topo-node cart_A
+  topo-node cart_B
+  topo-node corner_2A
+  topo-node sub_roof_gate_2
+  topo-node sub_roof_interm_1
+  topo-node sub_roof_out_1
+  topo-node FS9_hall
+  topo-node FS7_hall
+  topo-node ST_U1
+  topo-node corner_2B
+  atomic-path [corner_2A <-> sub_roof_gate_2] {cost = 5}
+  atomic-path [sub_roof_gate_2 <-> corner_2B] {cost = 5}
+  atomic-path [corner_2B <-> cart_B] {cost = 18}
+  atomic-path [cart_A <-> corner_2A] {cost = 18}
+  atomic-path [cart_A <-> corner_1A] {cost = 18}
+  atomic-path [corner_1A <-> sub_roof_gate_1] {cost = 5}
+  atomic-path [sub_roof_gate_1 <-> corner_1B] {cost = 5}
+  atomic-path [sub_roof_gate_1 <-> sub_roof_interm_2] {cost = 5}
+  atomic-path [sub_roof_interm_2 <-> sub_roof_out_2] {cost = 2}
+  atomic-path [sub_roof_out_2 <-> FS10_hall] {cost = 2}
+  atomic-path [FS10_hall <-> FS8_hall] {cost = 5}
+  atomic-path [FS10_hall <-> ST_U2] {cost = 5}
+  atomic-path [corner_1B <-> cart_B] {cost = 18}
+  atomic-path [sub_roof_gate_2 <-> sub_roof_interm_1] {cost = 5}
+  atomic-path [sub_roof_interm_1 <-> sub_roof_out_1] {cost = 2}
+  atomic-path [sub_roof_out_1 <-> FS9_hall] {cost = 2}
+  atomic-path [FS9_hall <-> ST_U1] {cost = 5}
+  atomic-path [FS7_hall <-> FS9_hall] {cost = 5}
+}
