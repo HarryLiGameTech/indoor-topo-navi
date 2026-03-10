@@ -3,15 +3,20 @@ package com.e611.toponavi.web.auth;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.AuthenticatedPrincipalOAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
 /**
- * Manually registers the GitHub OAuth2 client only when credentials are present.
- * This avoids Spring Boot's auto-configuration hard-failing on an empty client-id.
+ * Manually registers OAuth2 client beans.
+ * Replaces OAuth2ClientAutoConfiguration which we excluded to avoid
+ * startup failure when credentials are not set.
  */
 @Configuration
 public class OAuth2ClientConfig {
@@ -25,7 +30,6 @@ public class OAuth2ClientConfig {
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
         if (clientId == null || clientId.isBlank()) {
-            // Return an empty repository — OAuth2 login will be unavailable but app starts fine
             return registrationId -> null;
         }
 
@@ -45,6 +49,18 @@ public class OAuth2ClientConfig {
                 .build();
 
         return new InMemoryClientRegistrationRepository(githubRegistration);
+    }
+
+    @Bean
+    public OAuth2AuthorizedClientService authorizedClientService(
+            ClientRegistrationRepository clientRegistrationRepository) {
+        return new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository);
+    }
+
+    @Bean
+    public OAuth2AuthorizedClientRepository authorizedClientRepository(
+            OAuth2AuthorizedClientService authorizedClientService) {
+        return new AuthenticatedPrincipalOAuth2AuthorizedClientRepository(authorizedClientService);
     }
 }
 
