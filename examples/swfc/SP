@@ -1,0 +1,13 @@
+transport SP is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed = 1.5,
+        acceleration = 0.7,
+        cars = 2
+    }
+
+    station F3 at Floor3::SP_hall {location = 10.0, departureRate = 0.2}
+    station F2 at UpperLobby::SP_hall {location = 5.0, departureRate = 0.2}
+    station F1 at LowerLobby::SP_hall {location = 0.0, departureRate = 0.2}
+    station B1 at FloorB1::SP_hall {location = -5.0, departureRate = 0.2}
+    station B2 at FloorB2::SP_hall {location = -10.0, departureRate = 0.2}
+}
