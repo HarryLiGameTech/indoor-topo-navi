@@ -47,3 +47,5 @@ bin/
 .env
 .env.example
 *.pem
+
+run.sh
