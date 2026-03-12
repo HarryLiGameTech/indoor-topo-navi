@@ -266,26 +266,9 @@ The `mapJson` format is defined by the `toponavi-core` and `toponavi-dsl` module
 
 ---
 
-## 9. Backend Gap: `/api/me` Endpoint
+## 9. ~~Backend Gap~~: `/api/me` Endpoint ✅
 
-Before starting the session restore logic, the backend needs one additional endpoint:
-
-```
-GET /api/me
-Authorization: Bearer <jwt>
-
-Response 200:
-{
-  "id": "...",
-  "githubLogin": "...",
-  "displayName": "...",
-  "avatarUrl": "..."
-}
-
-Response 401: token missing or invalid
-```
-
-This endpoint simply reads the `@AuthenticationPrincipal User` (already injected by `JwtAuthFilter`) and returns the user's fields. It is a 5-line controller method.
+> **Implemented** in `AuthController.java`.
 
 ---
 

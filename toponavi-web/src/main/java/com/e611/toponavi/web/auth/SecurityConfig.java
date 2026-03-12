@@ -43,6 +43,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/github", "/auth/callback", "/error", "/oauth2/authorization/github", "/login/oauth2/code/github").permitAll()
                 .requestMatchers("/api/v1/**").permitAll()
+                .requestMatchers("/api/me").authenticated()
                 .requestMatchers("/api/maps/**").authenticated()
                 .anyRequest().permitAll()
             )

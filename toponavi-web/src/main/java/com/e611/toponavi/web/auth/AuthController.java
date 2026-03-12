@@ -1,10 +1,12 @@
 package com.e611.toponavi.web.auth;
 
+import com.e611.toponavi.web.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,11 +31,19 @@ public class AuthController implements ErrorController {
             response.sendError(503, "GitHub OAuth is not configured");
             return;
         }
-        // Redirect directly to Spring Security's OAuth2 authorization endpoint
-        // which is registered by the oauth2Login() filter chain
         response.sendRedirect("/oauth2/authorization/github");
     }
 
+    @GetMapping("/api/me")
+    public ResponseEntity<Map<String, Object>> me(@AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(Map.of(
+                "id",          user.getId().toString(),
+                "githubLogin", user.getGithubLogin(),
+                "displayName", user.getDisplayName() != null ? user.getDisplayName() : user.getGithubLogin(),
+                "avatarUrl",   user.getAvatarUrl() != null ? user.getAvatarUrl() : ""
+        ));
+    }
 
     @GetMapping("/error")
     public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
@@ -43,13 +53,9 @@ public class AuthController implements ErrorController {
         return ResponseEntity.status(status instanceof Integer i ? i : 500)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of(
-                        "status", status != null ? status : 500,
-                        "message", message != null ? message : "",
+                        "status",    status    != null ? status            : 500,
+                        "message",   message   != null ? message.toString(): "",
                         "exception", exception != null ? exception.toString() : ""
                 ));
     }
 }
-
-
-
-
