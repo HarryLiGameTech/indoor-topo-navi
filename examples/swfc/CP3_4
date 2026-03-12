@@ -1,0 +1,13 @@
+transport CP3_4 is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed = 1.5,
+        acceleration = 0.8,
+        cars = 2
+    }
+
+    station F2 at UpperLobby::CP3_4_hall {location = 5.0, departureRate = 0.25}
+    station F1 at LowerLobby::CP3_4_hall {location = 0.0, departureRate = 0.25}
+    station B1 at FloorB1::CP3_4_hall {location = -5.0, departureRate = 0.25}
+    station B2 at FloorB2::CP3_4_hall {location = -10.0, departureRate = 0.25}
+
+}

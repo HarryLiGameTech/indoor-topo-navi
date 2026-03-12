@@ -1,0 +1,116 @@
+topo-map LowerLobby(){
+   // Based on on-site study and legacy floor plan designs, may NOT be accurate
+   // For usage illustration only, do NOT put into production use without verifying the map first!
+
+   let params: {permResident: Int} = {
+       permResident = 30
+    }
+  topo-node CP1_2_hall
+  topo-node entrance_Z3_4
+  topo-node SS3_4_hall
+  topo-node gate_2
+  topo-node GE3_4_out
+  topo-node entrance_Z1_2_B
+  topo-node L1_2_hall_end_B
+  topo-node L2_hall
+  topo-node L1_hall
+  topo-node service_corr_A
+  topo-node entrance_Z1_2_A
+  topo-node entrance_Z5_6
+  topo-node S2_hall
+  topo-node A_hall_outside
+  topo-node LS2_hall
+  topo-node FS4_6_hall
+  topo-node ST_A
+  topo-node cafe
+  topo-node gate_1
+  topo-node retail_conn_out
+  topo-node retail_conn_in
+  topo-node SP_hall
+  topo-node escalator_1out_retail
+  topo-node gate_retail
+  topo-node MC1_hall
+  topo-node loading_bay
+  topo-node SS5_6_hall
+  topo-node logistics_center_intersact
+  topo-node garbage_room
+  topo-node S1_hall
+  topo-node service_corr_B
+  topo-node hotel_staff_conn
+  topo-node B_hall_outside
+  topo-node LS1_hall
+  topo-node FS1_3_hall
+  topo-node ST_B
+  topo-node SH_hall
+  topo-node hotel_entrance_first_door
+  topo-node hotel_concierge
+  topo-node side_gate_in
+  topo-node side_gate_out
+  topo-node gate_hotel_out
+  topo-node reception
+  topo-node GE3_4_hall
+  topo-node escalator_1Lobby
+  topo-node MP3_hall
+  topo-node escalator_1conv
+  topo-node gate_convention
+  topo-node CP3_4_hall
+  topo-node guest_toilet
+  atomic-path [service_corr_A <-> A_hall_outside] {cost = 2}
+  atomic-path [A_hall_outside <-> LS2_hall] {cost = 5}
+  atomic-path [LS2_hall <-> FS4_6_hall] {cost = 1}
+  atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
+  atomic-path [CP1_2_hall <-> SS3_4_hall] {cost = 5}
+  atomic-path [entrance_Z3_4 <-> CP1_2_hall] {cost = 4}
+  atomic-path [SS3_4_hall <-> MC1_hall] {cost = 4}
+  atomic-path [logistics_center_intersact <-> loading_bay] {cost = 12}
+  atomic-path [logistics_center_intersact <-> SS5_6_hall] {cost = 8}
+  atomic-path [SS5_6_hall <-> garbage_room] {cost = 10}
+  atomic-path [garbage_room <-> loading_bay] {cost = 6}
+  atomic-path [logistics_center_intersact <-> MC1_hall] {cost = 15}
+  atomic-path [gate_2 <-> entrance_Z1_2_B] {cost = 5}
+  atomic-path [entrance_Z1_2_B <-> L1_2_hall_end_B] {cost = 5}
+  atomic-path [L1_2_hall_end_B <-> L2_hall] {cost = 3}
+  atomic-path [L2_hall <-> L1_hall] {cost = 5}
+  atomic-path [L1_hall <-> service_corr_A] {cost = 3}
+  atomic-path [service_corr_A <-> entrance_Z1_2_A] {cost = 5}
+  atomic-path [entrance_Z1_2_A <-> entrance_Z5_6] {cost = 12}
+  atomic-path [entrance_Z5_6 <-> S2_hall] {cost = 5}
+  atomic-path [entrance_Z1_2_A <-> retail_conn_out] {cost = 5}
+  atomic-path [retail_conn_out <-> retail_conn_in] {cost = 2}
+  atomic-path [retail_conn_in <-> SP_hall] {cost = 4}
+  atomic-path [SP_hall <-> escalator_1out_retail] {cost = 6}
+  atomic-path [escalator_1out_retail <-> gate_retail] {cost = 2}
+  atomic-path [gate_1 <-> retail_conn_out] {cost = 10}
+  atomic-path [cafe <-> gate_1] {cost = 5}
+  atomic-path [cafe <-> entrance_Z1_2_A] {cost = 10}
+  atomic-path [cafe <-> retail_conn_out] {cost = 10}
+  atomic-path [entrance_Z1_2_A <-> gate_1] {cost = 15}
+  atomic-path [S1_hall <-> entrance_Z3_4] {cost = 5}
+  atomic-path [entrance_Z3_4 <-> entrance_Z1_2_B] {cost = 9}
+  atomic-path [entrance_Z1_2_B <-> CP1_2_hall] {cost = 7}
+  atomic-path [entrance_Z3_4 <-> gate_2] {cost = 12}
+  atomic-path [gate_2 <-> CP1_2_hall] {cost = 4}
+  atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
+  atomic-path [FS1_3_hall <-> LS1_hall] {cost = 1}
+  atomic-path [LS1_hall <-> B_hall_outside] {cost = 7}
+  atomic-path [B_hall_outside <-> hotel_staff_conn] {cost = 5}
+  atomic-path [hotel_staff_conn <-> service_corr_B] {cost = 5}
+  atomic-path [service_corr_B <-> entrance_Z3_4] {cost = 12}
+  atomic-path [hotel_entrance_first_door <-> SH_hall] {cost = 8}
+  atomic-path [hotel_entrance_first_door <-> hotel_concierge] {cost = 6}
+  atomic-path [hotel_concierge <-> gate_hotel_out] {cost = 4}
+  atomic-path [gate_hotel_out <-> side_gate_out] {cost = 6}
+  atomic-path [side_gate_out <-> side_gate_in] {cost = 3}
+  atomic-path [side_gate_in <-> service_corr_B] {cost = 4}
+  atomic-path [GE3_4_out <-> entrance_Z1_2_B] {cost = 7}
+  atomic-path [entrance_Z1_2_A <-> reception] {cost = 4}
+  atomic-path [reception <-> GE3_4_out] {cost = 3}
+  atomic-path [GE3_4_out <-> gate_2] {cost = 7}
+  atomic-path [retail_conn_out <-> reception] {cost = 5}
+  atomic-path [GE3_4_out <-> escalator_1Lobby] {cost = 3}
+  atomic-path [CP3_4_hall <-> entrance_Z5_6] {cost = 4}
+  atomic-path [CP3_4_hall <-> guest_toilet] {cost = 4}
+  atomic-path [entrance_Z5_6 <-> MP3_hall] {cost = 6}
+  atomic-path [MP3_hall <-> escalator_1conv] {cost = 3}
+  atomic-path [escalator_1conv <-> gate_convention] {cost = 12}
+}

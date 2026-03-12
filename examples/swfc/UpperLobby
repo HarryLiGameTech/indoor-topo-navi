@@ -1,0 +1,99 @@
+topo-map UpperLobby(){
+   let params: {permResident: Int} = {
+       permResident = 30
+    }
+  topo-node S1_hall
+  topo-node S2_hall
+  topo-node L1_hall
+  topo-node L2_hall
+  topo-node entrance_Z1_2_B
+  topo-node CP1_2_hall
+  topo-node SS3_4_hall_out
+  topo-node SS3_4_hall
+  topo-node escalator_2in_retail
+  topo-node SP_hall
+  topo-node retail_conn1_in
+  topo-node retail_conn1_out
+  topo-node entrance_Z1_2_A
+  topo-node service_corr_A
+  topo-node L1_2_hall_end_B
+  topo-node entrance_Z5_6
+  topo-node CP3_4_hall
+  topo-node office_toilets
+  topo-node ST_C_intersact
+  topo-node ST_C_out
+  topo-node ST_C
+  topo-node observatory_exit
+  topo-node retail_conn_corner
+  topo-node GE1_2_hall
+  topo-node serv_B_intersact
+  topo-node atrium_R_core_link
+  topo-node service_corr_B
+  topo-node B_hall_out
+  topo-node LS1_hall
+  topo-node FS1_3_hall
+  topo-node ST_B
+  topo-node gate_footbridge
+  topo-node GE4_hall_out
+  topo-node GE4_hall
+  topo-node SS7_8_hall_out
+  topo-node SS7_8_hall
+  topo-node ST_A
+  topo-node FS4_6_hall
+  topo-node LS2_hall
+  topo-node A_hall_out
+  topo-node atrium_R_neck
+  topo-node n_1b5bb9aa39624128a111933d85803616
+  topo-node retail_toilet_hall
+  topo-node retail_toilet_A
+  topo-node retail_toilet_B
+  topo-node SS5_6_hall
+  atomic-path [serv_B_intersact <-> atrium_R_core_link] {cost = 12}
+  atomic-path [n_1b5bb9aa39624128a111933d85803616 <-> retail_toilet_hall] {cost = 2}
+  atomic-path [retail_toilet_hall <-> retail_toilet_A] {cost = 3}
+  atomic-path [retail_toilet_hall <-> retail_toilet_B] {cost = 3}
+  atomic-path [retail_toilet_hall <-> SS5_6_hall] {cost = 6}
+  atomic-path [n_1b5bb9aa39624128a111933d85803616 <-> atrium_R_core_link] {cost = 13}
+  atomic-path [atrium_R_core_link <-> atrium_R_neck] {cost = 15}
+  atomic-path [atrium_R_neck <-> SS7_8_hall_out] {cost = 25}
+  atomic-path [SS7_8_hall_out <-> SS7_8_hall] {cost = 5}
+  atomic-path [SS7_8_hall_out <-> gate_footbridge] {cost = 25}
+  atomic-path [gate_footbridge <-> GE4_hall_out] {cost = 10}
+  atomic-path [GE4_hall_out <-> GE4_hall] {cost = 4}
+  atomic-path [gate_footbridge <-> escalator_2in_retail] {cost = 15}
+  atomic-path [escalator_2in_retail <-> SP_hall] {cost = 4}
+  atomic-path [SP_hall <-> retail_conn1_in] {cost = 4}
+  atomic-path [retail_conn1_in <-> retail_conn1_out] {cost = 2}
+  atomic-path [retail_conn1_out <-> entrance_Z1_2_A] {cost = 6}
+  atomic-path [entrance_Z1_2_A <-> service_corr_A] {cost = 5}
+  atomic-path [service_corr_A <-> A_hall_out] {cost = 3}
+  atomic-path [A_hall_out <-> LS2_hall] {cost = 4}
+  atomic-path [LS2_hall <-> FS4_6_hall] {cost = 1}
+  atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
+  atomic-path [service_corr_A <-> L1_hall] {cost = 3}
+  atomic-path [L1_hall <-> L2_hall] {cost = 5}
+  atomic-path [L2_hall <-> L1_2_hall_end_B] {cost = 3}
+  atomic-path [L1_2_hall_end_B <-> entrance_Z1_2_B] {cost = 5}
+  atomic-path [entrance_Z1_2_B <-> CP1_2_hall] {cost = 7}
+  atomic-path [CP1_2_hall <-> SS3_4_hall_out] {cost = 4}
+  atomic-path [SS3_4_hall_out <-> serv_B_intersact] {cost = 14}
+  atomic-path [serv_B_intersact <-> service_corr_B] {cost = 8}
+  atomic-path [service_corr_B <-> B_hall_out] {cost = 3}
+  atomic-path [B_hall_out <-> LS1_hall] {cost = 4}
+  atomic-path [LS1_hall <-> FS1_3_hall] {cost = 1}
+  atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
+  atomic-path [serv_B_intersact <-> observatory_exit] {cost = 12}
+  atomic-path [observatory_exit <-> GE1_2_hall] {cost = 5}
+  atomic-path [observatory_exit <-> retail_conn_corner] {cost = 5}
+  atomic-path [retail_conn_corner <-> ST_C_intersact] {cost = 3}
+  atomic-path [ST_C_intersact <-> ST_C_out] {cost = 5}
+  atomic-path [ST_C_out <-> ST_C] {cost = 3}
+  atomic-path [ST_C_intersact <-> entrance_Z5_6] {cost = 15}
+  atomic-path [entrance_Z5_6 <-> CP3_4_hall] {cost = 4}
+  atomic-path [CP3_4_hall <-> office_toilets] {cost = 4}
+  atomic-path [entrance_Z1_2_A <-> entrance_Z5_6] {cost = 15}
+  atomic-path [entrance_Z5_6 <-> S2_hall] {cost = 5}
+  atomic-path [entrance_Z1_2_A <-> entrance_Z1_2_B] {cost = 20}
+  atomic-path [S1_hall <-> SS3_4_hall_out] {cost = 4}
+  atomic-path [SS3_4_hall_out <-> SS3_4_hall] {cost = 5}
+}
