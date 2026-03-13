@@ -40,7 +40,7 @@ topo-map SL52(){
   topo-node Gate_R1
   topo-node Gate_R2
   topo-node Gate_R2_intermediate
-  atomic-path [lobby_entrance <-> S2_hall] {cost = 4}
+  atomic-path [lobby_entrance <-> S2_hall] {cost = 5}
   atomic-path [S2_hall <-> halls_entrance] {cost = 4}
   atomic-path [G1_2_in <-> halls_entrance] {cost = 5}
   atomic-path [G2_out <-> G1_2_in] {cost = 5}
@@ -82,5 +82,5 @@ topo-map SL52(){
   atomic-path [Gate_R1_out <-> Gate_R2] {cost = 40}
   atomic-path [Gate_R2 <-> Gate_R2_intermediate] {cost = 4}
   atomic-path [Gate_R2_intermediate <-> G4_out] {cost = 3}
-  atomic-path [escalator_52L <-> escalator_52R] {cost = 10}
+  atomic-path [escalator_52L <-> escalator_52R] {cost = 5}
 }

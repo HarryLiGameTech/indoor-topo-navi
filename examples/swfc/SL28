@@ -1,0 +1,67 @@
+topo-map SL28(){
+   let params: {permResident: Int} = {
+       permResident = 75
+    }
+  topo-node S1_hall
+  topo-node L4_hall
+  topo-node L3_hall
+  topo-node reception {description = "Reception Desk for SWFC office. Capable of visitor registration"}
+  topo-node escalator_28R
+  topo-node escalator_28L
+  topo-node ST_C_out
+  topo-node ST_C
+  topo-node service_office_reception {description = "Reception Desk of CEO Suite"}
+  topo-node local_elevator_hall_corner {description = "The corner at the very inner part of the L3 elevator hall"}
+  topo-node lobby_entrance
+  topo-node halls_entrance
+  topo-node G1_in
+  topo-node G2_in
+  topo-node G2_interm
+  topo-node G1_out
+  topo-node G1_interm
+  topo-node G2_out
+  topo-node LS3_hall
+  topo-node FS1_3_hall
+  topo-node ST_B
+  topo-node ST_A
+  topo-node FS4_6_hall
+  topo-node LS4_hall
+  topo-node n_d9bcef1c6181434cbc40b1e205a08d54
+  topo-node service_corr_A
+  topo-node A_hall_out
+  topo-node service_corr_B
+  topo-node B_hall_out
+  atomic-path [S1_hall <-> lobby_entrance] {cost = 5}
+  atomic-path [lobby_entrance <-> reception] {cost = 3}
+  atomic-path [S1_hall <-> halls_entrance] {cost = 4}
+  atomic-path [ST_C_out <-> ST_C] {cost = 3}
+  atomic-path [ST_A <-> FS4_6_hall] {cost = 3}
+  atomic-path [FS4_6_hall <-> LS4_hall] {cost = 1}
+  atomic-path [ST_B <-> FS1_3_hall] {cost = 3}
+  atomic-path [FS1_3_hall <-> LS3_hall] {cost = 1}
+  atomic-path [LS3_hall <-> B_hall_out] {cost = 5}
+  atomic-path [B_hall_out <-> service_corr_B] {cost = 3}
+  atomic-path [service_corr_B <-> G2_interm] {cost = 3}
+  atomic-path [LS4_hall <-> A_hall_out] {cost = 5}
+  atomic-path [A_hall_out <-> service_corr_A] {cost = 3}
+  atomic-path [service_corr_A <-> n_d9bcef1c6181434cbc40b1e205a08d54] {cost = 3}
+  atomic-path [G1_in <-> L3_hall] {cost = 12}
+  atomic-path [local_elevator_hall_corner <-> L3_hall] {cost = 3}
+  atomic-path [G1_in <-> halls_entrance] {cost = 5}
+  atomic-path [halls_entrance <-> G2_in] {cost = 5}
+  atomic-path [G2_in <-> L4_hall] {cost = 3}
+  atomic-path [G2_in <-> G2_interm] {cost = 5}
+  atomic-path [G2_interm <-> G2_out] {cost = 3}
+  atomic-path [G2_out <-> lobby_entrance] {cost = 12}
+  atomic-path [n_d9bcef1c6181434cbc40b1e205a08d54 <-> local_elevator_hall_corner] {cost = 4}
+  atomic-path [G1_out <-> G1_interm] {cost = 4}
+  atomic-path [G1_out <-> reception] {cost = 9}
+  atomic-path [lobby_entrance <-> escalator_28R] {cost = 12}
+  atomic-path [lobby_entrance <-> escalator_28L] {cost = 11}
+  atomic-path [escalator_28L <-> escalator_28R] {cost = 3}
+  atomic-path [reception <-> service_office_reception] {cost = 6}
+  atomic-path [reception <-> escalator_28R] {cost = 6}
+  atomic-path [reception <-> escalator_28L] {cost = 10}
+  atomic-path [G1_interm <-> G1_in] {cost = 5}
+  atomic-path [local_elevator_hall_corner <-> ST_C_out] {cost = 8}
+}
