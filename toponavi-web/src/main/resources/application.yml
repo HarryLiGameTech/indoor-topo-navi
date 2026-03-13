@@ -18,7 +18,7 @@ spring:
           github:
             client-id: ${GITHUB_OAUTH_CLIENT_ID:}
             client-secret: ${GITHUB_OAUTH_CLIENT_SECRET:}
-            scope: read:user, repo ,user:email
+            scope: read:user,user:email
         provider:
           github:
             authorization-uri: https://github.com/login/oauth/authorize
