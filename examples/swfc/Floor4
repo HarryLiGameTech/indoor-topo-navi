@@ -1,0 +1,33 @@
+topo-map Floor4(){
+  // This floor is quite "abandoned", which means most roads are closed off at most of the times.
+  // Therefore we only listed significant nodes, especially for the elevators and stairs. Please update this file if you made some exploration on this floor.
+   let params: {permResident: Int} = {
+       permResident = 5
+    }
+  topo-node escalator4_to_5
+  topo-node escalator4_to_3
+  topo-node small_alley_end
+  topo-node MP3_hall
+  topo-node guest_toilet
+  topo-node FS4_6_hall
+  topo-node LS2_hall
+  topo-node LS1_hall
+  topo-node FS1_3_hall
+  topo-node upward_escalator_intersact
+  topo-node downward_escalator_intersact
+  topo-node SS3_4_hall
+  topo-node MC1_hall
+  topo-node ST_B
+  topo-node ST_A
+  atomic-path [small_alley_end <-> MP3_hall] {cost = 2}
+  atomic-path [MP3_hall <-> guest_toilet] {cost = 3}
+  atomic-path [escalator4_to_3 <-> downward_escalator_intersact] {cost = 3}
+  atomic-path [downward_escalator_intersact <-> upward_escalator_intersact] {cost = 15}
+  atomic-path [upward_escalator_intersact <-> escalator4_to_5] {cost = 3}
+  atomic-path [upward_escalator_intersact <-> small_alley_end] {cost = 5}
+  atomic-path [SS3_4_hall <-> MC1_hall] {cost = 5}
+  atomic-path [ST_A <-> FS4_6_hall] {cost = 3}
+  atomic-path [FS4_6_hall <-> LS2_hall] {cost = 1}
+  atomic-path [LS1_hall <-> FS1_3_hall] {cost = 1}
+  atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
+}

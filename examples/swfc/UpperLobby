@@ -54,7 +54,7 @@ topo-map UpperLobby(){
   atomic-path [retail_toilet_hall <-> retail_toilet_B] {cost = 3}
   atomic-path [retail_toilet_hall <-> SS5_6_hall] {cost = 6}
   atomic-path [n_1b5bb9aa39624128a111933d85803616 <-> atrium_R_core_link] {cost = 13}
-  atomic-path [atrium_R_core_link <-> atrium_R_neck] {cost = 15}
+  atomic-path [atrium_R_core_link <-> atrium_R_neck] {cost = 12}
   atomic-path [atrium_R_neck <-> SS7_8_hall_out] {cost = 25}
   atomic-path [SS7_8_hall_out <-> SS7_8_hall] {cost = 5}
   atomic-path [SS7_8_hall_out <-> gate_footbridge] {cost = 25}

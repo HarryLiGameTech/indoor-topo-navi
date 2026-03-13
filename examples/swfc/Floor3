@@ -1,0 +1,114 @@
+topo-map Floor3(){
+   // Based on floor plan and on-site study. Shop doors are omitted for simplicity.
+   // PRs Strongly welcomed!
+
+   let params: {permResident: Int} = {
+       permResident = 25
+    }
+  topo-node CP1_2_hall
+  topo-node office_alley_A
+  topo-node SS3_4_hall
+  topo-node MC1_hall
+  topo-node office_alley_end_B
+  topo-node mori_office
+  topo-node GE3_4_hall
+  topo-node GE1_2_hall
+  topo-node observatory_exit
+  topo-node office_toilet_alley_end
+  topo-node atrium_R_core_link
+  topo-node atrium_R_neck
+  topo-node n_fe8234dd7ef64d9aadae8d91053fe52c
+  topo-node retail_toilet_out
+  topo-node retail_toilet_A
+  topo-node retail_toilet_B
+  topo-node SS5_6_hall
+  topo-node SP_hall
+  topo-node atrium_L_neck
+  topo-node outer_intersact
+  topo-node SS7_8_hall_out
+  topo-node SS7_8_hall
+  topo-node familymart
+  topo-node B_hall_intersact
+  topo-node B_hall_out
+  topo-node LS1_hall
+  topo-node GE1_3_hall
+  topo-node ST_B
+  topo-node escalator3_to_1
+  topo-node escalator3_to_4
+  topo-node observatory_reception_3F
+  topo-node n_cd48199cba08455e8ecb039629c96277
+  topo-node MP3_hall
+  topo-node BOH_alley_gate_B
+  topo-node ST_C_out
+  topo-node ST_C
+  topo-node BOH_alley_intersact
+  topo-node A_hall_intersact
+  topo-node BOH_alley_gate_L
+  topo-node A_hall_out
+  topo-node LS2_hall
+  topo-node FS4_6_hall
+  topo-node ST_A
+  topo-node MP3_alley_end
+  topo-node inner_intersact
+  topo-node office_toilet_B_out
+  topo-node office_toilet_A_out
+  topo-node office_toilet_A
+  topo-node office_toilet_B
+  topo-node BOH_inner_corner
+  topo-node BOH_alley_door_in
+  atomic-path [LS1_hall <-> B_hall_out] {cost = 4}
+  atomic-path [LS1_hall <-> GE1_3_hall] {cost = 1}
+  atomic-path [GE1_3_hall <-> ST_B] {cost = 3}
+  atomic-path [B_hall_out <-> B_hall_intersact] {cost = 5}
+  atomic-path [B_hall_intersact <-> office_toilet_alley_end] {cost = 4}
+  atomic-path [escalator3_to_1 <-> observatory_reception_3F] {cost = 3}
+  atomic-path [observatory_reception_3F <-> observatory_exit] {cost = 5}
+  atomic-path [escalator3_to_1 <-> observatory_exit] {cost = 7}
+  atomic-path [n_cd48199cba08455e8ecb039629c96277 <-> escalator3_to_4] {cost = 3}
+  atomic-path [escalator3_to_1 <-> BOH_alley_gate_B] {cost = 8}
+  atomic-path [BOH_alley_gate_B <-> n_cd48199cba08455e8ecb039629c96277] {cost = 5}
+  atomic-path [BOH_alley_gate_B <-> ST_C_out] {cost = 6}
+  atomic-path [ST_C_out <-> ST_C] {cost = 3}
+  atomic-path [A_hall_intersact <-> A_hall_out] {cost = 5}
+  atomic-path [A_hall_out <-> LS2_hall] {cost = 4}
+  atomic-path [LS2_hall <-> FS4_6_hall] {cost = 1}
+  atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
+  atomic-path [MP3_alley_end <-> n_cd48199cba08455e8ecb039629c96277] {cost = 6}
+  atomic-path [MP3_alley_end <-> MP3_hall] {cost = 2}
+  atomic-path [MP3_alley_end <-> BOH_alley_gate_L] {cost = 8}
+  atomic-path [BOH_alley_gate_L <-> A_hall_intersact] {cost = 5}
+  atomic-path [A_hall_intersact <-> BOH_alley_intersact] {cost = 4}
+  atomic-path [BOH_alley_intersact <-> ST_C_out] {cost = 6}
+  atomic-path [office_alley_end_B <-> mori_office] {cost = 7}
+  atomic-path [office_alley_end_B <-> GE3_4_hall] {cost = 5}
+  atomic-path [SS7_8_hall_out <-> inner_intersact] {cost = 25}
+  atomic-path [office_alley_end_B <-> inner_intersact] {cost = 20}
+  atomic-path [inner_intersact <-> office_alley_A] {cost = 13}
+  atomic-path [inner_intersact <-> CP1_2_hall] {cost = 7}
+  atomic-path [office_alley_A <-> SS3_4_hall] {cost = 5}
+  atomic-path [SS3_4_hall <-> MC1_hall] {cost = 4}
+  atomic-path [office_toilet_alley_end <-> office_alley_A] {cost = 12}
+  atomic-path [office_toilet_alley_end <-> familymart] {cost = 7}
+  atomic-path [observatory_exit <-> familymart] {cost = 7}
+  atomic-path [observatory_exit <-> GE1_2_hall] {cost = 4}
+  atomic-path [office_toilet_alley_end <-> atrium_R_core_link] {cost = 35}
+  atomic-path [atrium_R_core_link <-> atrium_R_neck] {cost = 12}
+  atomic-path [SS7_8_hall_out <-> SS7_8_hall] {cost = 5}
+  atomic-path [SS7_8_hall_out <-> atrium_R_neck] {cost = 45}
+  atomic-path [outer_intersact <-> SS7_8_hall_out] {cost = 20}
+  atomic-path [atrium_L_neck <-> outer_intersact] {cost = 28}
+  atomic-path [atrium_L_neck <-> SP_hall] {cost = 5}
+  atomic-path [office_alley_end_B <-> outer_intersact] {cost = 25}
+  atomic-path [atrium_R_core_link <-> n_fe8234dd7ef64d9aadae8d91053fe52c] {cost = 20}
+  atomic-path [n_fe8234dd7ef64d9aadae8d91053fe52c <-> retail_toilet_out] {cost = 3}
+  atomic-path [retail_toilet_out <-> retail_toilet_A] {cost = 3}
+  atomic-path [retail_toilet_out <-> retail_toilet_B] {cost = 3}
+  atomic-path [retail_toilet_out <-> SS5_6_hall] {cost = 6}
+  atomic-path [office_toilet_B_out <-> office_toilet_A_out] {cost = 0}
+  atomic-path [office_toilet_B_out <-> office_toilet_B] {cost = 2}
+  atomic-path [office_toilet_A_out <-> office_toilet_A] {cost = 2}
+  atomic-path [BOH_alley_door_in <-> office_toilet_A_out] {cost = 4}
+  atomic-path [BOH_alley_door_in <-> BOH_inner_corner] {cost = 3}
+  atomic-path [BOH_inner_corner <-> BOH_alley_intersact] {cost = 12}
+  atomic-path [office_alley_A <-> CP1_2_hall] {cost = 5}
+}

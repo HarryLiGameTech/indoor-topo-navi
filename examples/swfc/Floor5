@@ -1,0 +1,30 @@
+topo-map Floor5(){
+   // This floor is highly-private (MORI's own office), therefore only briefly mapped with only significant nodes according to floor plans
+   // It is strongly NOT recommended to enter this floor on-site! No need for further update since it's generally inaccessible
+
+   let params: {permResident: Int} = {
+       permResident = 50
+   }
+  topo-node MC1_hall
+  topo-node SS3_4_hall
+  topo-node core_door_R
+  topo-node mori_entrance
+  topo-node escalator_5only
+  topo-node MP3_hall
+  topo-node core_door_L
+  topo-node core_door_B
+  topo-node serv_gate_in
+  topo-node corner_LT
+  topo-node corner_LB
+  atomic-path [serv_gate_in <-> SS3_4_hall] {cost = 5}
+  atomic-path [SS3_4_hall <-> MC1_hall] {cost = 5}
+  atomic-path [corner_LT <-> serv_gate_in] {cost = 45}
+  atomic-path [serv_gate_in <-> core_door_R] {cost = 20}
+  atomic-path [core_door_R <-> mori_entrance] {cost = 35}
+  atomic-path [mori_entrance <-> escalator_5only] {cost = 4}
+  atomic-path [mori_entrance <-> core_door_B] {cost = 12}
+  atomic-path [core_door_B <-> corner_LB] {cost = 25}
+  atomic-path [corner_LB <-> MP3_hall] {cost = 4}
+  atomic-path [corner_LB <-> core_door_L] {cost = 20}
+  atomic-path [core_door_L <-> corner_LT] {cost = 25}
+}
