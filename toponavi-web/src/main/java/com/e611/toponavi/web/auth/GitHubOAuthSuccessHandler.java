@@ -59,3 +59,4 @@ public class GitHubOAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         getRedirectStrategy().sendRedirect(request, response, frontendUrl + "/auth/callback?token=" + jwt);
     }
 }
+
