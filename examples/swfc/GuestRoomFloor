@@ -1,0 +1,141 @@
+topo-map GuestRoomFloor(){
+   let params: {permResident: Int} = {
+       permResident = 55
+    }
+  topo-node HL_hall
+  topo-node n_4b896a7bbf264f2e9d4ba04a61775323
+  topo-node n_e0afebf32f8b474e9f1d831112adc7d8
+  topo-node A_egress_hall_out
+  topo-node A_egress_hall_interm
+  topo-node LS14_hall
+  topo-node FS4_6_hall
+  topo-node ST_A
+  topo-node ST_B
+  topo-node FS1_3_hall
+  topo-node LS13_hall
+  topo-node HS3_4_hall
+  topo-node service_corr_interm
+  topo-node service_corr_in
+  topo-node service_corr_out
+  topo-node B_egress_hall_interm
+  topo-node B_egress_hall_out
+  topo-node rooms_13_14
+  topo-node room_13_in
+  topo-node room_14_in
+  topo-node n_fb8b6ab23ca240dfa03fbb277be4268d
+  topo-node rooms_15_16
+  topo-node room_15_in
+  topo-node room_16_in
+  topo-node rooms_11_12
+  topo-node rooms_09
+  topo-node room_11_in
+  topo-node room_12_in
+  topo-node room_17_in
+  topo-node n_8bf02a7611d642adb6afd570768f3d16
+  topo-node rooms_17_18
+  topo-node room_18_in
+  topo-node n_9c06bc3a4ce54e729319ee101a8c9b64
+  topo-node n_b16306d7d2b046babcaf024263dcb59a
+  topo-node n_7c5ae9ab7cc949d9b430657d95f8587e
+  topo-node rooms_07_08
+  topo-node room_09_in
+  topo-node room_08_in
+  topo-node room_07_in
+  topo-node room_06_in
+  topo-node room_04_in
+  topo-node room_03_in
+  topo-node room_02_in
+  topo-node room_01_in
+  topo-node n_307a72f065b343f2a6f405d07b827f1c
+  topo-node rooms_06
+  topo-node n_8502caa31ddc4ba6855e0ebae68ecfef
+  topo-node rooms_03_04
+  topo-node rooms_01_02
+  topo-node n_3452f3f752f14da0927dd84915736ab7
+  topo-node rooms_27_28
+  topo-node n_1d0c85db341f4ae7972a757557a83be8
+  topo-node rooms_23
+  topo-node room_23_in
+  topo-node room_22_in
+  topo-node room_21_in
+  topo-node room_20_in
+  topo-node room_25_in
+  topo-node room_26_in
+  topo-node room_27_in
+  topo-node room_28_in
+  topo-node n_2d7a3b4011b6456b885dfe26bb35f375
+  topo-node rooms_25_26
+  topo-node n_5e19e165efab413cadcda5a369336191
+  topo-node rooms_21_22
+  topo-node n_70524c59eba44e42b6dd2881b4d27211
+  topo-node rooms_20
+  atomic-path [ST_A <-> FS4_6_hall] {cost = 3}
+  atomic-path [FS4_6_hall <-> LS14_hall] {cost = 1}
+  atomic-path [LS14_hall <-> A_egress_hall_interm] {cost = 5}
+  atomic-path [A_egress_hall_interm <-> A_egress_hall_out] {cost = 4}
+  atomic-path [A_egress_hall_out <-> n_e0afebf32f8b474e9f1d831112adc7d8] {cost = 3}
+  atomic-path [n_e0afebf32f8b474e9f1d831112adc7d8 <-> HL_hall] {cost = 4}
+  atomic-path [HL_hall <-> n_4b896a7bbf264f2e9d4ba04a61775323] {cost = 8}
+  atomic-path [n_4b896a7bbf264f2e9d4ba04a61775323 <-> n_9c06bc3a4ce54e729319ee101a8c9b64] {cost = 6}
+  atomic-path [n_9c06bc3a4ce54e729319ee101a8c9b64 <-> rooms_11_12] {cost = 3}
+  atomic-path [rooms_11_12 <-> room_11_in] {cost = 4}
+  atomic-path [rooms_11_12 <-> room_12_in] {cost = 4}
+  atomic-path [n_b16306d7d2b046babcaf024263dcb59a <-> n_9c06bc3a4ce54e729319ee101a8c9b64] {cost = 4}
+  atomic-path [n_b16306d7d2b046babcaf024263dcb59a <-> rooms_09] {cost = 3}
+  atomic-path [rooms_09 <-> room_09_in] {cost = 4}
+  atomic-path [n_b16306d7d2b046babcaf024263dcb59a <-> n_7c5ae9ab7cc949d9b430657d95f8587e] {cost = 4}
+  atomic-path [n_7c5ae9ab7cc949d9b430657d95f8587e <-> rooms_07_08] {cost = 3}
+  atomic-path [rooms_07_08 <-> room_08_in] {cost = 4}
+  atomic-path [rooms_07_08 <-> room_07_in] {cost = 4}
+  atomic-path [n_7c5ae9ab7cc949d9b430657d95f8587e <-> n_307a72f065b343f2a6f405d07b827f1c] {cost = 4}
+  atomic-path [n_307a72f065b343f2a6f405d07b827f1c <-> rooms_06] {cost = 3}
+  atomic-path [rooms_06 <-> room_06_in] {cost = 4}
+  atomic-path [rooms_03_04 <-> room_03_in] {cost = 4}
+  atomic-path [n_307a72f065b343f2a6f405d07b827f1c <-> n_8502caa31ddc4ba6855e0ebae68ecfef] {cost = 4}
+  atomic-path [n_8502caa31ddc4ba6855e0ebae68ecfef <-> rooms_03_04] {cost = 3}
+  atomic-path [n_8502caa31ddc4ba6855e0ebae68ecfef <-> A_egress_hall_out] {cost = 2}
+  atomic-path [n_4b896a7bbf264f2e9d4ba04a61775323 <-> rooms_13_14] {cost = 3}
+  atomic-path [rooms_13_14 <-> room_13_in] {cost = 4}
+  atomic-path [rooms_13_14 <-> room_14_in] {cost = 4}
+  atomic-path [n_4b896a7bbf264f2e9d4ba04a61775323 <-> n_fb8b6ab23ca240dfa03fbb277be4268d] {cost = 5}
+  atomic-path [n_fb8b6ab23ca240dfa03fbb277be4268d <-> rooms_15_16] {cost = 3}
+  atomic-path [rooms_15_16 <-> room_15_in] {cost = 4}
+  atomic-path [rooms_15_16 <-> room_16_in] {cost = 4}
+  atomic-path [room_04_in <-> rooms_03_04] {cost = 4}
+  atomic-path [n_e0afebf32f8b474e9f1d831112adc7d8 <-> n_3452f3f752f14da0927dd84915736ab7] {cost = 5}
+  atomic-path [n_3452f3f752f14da0927dd84915736ab7 <-> rooms_27_28] {cost = 3}
+  atomic-path [n_e0afebf32f8b474e9f1d831112adc7d8 <-> rooms_01_02] {cost = 3}
+  atomic-path [rooms_01_02 <-> room_02_in] {cost = 4}
+  atomic-path [rooms_01_02 <-> room_01_in] {cost = 4}
+  atomic-path [rooms_27_28 <-> room_28_in] {cost = 4}
+  atomic-path [rooms_27_28 <-> room_27_in] {cost = 4}
+  atomic-path [rooms_25_26 <-> room_26_in] {cost = 4}
+  atomic-path [rooms_25_26 <-> room_25_in] {cost = 4}
+  atomic-path [rooms_25_26 <-> n_2d7a3b4011b6456b885dfe26bb35f375] {cost = 3}
+  atomic-path [n_2d7a3b4011b6456b885dfe26bb35f375 <-> service_corr_out] {cost = 4}
+  atomic-path [service_corr_out <-> n_3452f3f752f14da0927dd84915736ab7] {cost = 2}
+  atomic-path [rooms_23 <-> n_1d0c85db341f4ae7972a757557a83be8] {cost = 3}
+  atomic-path [n_1d0c85db341f4ae7972a757557a83be8 <-> n_2d7a3b4011b6456b885dfe26bb35f375] {cost = 4}
+  atomic-path [n_1d0c85db341f4ae7972a757557a83be8 <-> n_5e19e165efab413cadcda5a369336191] {cost = 4}
+  atomic-path [rooms_23 <-> room_23_in] {cost = 4}
+  atomic-path [n_5e19e165efab413cadcda5a369336191 <-> rooms_21_22] {cost = 3}
+  atomic-path [rooms_21_22 <-> room_22_in] {cost = 4}
+  atomic-path [rooms_21_22 <-> room_21_in] {cost = 4}
+  atomic-path [ST_B <-> FS1_3_hall] {cost = 3}
+  atomic-path [FS1_3_hall <-> LS13_hall] {cost = 1}
+  atomic-path [LS13_hall <-> B_egress_hall_interm] {cost = 5}
+  atomic-path [B_egress_hall_interm <-> B_egress_hall_out] {cost = 4}
+  atomic-path [B_egress_hall_out <-> n_fb8b6ab23ca240dfa03fbb277be4268d] {cost = 3}
+  atomic-path [B_egress_hall_out <-> n_8bf02a7611d642adb6afd570768f3d16] {cost = 2}
+  atomic-path [n_8bf02a7611d642adb6afd570768f3d16 <-> rooms_17_18] {cost = 3}
+  atomic-path [HS3_4_hall <-> service_corr_in] {cost = 6}
+  atomic-path [service_corr_in <-> service_corr_interm] {cost = 3}
+  atomic-path [service_corr_interm <-> service_corr_out] {cost = 3}
+  atomic-path [HS3_4_hall <-> LS13_hall] {cost = 3}
+  atomic-path [n_8bf02a7611d642adb6afd570768f3d16 <-> n_70524c59eba44e42b6dd2881b4d27211] {cost = 4}
+  atomic-path [n_70524c59eba44e42b6dd2881b4d27211 <-> rooms_20] {cost = 3}
+  atomic-path [rooms_17_18 <-> room_17_in] {cost = 4}
+  atomic-path [rooms_17_18 <-> room_18_in] {cost = 4}
+  atomic-path [rooms_20 <-> room_20_in] {cost = 4}
+  atomic-path [n_70524c59eba44e42b6dd2881b4d27211 <-> n_5e19e165efab413cadcda5a369336191] {cost = 4}
+}
