@@ -24,7 +24,7 @@ public class AuthController implements ErrorController {
         this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
-    @GetMapping("/auth/github")
+    @GetMapping({"/auth/github", "/auth/github/"})
     public void initiateGitHubLogin(HttpServletResponse response) throws IOException {
         ClientRegistration reg = clientRegistrationRepository.findByRegistrationId("github");
         if (reg == null) {
@@ -34,7 +34,7 @@ public class AuthController implements ErrorController {
         response.sendRedirect("/oauth2/authorization/github");
     }
 
-    @GetMapping("/api/me")
+    @GetMapping({"/api/me", "/api/me/"})
     public ResponseEntity<Map<String, Object>> me(@AuthenticationPrincipal User user) {
         if (user == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(Map.of(
@@ -45,7 +45,7 @@ public class AuthController implements ErrorController {
         ));
     }
 
-    @GetMapping("/error")
+    @GetMapping({"/error", "/error/"})
     public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
         Object status = request.getAttribute("jakarta.servlet.error.status_code");
         Object message = request.getAttribute("jakarta.servlet.error.message");

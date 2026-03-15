@@ -27,7 +27,7 @@ spring:
             user-name-attribute: login
 
 platform:
-  frontend-url: ${FRONTEND_URL:http://192.168.50.201:5173}
+  frontend-url: ${FRONTEND_URL:http://topomap-store.hnrobert.space}
   jwt:
     secret: ${JWT_SECRET:changeme_replace_in_production_with_a_strong_random_secret}
     expiration-ms: 86400000   # 24 hours

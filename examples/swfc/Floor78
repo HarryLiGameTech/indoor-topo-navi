@@ -1,0 +1,38 @@
+topo-map Floor78(){
+   let params: {permResident: Int} = {
+       permResident = 1
+    }
+  topo-node ST_A
+  topo-node FS4_6_hall
+  topo-node corr_A
+  topo-node n_18567ec144d742d18ae70471bdf84122
+  topo-node mech_entrance_A
+  topo-node SH2_3_hall
+  topo-node ST_C
+  topo-node corr_B
+  topo-node n_7350aa7a2d7645eb98b23a5e27558a03
+  topo-node FS1_3_hall
+  topo-node ST_B
+  topo-node ST_A_out
+  topo-node corr_A_out
+  topo-node ST_B_out
+  topo-node mech_entrance_B
+  topo-node mech_entrance_C
+  atomic-path [ST_A_out <-> ST_A] {cost = 2}
+  atomic-path [ST_A_out <-> corr_A_out] {cost = 10}
+  atomic-path [corr_A_out <-> corr_A] {cost = 2}
+  atomic-path [corr_A <-> n_18567ec144d742d18ae70471bdf84122] {cost = 3}
+  atomic-path [corr_A <-> FS4_6_hall] {cost = 3}
+  atomic-path [FS4_6_hall <-> ST_A] {cost = 4}
+  atomic-path [n_18567ec144d742d18ae70471bdf84122 <-> mech_entrance_A] {cost = 18}
+  atomic-path [mech_entrance_A <-> SH2_3_hall] {cost = 4}
+  atomic-path [SH2_3_hall <-> ST_C] {cost = 8}
+  atomic-path [FS1_3_hall <-> ST_B] {cost = 4}
+  atomic-path [ST_B <-> ST_B_out] {cost = 2}
+  atomic-path [ST_B_out <-> mech_entrance_B] {cost = 10}
+  atomic-path [mech_entrance_B <-> corr_B] {cost = 2}
+  atomic-path [corr_B <-> n_7350aa7a2d7645eb98b23a5e27558a03] {cost = 3}
+  atomic-path [corr_B <-> FS1_3_hall] {cost = 3}
+  atomic-path [mech_entrance_C <-> n_7350aa7a2d7645eb98b23a5e27558a03] {cost = 5}
+  atomic-path [mech_entrance_C <-> ST_C] {cost = 2}
+}
