@@ -1,0 +1,56 @@
+topo-map PHSH_Floor86(){
+   let params: {permResident: Int} = {
+       permResident = 10
+    }
+  topo-node HL_hall
+  topo-node A_egress_hall_out
+  topo-node A_egress_hall_interm
+  topo-node LS14_hall
+  topo-node FS4_6_hall
+  topo-node ST_A
+  topo-node salon_7_8
+  topo-node B_egress_hall_interm
+  topo-node LS13_hall
+  topo-node HS3_4_hall
+  topo-node service_corr_out
+  topo-node service_corr_interm
+  topo-node service_corr_in
+  topo-node FS1_3_hall
+  topo-node ST_B
+  topo-node guest_elevator_intersect
+  topo-node salon_3_4
+  topo-node small_stairs
+  topo-node salon_5_6
+  topo-node pantry_intersect
+  topo-node pantry
+  topo-node salon_6_7
+  topo-node salon_2_3
+  topo-node salon_1_2
+  topo-node n_f9301320fc0c4d00bdc850e3d25ac276
+  atomic-path [pantry <-> pantry_intersect] {cost = 3}
+  atomic-path [pantry_intersect <-> salon_5_6] {cost = 2}
+  atomic-path [salon_5_6 <-> salon_6_7] {cost = 13}
+  atomic-path [salon_6_7 <-> salon_7_8] {cost = 7}
+  atomic-path [B_egress_hall_interm <-> salon_7_8] {cost = 4}
+  atomic-path [B_egress_hall_interm <-> LS13_hall] {cost = 5}
+  atomic-path [LS13_hall <-> FS1_3_hall] {cost = 1}
+  atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
+  atomic-path [LS13_hall <-> HS3_4_hall] {cost = 3}
+  atomic-path [salon_1_2 <-> n_f9301320fc0c4d00bdc850e3d25ac276] {cost = 13}
+  atomic-path [n_f9301320fc0c4d00bdc850e3d25ac276 <-> salon_7_8] {cost = 13}
+  atomic-path [HS3_4_hall <-> service_corr_in] {cost = 6}
+  atomic-path [service_corr_in <-> service_corr_interm] {cost = 3}
+  atomic-path [service_corr_interm <-> service_corr_out] {cost = 3}
+  atomic-path [service_corr_out <-> salon_1_2] {cost = 2}
+  atomic-path [service_corr_out <-> salon_2_3] {cost = 5}
+  atomic-path [salon_2_3 <-> guest_elevator_intersect] {cost = 3}
+  atomic-path [guest_elevator_intersect <-> HL_hall] {cost = 4}
+  atomic-path [guest_elevator_intersect <-> A_egress_hall_out] {cost = 4}
+  atomic-path [A_egress_hall_out <-> A_egress_hall_interm] {cost = 4}
+  atomic-path [A_egress_hall_out <-> salon_3_4] {cost = 5}
+  atomic-path [salon_3_4 <-> small_stairs] {cost = 7}
+  atomic-path [small_stairs <-> pantry_intersect] {cost = 5}
+  atomic-path [A_egress_hall_interm <-> LS14_hall] {cost = 5}
+  atomic-path [ST_A <-> FS4_6_hall] {cost = 3}
+  atomic-path [FS4_6_hall <-> LS14_hall] {cost = 1}
+}

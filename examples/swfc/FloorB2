@@ -1,0 +1,92 @@
+topo-map FloorB2(){
+   // This floor is way messy! Shops' doors omitted for simplicity. BOH area's paths may be invalid or partially missing
+
+   let params: {permResident: Int} = {
+       permResident = 50
+    }
+  topo-node SP1_2_hall
+  topo-node retail_escalator_B2
+  topo-node observatory_escalator_B2B
+  topo-node GE4_hall
+  topo-node GE3_hall
+  topo-node n_a3cad4ca4485498098ddbab2cdabf27b
+  topo-node n_c4134fb40c4b40daa500b1ff70601f28
+  topo-node core_gate_T
+  topo-node BOH_intersect_CP_hall
+  topo-node office_toilet_A
+  topo-node CP1_2_hall
+  topo-node n_35247bbbbcf045b0a29471b43cb40820
+  topo-node core_gate_L
+  topo-node egress_corr_A
+  topo-node A_hall_out
+  topo-node LS2_hall
+  topo-node FS4_6_hall
+  topo-node retail_BOH_corner
+  topo-node retail_BOH_end
+  topo-node hotel_BOH_corner
+  topo-node SH3_hall
+  topo-node egress_corr_BL
+  topo-node LS1_hall
+  topo-node FS1_3_hall
+  topo-node egress_corr_BR
+  topo-node n_dee63b00f3df4b1bb1fdfebf354f39ad
+  topo-node observatory_escalator_B2A
+  topo-node GE1_2_hall
+  topo-node n_f5352bd4b66944f2b3d22ea783a60ce9
+  topo-node BOH_intersect_SS_hall
+  topo-node SS3_4_hall
+  topo-node core_gate_R
+  topo-node CP3_4_hall
+  topo-node office_toilet_B
+  topo-node n_c2ec1b3498014e9dbfc4b49c0f18181c
+  topo-node retail_intersact_CP_hall
+  topo-node carpark_gate
+  topo-node n_c63c7d76bd264253a7075fc96e4d618f
+  topo-node n_5e15291c001c4e1bb9cdbf1f88d347b6
+  topo-node n_f4f3bab151674141b75245675efb2cc0
+  topo-node n_dd6242092778436289e99ba4e01ea775
+  topo-node n_6d7317dbf8544246a0624170ab82d702
+  topo-node laundry
+  topo-node retail_core_intersect
+  atomic-path [observatory_escalator_B2B <-> GE4_hall] {cost = 4}
+  atomic-path [n_a3cad4ca4485498098ddbab2cdabf27b <-> GE3_hall] {cost = 5}
+  atomic-path [n_a3cad4ca4485498098ddbab2cdabf27b <-> n_c4134fb40c4b40daa500b1ff70601f28] {cost = 5}
+  atomic-path [n_c4134fb40c4b40daa500b1ff70601f28 <-> core_gate_T] {cost = 8}
+  atomic-path [core_gate_T <-> BOH_intersect_CP_hall] {cost = 5}
+  atomic-path [retail_escalator_B2 <-> SP1_2_hall] {cost = 10}
+  atomic-path [retail_intersact_CP_hall <-> SP1_2_hall] {cost = 45}
+  atomic-path [retail_intersact_CP_hall <-> n_c2ec1b3498014e9dbfc4b49c0f18181c] {cost = 7}
+  atomic-path [office_toilet_A <-> n_35247bbbbcf045b0a29471b43cb40820] {cost = 2}
+  atomic-path [n_35247bbbbcf045b0a29471b43cb40820 <-> CP1_2_hall] {cost = 2}
+  atomic-path [n_35247bbbbcf045b0a29471b43cb40820 <-> carpark_gate] {cost = 6}
+  atomic-path [BOH_intersect_SS_hall <-> BOH_intersect_CP_hall] {cost = 7}
+  atomic-path [BOH_intersect_SS_hall <-> SS3_4_hall] {cost = 4}
+  atomic-path [core_gate_R <-> BOH_intersect_SS_hall] {cost = 11}
+  atomic-path [observatory_escalator_B2A <-> GE1_2_hall] {cost = 5}
+  atomic-path [core_gate_L <-> egress_corr_A] {cost = 5}
+  atomic-path [n_c63c7d76bd264253a7075fc96e4d618f <-> SP1_2_hall] {cost = 6}
+  atomic-path [n_c63c7d76bd264253a7075fc96e4d618f <-> n_5e15291c001c4e1bb9cdbf1f88d347b6] {cost = 3}
+  atomic-path [n_5e15291c001c4e1bb9cdbf1f88d347b6 <-> n_f4f3bab151674141b75245675efb2cc0] {cost = 3}
+  atomic-path [n_dd6242092778436289e99ba4e01ea775 <-> n_c2ec1b3498014e9dbfc4b49c0f18181c] {cost = 3}
+  atomic-path [retail_BOH_corner <-> egress_corr_A] {cost = 2}
+  atomic-path [retail_BOH_corner <-> retail_BOH_end] {cost = 6}
+  atomic-path [n_f5352bd4b66944f2b3d22ea783a60ce9 <-> core_gate_T] {cost = 6}
+  atomic-path [egress_corr_A <-> A_hall_out] {cost = 5}
+  atomic-path [A_hall_out <-> LS2_hall] {cost = 3}
+  atomic-path [LS2_hall <-> FS4_6_hall] {cost = 1}
+  atomic-path [hotel_BOH_corner <-> SH3_hall] {cost = 5}
+  atomic-path [SH3_hall <-> egress_corr_BL] {cost = 3}
+  atomic-path [egress_corr_BL <-> LS1_hall] {cost = 5}
+  atomic-path [LS1_hall <-> FS1_3_hall] {cost = 1}
+  atomic-path [egress_corr_BL <-> n_dee63b00f3df4b1bb1fdfebf354f39ad] {cost = 4}
+  atomic-path [n_dee63b00f3df4b1bb1fdfebf354f39ad <-> egress_corr_BR] {cost = 3}
+  atomic-path [egress_corr_BR <-> core_gate_R] {cost = 4}
+  atomic-path [n_6d7317dbf8544246a0624170ab82d702 <-> hotel_BOH_corner] {cost = 10}
+  atomic-path [CP3_4_hall <-> office_toilet_B] {cost = 2}
+  atomic-path [n_f5352bd4b66944f2b3d22ea783a60ce9 <-> n_dee63b00f3df4b1bb1fdfebf354f39ad] {cost = 9}
+  atomic-path [n_6d7317dbf8544246a0624170ab82d702 <-> laundry] {cost = 3}
+  atomic-path [retail_core_intersect <-> core_gate_L] {cost = 15}
+  atomic-path [retail_core_intersect <-> n_dd6242092778436289e99ba4e01ea775] {cost = 12}
+  atomic-path [retail_core_intersect <-> n_f4f3bab151674141b75245675efb2cc0] {cost = 9}
+  atomic-path [n_dd6242092778436289e99ba4e01ea775 <-> CP3_4_hall] {cost = 10}
+}

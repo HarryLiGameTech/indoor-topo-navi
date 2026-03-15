@@ -1,0 +1,20 @@
+topo-map Floor85(){
+    // TODO: Complete it! Current one only acts as fallback version
+    let params: {permResident: Int} = {
+        permResident = 50
+    }
+
+    topo-node HL_hall
+    topo-node HS3_4_hall
+    topo-node LS14_hall
+    topo-node FS4_6_hall
+    topo-node ST_A
+    topo-node ST_B
+    topo-node service_corr_interm
+    topo-node service_corr_in
+    topo-node service_corr_out
+    topo-node LS13_hall
+    topo-node FS1_3_hall
+
+
+}

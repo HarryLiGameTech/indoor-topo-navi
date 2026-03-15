@@ -1,0 +1,20 @@
+topo-map Floor90(){
+    // Highly restricted floor. Only included significant nodes
+    // Written based on the only chance of on-site study
+    let params: {permResident: Int} = {
+       permResident = 25
+    }
+
+    topo-node FS7_hall
+    topo-node FS8_hall
+    topo-node HS3_4_hall
+    topo-node LS14_hall
+    topo-node staff_canteen
+
+
+    atomic-path [FS7_hall <-> HS3_4_hall] {cost = 10}
+    atomic-path [HS3_4_hall <-> staff_canteen] {cost = 15}
+    atomic-path [staff_canteen <-> LS14_hall] {cost = 20}
+    atomic-path [FS8_hall <-> LS14_hall] {cost = 15}
+    atomic-path [staff_canteen <-> FS8_hall] {cost = 30}
+}
