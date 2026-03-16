@@ -1,0 +1,127 @@
+topo-map FloorB1(){
+   let params: {permResident: Int} = {
+       permResident = 75
+    }
+  topo-node SP_hall
+  topo-node retail_escalator_B1out
+  topo-node retail_escalator_B1in
+  topo-node n_d5b4c3e9b3674523b160e65c2f426fc7 {description = "A narrow corridor connects retail area and retail-loading-bay"}
+  topo-node carpark_retail_logistics_gate
+  topo-node retail_intersect
+  topo-node observatory_escalator_B1B {description = "Escalator connecting B1 and B2 floors of the observatory's staff express-elevator hall"}
+  topo-node OB_elevator_hall_B_gate {description = "An automatic door separating the observatory entrance corridor and the staff express-elevator hall"}
+  topo-node GE4_hall
+  topo-node OB_elevator_hall_A_gate {description = "An automatic door separating the observatory entrance corridor and the guest express-elevator hall"}
+  topo-node observatory_escalator_B1A {description = "Escalator connecting B1 and B2 floors of the observatory's guest express-elevator hall"}
+  topo-node GE1_2_hall
+  topo-node n_6368a1ddeca0459795eb4ea031957e0a
+  topo-node ticket_office
+  topo-node observatory_individual_entrance
+  topo-node observatory_intersect
+  topo-node observatory_group_entrance
+  topo-node observatory_toilet_B_out
+  topo-node observatory_toilet_A_out
+  topo-node observatory_toilet_B
+  topo-node observatory_toilet_A
+  topo-node group_passageway_corner_1 {description = "1st corner inside the group entrance"}
+  topo-node group_passageway_corner_2 {description = "2nd corner inside the group entrance"}
+  topo-node SS3_4_hall
+  topo-node logistics_outer_corner
+  topo-node logistics_main_entrance
+  topo-node registration_booth
+  topo-node loading_bay_end {description = "End of the loading bay, towards the connection between carpark and the logistics hub"}
+  topo-node carpark_main_gate
+  topo-node CP1_2_hall
+  topo-node office_toilets
+  topo-node some_shop
+  topo-node retail_sunken_square_gate
+  topo-node CP3_4_corr_intersect
+  topo-node CP3_4_hall
+  topo-node n_81437a6f743b424b8549bcb331e1d03c {description = "Corner at connection corridor between CP3/4 elevator hall and retail area "}
+  topo-node escalator_B1_OBgate
+  topo-node retail_observatory_conn
+  topo-node logistics_carpark_conn
+  topo-node core_gate_R_out
+  topo-node core_gate_T
+  topo-node n_a230f34e96594131a8a7e0d200ae0f45
+  topo-node L2_2_4_escape {description = "Emergency escape door for L2-2 and L2-4 elevators"}
+  topo-node L1_1_3_escape {description = "Emergency escape door for L1-1 and L1-3 elevators"}
+  topo-node B_hall_intersect
+  topo-node post_office_booth {description = "Post services booth, NOT working when in off-hours"}
+  topo-node core_gate_R_in
+  topo-node logistics_core_intersect
+  topo-node logistics_toilets
+  topo-node n_304252c5a5d94eb59de61a54d09ec2bc
+  topo-node S1_2_4_escape {description = "Emergency escape door for S1-2 and S1-4 elevators"}
+  topo-node S2_1_3_escape {description = "Emergency escape door for S2-1 and S2-3 elevators"}
+  topo-node ramen_restaurant {description = "Gate of shop TONCHIN RAMEN"}
+  topo-node B_hall_interm
+  topo-node B_hall_gate
+  topo-node LS2_hall
+  topo-node FS4_6_hall
+  topo-node LS1_hall
+  topo-node FS1_3_hall
+  topo-node pedestrian_slope {description = "At the bottom of a slope designed for pedestrian access to the loading bay"}
+  atomic-path [SP_hall <-> retail_escalator_B1in] {cost = 4}
+  atomic-path [retail_escalator_B1in <-> n_d5b4c3e9b3674523b160e65c2f426fc7] {cost = 4}
+  atomic-path [n_d5b4c3e9b3674523b160e65c2f426fc7 <-> carpark_retail_logistics_gate] {cost = 4}
+  atomic-path [observatory_individual_entrance <-> ticket_office] {cost = 8}
+  atomic-path [observatory_toilet_A_out <-> observatory_toilet_A] {cost = 2}
+  atomic-path [observatory_toilet_A_out <-> observatory_toilet_B_out] {cost = 2}
+  atomic-path [observatory_toilet_B_out <-> observatory_toilet_B] {cost = 2}
+  atomic-path [observatory_toilet_B_out <-> observatory_group_entrance] {cost = 4}
+  atomic-path [observatory_group_entrance <-> group_passageway_corner_1] {cost = 6}
+  atomic-path [group_passageway_corner_1 <-> group_passageway_corner_2] {cost = 5}
+  atomic-path [group_passageway_corner_2 <-> OB_elevator_hall_A_gate] {cost = 25}
+  atomic-path [observatory_intersect <-> observatory_escalator_B1A] {cost = 5}
+  atomic-path [observatory_escalator_B1A <-> OB_elevator_hall_A_gate] {cost = 12}
+  atomic-path [OB_elevator_hall_A_gate <-> GE1_2_hall] {cost = 6}
+  atomic-path [observatory_intersect <-> n_6368a1ddeca0459795eb4ea031957e0a] {cost = 15}
+  atomic-path [n_6368a1ddeca0459795eb4ea031957e0a <-> observatory_escalator_B1B] {cost = 18}
+  atomic-path [observatory_escalator_B1B <-> OB_elevator_hall_B_gate] {cost = 12}
+  atomic-path [OB_elevator_hall_B_gate <-> GE4_hall] {cost = 6}
+  atomic-path [registration_booth <-> logistics_main_entrance] {cost = 5}
+  atomic-path [CP1_2_hall <-> carpark_main_gate] {cost = 6}
+  atomic-path [office_toilets <-> CP1_2_hall] {cost = 2}
+  atomic-path [carpark_retail_logistics_gate <-> carpark_main_gate] {cost = 35}
+  atomic-path [SP_hall <-> some_shop] {cost = 4}
+  atomic-path [some_shop <-> retail_escalator_B1out] {cost = 6}
+  atomic-path [some_shop <-> retail_intersect] {cost = 6}
+  atomic-path [retail_intersect <-> retail_sunken_square_gate] {cost = 20}
+  atomic-path [retail_sunken_square_gate <-> CP3_4_corr_intersect] {cost = 6}
+  atomic-path [CP3_4_corr_intersect <-> n_81437a6f743b424b8549bcb331e1d03c] {cost = 10}
+  atomic-path [n_81437a6f743b424b8549bcb331e1d03c <-> CP3_4_hall] {cost = 2}
+  atomic-path [escalator_B1_OBgate <-> ticket_office] {cost = 8}
+  atomic-path [escalator_B1_OBgate <-> retail_observatory_conn] {cost = 7}
+  atomic-path [retail_observatory_conn <-> CP3_4_corr_intersect] {cost = 15}
+  atomic-path [carpark_main_gate <-> logistics_carpark_conn] {cost = 35}
+  atomic-path [core_gate_R_out <-> registration_booth] {cost = 3}
+  atomic-path [observatory_individual_entrance <-> observatory_intersect] {cost = 60}
+  atomic-path [logistics_outer_corner <-> SS3_4_hall] {cost = 4}
+  atomic-path [L1_1_3_escape <-> L2_2_4_escape] {cost = 10}
+  atomic-path [L2_2_4_escape <-> n_a230f34e96594131a8a7e0d200ae0f45] {cost = 3}
+  atomic-path [escalator_B1_OBgate <-> observatory_toilet_A_out] {cost = 12}
+  atomic-path [logistics_outer_corner <-> post_office_booth] {cost = 2}
+  atomic-path [post_office_booth <-> core_gate_R_out] {cost = 8}
+  atomic-path [B_hall_intersect <-> S2_1_3_escape] {cost = 4}
+  atomic-path [S2_1_3_escape <-> n_304252c5a5d94eb59de61a54d09ec2bc] {cost = 4}
+  atomic-path [n_a230f34e96594131a8a7e0d200ae0f45 <-> S1_2_4_escape] {cost = 4}
+  atomic-path [S1_2_4_escape <-> logistics_core_intersect] {cost = 4}
+  atomic-path [ramen_restaurant <-> retail_escalator_B1out] {cost = 3}
+  atomic-path [n_304252c5a5d94eb59de61a54d09ec2bc <-> logistics_toilets] {cost = 10}
+  atomic-path [logistics_toilets <-> logistics_core_intersect] {cost = 6}
+  atomic-path [FS4_6_hall <-> LS2_hall] {cost = 1}
+  atomic-path [B_hall_interm <-> B_hall_intersect] {cost = 3}
+  atomic-path [LS1_hall <-> FS1_3_hall] {cost = 1}
+  atomic-path [LS1_hall <-> logistics_core_intersect] {cost = 7}
+  atomic-path [logistics_core_intersect <-> core_gate_R_in] {cost = 2}
+  atomic-path [core_gate_R_in <-> core_gate_R_out] {cost = 2}
+  atomic-path [B_hall_interm <-> B_hall_gate] {cost = 5}
+  atomic-path [LS2_hall <-> B_hall_gate] {cost = 3}
+  atomic-path [logistics_main_entrance <-> loading_bay_end] {cost = 15}
+  atomic-path [pedestrian_slope <-> logistics_carpark_conn] {cost = 25}
+  atomic-path [loading_bay_end <-> pedestrian_slope] {cost = 6}
+  atomic-path [n_a230f34e96594131a8a7e0d200ae0f45 <-> core_gate_T] {cost = 5}
+  atomic-path [core_gate_T <-> logistics_outer_corner] {cost = 10}
+  atomic-path [ramen_restaurant <-> retail_intersect] {cost = 18}
+}
