@@ -98,6 +98,7 @@ class TopoScriptCompiler() {
       if (!fileToRead.exists()) {
          println(s"${Console.YELLOW}Warning: Transport file not found: ${transFile.getAbsolutePath} (or without extension)${Console.RESET}")
       } else {
+        println(s"Parsing transport file: ${fileToRead.getAbsolutePath}")
         val transCode = scala.io.Source.fromFile(fileToRead).mkString
         val transExpr = parseTransportFile(transCode)
         val elaboratedTransport = transExpr.elaborate(using topoEnvForTransport)

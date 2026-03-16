@@ -74,6 +74,8 @@ object Interpreter {
         leftValue <- evalTramp(leftTerm)
         rightValue <- evalTramp(rightTerm)
       } yield (kind, leftValue, rightValue) match {
+        case (OpKind.Neg, Value.FloatVal(v), _) => Value.FloatVal(-v)
+        case (OpKind.Neg, Value.IntVal(v), _)   => Value.IntVal(-v)
         case (OpKind.Add, Value.FloatVal(l), Value.FloatVal(r)) => Value.FloatVal(l + r)
         case (OpKind.Sub, Value.FloatVal(l), Value.FloatVal(r)) => Value.FloatVal(l - r)
         case (OpKind.Mul, Value.FloatVal(l), Value.FloatVal(r)) => Value.FloatVal(l * r)

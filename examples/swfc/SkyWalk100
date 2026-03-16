@@ -1,5 +1,5 @@
 topo-map SkyWalk100(){
-    let config: {permResident: Int} = {
+    let params: {permResident: Int} = {
         permResident = 20
     }
 

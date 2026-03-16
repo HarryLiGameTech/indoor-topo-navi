@@ -1,7 +1,7 @@
 topo-map Floor95(){
     // Written based on photos and video of the floor.
 
-    let config: {permResident: Int} = {
+    let params: {permResident: Int} = {
         permResident = 20
     }
 

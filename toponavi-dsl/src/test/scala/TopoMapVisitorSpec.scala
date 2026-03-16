@@ -112,7 +112,7 @@ class TopoMapVisitorSpec extends AnyFlatSpec with Matchers {
     parseExpr(code) shouldBe Expr.If(
       Expr.BinOp(OpKind.Gt, Expr.Var("x"), Expr.IntLit(0)),
       Expr.IntLit(1),
-      Expr.BinOp(OpKind.Sub, Expr.IntLit(0), Expr.IntLit(1)) // Desugared NegExpr
+      Expr.BinOp(OpKind.Neg, Expr.IntLit(1), Expr.IntLit(0)) // NegExpr: -(1)
     )
   }
 

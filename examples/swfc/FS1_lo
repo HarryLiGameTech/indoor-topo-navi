@@ -5,9 +5,9 @@ transport FS1_lo is Elevator{
         cars = 1
     }
 
-    station F87 at HL87::FS_1_3_hall {location = 386.0, departureRate = 0.2}
-    station F86 at Floor86::FS_1_3_hall {location = 380.0, departureRate = 0.2}
-    station F85 at Floor85::FS_1_3_hall {location = 374.0, departureRate = 0.2}
-    station F79 at Floor79::FS_1_3_hall {location = 340.0, departureRate = 0.2}
-    station B2 at FloorB2::FS_1_3_hall {location = -10.0, departureRate = 0.2}
+    station F87 at HL87::FS1_3_hall {location = 386.0, departureRate = 0.2}
+    station F86 at Floor86::FS1_3_hall {location = 380.0, departureRate = 0.2}
+    station F85 at Floor85::FS1_3_hall {location = 374.0, departureRate = 0.2}
+    station F79 at Floor79::FS1_3_hall {location = 340.0, departureRate = 0.2}
+    station B2 at FloorB2::FS1_3_hall {location = -10.0, departureRate = 0.2}
 }

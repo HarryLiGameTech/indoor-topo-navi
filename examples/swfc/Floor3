@@ -31,7 +31,7 @@ topo-map Floor3(){
   topo-node B_hall_intersact
   topo-node B_hall_out
   topo-node LS1_hall
-  topo-node GE1_3_hall
+  topo-node FS1_3_hall
   topo-node ST_B
   topo-node escalator3_to_1
   topo-node escalator3_to_4
@@ -57,8 +57,8 @@ topo-map Floor3(){
   topo-node BOH_inner_corner
   topo-node BOH_alley_door_in
   atomic-path [LS1_hall <-> B_hall_out] {cost = 4}
-  atomic-path [LS1_hall <-> GE1_3_hall] {cost = 1}
-  atomic-path [GE1_3_hall <-> ST_B] {cost = 3}
+  atomic-path [LS1_hall <-> FS1_3_hall] {cost = 1}
+  atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
   atomic-path [B_hall_out <-> B_hall_intersact] {cost = 5}
   atomic-path [B_hall_intersact <-> office_toilet_alley_end] {cost = 4}
   atomic-path [escalator3_to_1 <-> observatory_reception_3F] {cost = 3}

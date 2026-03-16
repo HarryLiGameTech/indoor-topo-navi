@@ -2,7 +2,7 @@ transport OP1 is Elevator{
     // default-access = TenantsOnly
 
     // Config
-    let config: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
         maxSpeed = 4.0, // 4 meters a second
         acceleration = 0.9, // 0.9m/s2
         cars = 6

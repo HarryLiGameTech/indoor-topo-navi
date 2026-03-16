@@ -37,7 +37,7 @@ enum Type extends Identified[Identifier] {
 }
 
 enum OpKind {
-  case Add, Sub, Mul, Eq, Lt, Gt, Concat
+  case Add, Sub, Mul, Eq, Lt, Gt, Concat, Neg
 
   override def toString: String = this match {
     case Add => "+"
@@ -47,6 +47,7 @@ enum OpKind {
     case Eq  => "=="
     case Lt  => "<"
     case Gt  => ">"
+    case Neg => "-"
   }
 }
 
@@ -253,6 +254,8 @@ enum Term {
     case Term.ListLit(None, hd::tl)     => Type.ListType(hd.infer(typeEnv))
     case Term.ListLit(None, Nil)        => throw new RuntimeException("Cannot infer type of empty list without annotation")
     case Term.BinOp(kind, lhs, rhs)     => (kind, lhs.infer(typeEnv), rhs.infer(typeEnv)) match {
+      case (OpKind.Neg, Type.IntType, _)            => Type.IntType
+      case (OpKind.Neg, Type.FloatType, _)          => Type.FloatType
       case (OpKind.Add, Type.IntType, Type.IntType)     => Type.IntType
       case (OpKind.Sub, Type.IntType, Type.IntType)     => Type.IntType
       case (OpKind.Mul, Type.IntType, Type.IntType)     => Type.IntType

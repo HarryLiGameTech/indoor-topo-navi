@@ -1,6 +1,6 @@
 topo-map Floor89(){
     // A tough floor that may not be very "infra-free-safe".
-    let config: {permResident: Int} = {
+    let params: {permResident: Int} = {
         permResident = 5
     }
 

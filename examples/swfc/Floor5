@@ -16,6 +16,12 @@ topo-map Floor5(){
   topo-node serv_gate_in
   topo-node corner_LT
   topo-node corner_LB
+  topo-node LS1_hall
+  topo-node FS1_3_hall
+  topo-node ST_B
+  topo-node LS2_hall
+  topo-node FS4_6_hall
+  topo-node ST_A
   atomic-path [serv_gate_in <-> SS3_4_hall] {cost = 5}
   atomic-path [SS3_4_hall <-> MC1_hall] {cost = 5}
   atomic-path [corner_LT <-> serv_gate_in] {cost = 45}

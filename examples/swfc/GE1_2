@@ -6,7 +6,7 @@ transport GE1_2 is Elevator{
     }
 
     station F95 at Floor95::GE1_2_hall {location = 430.0, departureRate = 0.0}
-    station F94 at Floor94::GE1_2_hall {location = 425.0, departureRate = 0.5}
+    station F94 at SkyArena::GE1_2_hall {location = 425.0, departureRate = 0.5}
     station F3 at Floor3::GE1_2_hall {location = 10.0, departureRate = 0.0}
     station F2 at UpperLobby::GE1_2_hall {location = 5.0, departureRate = 0.0}
     station B1 at FloorB1::GE1_2_hall {location = -5.0, departureRate = 0.25}

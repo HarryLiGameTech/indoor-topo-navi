@@ -18,13 +18,13 @@ topo-map Zone6(){
   topo-node G2_in
   topo-node service_corr_A
   topo-node A_hall_out
-  topo-node FS_4_6_hall
+  topo-node FS4_6_hall
   topo-node ST_A
   topo-node ST_C
   topo-node G3_out
   topo-node service_corr_B
   topo-node G3_in
-  topo-node FS_1_3_hall
+  topo-node FS1_3_hall
   topo-node B_hall_out
   topo-node ST_B
   topo-node LS12_hall
@@ -36,8 +36,8 @@ topo-map Zone6(){
   topo-node toilet_B_out
   topo-node toilet_B
   topo-node toilet_A
-  atomic-path [ST_A <-> FS_4_6_hall] {cost = 3}
-  atomic-path [FS_4_6_hall <-> LS12_hall] {cost = 1}
+  atomic-path [ST_A <-> FS4_6_hall] {cost = 3}
+  atomic-path [FS4_6_hall <-> LS12_hall] {cost = 1}
   atomic-path [LS12_hall <-> A_hall_out] {cost = 4}
   atomic-path [A_hall_out <-> service_corr_A] {cost = 5}
   atomic-path [service_corr_A <-> G6_out] {cost = 3}
@@ -71,6 +71,6 @@ topo-map Zone6(){
   atomic-path [G3_out <-> service_corr_B] {cost = 4}
   atomic-path [service_corr_B <-> B_hall_out] {cost = 3}
   atomic-path [B_hall_out <-> LS11_hall] {cost = 5}
-  atomic-path [LS11_hall <-> FS_1_3_hall] {cost = 1}
-  atomic-path [FS_1_3_hall <-> ST_B] {cost = 3}
+  atomic-path [LS11_hall <-> FS1_3_hall] {cost = 1}
+  atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
 }

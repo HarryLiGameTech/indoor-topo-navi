@@ -164,7 +164,7 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
   }
 
   override def visitNegExpr(ctx: NegExprContext): Expr =
-    Expr.BinOp(OpKind.Sub, Expr.IntLit(0), visitExpr(ctx.expr()))
+    Expr.BinOp(OpKind.Neg, visitExpr(ctx.expr()), Expr.IntLit(0)) // RHS ignored; Neg is unary
 
   override def visitMulDivExpr(ctx: MulDivExprContext): Expr = {
     val op = ctx.op.getText match {

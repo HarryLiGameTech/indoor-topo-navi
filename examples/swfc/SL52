@@ -17,12 +17,12 @@ topo-map SL52(){
   topo-node escalator_52L
   topo-node escalator_52R
   topo-node ST_A
-  topo-node FS_4_6_hall
+  topo-node FS4_6_hall
   topo-node LS8_hall
   topo-node A_hall_out
   topo-node service_corr_A
   topo-node LS7_hall
-  topo-node FS_1_3_hall
+  topo-node FS1_3_hall
   topo-node ST_B
   topo-node B_hall_out
   topo-node service_corr_B
@@ -69,12 +69,12 @@ topo-map SL52(){
   atomic-path [lobby_intersact <-> escalator_52R] {cost = 10}
   atomic-path [service_corr_B <-> B_hall_out] {cost = 3}
   atomic-path [B_hall_out <-> LS7_hall] {cost = 5}
-  atomic-path [LS7_hall <-> FS_1_3_hall] {cost = 1}
-  atomic-path [FS_1_3_hall <-> ST_B] {cost = 3}
+  atomic-path [LS7_hall <-> FS1_3_hall] {cost = 1}
+  atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
   atomic-path [service_corr_A <-> A_hall_out] {cost = 3}
   atomic-path [A_hall_out <-> LS8_hall] {cost = 5}
-  atomic-path [LS8_hall <-> FS_4_6_hall] {cost = 1}
-  atomic-path [FS_4_6_hall <-> ST_A] {cost = 3}
+  atomic-path [LS8_hall <-> FS4_6_hall] {cost = 1}
+  atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
   atomic-path [Gate_R1_out <-> reception] {cost = 15}
   atomic-path [Gate_R1_out <-> Gate_R1_intermediate] {cost = 2}
   atomic-path [Gate_R1_intermediate <-> Gate_R1] {cost = 2}
