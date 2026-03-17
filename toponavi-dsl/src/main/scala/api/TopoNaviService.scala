@@ -34,12 +34,38 @@ object TopoNaviService {
 
     // Step A: Compile
     val result: CompilationResult = compiler.compileProject(files)
-
-    // Step B: Strip graph name and node name from "graph::node" format
-    val Array(startGraphName, startNode) = startNodeName.split("::", 2)
-    val Array(endGraphName, endNode)     = endNodeName.split("::", 2)
-
     val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, true)
+
+    // Helper function for fuzzy src-dst specification
+    def resolveNode(input: String): (String, String) = {
+      if (input.contains("::")) {
+        val Array(graphName, nodeName) = input.split("::", 2)
+        (graphName, nodeName)
+      } else {
+        // Fuzzy search across all graphs
+        val matches = result.graphs.values.flatMap { graph =>
+          graph.nodes.collect {
+            case node if node.identifier == input =>
+              (graph.identifier, node.identifier)
+          }
+        }.toSeq
+
+        matches.size match {
+          case 1 => matches.head
+          case 0 =>
+            throw new RuntimeException(s"Node '$input' not found in any graph")
+          case _ =>
+            val locations = matches.map { case (g, n) => s"$g::$n" }.mkString(", ")
+            throw new RuntimeException(
+              s"Ambiguous node '$input'. Found in multiple locations: $locations"
+            )
+        }
+      }
+    }
+
+    // Step B: Resolve start and end nodes
+    val (startGraphName, startNode) = resolveNode(startNodeName)
+    val (endGraphName, endNode) = resolveNode(endNodeName)
 
     // Step C: Execute Pathfinding
     val navigationPlan = routePlanner.navigate(startGraphName, endGraphName, startNode, endNode, Normal, MinimizeTime)
