@@ -3,6 +3,8 @@ package navigation
 import data.{GlobalNode, NavigationGraph, NavigationOutputPath, RouteEdge, TopoNode, TransportGraph}
 import enums.{NavigationError, RouteEdgeCategory, RoutePlanningPreferences}
 import enums.NavigationError.{InvalidData, NoRouteFound}
+import enums.ElevatorTrafficPattern.UpRush
+import enums.ElevatorTrafficPattern.Flat
 
 import scala.collection.mutable
 import scala.util.boundary.break
@@ -122,7 +124,8 @@ class RoutePlanner private(
               target = GlobalNode(nextInterchange.ownerGraph, nextInterchange.localNode),
               cost = currentInterchange.ownerLine.travelTimeBetweenStations(
                 currentInterchange.ownerGraph,
-                nextInterchange.ownerGraph
+                nextInterchange.ownerGraph,
+                UpRush
               ),
               category = RouteEdgeCategory.Transport,
               movementDescription = s"Take ${currentInterchange.ownerLine.identifier} from ${currentInterchange.ownerGraph.identifier} to ${nextInterchange.ownerGraph.identifier}"

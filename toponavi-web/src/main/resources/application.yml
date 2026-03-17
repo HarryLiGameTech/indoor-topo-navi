@@ -42,4 +42,8 @@ platform:
 server:
   port: 8080
   forward-headers-strategy: native
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
 

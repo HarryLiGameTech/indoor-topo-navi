@@ -4,6 +4,8 @@ import cats.effect.IO
 import enums.TransportServicePermission.{ArriveOnly, DepartOnly}
 import enums.VisitingMode.Normal
 import enums.{PathType, RoutePlanningPreferences, TransportServicePermission, VisitingMode}
+import enums.ElevatorTrafficPattern.UpRush
+import enums.ElevatorTrafficPattern.Flat
 
 import scala.collection.mutable
 
@@ -158,7 +160,7 @@ class TransportGraph private(
   private def actualCostBetween(from: StationNode, to: StationNode): Double = {
     if (from.ownerLine == to.ownerLine){
       // Use the line's travel time
-      from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
+      from.ownerLine.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph, UpRush)
     }
     else{
       // Use the transfer time via the navigation graph
@@ -187,7 +189,7 @@ class TransportGraph private(
       totalPath.prepend(node)
 
       if (parent.ownerLine == node.ownerLine){
-        pathEdges.prepend(TransportEdge(parent, node, parent.ownerLine.travelTimeBetweenStations(parent.ownerGraph, node.ownerGraph)))
+        pathEdges.prepend(TransportEdge(parent, node, parent.ownerLine.travelTimeBetweenStations(parent.ownerGraph, node.ownerGraph, UpRush)))
       }
       else{
         val transferCost: Double = parent.ownerGraph.findPath(
@@ -243,7 +245,7 @@ object TransportGraph {
           to <- stationNodes
           if ((from != to && from.permission != ArriveOnly) && to.permission != DepartOnly) // Avoid self-loops and takes permission into account
         } {
-          val cost = line.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph)
+          val cost = line.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph, UpRush)
           edges += TransportEdge(from, to, cost)
         }
       }

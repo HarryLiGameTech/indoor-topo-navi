@@ -169,7 +169,7 @@ case class ElevatorBank(
   }
 
   // TODO: Substitute netTimeBetweenStations(src, dst)
-  override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern = UpRush): Double = {
+  override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern): Double = {
     waitingTime(trafficPattern, src) + netTimeBetweenStations(src, dst)
   }
 
@@ -186,7 +186,7 @@ case class ElevatorBank(
 
   private def idleStateWaitingTime(): Double = {
     val expectedNearestElevatorFloorDiff = stationLocations.size / (carAmount * 4) // Assume all elevator cars uniformly distributed across the building
-    println(s"Nearest elevator expected to be ${expectedNearestElevatorFloorDiff} floors away")
+    // println(s"Nearest elevator expected to be ${expectedNearestElevatorFloorDiff} floors away")
     val stations = orderedStations()
     if (stations.isEmpty || stations.size == 1) then throw RuntimeException("Elevator must have at least 2 stations")
 
@@ -196,7 +196,7 @@ case class ElevatorBank(
     }
     val avgFloorHeight = totalHeight / (stations.size - 1)
 
-    println(s"Static idleWaitingTime: ${netTimeToCoverDistance(expectedNearestElevatorFloorDiff * avgFloorHeight)}")
+    // println(s"Static idleWaitingTime: ${netTimeToCoverDistance(expectedNearestElevatorFloorDiff * avgFloorHeight)}")
     netTimeToCoverDistance(expectedNearestElevatorFloorDiff * avgFloorHeight)
   }
 
@@ -206,12 +206,12 @@ case class ElevatorBank(
     // For example, a 25-story building with 5 elevator, then elevator distributed at 2, 7, 12, 17, 22 (at every place, no more than waiting for 25/(5*2) = 2.5 floors)
     // So calculate this real distribution, and find actualNearestElevatorFloorDiff by finding the nearest elevator to the departureFloor. This is more accurate than the static estimation above.
     val elevatorPositions = (0 until carAmount).map(i => (i * carDistributionGap + carDistributionGap / 2) % stationLocations.size).toList // Midpoint distribution
-    println(s"elevatorPositions for Flat pattern: $elevatorPositions")
+    // println(s"elevatorPositions for Flat pattern: $elevatorPositions")
     // Find the nearest one
     val stations = orderedStations()
     val departureFloorIndex = stations.indexOf(departureFloor)
     val actualNearestElevatorFloorDiff = elevatorPositions.map(pos => Math.abs(pos - departureFloorIndex)).min
-    println(s"Nearest elevator at ${actualNearestElevatorFloorDiff} floors away")
+    // println(s"Nearest elevator at ${actualNearestElevatorFloorDiff} floors away")
 
     if (stations.isEmpty || stations.size == 1) then throw RuntimeException("Elevator must have at least 2 stations")
 
@@ -221,7 +221,7 @@ case class ElevatorBank(
     }
     val avgFloorHeight = totalHeight / (stations.size - 1)
 
-    println(s"idleWaitingTime: ${netTimeToCoverDistance(actualNearestElevatorFloorDiff * avgFloorHeight)}")
+    // println(s"idleWaitingTime: ${netTimeToCoverDistance(actualNearestElevatorFloorDiff * avgFloorHeight)}")
     netTimeToCoverDistance(actualNearestElevatorFloorDiff * avgFloorHeight)
   }
   
@@ -266,7 +266,7 @@ case class ElevatorBank(
       }
     }
 
-    println(s"Sum of Probs: $totalProb")
+    // println(s"Sum of Probs: $totalProb")
     println(s"upTime: $time")
     time
   }
@@ -438,7 +438,7 @@ case class ElevatorBank(
 
        result += heightOfFloor * probReversalAboveI
     }
-    println(s"dH value = $result")
+    // println(s"dH value = $result")
     result
   }
 
@@ -448,7 +448,7 @@ case class ElevatorBank(
     if (entranceStations.length <= 1) {
       val currentStation = entranceStations.head
       val currentStationIndex = orderedStations().indexOf(currentStation)
-      println(s"dL value = ${floorHeight(currentStationIndex)}")
+      // println(s"dL value = ${floorHeight(currentStationIndex)}")
       return floorHeight(currentStationIndex)
     }
 
@@ -474,7 +474,7 @@ case class ElevatorBank(
       expectedDistance += dist * probNoStopAtOrBelowI
     }
 
-    println(s"dL value = $expectedDistance")
+    // println(s"dL value = $expectedDistance")
 
     expectedDistance
   }

@@ -228,7 +228,7 @@ class TopoScriptCompiler() {
         elaboratedTransports += elaboratedTransport
       }
     }
-    pprintln(elaboratedTransports)
+//    pprintln(elaboratedTransports)
 
     // 4. Convert to toponavi-core Data Structures
     val baseNavigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
@@ -265,11 +265,11 @@ class TopoScriptCompiler() {
     val transportGraph = TransportGraph(linearTransports)
 
     println("=== navigationGraphs ===")
-    pprintln(navigationGraphs)
+//    pprintln(navigationGraphs)
     println("=== linearTransports ===")
-    pprintln(linearTransports)
+//    pprintln(linearTransports)
     println("=== transportGraph ===")
-    pprintln(transportGraph)
+//    pprintln(transportGraph)
 
     // Return result
     // Note: ensure CompilationResult and its fields are accessible to Java 
