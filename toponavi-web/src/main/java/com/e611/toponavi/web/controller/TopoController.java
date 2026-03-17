@@ -111,7 +111,7 @@ public class TopoController {
                     cacheService.load(exampleFiles).isPresent();
 
             // Initialize cache service in Scala facade
-            com.e611.toponavi.web.cache.CachedResult cached = fromCache ?
+            CompilationCacheService.CachedResult cached = fromCache ?
                     cacheService.load(exampleFiles).orElse(null) : null;
             if (cached != null) {
                 TopoNaviService.setCacheService(cacheService);
@@ -150,7 +150,7 @@ public class TopoController {
             }
 
             // Initialize cache service for validation
-            com.e611.toponavi.web.cache.CachedResult cached =
+            CompilationCacheService.CachedResult cached =
                     cacheService.load(exampleFiles).orElse(null);
             if (cached != null) {
                 TopoNaviService.setCacheService(cacheService);
@@ -175,10 +175,11 @@ public class TopoController {
     public ResponseEntity<?> invalidateCache(
             @RequestParam(required = false) String projectIdentifier) {
         try {
-            String cacheKey = projectIdentifier != null ? "all" : projectIdentifier;
+            String cacheKey = projectIdentifier != null ? projectIdentifier : "all";
 
             if ("all".equals(projectIdentifier)) {
                 cacheService.clearAll();
+                return ResponseEntity.ok(Map.of("status", "success", "cacheKey", "all"));
             } else {
                 // Load files to generate proper key
                 Map<String, String> exampleFiles = loadExampleFiles();
@@ -218,7 +219,7 @@ public class TopoController {
 
     private Map<String, String> loadExampleFiles() {
         Map<String, String> files = new HashMap<>();
-        java.nio.file.Path examplesPath = java.nio.file.Paths.get(examplePathConfig);
+        java.nio.file.Path examplesPath = java.nio.file.Paths.get(examplesPathConfig);
 
         if (!java.nio.file.Files.exists(examplesPath)) {
             System.err.println("Examples directory not found: " + examplesPath.toAbsolutePath());

@@ -7,7 +7,8 @@ import java.io.*;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Hex;
+import org.apache.commons.codec.binary.Hex;
+import java.util.Optional;
 
 @Service
 public class CompilationCacheService {
@@ -146,8 +147,6 @@ public class CompilationCacheService {
             for (String filename : sortedFilenames) {
                 String content = files.get(filename);
                 if (content != null) {
-                    digest.update(filename.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                } else {
                     digest.update(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 }
             }
