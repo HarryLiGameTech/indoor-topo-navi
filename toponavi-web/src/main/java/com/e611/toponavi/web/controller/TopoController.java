@@ -2,6 +2,7 @@ package com.e611.toponavi.web.controller;
 
 import api.TopoNaviService; // The Scala Facade
 import com.e611.toponavi.web.dto.NavigationRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1")
 public class TopoController {
+
+    @Value("${platform.examples-path:examples}")
+    private String examplesPathConfig;
 
     @GetMapping(value = "test-constraints")
     public ResponseEntity<?> testConstraints() {
@@ -36,7 +40,7 @@ public class TopoController {
         }
     }
 
-    // Accept multipart/form-data — each form field is a filename, its value is the file content
+    // Accept multipart/form-data — each form field is a filename, its value is file content
     @PostMapping(value = "/validate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> validateMultipart(@RequestParam Map<String, MultipartFile> fileUploads,
                                                @RequestParam Map<String, String> textFields) throws IOException {
@@ -55,7 +59,7 @@ public class TopoController {
     @PostMapping("/testNavigate")
     public ResponseEntity<?> testNavigate(@RequestBody NavigationRequest request) {
         try {
-            // Stateless: We compile the code sent in THIS request to find the path
+            // Stateless: We compile code sent in THIS request to find path
             String pathOutput = TopoNaviService.findPath(
                     request.files,
                     request.startNode,
@@ -74,10 +78,100 @@ public class TopoController {
                 "name",        "Shanghai World Financial Center",
                 "address",     "Lujiazui Shanghai",
                 "height",      "492",
-                "description", "A super-tall building recognized as a bottle-opener, built by Mori in 2008. It survived the economic crisis in late 1990s, and eventually completed without big issues"
+                "description", "A super-tall building recognized as a bottle-opener, built by Mori in 2008. It survived economic crisis in late 1990s, and eventually completed without big issues"
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @GetMapping("/quick-demo-navigation")
+    public ResponseEntity<?> quickDemoNavigation(
+            @RequestParam String startNode,
+            @RequestParam String endNode) {
+        try {
+            // Load example files from examples directory
+            Map<String, String> exampleFiles = loadExampleFiles();
+
+            if (exampleFiles.isEmpty()) {
+                return ResponseEntity.badRequest().body(
+                    Map.of("error", "No example files found in examples directory")
+                );
+            }
+
+            // Perform navigation using existing service
+            String pathOutput = TopoNaviService.findPath(
+                    exampleFiles,
+                    startNode,
+                    endNode
+            );
+
+            return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "path", pathOutput,
+                "filesLoaded", exampleFiles.size()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                Map.of("error", e.getMessage())
+            );
+        }
+    }
+
+    @GetMapping("/quick-demo-available-nodes")
+    public ResponseEntity<?> getAvailableNodes(@RequestParam(required = false) String mapName) {
+        try {
+            Map<String, String> exampleFiles = loadExampleFiles();
+
+            if (exampleFiles.isEmpty()) {
+                return ResponseEntity.badRequest().body(
+                    Map.of("error", "No example files found")
+                );
+            }
+
+            // Compile example files to extract available nodes
+            var result = TopoNaviService.validateCode(exampleFiles);
+
+            return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", result,
+                "availableFiles", exampleFiles.keySet()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                Map.of("error", e.getMessage())
+            );
+        }
+    }
+
+    private Map<String, String> loadExampleFiles() {
+        Map<String, String> files = new HashMap<>();
+        java.nio.file.Path examplesPath = java.nio.file.Paths.get(examplesPathConfig);
+
+        if (!java.nio.file.Files.exists(examplesPath)) {
+            System.err.println("Examples directory not found: " + examplesPath.toAbsolutePath());
+            return files;
+        }
+
+        try {
+            // Walk through examples directory and load all files
+            java.nio.file.Files.walk(examplesPath)
+                .filter(java.nio.file.Files::isRegularFile)
+                .forEach(file -> {
+                    try {
+                        // Create relative path as filename (e.g., "swfc/Floor3")
+                        String relativePath = examplesPath.relativize(file).toString();
+                        String content = java.nio.file.Files.readString(file);
+                        files.put(relativePath, content);
+                    } catch (IOException e) {
+                        // Skip files that cannot be read
+                        System.err.println("Failed to read file: " + file + " - " + e.getMessage());
+                    }
+                });
+        } catch (IOException e) {
+            System.err.println("Failed to load example files: " + e.getMessage());
+        }
+
+        return files;
     }
 }

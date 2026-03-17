@@ -37,6 +37,7 @@ platform:
     installation-id: ${GITHUB_APP_INSTALLATION_ID:}
     org-name: ${GITHUB_ORG_NAME:toponavi-map-store}
     oauth-base-url: ${GITHUB_OAUTH_BASE_URL:}
+  examples-path: ${EXAMPLES_PATH:../examples/swfc}  # Path to DSL map examples (relative or absolute)
 
 server:
   port: 8080
