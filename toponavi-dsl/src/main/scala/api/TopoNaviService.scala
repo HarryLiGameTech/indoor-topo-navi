@@ -6,8 +6,7 @@ import enums.RoutePlanningPreferences.MinimizeTime
 import enums.VisitingMode.Normal
 import navigation.RoutePlanner
 import enums.NavigationError.{ConstraintFailure, InvalidData, NoRouteFound}
-import com.e611.toponavi.web.cache.{CompilationCacheService, CachedResult}
-
+import com.e611.toponavi.web.cache.CompilationCacheService
 import java.util.{Map => JMap}
 import scala.jdk.CollectionConverters._
 

@@ -7,7 +7,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import org.apache.commons.codec.binary.Hex;
+import java.util.HexFormat;
 import java.util.Optional;
 
 @Service
@@ -152,7 +152,7 @@ public class CompilationCacheService {
             }
 
             byte[] hash = digest.digest();
-            return Hex.encodeHexString(hash);
+            return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 algorithm not available", e);
         }
