@@ -6,15 +6,29 @@ import enums.RoutePlanningPreferences.MinimizeTime
 import enums.VisitingMode.Normal
 import navigation.RoutePlanner
 import enums.NavigationError.{ConstraintFailure, InvalidData, NoRouteFound}
+import com.e611.toponavi.web.cache.{CompilationCacheService, CachedResult}
+
+import java.util.{Map => JMap}
+import scala.jdk.CollectionConverters._
 
 
 object TopoNaviService {
   private val compiler = new TopoScriptCompiler()
 
-  // 1. Compilation Check
+  // Lazy initialization of cache service (will be injected by Spring at runtime)
+  private var cacheService: Option[CompilationCacheService] = None
+
+  /**
+   * Initializes the cache service for use by Scala object.
+   * This is called from Java to register the cache service.
+   */
+  def setCacheService(service: CompilationCacheService): Unit = {
+    cacheService = Some(service)
+  }
+
+  // 1. Compilation Check (without cache)
   // Returns "Success" or throws Exception with error message
-  def validateCode(files: java.util.Map[String, String]): String = {
-    // import scala.jdk.CollectionConverters._
+  def validateCode(files: JMap[String, String]): String = {
     try {
       compiler.compileProject(files)
       "Compilation Successful"
@@ -23,17 +37,83 @@ object TopoNaviService {
     }
   }
 
+  /**
+   * Compilation Check with automatic caching.
+   * Uses cache if available and valid (matches current file hash).
+   *
+   * @param files Map of filename -> file content
+   * @return "Compilation Successful" or throws Exception
+   */
+  def validateCodeWithCache(
+    files: JMap[String, String]
+  ): String = {
+    val scalaFiles = files.asScala.toMap
 
-  // 2. Navigation Request
-  // Takes the Code AND the start/end points. Compiles on-the-fly, finds path, returns String.
+    // Try to load from cache
+    cacheService match {
+      case Some(cache) =>
+        cache.load(scalaFiles) match {
+          case Some(cached) =>
+            return "Compilation Successful (from cache)"
+          case None =>
+            // Cache miss - compile normally
+            val result = compiler.compileProject(scalaFiles)
+            cache.save(scalaFiles, result)
+            return "Compilation Successful"
+        }
+      case None =>
+        // Cache not initialized - compile without caching
+        compiler.compileProject(scalaFiles)
+        return "Compilation Successful"
+    }
+  }
+
+  // 2. Compilation with manual cache control
+  //
+  // @param files Map of filename -> file content
+  // @param forceRecompile If "true", bypass cache and force recompilation
+  // @return CompilationResult
+  def compileProjectCached(
+    files: JMap[String, String],
+    forceRecompile: String = "false"
+  ): CompilationResult = {
+    val scalaFiles = files.asScala.toMap
+
+    cacheService match {
+      case Some(cache) =>
+        // If force recompile, don't check cache
+        if ("true".equals(forceRecompile)) {
+          val result = compiler.compileProject(scalaFiles)
+          cache.save(scalaFiles, result)
+          return result
+        }
+
+        // Try to load from cache
+        cache.load(scalaFiles) match {
+          case Some(cached) =>
+            return cached.getResult()
+          case None =>
+            // Cache miss - compile and save
+            val result = compiler.compileProject(scalaFiles)
+            cache.save(scalaFiles, result)
+            return result
+        }
+
+      case None =>
+        // Cache not initialized - compile directly
+        compiler.compileProject(scalaFiles)
+    }
+  }
+
+  // 3. Navigation Request (unchanged - uses cached compilation internally)
+  // Takes Code AND start/end points. Compiles on-the-fly, finds path, returns String.
   def findPath(
-    files: java.util.Map[String, String],
+    files: JMap[String, String],
     startNodeName: String,  // graph::node
     endNodeName: String    // graph::node
   ): String = {
-
-    // Step A: Compile
-    val result: CompilationResult = compiler.compileProject(files)
+    // Step A: Compile (uses cache if available)
+    val result: CompilationResult = compileProjectCached(files, "false")
     val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, true)
 
     // Helper function for fuzzy src-dst specification

@@ -2,6 +2,8 @@ package com.e611.toponavi.web.controller;
 
 import api.TopoNaviService; // The Scala Facade
 import com.e611.toponavi.web.dto.NavigationRequest;
+import com.e611.toponavi.web.cache.CompilationCacheService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1")
 public class TopoController {
+
+    @Autowired
+    private CompilationCacheService cacheService;
 
     @Value("${platform.examples-path:examples}")
     private String examplesPathConfig;
@@ -88,18 +93,31 @@ public class TopoController {
     @GetMapping("/quick-demo-navigation")
     public ResponseEntity<?> quickDemoNavigation(
             @RequestParam String startNode,
-            @RequestParam String endNode) {
+            @RequestParam String endNode,
+            @RequestParam(required = false) String forceRecompile) {
         try {
             // Load example files from examples directory
             Map<String, String> exampleFiles = loadExampleFiles();
 
             if (exampleFiles.isEmpty()) {
                 return ResponseEntity.badRequest().body(
-                    Map.of("error", "No example files found in examples directory")
+                        Map.of("error", "No example files found in examples directory")
                 );
             }
 
-            // Perform navigation using existing service
+            // Check cache
+            String cacheKey = cacheService.generateCacheHash(exampleFiles);
+            boolean fromCache = !"true".equals(forceRecompile) &&
+                    cacheService.load(exampleFiles).isPresent();
+
+            // Initialize cache service in Scala facade
+            com.e611.toponavi.web.cache.CachedResult cached = fromCache ?
+                    cacheService.load(exampleFiles).orElse(null) : null;
+            if (cached != null) {
+                TopoNaviService.setCacheService(cacheService);
+            }
+
+            // Perform navigation (compilation happens internally with cache)
             String pathOutput = TopoNaviService.findPath(
                     exampleFiles,
                     startNode,
@@ -109,11 +127,13 @@ public class TopoController {
             return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "path", pathOutput,
-                "filesLoaded", exampleFiles.size()
+                "filesLoaded", exampleFiles.size(),
+                "cacheKey", cacheKey.substring(0, 8),
+                "fromCache", fromCache
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                Map.of("error", e.getMessage())
+                        Map.of("error", e.getMessage())
             );
         }
     }
@@ -125,12 +145,19 @@ public class TopoController {
 
             if (exampleFiles.isEmpty()) {
                 return ResponseEntity.badRequest().body(
-                    Map.of("error", "No example files found")
+                        Map.of("error", "No example files found")
                 );
             }
 
-            // Compile example files to extract available nodes
-            var result = TopoNaviService.validateCode(exampleFiles);
+            // Initialize cache service for validation
+            com.e611.toponavi.web.cache.CachedResult cached =
+                    cacheService.load(exampleFiles).orElse(null);
+            if (cached != null) {
+                TopoNaviService.setCacheService(cacheService);
+            }
+
+            // Validate - compilation will be cached automatically
+            String result = TopoNaviService.validateCode(exampleFiles);
 
             return ResponseEntity.ok(Map.of(
                 "status", "success",
@@ -139,14 +166,59 @@ public class TopoController {
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                Map.of("error", e.getMessage())
+                        Map.of("error", e.getMessage())
+            );
+        }
+    }
+
+    @PostMapping("/cache/invalidate")
+    public ResponseEntity<?> invalidateCache(
+            @RequestParam(required = false) String projectIdentifier) {
+        try {
+            String cacheKey = projectIdentifier != null ? "all" : projectIdentifier;
+
+            if ("all".equals(projectIdentifier)) {
+                cacheService.clearAll();
+            } else {
+                // Load files to generate proper key
+                Map<String, String> exampleFiles = loadExampleFiles();
+                String key = cacheService.generateCacheHash(exampleFiles);
+                boolean invalidated = cacheService.invalidate(key);
+
+                return ResponseEntity.ok(Map.of(
+                    "status", invalidated ? "success" : "not_found",
+                    "cacheKey", key != null ? key.substring(0, Math.min(8, key.length())) : "all"
+                ));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                        Map.of("error", e.getMessage())
+            );
+        }
+    }
+
+    @GetMapping("/cache/status")
+    public ResponseEntity<?> getCacheStatus() {
+        try {
+            Map<String, String> exampleFiles = loadExampleFiles();
+            String cacheKey = cacheService.generateCacheHash(exampleFiles);
+            boolean cacheExists = cacheService.load(exampleFiles).isPresent();
+
+            return ResponseEntity.ok(Map.of(
+                "cacheKey", cacheKey.substring(0, 8),
+                "cacheHit", cacheExists,
+                "filesLoaded", exampleFiles.size()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", e.getMessage())
             );
         }
     }
 
     private Map<String, String> loadExampleFiles() {
         Map<String, String> files = new HashMap<>();
-        java.nio.file.Path examplesPath = java.nio.file.Paths.get(examplesPathConfig);
+        java.nio.file.Path examplesPath = java.nio.file.Paths.get(examplePathConfig);
 
         if (!java.nio.file.Files.exists(examplesPath)) {
             System.err.println("Examples directory not found: " + examplesPath.toAbsolutePath());
