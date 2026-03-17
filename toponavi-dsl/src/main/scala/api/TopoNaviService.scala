@@ -28,21 +28,21 @@ object TopoNaviService {
   // Takes the Code AND the start/end points. Compiles on-the-fly, finds path, returns String.
   def findPath(
     files: java.util.Map[String, String],
-    startNodeName: String,
-    endNodeName: String    // Changed to TopoNode
+    startNodeName: String,  // graph::node
+    endNodeName: String    // graph::node
   ): String = {
 
     // Step A: Compile
     val result: CompilationResult = compiler.compileProject(files)
 
-    // Step B: Locate Nodes in the compiled graphs
-    val startGraph = result.graphs.values.find(_.nodes.exists(_.identifier == startNodeName)).getOrElse(throw RuntimeException("RoutePlanner: Source graph not found"))
-    val endGraph   = result.graphs.values.find(_.nodes.exists(_.identifier == endNodeName)).getOrElse(throw RuntimeException("RoutePlanner: Source graph not found"))
+    // Step B: Strip graph name and node name from "graph::node" format
+    val Array(startGraphName, startNode) = startNodeName.split("::", 2)
+    val Array(endGraphName, endNode)     = endNodeName.split("::", 2)
 
     val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, true)
 
-    // Step C: Execute Pathfinding (Mocking your core logic here)
-    val navigationPlan = routePlanner.navigate(startGraph.identifier, endGraph.identifier, startNodeName, endNodeName, Normal, MinimizeTime)
+    // Step C: Execute Pathfinding
+    val navigationPlan = routePlanner.navigate(startGraphName, endGraphName, startNode, endNode, Normal, MinimizeTime)
 
     // Step D: Pretty Print
     navigationPlan match {

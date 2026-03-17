@@ -66,4 +66,18 @@ public class TopoController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/test-building-query")
+    public ResponseEntity<?> testBuildingQuery(@RequestParam(required = false) String name){
+        try{
+            return ResponseEntity.ok(Map.of(
+                "name",        "Shanghai World Financial Center",
+                "address",     "Lujiazui Shanghai",
+                "height",      "492",
+                "description", "A super-tall building recognized as a bottle-opener, built by Mori in 2008. It survived the economic crisis in late 1990s, and eventually completed without big issues"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
