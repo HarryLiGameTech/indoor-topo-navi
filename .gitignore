@@ -49,3 +49,7 @@ bin/
 *.pem
 
 run.sh
+
+*.hprof
+
+bfg-1.15.0.jar

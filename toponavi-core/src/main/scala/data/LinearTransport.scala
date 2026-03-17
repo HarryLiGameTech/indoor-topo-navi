@@ -259,7 +259,7 @@ case class ElevatorBank(
         val netTime = netTimeBetweenStations(start, end)
         val contribution = prob * netTime
 
-        println(s"${start.identifier}->${end.identifier}: prob=$prob, netTime=$netTime, contribution=$contribution")
+        // println(s"${start.identifier}->${end.identifier}: prob=$prob, netTime=$netTime, contribution=$contribution")
 
         time += contribution
         totalProb += prob
@@ -290,7 +290,7 @@ case class ElevatorBank(
     // The comment says: 1 - sum...
     // Raising to power 'c' (number of passengers) suggests this is the probability that NONE of the 'c' passengers stop at intermediate floors.
 
-    println(s"l1=$l1, l2=$l2, l3=$l3, l4=$l4, r1=$r1, r2=$r2, r3=$r3, r4=$r4")
+    // println(s"l1=$l1, l2=$l2, l3=$l3, l4=$l4, r1=$r1, r2=$r2, r3=$r3, r4=$r4")
 
     Math.pow(l1 * r1, c)
       - Math.pow(l2 * r2, c)
