@@ -131,9 +131,9 @@ building-includes{
     vehicle MP3
 
     // Expresses
-    vehicle S1_up
+    vehicle S1_hi
     vehicle S1_lo
-    vehicle S2_lo
+    vehicle S2_hi
     vehicle S2_lo
     vehicle SH
     vehicle GE1_2

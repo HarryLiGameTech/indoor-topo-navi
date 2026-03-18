@@ -1,6 +1,5 @@
 package com.e611.toponavi.web.cache;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import compiler.CompilationResult;
 import org.springframework.stereotype.Service;
 import java.io.*;
@@ -14,12 +13,10 @@ import java.util.Optional;
 public class CompilationCacheService {
 
     private final Path cacheDir;
-    private final ObjectMapper objectMapper;
 
     public CompilationCacheService() {
         String home = System.getProperty("user.home");
         this.cacheDir = Paths.get(home, ".toponavi-cache");
-        this.objectMapper = new ObjectMapper();
         createCacheDirectoryIfNotExists();
     }
 
@@ -39,10 +36,7 @@ public class CompilationCacheService {
         }
 
         try {
-            byte[] data = Files.readAllBytes(cacheFile);
-            CompilationResult result = objectMapper.readValue(data, CompilationResult.class);
-
-            // Verify meta file exists and hasn't been corrupted
+            // Verify meta file hasn't been corrupted before deserializing
             if (Files.exists(metaFile)) {
                 String storedHash = Files.readString(metaFile);
                 if (!storedHash.equals(currentHash)) {
@@ -51,9 +45,12 @@ public class CompilationCacheService {
                 }
             }
 
-            System.out.println("Cache HIT: " + currentHash.substring(0, 8) + "...");
-            return Optional.of(new CachedResult(result, currentHash));
-        } catch (IOException e) {
+            try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(cacheFile))) {
+                CompilationResult result = (CompilationResult) ois.readObject();
+                System.out.println("Cache HIT: " + currentHash.substring(0, 8) + "...");
+                return Optional.of(new CachedResult(result, currentHash));
+            }
+        } catch (IOException | ClassNotFoundException e) {
             System.err.println("Cache read failed for " + currentHash.substring(0, 8) + "...: " + e.getMessage());
             return Optional.empty();
         }
@@ -70,14 +67,13 @@ public class CompilationCacheService {
         Path cacheFile = cacheDir.resolve(cacheHash + ".ser");
         Path metaFile = cacheDir.resolve(cacheHash + ".meta");
 
-        try {
-            byte[] data = objectMapper.writeValueAsBytes(result);
-            Files.write(cacheFile, data);
+        try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(cacheFile))) {
+            oos.writeObject(result);
 
             // Write meta file with hash for validation
             Files.writeString(metaFile, cacheHash);
 
-            System.out.println("Cache SAVED: " + cacheHash.substring(0, 8) + "... (" + data.length + " bytes)");
+            System.out.println("Cache SAVED: " + cacheHash.substring(0, 8) + "...");
         } catch (IOException e) {
             System.err.println("Cache write failed for " + cacheHash.substring(0, 8) + "...: " + e.getMessage());
             throw new RuntimeException("Failed to cache compilation result", e);

@@ -13,7 +13,7 @@ import scala.collection.mutable
 class TransportGraph private(
   val nodes: List[StationNode],
   val adjacencyList: Map[StationNode, Set[StationNode]]
-){
+) extends Serializable {
   def findPath(
     start: StationNode,
     goal: StationNode,

@@ -10,7 +10,7 @@ class NavigationGraph private(
   val nodes: List[TopoNode] = List.empty,
   val adjacencyList: List[AtomicPath] = List.empty, // Single direction!
   val reverseAdjacency: Map[TopoNode, List[AtomicPath]] = Map.empty
-) {
+) extends Serializable {
   
   private def getOutgoingEdges(originNode: TopoNode): List[AtomicPath] = {
     adjacencyList.filter(_.source == originNode)

@@ -4,7 +4,7 @@ import enums.ElevatorStationCategory.{Entrance, Occupant}
 import enums.ElevatorTrafficPattern.{BidirectionalRush, DownRush, Flat, UpRush}
 import enums.{ElevatorStationCategory, ElevatorTrafficPattern, TransportServicePermission}
 
-trait LinearTransport {
+trait LinearTransport extends Serializable {
   def identifier: String
   def stationNodes: Map[NavigationGraph, TopoNode]
   def stationLocations: Map[NavigationGraph, Double]

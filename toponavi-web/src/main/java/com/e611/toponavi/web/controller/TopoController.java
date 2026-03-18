@@ -1,6 +1,7 @@
 package com.e611.toponavi.web.controller;
 
 import api.TopoNaviService; // The Scala Facade
+import compiler.CompilationResult;
 import com.e611.toponavi.web.dto.NavigationRequest;
 import com.e611.toponavi.web.cache.CompilationCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,22 +108,20 @@ public class TopoController {
 
             // Check cache
             String cacheKey = cacheService.generateCacheHash(exampleFiles);
-            boolean fromCache = !"true".equals(forceRecompile) &&
-                    cacheService.load(exampleFiles).isPresent();
-
-            // Initialize cache service in Scala facade
-            CompilationCacheService.CachedResult cached = fromCache ?
+            CompilationCacheService.CachedResult cached = !"true".equals(forceRecompile) ?
                     cacheService.load(exampleFiles).orElse(null) : null;
-            if (cached != null) {
-                TopoNaviService.setCacheService(cacheService);
+            boolean fromCache = cached != null;
+
+            // Compile (from cache or fresh)
+            CompilationResult compilationResult;
+            if (fromCache) {
+                compilationResult = cached.getResult();
+            } else {
+                compilationResult = TopoNaviService.compile(exampleFiles);
+                cacheService.save(exampleFiles, compilationResult);
             }
 
-            // Perform navigation (compilation happens internally with cache)
-            String pathOutput = TopoNaviService.findPath(
-                    exampleFiles,
-                    startNode,
-                    endNode
-            );
+            String pathOutput = TopoNaviService.findPathFromResult(compilationResult, startNode, endNode);
 
             return ResponseEntity.ok(Map.of(
                 "status", "success",
@@ -149,19 +148,21 @@ public class TopoController {
                 );
             }
 
-            // Initialize cache service for validation
+            // Check cache; compile and save if miss
             CompilationCacheService.CachedResult cached =
                     cacheService.load(exampleFiles).orElse(null);
+            String message;
             if (cached != null) {
-                TopoNaviService.setCacheService(cacheService);
+                message = "Compilation Successful (from cache)";
+            } else {
+                CompilationResult result = TopoNaviService.compile(exampleFiles);
+                cacheService.save(exampleFiles, result);
+                message = "Compilation Successful";
             }
-
-            // Validate - compilation will be cached automatically
-            String result = TopoNaviService.validateCode(exampleFiles);
 
             return ResponseEntity.ok(Map.of(
                 "status", "success",
-                "message", result,
+                "message", message,
                 "availableFiles", exampleFiles.keySet()
             ));
         } catch (Exception e) {
