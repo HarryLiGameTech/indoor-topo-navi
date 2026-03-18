@@ -2,6 +2,7 @@ package com.e611.toponavi.web.controller;
 
 import api.TopoNaviService; // The Scala Facade
 import compiler.CompilationResult;
+import data.NavigationOutputPath;
 import com.e611.toponavi.web.dto.NavigationRequest;
 import com.e611.toponavi.web.cache.CompilationCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,11 +122,12 @@ public class TopoController {
                 cacheService.save(exampleFiles, compilationResult);
             }
 
-            String pathOutput = TopoNaviService.findPathFromResult(compilationResult, startNode, endNode);
+            NavigationOutputPath plan = TopoNaviService.findRoutePlan(compilationResult, startNode, endNode);
 
             return ResponseEntity.ok(Map.of(
                 "status", "success",
-                "path", pathOutput,
+                "path", plan.prettyPrint(),
+                "steps", plan.toStructuredSteps(),
                 "filesLoaded", exampleFiles.size(),
                 "cacheKey", cacheKey.substring(0, 8),
                 "fromCache", fromCache
