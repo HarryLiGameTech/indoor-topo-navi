@@ -53,7 +53,6 @@ public class CompilationCacheService {
             }
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Cache read failed for " + currentHash.substring(0, 8) + "...: " + e.getMessage());
-            System.exit(1);
             return Optional.empty();
         }
     }
