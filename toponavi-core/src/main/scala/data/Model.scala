@@ -157,9 +157,13 @@ case class NavigationOutputPath(
         m.put("step", Int.box(stepNum))
         m.put("type", "Walk")
         m.put("graph", floor)
-        m.put("from", s"${named.headOption.getOrElse(edges.head.source.localNode.identifier)} (${named.headOption.getOrElse(edges.head.source.localNode.attributes.getOrElse("description", "{NO-DESCRIPTION}"))})")
-        m.put("to",   s"${named.lastOption.getOrElse(edges.last.target.localNode.identifier)} (${named.lastOption.getOrElse(edges.last.source.localNode.attributes.getOrElse("description", "{NO-DESCRIPTION}"))})")
-        m.put("namedWaypoints", named.asJava)
+        m.put("from", s"${named.headOption.getOrElse(edges.head.source.localNode.identifier)} (${edges.head.source.localNode.attributes.getOrElse("description", "{NO-DESCRIPTION-FOUND}").toString})")
+        m.put("to",   s"${named.lastOption.getOrElse(edges.last.target.localNode.identifier)} (${edges.last.source.localNode.attributes.getOrElse("description", "{NO-DESCRIPTION-FOUND}").toString})")
+        m.put("namedWaypoints", (edges.head.source :: edges.map(_.target))
+          .map(_.localNode)
+          .filterNot(n => isInternalNode(n.identifier))
+          .map(n => s"${n.identifier} (${n.attributes.getOrElse("description", "{NO-DESCRIPTION-FOUND}").toString})")
+          .asJava) // TODO: Include the description of each nodes, refer to prev 2 lines
         m.put("costSeconds", Double.box(edges.map(_.cost).sum))
       case TransportLeg(edge) =>
         m.put("step", Int.box(stepNum))

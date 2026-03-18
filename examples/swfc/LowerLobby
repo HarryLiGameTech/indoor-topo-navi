@@ -41,7 +41,7 @@ topo-map LowerLobby(){
   topo-node LS1_hall
   topo-node FS1_3_hall
   topo-node ST_B
-  topo-node SH_hall
+  topo-node SH_hall {description = "Hotel express elevator hall"}
   topo-node hotel_entrance_first_door
   topo-node hotel_concierge
   topo-node side_gate_in
