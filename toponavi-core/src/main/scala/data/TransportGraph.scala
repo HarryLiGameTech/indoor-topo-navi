@@ -12,7 +12,7 @@ import scala.collection.mutable
 // The RailNetwork shall be generated after all the modifiers are applied. i.e. locked and ineligible floor/elevator pair shall not appear here
 class TransportGraph private(
   val nodes: List[StationNode],
-  val adjacencyList: Map[StationNode, Set[StationNode]]
+  val adjacencyList: Map[StationNode, Map[StationNode, Double]]
 ) extends Serializable {
   def findPath(
     start: StationNode,
@@ -62,8 +62,8 @@ class TransportGraph private(
 
         // Only explore neighbors if current path might lead to a better solution
         if (gScore(current) < bestCost) {
-          for (neighbor <- adjacencyList.getOrElse(current, Nil)) {
-            val tentativeGScore = gScore(current) + actualCostBetween(current, neighbor)
+          for ((neighbor, edgeCost) <- adjacencyList.getOrElse(current, Map.empty)) {
+            val tentativeGScore = gScore(current) + edgeCost
 
             if (tentativeGScore < gScore(neighbor)) {
               cameFrom(neighbor) = current
@@ -303,11 +303,11 @@ object TransportGraph {
   }.toList
 }
 
-  private def buildAdjacencyList(edges: Set[TransportEdge]): Map[StationNode, Set[StationNode]] = {
+  private def buildAdjacencyList(edges: Set[TransportEdge]): Map[StationNode, Map[StationNode, Double]] = {
     edges
       .groupBy(_.source) // Group all edges by their source node
       .view
-      .mapValues(_.map(_.target)) // For each source node, extract all destination nodes
+      .mapValues(_.map(e => e.target -> e.cost).toMap) // Preserve precomputed costs
       .toMap
   }
 
