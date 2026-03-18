@@ -38,9 +38,10 @@ public class CompilationCacheService {
         try {
             // Verify meta file hasn't been corrupted before deserializing
             if (Files.exists(metaFile)) {
-                String storedHash = Files.readString(metaFile);
+                String storedHash = Files.readString(metaFile).trim();
                 if (!storedHash.equals(currentHash)) {
                     System.out.println("Cache INVALIDATED: hash mismatch, recompiling needed");
+                    Files.deleteIfExists(cacheFile); // clean up stale entry
                     return Optional.empty();
                 }
             }
@@ -52,6 +53,7 @@ public class CompilationCacheService {
             }
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Cache read failed for " + currentHash.substring(0, 8) + "...: " + e.getMessage());
+            System.exit(1);
             return Optional.empty();
         }
     }

@@ -267,7 +267,7 @@ case class ElevatorBank(
     }
 
     // println(s"Sum of Probs: $totalProb")
-    println(s"upTime: $time")
+    // println(s"upTime: $time")
     time
   }
 
@@ -300,7 +300,7 @@ case class ElevatorBank(
   
   private def downTime(): Double = {
     val expectedDistance = downPathHighRevPointToRefPointDistance() + downPathLowRevPointToRefPointDistance()
-    println(s"downTime: ${netTimeToCoverDistance(expectedDistance)}")
+    // println(s"downTime: ${netTimeToCoverDistance(expectedDistance)}")
     netTimeToCoverDistance(expectedDistance)
   }
   
@@ -324,7 +324,7 @@ case class ElevatorBank(
     }
 
     val result = (occupantStations.length - expectedNonStopsInOccupantFloors) + (entranceStations.length - expectedNonStopsInEntranceFloors)
-    println(s"Expected Stops: ${result}")
+    // println(s"Expected Stops: ${result}")
     result
   }
 
