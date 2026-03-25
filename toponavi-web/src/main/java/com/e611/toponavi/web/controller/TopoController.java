@@ -2,6 +2,7 @@ package com.e611.toponavi.web.controller;
 
 import api.TopoNaviService; // The Scala Facade
 import compiler.CompilationResult;
+import data.NavigationGraph;
 import data.NavigationOutputPath;
 import com.e611.toponavi.web.dto.NavigationRequest;
 import com.e611.toponavi.web.cache.CompilationCacheService;
@@ -11,11 +12,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import scala.jdk.javaapi.CollectionConverters;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -139,8 +143,8 @@ public class TopoController {
         }
     }
 
-    @GetMapping("/quick-demo-available-nodes")
-    public ResponseEntity<?> getAvailableNodes(@RequestParam(required = false) String mapName) {
+    @GetMapping("/quick-demo-available-submaps")
+    public ResponseEntity<?> getAvailableSubmaps() {
         try {
             Map<String, String> exampleFiles = loadExampleFiles();
 
@@ -154,22 +158,72 @@ public class TopoController {
             CompilationCacheService.CachedResult cached =
                     cacheService.load(exampleFiles).orElse(null);
             String message;
+            CompilationResult result;
             if (cached != null) {
+                result = cached.getResult();
                 message = "Compilation Successful (from cache)";
             } else {
-                CompilationResult result = TopoNaviService.compile(exampleFiles);
+                result = TopoNaviService.compile(exampleFiles);
                 cacheService.save(exampleFiles, result);
                 message = "Compilation Successful";
             }
 
+            Set<String> submaps = CollectionConverters.asJava(result.graphs().keySet());
+
             return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "message", message,
-                "availableFiles", exampleFiles.keySet()
+                "availableMaps", submaps
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
                         Map.of("error", e.getMessage())
+            );
+        }
+    }
+
+    @GetMapping("/quick-demo-available-nodes")
+    public ResponseEntity<?> getAvailableNodesFromMap(@RequestParam String mapName) {
+        try {
+            Map<String, String> exampleFiles = loadExampleFiles();
+
+            if (exampleFiles.isEmpty()) {
+                return ResponseEntity.badRequest().body(
+                        Map.of("error", "No example files found")
+                );
+            }
+
+            // Check cache; compile and save if miss
+            CompilationCacheService.CachedResult cached =
+                    cacheService.load(exampleFiles).orElse(null);
+            String message;
+            CompilationResult result;
+            if (cached != null) {
+                result = cached.getResult();
+                message = "Compilation Successful (from cache)";
+            } else {
+                result = TopoNaviService.compile(exampleFiles);
+                cacheService.save(exampleFiles, result);
+                message = "Compilation Successful";
+            }
+
+            NavigationGraph graph = CollectionConverters.asJava(result.graphs()).get(mapName);
+            if (graph == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Map not found: " + mapName));
+            }
+            Set<String> nodesInMap = CollectionConverters.asJava(graph.nodes())
+                    .stream()
+                    .map(node -> node.identifier())
+                    .collect(java.util.stream.Collectors.toSet());
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", message,
+                    "availableFiles", nodesInMap
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", e.getMessage())
             );
         }
     }

@@ -86,6 +86,7 @@ class RoutePlanner private(
     transportGraph.findPathFuzzy(sourceGraph, goalGraph, subMapNames, RoutePlanningPreferences.MinimizeTime, transportSolutionIndex) match {
       case Some(transportPath) =>
         val interchangeNodes = transportPath.routeNodes
+        println("interchangeNodes.size = " + interchangeNodes.size)
 
         // 1. Add the starting point (sourceNode to first interchange)
         sourceGraph.findPath(sourceNode, interchangeNodes.head.localNode, visitingMode) match {
