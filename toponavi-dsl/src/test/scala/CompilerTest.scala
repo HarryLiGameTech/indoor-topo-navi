@@ -1,9 +1,11 @@
+import api.TopoNaviService
 import compiler.TopoScriptCompiler
+import data.NavigationOutputPath
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should
+
 import java.io.{File, PrintWriter}
 import java.nio.file.Files
-
 import pprint.pprintln
 
 class CompilerTest extends AnyFunSuite with should.Matchers {
@@ -128,10 +130,14 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       val compiler = new TopoScriptCompiler()
       val result = compiler.compile(examplesDir.getAbsolutePath)
 
+      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "FloorB2::GE3_hall", "FloorB1::FS4_6_hall");
+
       assert(result != null)
       println("Real project compilation result: ")
       pprintln(result)
       println("Real project compilation successful!")
+
+      pprint.pprintln(plan)
     } else {
       println(s"Skipping real project test: 'examples' directory not found. Checked: ${possiblePaths.map(_.getAbsolutePath).mkString(", ")}")
     }
