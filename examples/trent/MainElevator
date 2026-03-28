@@ -5,7 +5,7 @@ transport MainElevator is Elevator{
         cars = 2
     }
 
-    station F4 at Floor4::main_elevator_hall {location = 12.0, departureRate = 0.01}
+    // station F4 at Floor4::main_elevator_hall {location = 12.0, departureRate = 0.01}
     station F3 at Floor3::main_elevator_hall {location = 8.0, departureRate = 0.01}
     station F2 at Floor2::main_elevator_hall {location = 3.5, departureRate = 0.6}
     station F1 at Floor1::main_elevator_hall {location = 0.0, departureRate = 0.38}
