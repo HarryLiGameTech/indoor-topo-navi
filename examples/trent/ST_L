@@ -4,7 +4,7 @@ transport ST_L is Stairs{
     }
 
     // station F4 at Floor4:: {location = 12.0, directSegmentIndex = 6}
-    station F3 at Floor3:: {location = 8.0, directSegmentIndex = 4}
-    station F2 at Floor2:: {location = 3.5, directSegmentIndex = 2}
-    station F1 at Floor1:: {location = 0.0, directSegmentIndex = 0}
+    station F3 at Floor3::Stair_L {location = 8.0, directSegmentIndex = 4}
+    station F2 at Floor2::Stair_L {location = 3.5, directSegmentIndex = 2}
+    station F1 at Floor1::stair_L {location = 0.0, directSegmentIndex = 0}
 }

@@ -84,7 +84,7 @@ topo-map Floor2(){
   topo-node room_222_out
   topo-node room_220_out
   topo-node door_quad
-  topo-node room_218_out // Stair_LLT
+  topo-node room_218_out
   topo-node room_218
   topo-node room_226_out_2
   topo-node room_226_out_1
