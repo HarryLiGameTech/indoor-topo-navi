@@ -137,6 +137,18 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       pprintln(result)
       println("Real project compilation successful!")
 
+      val stairCases = result.transportGraph.nodes
+        .map(_.ownerLine)
+        .distinct
+        .collect { case sc: data.StairCase => sc }
+
+      if (stairCases.isEmpty) {
+        fail("No StairCase found in the transport graph. Check that a Stairs transport is defined and compiled correctly.")
+      } else {
+        println("StairCase objects found in transport graph:")
+        stairCases.foreach(pprint.pprintln(_))
+      }
+
       pprint.pprintln(plan)
     } else {
       println(s"Skipping real project test: 'examples' directory not found. Checked: ${possiblePaths.map(_.getAbsolutePath).mkString(", ")}")

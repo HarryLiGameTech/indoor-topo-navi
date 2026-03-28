@@ -65,7 +65,7 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     val name = ctx.ID().getText
     val transportType = ctx.expr().getText
 
-    if (transportType != "Elevator" || transportType != "Escalator" || transportType != "Stairs") {
+    if (transportType != "Elevator" && transportType != "Escalator" && transportType != "Stairs") {
       throw new RuntimeException(s"Unsupported transport type '$transportType'.")
     }
 
