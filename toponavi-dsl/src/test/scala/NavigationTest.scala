@@ -152,7 +152,7 @@ object TrentRoutePlanningTester extends App {
   // ── END DIAGNOSTICS ────────────────────────────────────────────────────────
 
   // TEST NAVIGATE BEGIN //
-  routePlanner.navigate("Floor1", "Floor2", "stair_LLT", "room_201_out_1", Normal, RoutePlanningPreferences.MinimizeTransfers) match { // This task only need 1-floor of stairclimbing. But the system actually "forced" the user to the main_elevator, which is definitely farther (not expected)
+  routePlanner.navigate("Floor1", "Floor2", "stair_LLT", "room_201_out_1", Normal, RoutePlanningPreferences.MinimizePhysicalDemands) match { // This task only need 1-floor of stairclimbing. But the system actually "forced" the user to the main_elevator, which is definitely farther (not expected)
     case Right(navigationPath) =>
       println(s"\n=== Testing TrentRoutePlanner Navigate ===")
       println(s"Path found with ${navigationPath.routeNodes.size} nodes:")

@@ -3,7 +3,7 @@ package api
 import compiler.TopoScriptCompiler
 import compiler.CompilationResult
 import data.NavigationOutputPath
-import enums.NavigationError
+import enums.{NavigationError, RoutePlanningPreferences}
 import enums.RoutePlanningPreferences.MinimizeTime
 import enums.VisitingMode.Normal
 import navigation.RoutePlanner
@@ -34,12 +34,13 @@ object TopoNaviService {
   def findRoutePlan(
     result: CompilationResult,
     startNodeName: String,
-    endNodeName: String
+    endNodeName: String,
+    preference: RoutePlanningPreferences
   ): NavigationOutputPath = {
     val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, true)
     val (startGraphName, startNode) = resolveNode(startNodeName, result)
     val (endGraphName, endNode) = resolveNode(endNodeName, result)
-    routePlanner.navigate(startGraphName, endGraphName, startNode, endNode, Normal, MinimizeTime) match {
+    routePlanner.navigate(startGraphName, endGraphName, startNode, endNode, Normal, preference) match {
       case Left(error) => throw new RuntimeException(formatError(error))
       case Right(plan) => plan
     }
@@ -49,20 +50,44 @@ object TopoNaviService {
   def findPathFromResult(
     result: CompilationResult,
     startNodeName: String,
-    endNodeName: String
+    endNodeName: String,
+    preference: RoutePlanningPreferences
   ): String =
-    try { findRoutePlan(result, startNodeName, endNodeName).prettyPrint }
+    try { findRoutePlan(result, startNodeName, endNodeName, preference).prettyPrint }
     catch { case e: RuntimeException => e.getMessage }
 
   // 5. Navigation Request (stateless - compiles on-the-fly, no cache)
   def findPath(
     files: JMap[String, String],
     startNodeName: String,
-    endNodeName: String
+    endNodeName: String,
+    preference: RoutePlanningPreferences
   ): String = {
     val result: CompilationResult = compiler.compileProject(files)
-    findPathFromResult(result, startNodeName, endNodeName)
+    findPathFromResult(result, startNodeName, endNodeName, preference)
   }
+
+  // Java-friendly overloads: accept preference as a String to avoid Scala enum interop issues
+  def findPath(
+    files: JMap[String, String],
+    startNodeName: String,
+    endNodeName: String,
+    preference: String
+  ): String = findPath(files, startNodeName, endNodeName, parsePreference(preference))
+
+  def findRoutePlan(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: String
+  ): NavigationOutputPath = findRoutePlan(result, startNodeName, endNodeName, parsePreference(preference))
+
+  private def parsePreference(s: String): RoutePlanningPreferences = s match {
+    case "MinimizeTransfers"       => RoutePlanningPreferences.MinimizeTransfers
+    case "MinimizePhysicalDemands" => RoutePlanningPreferences.MinimizePhysicalDemands
+    case _                         => RoutePlanningPreferences.MinimizeTime
+  }
+
 
   private def resolveNode(input: String, result: CompilationResult): (String, String) = {
     if (input.contains("::")) {
