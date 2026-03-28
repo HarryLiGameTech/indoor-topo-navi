@@ -150,6 +150,7 @@ case class StationDef(
 
 case class TransportExpr(
   name: String,
+  surfaceType: String = "Elevator", // e.g., "Elevator", "Escalator", "Stairs"
   stations: List[StationDef],
   env: Environment[Identifier, Type, Expr] = Environment.empty,
   data: Data
@@ -162,6 +163,7 @@ case class TransportExpr(
 
     TransportValue(
       name = name,
+      surfaceType = this.surfaceType,
       stations = stations.map { station =>
         // Strict Validation: Ensure the referenced node exists
         if (topoEnv.resolveNode(station.node.fromMapName, station.node.nodeName).isEmpty) {

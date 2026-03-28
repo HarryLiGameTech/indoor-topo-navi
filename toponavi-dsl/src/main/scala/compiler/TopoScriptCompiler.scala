@@ -4,12 +4,11 @@ import util.catchError
 import syntax.TopoMapVisitor
 import surfacelang.{GlobalConfigExpr, TopoEnvironment}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
-import data.{ElevatorBank, LinearTransport, NavigationGraph, TransportGraph}
+import data.{ElevatorBank, LinearTransport, NavigationGraph, StairCase, TransportGraph}
 import corelang.{Environment, Value}
 import enums.ElevatorStationCategory.{Entrance, Occupant}
 import surfacelang.{TopoMapValue, TransportValue}
 import pprint.pprintln
-
 import topomap.grammar.{MapFileLexer, MapFileParser}
 
 import java.io.File
@@ -96,7 +95,7 @@ class TopoScriptCompiler() {
       val transFile = new File(targetDirectory, transName + ".ttr")
       val fileToRead = if (transFile.exists()) transFile else new File(targetDirectory, transName)
       if (!fileToRead.exists()) {
-         println(s"${Console.YELLOW}Warning: Transport file not found: ${transFile.getAbsolutePath} (or without extension)${Console.RESET}")
+        println(s"${Console.YELLOW}Warning: Transport file not found: ${transFile.getAbsolutePath} (or without extension)${Console.RESET}")
       } else {
         println(s"Parsing transport file: ${fileToRead.getAbsolutePath}")
         val transCode = scala.io.Source.fromFile(fileToRead).mkString
@@ -406,80 +405,140 @@ class TopoScriptCompiler() {
   }
 
   private def buildLinearTransport(transVal: TransportValue, graphs: Map[String, NavigationGraph]): LinearTransport = {
-     // Retrieve 'params' from the context, which is expected to be a RecordVal
-     val paramsOption = transVal.context.values.get(corelang.Identifier.Symbol("params"))
-
-     val d = paramsOption match {
-       case Some(Value.RecordVal(fields)) => fields
-       case Some(_) => throw new RuntimeException(s"Symbol 'params' in transport ${transVal.name} must be a RecordVal")
-       case None => throw new RuntimeException("Must contain a 'params' record in transport context for transport data")
+     transVal.surfaceType match {
+         case "Elevator"  => buildElevatorBank(transVal, graphs) // Continue with ElevatorBank construction
+         case "Escalator" => throw RuntimeException("Escalator building logic not yet implemented") // TODO: Implement buildEscalator similar to buildElevatorBank
+         case "Stairs"    => buildStairCase(transVal, graphs) // TODO: Implement buildStairs similar to buildElevatorBank
+         case _ => throw new RuntimeException(s"Unsupported transport type '${transVal.surfaceType}'.")
      }
+  }
 
-     val maxV = d.get("maxVelocity").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => throw RuntimeException("maxVelocity must be either Int or Float") }.getOrElse(2.5)
-     val acc = d.get("acceleration").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => throw RuntimeException("acceleration must be either Int or Float") }.getOrElse(0.8)
-     val duty = d.get("duty").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("duty must be Int") }.getOrElse(1000)
-     val cap = d.get("capacity").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("capacity must be Int") }.getOrElse(13)
-     val carAmount = d.get("carAmount").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("carAmount must be Int") }.getOrElse(1)
+  private def buildElevatorBank(transVal: TransportValue, graphs: Map[String, NavigationGraph]): ElevatorBank = {
+    // Retrieve 'params' from the context, which is expected to be a RecordVal
+    val paramsOption = transVal.context.values.get(corelang.Identifier.Symbol("params"))
+    val d = paramsOption match {
+      case Some(Value.RecordVal(fields)) => fields
+      case Some(_) => throw new RuntimeException(s"Symbol 'params' in transport ${transVal.name} must be a RecordVal")
+      case None => throw new RuntimeException("Must contain a 'params' record in transport context for transport data")
+    }
 
-     val stations = transVal.stations.map { case (nodeRef, stationData) =>
-       val loopGraph = graphs(nodeRef.fromMapName)
-       val loopNode = loopGraph.nodes.find(n => n.identifier == nodeRef.nodeName)
-         .getOrElse(throw new RuntimeException(s"Node not found in Core Graph: ${nodeRef.nodeName}"))
-       (loopGraph, loopNode)
-     }.toMap
+    val maxV = d.get("maxVelocity").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => throw RuntimeException("maxVelocity must be either Int or Float") }.getOrElse(2.5)
+    val acc = d.get("acceleration").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => throw RuntimeException("acceleration must be either Int or Float") }.getOrElse(0.8)
+    val duty = d.get("duty").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("duty must be Int") }.getOrElse(1000)
+    val cap = d.get("capacity").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("capacity must be Int") }.getOrElse(13)
+    val carAmount = d.get("carAmount").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("carAmount must be Int") }.getOrElse(1)
 
-     val locations = transVal.stations.map { case (nodeRef, stationData) =>
-       val loopGraph = graphs(nodeRef.fromMapName)
-       val loc = stationData.fields.get("location") match {
-         case Some(Value.FloatVal(v)) => v
-         case Some(Value.IntVal(v)) => v.toDouble
-         case _ => throw RuntimeException("location must be specified as an int or float for each station")
-       }
-       (loopGraph, loc)
-     }.toMap
+    val stations = transVal.stations.map { case (nodeRef, stationData) =>
+      val loopGraph = graphs(nodeRef.fromMapName)
+      val loopNode = loopGraph.nodes.find(n => n.identifier == nodeRef.nodeName)
+        .getOrElse(throw new RuntimeException(s"Node not found in Core Graph: ${nodeRef.nodeName}"))
+      (loopGraph, loopNode)
+    }.toMap
+
+    val locations = transVal.stations.map { case (nodeRef, stationData) =>
+      val loopGraph = graphs(nodeRef.fromMapName)
+      val loc = stationData.fields.get("location") match {
+        case Some(Value.FloatVal(v)) => v
+        case Some(Value.IntVal(v)) => v.toDouble
+        case _ => throw RuntimeException("location must be specified as an int or float for each station")
+      }
+      (loopGraph, loc)
+    }.toMap
 
 
-     val depRates = transVal.stations.map { case (nodeRef, stationData) =>
-       val loopGraph = graphs(nodeRef.fromMapName)
-       val depRate = stationData.fields.get("departureRate") match {
-         case Some(Value.FloatVal(v)) => v
-         case _ => throw RuntimeException("departureRate must be specified as a float for each station") // TODO: Only applicable for elevator
-       }
-       (loopGraph, depRate)
-     }.toMap
+    val depRates = transVal.stations.map { case (nodeRef, stationData) =>
+      val loopGraph = graphs(nodeRef.fromMapName)
+      val depRate = stationData.fields.get("departureRate") match {
+        case Some(Value.FloatVal(v)) => v
+        case _ => throw RuntimeException("departureRate must be specified as a float for each station") // TODO: Only applicable for elevator
+      }
+      (loopGraph, depRate)
+    }.toMap
 
     // TODO: Awaiting constraint system to determine permissions properly. For now, default to FullyGranted for all graphs.
     // We need permissions only for station graphs
-     val stPermissions = stations.keys.map { g =>
-         g -> enums.TransportServicePermission.FullyGranted
-     }.toMap
+    val stPermissions = stations.keys.map { g =>
+      g -> enums.TransportServicePermission.FullyGranted
+    }.toMap
 
     // TODO: Refactor with the stationCategories enum values in TopoScript
-     val categories = if (locations.isEmpty) Map.empty else {
-       val entranceStation = locations.minBy(_._2)._1
-       locations.keys.map { g =>
-         if (g == entranceStation) g -> Entrance
-         else g -> Occupant
-       }.toMap
-     }
+    val categories = if (locations.isEmpty) Map.empty else {
+      val entranceStation = locations.minBy(_._2)._1
+      locations.keys.map { g =>
+        if (g == entranceStation) g -> Entrance
+        else g -> Occupant
+      }.toMap
+    }
 
-     ElevatorBank(
-       identifier = transVal.name,
-       stationNodes = stations,
-       stationLocations = locations,
-       stationCategories = categories, // Make one pair with value Entrance and others Occupant
-       stationPermissions = stPermissions,
-       stationPopulations = stations.keys.map { g =>
-         g -> metadata.floorPopulation.getOrElse(g, 1)
-       }.toMap,
-       departureRate = depRates,
-       maxVelocity = maxV,
-       acceleration = acc,
-       carAmount = carAmount,
-       capacity = cap,
-       duty = duty
-     )
+    ElevatorBank(
+      identifier = transVal.name,
+      stationNodes = stations,
+      stationLocations = locations,
+      stationCategories = categories, // Make one pair with value Entrance and others Occupant
+      stationPermissions = stPermissions,
+      stationPopulations = stations.keys.map { g =>
+        g -> metadata.floorPopulation.getOrElse(g, 1)
+      }.toMap,
+      departureRate = depRates,
+      maxVelocity = maxV,
+      acceleration = acc,
+      carAmount = carAmount,
+      capacity = cap,
+      duty = duty
+    )
   }
+
+  private def buildStairCase(transVal: TransportValue, graphs: Map[String, NavigationGraph]): StairCase = {
+    // Retrieve 'params' from the context, which is expected to be a RecordVal
+    val paramsOption = transVal.context.values.get(corelang.Identifier.Symbol("params"))
+    val d = paramsOption match {
+      case Some(Value.RecordVal(fields)) => fields
+      case Some(_) => throw new RuntimeException(s"Symbol 'params' in transport ${transVal.name} must be a RecordVal")
+      case None => throw new RuntimeException("Must contain a 'params' record in transport context for transport data")
+    }
+
+    val maxV = d.get("maxVelocity").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => throw RuntimeException("maxVelocity must be either Int or Float") }.getOrElse(2.5)
+    val acc = d.get("acceleration").map { case Value.FloatVal(v) => v; case Value.IntVal(v) => v.toDouble; case _ => throw RuntimeException("acceleration must be either Int or Float") }.getOrElse(0.8)
+    val duty = d.get("duty").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("duty must be Int") }.getOrElse(1000)
+    val cap = d.get("capacity").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("capacity must be Int") }.getOrElse(13)
+    val carAmount = d.get("carAmount").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("carAmount must be Int") }.getOrElse(1)
+
+    val stations = transVal.stations.map { case (nodeRef, stationData) =>
+      val loopGraph = graphs(nodeRef.fromMapName)
+      val loopNode = loopGraph.nodes.find(n => n.identifier == nodeRef.nodeName)
+        .getOrElse(throw new RuntimeException(s"Node not found in Core Graph: ${nodeRef.nodeName}"))
+      (loopGraph, loopNode)
+    }.toMap
+
+    val locations = transVal.stations.map { case (nodeRef, stationData) =>
+      val loopGraph = graphs(nodeRef.fromMapName)
+      val loc = stationData.fields.get("location") match {
+        case Some(Value.FloatVal(v)) => v
+        case Some(Value.IntVal(v)) => v.toDouble
+        case _ => throw RuntimeException("location must be specified as an int or float for each station")
+      }
+      (loopGraph, loc)
+    }.toMap
+
+    val runIndices = transVal.stations.map { case (nodeRef, stationData) =>
+      val loopGraph = graphs(nodeRef.fromMapName)
+      val loc = stationData.fields.get("directSegmentIndex") match {
+        case Some(Value.IntVal(v)) => v.toInt
+        case _ => throw RuntimeException("directSegmentIndex must be specified as an Int for each station")
+      }
+      (loopGraph, loc)
+    }.toMap
+    
+
+    StairCase(
+      identifier = transVal.name,
+      stationNodes = stations,
+      stationLocations = locations,
+      stationRunIndices = runIndices, 
+      turnAroundLoss = 10.0,
+    )
+  }
+
 
   private def convertAttributes(record: Value.RecordVal): Map[String, enums.AttributeValue] = {
     record.fields.map { case (k, v) =>
@@ -494,7 +553,10 @@ class TopoScriptCompiler() {
     }
   }
 
+  
 }
+
+
 
 class CompilerMetadataContext() {
   val floorPopulation: mutable.Map[NavigationGraph, Int] = mutable.Map.empty

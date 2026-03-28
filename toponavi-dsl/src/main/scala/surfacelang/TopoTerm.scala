@@ -17,6 +17,7 @@ case class RootValue(
 
 case class TransportValue(
   name: String,
+  surfaceType: String,
   stations: List[(TopoNodeRefValue, Value.RecordVal)],
   data: Value.RecordVal,
   context: Context,

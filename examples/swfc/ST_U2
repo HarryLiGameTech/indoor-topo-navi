@@ -1,0 +1,15 @@
+transport ST_U2 is Stairs{
+    let params: {turnBackCost: Int} = {
+        turnBackCost = 3
+    }
+
+    // station F101 at Floor101::staircase_U2 {location = 480.0, directSegmentIndex = 60}
+    station F100 at SkyWalk100::staircase_U2 {location = 474.0, directSegmentIndex = 58}
+    station F99 at Floor99::staircase_U2 {location = 460.5, directSegmentIndex = 50}
+    station F98 at Floor98::staircase_U2 {location = 447.0, directSegmentIndex = 41}
+    station F97 at SkyWalk97::staircase_U2 {location = 439.0, directSegmentIndex = 33}
+    station F96 at Floor96::ST_U2 {location = 435.5, directSegmentIndex = 29}
+    station F95 at Floor95::FS10_hall {location = 430.0, directSegmentIndex = 25}
+    station F94 at SkyArena::staff_hallway {location = 425.0, directSegmentIndex = 21}
+    station F89 at Floor89::staircase_U2 {location = 397.0, directSegmentIndex = 0}
+}

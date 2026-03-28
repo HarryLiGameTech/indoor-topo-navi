@@ -28,7 +28,9 @@ trait LinearTransport extends Serializable {
 case class StairCase(
   identifier: String,
   stationNodes: Map[NavigationGraph, TopoNode],
-  stationLocations: Map[NavigationGraph, Double]
+  stationLocations: Map[NavigationGraph, Double],
+  stationRunIndices: Map[NavigationGraph, Int], // For turn-around loss calculation, indicating which flight of stairs the station is on. Usually starts from 0 at the bottom.
+  turnAroundLoss: Double // Additional time loss for "turning-around" between different flights in the staircase
 ) extends LinearTransport {
 
   override def maxVelocity: Double = 0.0
@@ -45,16 +47,16 @@ case class StairCase(
 
   override def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
     val distance = distanceBetweenStations(src, dst)
-    distance / 0.167 // Assume average vertical speed of 0.167 m/s for stairs (a.k.a. Covering 100m in 10 minutes)
+    distance / 0.167 // Assume average vertical speed of 0.167 m/s for stairs (a.k.a. Covering 100m height in 10 minutes)
   }
 
   def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, verticalSpeed: Double): Double = {
-    val distance = distanceBetweenStations(src, dst)
-    distance / verticalSpeed
+    val distance = distanceBetweenStations(src, dst) // Add turn-around loss if changing flights
+    distance / verticalSpeed + turnAroundLoss * Math.max(0, Math.abs(stationRunIndices(src) - stationRunIndices(dst)) - 1)
   }
 
   override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern): Double = {
-    netTimeBetweenStations(src, dst) // Climbing stairs does not involve random waiting time
+    netTimeBetweenStations(src, dst) // Climbing stairs does not involve randomness
   }
 
   override def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double = {

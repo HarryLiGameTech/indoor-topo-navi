@@ -63,6 +63,11 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
 
   override def visitSurfaceDefTransportExpr(ctx: SurfaceDefTransportExprContext): TransportExpr = {
     val name = ctx.ID().getText
+    val transportType = ctx.expr().getText
+
+    if (transportType != "Elevator" || transportType != "Escalator" || transportType != "Stairs") {
+      throw new RuntimeException(s"Unsupported transport type '$transportType'.")
+    }
 
     // TODO: Need more consideration on this, so ditch this feat for now
     val transportData: Expr.Record = Expr.Record(Map.empty) // Why does explicit type required here? (otherwise "requires Data but found Expr.Record", wtf)
@@ -70,6 +75,7 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     ctx.surfaceBody().surfaceBodyElement().asScala.foldLeft(
       TransportExpr(
         name = name,
+        surfaceType = transportType,
         stations = List.empty,
         data = transportData
       )

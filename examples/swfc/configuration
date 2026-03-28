@@ -173,4 +173,7 @@ building-includes{
     vehicle HS3_4
     vehicle HS5
     vehicle HS6
+
+    // Stairs
+    vehicle ST_U2
 }

@@ -1,0 +1,8 @@
+transport GroundLobbyEscalator is Escalator{
+    let params: {time: Int} = {
+        time = 20
+    }
+
+    station F2 at UpperLobby::entrance_Z1_2_B {}
+    station F1 at LowerLobby::escalator_1Lobby {}
+}
