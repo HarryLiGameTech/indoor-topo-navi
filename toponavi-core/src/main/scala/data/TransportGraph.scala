@@ -110,7 +110,7 @@ class TransportGraph private(
     }
     val sortedPaths = preference match {
       case MinimizeTime => allPaths.sortBy(_.totalCost)
-      case MinimizeTransfers => allPaths.sortBy(_.routeEdges.size)
+      case MinimizeTransfers => allPaths.sortBy(p => (p.routeEdges.size, p.totalCost))
 //      case MinimizePhysicalDemands => allPaths.sortBy(_.routeEdges.count(e => e.category == RouteEdgeCategory.Transport)) // Example: prioritize paths with fewer transport edges
       case _ => allPaths.sortBy(_.totalCost) // TODO
     }
