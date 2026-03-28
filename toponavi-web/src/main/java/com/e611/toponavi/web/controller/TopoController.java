@@ -17,6 +17,7 @@ import scala.jdk.javaapi.CollectionConverters;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -230,6 +231,68 @@ public class TopoController {
         }
     }
 
+    @GetMapping("/quick-demo-all-available-nodes")
+    public ResponseEntity<?> getAllAvailableNodes(@RequestParam(required = false) String withNodesAttributes) {
+        try {
+            Map<String, String> exampleFiles = loadExampleFiles();
+
+            if (exampleFiles.isEmpty()) {
+                return ResponseEntity.badRequest().body(
+                        Map.of("error", "No example files found")
+                );
+            }
+
+            // Check cache; compile and save if miss
+            CompilationCacheService.CachedResult cached =
+                    cacheService.load(exampleFiles).orElse(null);
+            String message;
+            CompilationResult result;
+            if (cached != null) {
+                result = cached.getResult();
+                message = "Compilation Successful (from cache)";
+            } else {
+                result = TopoNaviService.compile(exampleFiles);
+                cacheService.save(exampleFiles, result);
+                message = "Compilation Successful";
+            }
+
+            // Get all the nodes inside the result, formatted as "{graph_identifier}::{node_identifier}"
+            Map<String, NavigationGraph> graphs = CollectionConverters.asJava(result.graphs());
+            List<String> allNodes = graphs.entrySet().stream()
+                    .flatMap(entry -> CollectionConverters.asJava(entry.getValue().nodes()).stream()
+                            .map(node -> entry.getKey() + "::" + node.identifier()))
+                    .toList();
+
+            boolean includeAttributes = "true".equalsIgnoreCase(withNodesAttributes);
+            Object nodesData;
+            if (includeAttributes) {
+                Map<String, Map<String, Object>> nodesWithAttrs = new LinkedHashMap<>();
+                graphs.forEach((graphId, graph) ->
+                    CollectionConverters.asJava(graph.nodes()).forEach(node -> {
+                        Map<String, Object> attrs = new HashMap<>();
+                        CollectionConverters.asJava(node.attributes()).forEach((attrKey, attrVal) ->
+                            attrs.put(attrKey, toJavaValue(attrVal))
+                        );
+                        nodesWithAttrs.put(graphId + "::" + node.identifier(), attrs);
+                    })
+                );
+                nodesData = nodesWithAttrs;
+            } else {
+                nodesData = allNodes;
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", message,
+                    "allNodes", nodesData
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", e.getMessage())
+            );
+        }
+    }
+
     @PostMapping("/cache/invalidate")
     public ResponseEntity<?> invalidateCache(
             @RequestParam(required = false) String projectIdentifier) {
@@ -274,6 +337,14 @@ public class TopoController {
                     Map.of("error", e.getMessage())
             );
         }
+    }
+
+    private Object toJavaValue(enums.AttributeValue av) {
+        if (av instanceof enums.AttributeValue.IntValue v) return v.value();
+        if (av instanceof enums.AttributeValue.StringValue v) return v.value();
+        if (av instanceof enums.AttributeValue.BoolValue v) return v.value();
+        if (av instanceof enums.AttributeValue.DoubleValue v) return v.value();
+        return av.toString();
     }
 
     private Map<String, String> loadExampleFiles() {
