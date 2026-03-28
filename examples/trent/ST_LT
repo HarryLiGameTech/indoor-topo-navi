@@ -1,0 +1,10 @@
+transport ST_LT is Stairs{
+    let params: {turnBackCost: Int} = {
+        turnBackCost = 3
+    }
+
+    // station F4 at Floor4:: {location = 12.0, directSegmentIndex = 6}
+    station F3 at Floor3:: {location = 8.0, directSegmentIndex = 4}
+    station F2 at Floor2:: {location = 3.5, directSegmentIndex = 2}
+    station F1 at Floor1:: {location = 0.0, directSegmentIndex = 0}
+}
