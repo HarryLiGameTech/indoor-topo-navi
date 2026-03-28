@@ -26,8 +26,8 @@ topo-map Floor1(){
   topo-node n_5db631184caa4c398ee3130c2106ff80
   topo-node left_elevator_hall {description = "The elevator hall towards the gate1-facing area of the building, which is less crowded than the main elevator hall. It has 1 car."}
   topo-node right_elevator_hall {description = "The elevator hall towards the library-facing area of the building, which is less crowded than the main elevator hall. It has 1 car."}
-  topo-node toilet_4_male // TODO
-  topo-node toilet_4_female // TODO
+  topo-node toilet_4_male
+  topo-node toilet_4_female
   topo-node bathroom_pathway
   topo-node room_101C
   topo-node room_101C_out
