@@ -74,7 +74,8 @@ public class TopoController {
             String pathOutput = TopoNaviService.findPath(
                     request.files,
                     request.startNode,
-                    request.endNode
+                    request.endNode,
+                    "MinimizeTime"
             );
             return ResponseEntity.ok(Map.of("path", pathOutput));
         } catch (Exception e) {
@@ -100,6 +101,7 @@ public class TopoController {
     public ResponseEntity<?> quickDemoNavigation(
             @RequestParam String startNode,
             @RequestParam String endNode,
+            @RequestParam(required = false) String routePlanningPreference,
             @RequestParam(required = false) String forceRecompile) {
         try {
             // Load example files from examples directory
@@ -126,7 +128,7 @@ public class TopoController {
                 cacheService.save(exampleFiles, compilationResult);
             }
 
-            NavigationOutputPath plan = TopoNaviService.findRoutePlan(compilationResult, startNode, endNode);
+            NavigationOutputPath plan = TopoNaviService.findRoutePlan(compilationResult, startNode, endNode, routePlanningPreference);
 
             return ResponseEntity.ok(Map.of(
                 "status", "success",
