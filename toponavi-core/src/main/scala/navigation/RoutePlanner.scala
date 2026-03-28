@@ -23,7 +23,7 @@ class RoutePlanner private(
     sourceNodeName: String,
     goalNodeName: String,
     visitingMode: enums.VisitingMode,
-    preferences: RoutePlanningPreferences
+    preference: RoutePlanningPreferences
   ): Either[NavigationError, NavigationOutputPath] = {
     // This would involve combining intra-map paths and transportation paths
     // to create a complete route from startNode in startGraph to goalNode in goalGraph
@@ -34,10 +34,10 @@ class RoutePlanner private(
           goalGraph.nodes.find(_.identifier == goalNodeName)) match {
           case (Some(sourceNode), Some(goalNode)) =>
             if isHighRise then{
-              findRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode)
+              findRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference)
             }
             else{
-              findRouteForStandardBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode)
+              findRouteForStandardBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference)
             }
           case (None, _) => Left(InvalidData(s"sourceGraphName and sourceNodeName: ${sourceGraphName}, ${sourceNodeName} not found"))
           case (_, None) => Left(InvalidData(s"goalGraphName and goalNodeName: ${goalGraphName}, ${goalNodeName} not found"))
@@ -53,7 +53,8 @@ class RoutePlanner private(
     sourceNode: TopoNode,
     goalGraph: NavigationGraph,
     goalNode: TopoNode,
-    visitingMode: enums.VisitingMode
+    visitingMode: enums.VisitingMode,
+    preference: RoutePlanningPreferences
   ): Either[NavigationError, NavigationOutputPath] = {
     // High-rise specific route planning logic
     // Prioritizing elevators, escalators, as T_trans >> T_walk, catching a coming ride saves much more time than over-optimizing walking paths
@@ -69,7 +70,7 @@ class RoutePlanner private(
       }
     }
     else{ // Collect all path segments between interchange nodes
-      findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, 0)
+      findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, 0)
     }
   }
 
@@ -79,11 +80,12 @@ class RoutePlanner private(
     goalGraph: NavigationGraph,
     goalNode: TopoNode,
     visitingMode: enums.VisitingMode,
+    preference: RoutePlanningPreferences,
     transportSolutionIndex: Int
   ): Either[NavigationError, NavigationOutputPath] = {
     val allRouteEdges = mutable.ListBuffer[RouteEdge]()
     val allGlobalNodes = mutable.ListBuffer[GlobalNode]()
-    transportGraph.findPathFuzzy(sourceGraph, goalGraph, subMapNames, RoutePlanningPreferences.MinimizeTime, transportSolutionIndex) match {
+    transportGraph.findPathFuzzy(sourceGraph, goalGraph, subMapNames, preference, transportSolutionIndex) match {
       case Some(transportPath) =>
         val interchangeNodes = transportPath.routeNodes
         println("interchangeNodes.size = " + interchangeNodes.size)
@@ -95,7 +97,7 @@ class RoutePlanner private(
             allRouteEdges ++= startPath.routeEdges.map(RouteEdge.fromAtomicPath(sourceGraph, _, visitingMode))
           case None =>
             // Recurse with next index
-            return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, transportSolutionIndex + 1)
+            return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, transportSolutionIndex + 1)
         }
 
         // 2. Add paths between interchange nodes - only when on the same floor
@@ -116,7 +118,7 @@ class RoutePlanner private(
                 allRouteEdges ++= path.routeEdges.map(RouteEdge.fromAtomicPath(currentInterchange.ownerGraph, _, visitingMode))
               case None =>
                 // Recurse with next index
-                return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, transportSolutionIndex + 1)
+                return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, transportSolutionIndex + 1)
             }
           } else {
             // Different floors - this is a vehicle-ride, so create direct transport edge
@@ -145,7 +147,7 @@ class RoutePlanner private(
               allRouteEdges ++= finalPath.routeEdges.map(RouteEdge.fromAtomicPath(goalGraph, _, visitingMode))
             case None =>
               // Recurse with next index
-              return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, transportSolutionIndex + 1)
+              return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, transportSolutionIndex + 1)
           }
         } else {
           
@@ -165,7 +167,8 @@ class RoutePlanner private(
     sourceNode: TopoNode,
     goalGraph: NavigationGraph,
     goalNode: TopoNode,
-    visitingMode: enums.VisitingMode
+    visitingMode: enums.VisitingMode,
+    preference: RoutePlanningPreferences
   ): Either[NavigationError, NavigationOutputPath] = {
     // TODO: Implement standard building route planning logic here
     Left(NoRouteFound("Route planning for standard buildings not yet implemented"))

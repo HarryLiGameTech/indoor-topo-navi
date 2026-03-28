@@ -27,7 +27,7 @@ object RoutePlanningTester extends App {
   val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, true)
 
   // TEST NAVIGATE BEGIN //
-  routePlanner.navigate("FloorB1", "Floor89", "CP1_2_hall", "Y_hall", Normal, RoutePlanningPreferences.MinimizeTime) match {
+  routePlanner.navigate("LowerLobby", "Floor50", "CP3_4_hall", "toilet_A", Normal, RoutePlanningPreferences.MinimizeTransfers) match {
     case Right(navigationPath) =>
       println(s"\n=== Testing RoutePlanner Navigate ===")
       println(s"Path found with ${navigationPath.routeNodes.size} nodes:")

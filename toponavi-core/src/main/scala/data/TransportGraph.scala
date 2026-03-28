@@ -6,6 +6,7 @@ import enums.VisitingMode.Normal
 import enums.{PathType, RoutePlanningPreferences, TransportServicePermission, VisitingMode}
 import enums.ElevatorTrafficPattern.UpRush
 import enums.ElevatorTrafficPattern.Flat
+import enums.RoutePlanningPreferences.{MinimizePhysicalDemands, MinimizeTime, MinimizeTransfers}
 
 import scala.collection.mutable
 
@@ -96,32 +97,32 @@ class TransportGraph private(
   ): Option[TransportationPath] = {
     val startNodes = nodes.filter(_.ownerGraph == startGraph)
     val goalNodes = nodes.filter(_.ownerGraph == goalGraph)
-    preference match{
-      case RoutePlanningPreferences.MinimizeTime => {
-        val allPaths = mutable.ListBuffer[TransportationPath]()
-        for (startNode <- startNodes) {
-          for (goalNode <- goalNodes) {
-            val pathOption = findPath(startNode, goalNode, floorNameList)
-            pathOption match {
-              case Some(path) => allPaths += path
-              case None => ()
-            }
-          }
+
+    val allPaths = mutable.ListBuffer[TransportationPath]()
+    for (startNode <- startNodes) {
+      for (goalNode <- goalNodes) {
+        val pathOption = findPath(startNode, goalNode, floorNameList)
+        pathOption match {
+          case Some(path) => allPaths += path
+          case None => ()
         }
-        val sortedPaths = allPaths.sortBy(_.totalCost)
-        if (returnIndex >= 0 && returnIndex < sortedPaths.size) {
-          Some(TransportationPath(sortedPaths(returnIndex).routeNodes, sortedPaths(returnIndex).routeEdges))
-        }
-        else {
-          None
-        }
-      }
-      case _ => {
-        None
       }
     }
+    val sortedPaths = preference match {
+      case MinimizeTime => allPaths.sortBy(_.totalCost)
+      case MinimizeTransfers => allPaths.sortBy(_.routeEdges.size)
+//      case MinimizePhysicalDemands => allPaths.sortBy(_.routeEdges.count(e => e.category == RouteEdgeCategory.Transport)) // Example: prioritize paths with fewer transport edges
+      case _ => allPaths.sortBy(_.totalCost) // TODO
+    }
 
+    if (returnIndex >= 0 && returnIndex < sortedPaths.size) {
+      Some(TransportationPath(sortedPaths(returnIndex).routeNodes, sortedPaths(returnIndex).routeEdges))
+    }
+    else {
+      None
+    }
   }
+
 
   // Why did I wrote this exactly??
 //  def findPathFuzzy(
