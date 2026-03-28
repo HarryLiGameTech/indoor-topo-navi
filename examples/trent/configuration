@@ -1,8 +1,10 @@
 building-includes {
-    submap Floor1
-    submap Floor2
-    submap Floor3
     submap Floor4
+    submap Floor3
+    submap Floor2
+    submap Floor1
+
+
 
     vehicle MainElevator
     vehicle LeftElevator
