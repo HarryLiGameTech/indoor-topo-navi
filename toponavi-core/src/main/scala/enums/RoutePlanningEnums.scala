@@ -13,4 +13,5 @@ enum RoutePlanningPreferences:
 enum RouteEdgeCategory:
   case Walking
   case Transport
+  case Climbing
   case Portal

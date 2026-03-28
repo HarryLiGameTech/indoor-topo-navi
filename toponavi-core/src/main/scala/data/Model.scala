@@ -99,6 +99,17 @@ case class TransportationPath(
   def totalCost: Double = {
     routeEdges.map(_.cost).sum
   }
+
+  def physicalDemandScore: Double = routeEdges.map { edge =>
+    if (edge.source.ownerLine == edge.target.ownerLine)
+      edge.source.ownerLine match {
+        case _: ElevatorBank => 0.1 * edge.source.ownerLine.distanceBetweenStations(edge.source.ownerGraph, edge.target.ownerGraph)
+        case _: StairCase    => 10.0 * edge.source.ownerLine.distanceBetweenStations(edge.source.ownerGraph, edge.target.ownerGraph)
+        case _               => 1.0 * edge.cost
+      }
+    else
+      1.0 * edge.cost // walking transfer between different transport lines on the same floor
+  }.sum
 }
 
 case class NavigationOutputPath(
