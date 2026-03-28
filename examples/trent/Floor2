@@ -1,0 +1,283 @@
+topo-map Floor2(){
+  let params: {permResident: Int} = {
+    permResident = 150
+  }
+  topo-node door_riverside
+  topo-node main_elevator_hall {description = "The main elevator hall in the middle of the building. It has 2 cars, but heavily used by occupants and visitors due to its significant location advantage."}
+  topo-node right_elevator_hall {description = "The elevator hall towards the library-facing area of the building, which is less crowded than the main elevator hall. It has 1 car."}
+  topo-node left_elevator_hall {description = "The elevator hall towards the gate1-facing area of the building, which is less crowded than the main elevator hall. It has 1 car."}
+  topo-node room_209_out_1
+  topo-node room_209_out_2
+  topo-node room_209
+  topo-node room_236
+  topo-node room_236_out_1
+  topo-node room_236_out_2
+  topo-node grand_gate
+  topo-node door_234
+  topo-node room_234_out
+  topo-node room_231
+  topo-node room_231_out // Stair_LB
+  topo-node room_230_out
+  topo-node door_254
+  topo-node room_254_out
+  topo-node room_257_out // Stair_RB
+  topo-node room_239_240A_out
+  topo-node room_239
+  topo-node room_240B_out
+  topo-node room_246_247_250_out
+  topo-node room_250
+  topo-node room_246
+  topo-node room_247
+  topo-node room_248
+  topo-node room_249
+  topo-node toilet_4_male {description = "male toilet 4"}
+  topo-node toilet_4_female {description = "female toilet 4"} 
+  topo-node room_248_249_252_253_out
+  topo-node toilet_4_out
+  topo-node room_258
+  topo-node room_259
+  topo-node room_260
+  topo-node room_261
+  topo-node room_262
+  topo-node room_263
+  topo-node room_264
+  topo-node room_265
+  topo-node n_d4fabf0e45694dd19784e7341c3eca13
+  topo-node room_267
+  topo-node sub_exhibition {description = "a sub-exhibition area within the museum"}
+  topo-node room_243
+  topo-node sub_exhibition_out
+  topo-node room_243_museum_out_2 // Stair_RRT
+  topo-node museum {description = "The museum exhibiting the history of this school, it is a popular destination for visitors and senior-level staff."}
+  topo-node Stair_R
+  topo-node Stair_L
+  topo-node museum_out_3
+  topo-node gate_quad_R {description = "Gate on the library-side, opens towards the quad, with medium-width open stairs"}
+  topo-node room_208_out // Stair_LT
+  topo-node room_208
+  topo-node room_207
+  topo-node room_206
+  topo-node room_210
+  topo-node room_214
+  topo-node room_215
+  topo-node room_211
+  topo-node room_216
+  topo-node room_212
+  topo-node room_213
+  topo-node toilet_2_male {description = "male toilet 2"}
+  topo-node room_210_211_214_215_out
+  topo-node room_212_213_216_out
+  topo-node toilet_2_out
+  topo-node door_M1_6 {description = "the door between toilet1 and room 206"}
+  topo-node room_208_out_1
+  topo-node room_204
+  topo-node room_202
+  topo-node room_201_202_205B_out
+  topo-node room_201_out_1 // Stair_LLT
+  topo-node room_205C
+  topo-node room_205B
+  topo-node room_205A
+  topo-node room_201
+  topo-node room_204_out
+  topo-node room_203_out
+  topo-node room_205A_205C_out
+  topo-node room_222_out
+  topo-node room_220_out
+  topo-node door_quad
+  topo-node room_218_out // Stair_LLT
+  topo-node room_218
+  topo-node room_226_out_2
+  topo-node room_226_out_1
+  topo-node room_226
+  topo-node room_228_out
+  topo-node room_228
+  topo-node room_229_out
+  topo-node room_229
+  topo-node gate_quad_L {description = "Gate on the gate1-side, opens towards the quad, with medium-width open stairs"}
+  topo-node riverside
+  topo-node toilet_1_female {description = "female toilet 1"}
+  topo-node toilet_1_male {description = "male toilet 1"}
+  topo-node toilet_1_accessible {description = "accessible toilet 1"}
+  topo-node toilet_1_out
+  topo-node room_206_out_2
+  topo-node room_203
+  topo-node smoke_area_R {description = "smoke area on the library-facing side of the building, on a small balcony"}
+  topo-node smoke_area_L {description = "smoke area on the gate1-facing side of the building, on a small balcony"}
+  topo-node room_243_out_1
+  topo-node gate_quad_main {description = "Grand gate in the middle of the building, opens towards the quad, with wide and open stairs"}
+  topo-node garden_L {description = "Garden area on the gate1-side of the building"}
+  topo-node garden_R {description = "Garden area on the library-side of the building"}
+  topo-node room_266
+  topo-node room_266_out
+  topo-node Stair_RT
+  topo-node room_240A
+  topo-node room_240B
+  topo-node toilet_3_male {description = "male toilet 3"}
+  topo-node toilet_3_female {description = "female toilet 3"}
+  topo-node toilet_3_accessible {description = "accessible toilet 3"}
+  topo-node toilet_3_out
+  topo-node room_267_out // Stair_RRB
+  topo-node room_265_out
+  topo-node room_264_out
+  topo-node room_263_out
+  topo-node room_263_out
+  topo-node room_261_out
+  topo-node room_260_out
+  topo-node room_259_out
+  topo-node room_258_out
+  topo-node room_254
+  topo-node room_257
+  topo-node room_252
+  topo-node room_253
+  topo-node room_234
+  topo-node room_230
+  topo-node room_222
+  topo-node room_220
+  topo-node toilet_2_female {description = "female toilet 2"}
+  topo-node toilet_2_accessible {description = "accessible toilet 2"}
+  atomic-path [door_riverside <-> main_elevator_hall] {cost = 3}
+  atomic-path [room_209_out_1 <-> room_209_out_2] {cost = 4}
+  atomic-path [room_209 <-> room_209_out_1] {cost = 3}
+  atomic-path [room_209 <-> room_209_out_2] {cost = 3}
+  atomic-path [room_236 <-> room_236_out_1] {cost = 3}
+  atomic-path [room_236 <-> room_236_out_2] {cost = 3}
+  atomic-path [room_236_out_1 <-> main_elevator_hall] {cost = 5}
+  atomic-path [room_209_out_2 <-> main_elevator_hall] {cost = 5}
+  atomic-path [main_elevator_hall <-> grand_gate] {cost = 7}
+  atomic-path [room_231_out <-> room_231] {cost = 3}
+  atomic-path [room_234_out <-> door_234] {cost = 3}
+  atomic-path [door_254 <-> room_254_out] {cost = 3}
+  atomic-path [room_239_240A_out <-> room_239] {cost = 3}
+  atomic-path [room_239_240A_out <-> room_246_247_250_out] {cost = 3}
+  atomic-path [room_246_247_250_out <-> room_240B_out] {cost = 3}
+  atomic-path [room_250 <-> room_246_247_250_out] {cost = 3}
+  atomic-path [room_246 <-> room_246_247_250_out] {cost = 3}
+  atomic-path [room_247 <-> room_246_247_250_out] {cost = 3}
+  atomic-path [room_248 <-> room_248_249_252_253_out] {cost = 3}
+  atomic-path [room_249 <-> room_248_249_252_253_out] {cost = 3}
+  atomic-path [room_246_247_250_out <-> room_248_249_252_253_out] {cost = 3}
+  atomic-path [room_248_249_252_253_out <-> toilet_4_out] {cost = 3}
+  atomic-path [toilet_4_out <-> toilet_4_male] {cost = 3}
+  atomic-path [toilet_4_out <-> toilet_4_female] {cost = 3}
+  atomic-path [sub_exhibition <-> sub_exhibition_out] {cost = 3}
+  atomic-path [museum <-> room_243_museum_out_2] {cost = 18}
+  atomic-path [room_243 <-> room_243_museum_out_2] {cost = 3}
+  atomic-path [room_243_museum_out_2 <-> sub_exhibition_out] {cost = 12}
+  atomic-path [right_elevator_hall <-> sub_exhibition_out] {cost = 5}
+  atomic-path [Stair_R <-> right_elevator_hall] {cost = 5}
+  atomic-path [sub_exhibition_out <-> Stair_R] {cost = 4}
+  atomic-path [right_elevator_hall <-> museum_out_3] {cost = 5}
+  atomic-path [n_d4fabf0e45694dd19784e7341c3eca13 <-> gate_quad_R] {cost = 7}
+  atomic-path [room_208 <-> room_208_out] {cost = 3}
+  atomic-path [room_208_out <-> room_209_out_1] {cost = 3}
+  atomic-path [room_207 <-> room_208_out] {cost = 3}
+  atomic-path [room_210 <-> room_210_211_214_215_out] {cost = 3}
+  atomic-path [room_214 <-> room_210_211_214_215_out] {cost = 3}
+  atomic-path [room_215 <-> room_210_211_214_215_out] {cost = 3}
+  atomic-path [room_211 <-> room_210_211_214_215_out] {cost = 3}
+  atomic-path [room_213 <-> room_212_213_216_out] {cost = 3}
+  atomic-path [room_212 <-> room_212_213_216_out] {cost = 3}
+  atomic-path [room_216 <-> room_212_213_216_out] {cost = 3}
+  atomic-path [toilet_2_male <-> toilet_2_out] {cost = 3}
+  atomic-path [room_212_213_216_out <-> toilet_2_out] {cost = 3}
+  atomic-path [room_210_211_214_215_out <-> room_212_213_216_out] {cost = 3}
+  atomic-path [room_208_out <-> room_210_211_214_215_out] {cost = 10}
+  atomic-path [room_208_out_1 <-> door_M1_6] {cost = 3}
+  atomic-path [room_201_202_205B_out <-> room_201_out_1] {cost = 4}
+  atomic-path [room_205C <-> room_201_out_1] {cost = 3}
+  atomic-path [room_205B <-> room_201_202_205B_out] {cost = 3}
+  atomic-path [room_201_202_205B_out <-> room_203_out] {cost = 4}
+  atomic-path [room_204 <-> room_204_out] {cost = 3}
+  atomic-path [room_203_out <-> left_elevator_hall] {cost = 6}
+  atomic-path [room_204_out <-> left_elevator_hall] {cost = 7}
+  atomic-path [room_204_out <-> room_203_out] {cost = 3}
+  atomic-path [room_208_out_1 <-> room_208_out] {cost = 7}
+  atomic-path [room_205A <-> left_elevator_hall] {cost = 5}
+  atomic-path [room_205A_205C_out <-> room_205A] {cost = 5}
+  atomic-path [left_elevator_hall <-> door_quad] {cost = 12}
+  atomic-path [door_quad <-> room_222_out] {cost = 3}
+  atomic-path [room_222_out <-> room_220_out] {cost = 3}
+  atomic-path [room_218_out <-> room_218] {cost = 3}
+  atomic-path [room_218_out <-> room_220_out] {cost = 3}
+  atomic-path [door_quad <-> room_226_out_2] {cost = 3}
+  atomic-path [room_226_out_2 <-> room_226] {cost = 3}
+  atomic-path [room_226_out_1 <-> room_226] {cost = 3}
+  atomic-path [room_229_out <-> room_230_out] {cost = 3}
+  atomic-path [room_229_out <-> room_229] {cost = 3}
+  atomic-path [room_228_out <-> room_228] {cost = 3}
+  atomic-path [room_228_out <-> room_229_out] {cost = 3}
+  atomic-path [room_226_out_1 <-> room_228_out] {cost = 5}
+  atomic-path [room_226_out_1 <-> room_226_out_2] {cost = 3}
+  atomic-path [door_quad <-> gate_quad_L] {cost = 10}
+  atomic-path [riverside <-> door_riverside] {cost = 7}
+  atomic-path [room_201 <-> room_201_out_1] {cost = 3}
+  atomic-path [room_201 <-> room_201_202_205B_out] {cost = 3}
+  atomic-path [room_201_out_1 <-> room_201_202_205B_out] {cost = 5}
+  atomic-path [toilet_1_out <-> door_M1_6] {cost = 3}
+  atomic-path [toilet_1_out <-> room_204_out] {cost = 3}
+  atomic-path [toilet_1_out <-> toilet_1_accessible] {cost = 3}
+  atomic-path [toilet_1_out <-> toilet_1_male] {cost = 3}
+  atomic-path [toilet_1_female <-> toilet_1_out] {cost = 3}
+  atomic-path [room_206_out_2 <-> room_206] {cost = 3}
+  atomic-path [room_206_out_2 <-> room_208_out] {cost = 5}
+  atomic-path [room_202 <-> room_201_202_205B_out] {cost = 3}
+  atomic-path [room_201_202_205B_out <-> room_203_out] {cost = 5}
+  atomic-path [room_203 <-> room_203_out] {cost = 3}
+  atomic-path [smoke_area_L <-> toilet_2_out] {cost = 3}
+  atomic-path [toilet_4_out <-> smoke_area_R] {cost = 3}
+  atomic-path [museum <-> right_elevator_hall] {cost = 18}
+  atomic-path [room_243_out_1 <-> sub_exhibition_out] {cost = 5}
+  atomic-path [room_243_out_1 <-> room_243_museum_out_2] {cost = 5}
+  atomic-path [gate_quad_main <-> grand_gate] {cost = 15}
+  atomic-path [gate_quad_main <-> door_234] {cost = 5}
+  atomic-path [gate_quad_main <-> door_254] {cost = 5}
+  atomic-path [garden_L <-> grand_gate] {cost = 4}
+  atomic-path [grand_gate <-> garden_R] {cost = 4}
+  atomic-path [room_266_out <-> room_266] {cost = 3}
+  atomic-path [room_266_out <-> n_d4fabf0e45694dd19784e7341c3eca13] {cost = 5}
+  atomic-path [room_236_out_2 <-> Stair_RT] {cost = 3}
+  atomic-path [Stair_RT <-> room_239_240A_out] {cost = 3}
+  atomic-path [room_240A <-> room_239_240A_out] {cost = 3}
+  atomic-path [room_240B <-> room_239] {cost = 3}
+  atomic-path [toilet_3_male <-> toilet_3_out] {cost = 3}
+  atomic-path [toilet_3_female <-> toilet_3_out] {cost = 3}
+  atomic-path [toilet_3_accessible <-> toilet_3_out] {cost = 3}
+  atomic-path [room_240B_out <-> toilet_3_out] {cost = 3}
+  atomic-path [toilet_3_out <-> sub_exhibition_out] {cost = 8}
+  atomic-path [museum_out_3 <-> n_d4fabf0e45694dd19784e7341c3eca13] {cost = 8}
+  atomic-path [room_267_out <-> room_266_out] {cost = 5}
+  atomic-path [room_265_out <-> room_265] {cost = 2}
+  atomic-path [room_265_out <-> n_d4fabf0e45694dd19784e7341c3eca13] {cost = 2}
+  atomic-path [room_264_out <-> room_264] {cost = 2}
+  atomic-path [room_264_out <-> room_265_out] {cost = 2}
+  atomic-path [room_263_out <-> room_264_out] {cost = 2}
+  atomic-path [room_263_out <-> room_263] {cost = 2}
+  atomic-path [room_263_out <-> room_262] {cost = 2}
+  atomic-path [room_263_out <-> room_263_out] {cost = 2}
+  atomic-path [room_261_out <-> room_261] {cost = 2}
+  atomic-path [room_261_out <-> room_263_out] {cost = 2}
+  atomic-path [room_260_out <-> room_260] {cost = 2}
+  atomic-path [room_260_out <-> room_261_out] {cost = 2}
+  atomic-path [room_259_out <-> room_260_out] {cost = 2}
+  atomic-path [room_258_out <-> room_259_out] {cost = 2}
+  atomic-path [room_258_out <-> room_259_out] {cost = 2}
+  atomic-path [room_258_out <-> room_258] {cost = 2}
+  atomic-path [room_257_out <-> room_258_out] {cost = 2}
+  atomic-path [room_254_out <-> room_257_out] {cost = 6}
+  atomic-path [room_254_out <-> room_254] {cost = 3}
+  atomic-path [room_257_out <-> room_257] {cost = 3}
+  atomic-path [room_252 <-> room_248_249_252_253_out] {cost = 3}
+  atomic-path [room_253 <-> room_248_249_252_253_out] {cost = 3}
+  atomic-path [room_234_out <-> room_234] {cost = 3}
+  atomic-path [room_234_out <-> room_231_out] {cost = 5}
+  atomic-path [room_231_out <-> room_230_out] {cost = 3}
+  atomic-path [room_230_out <-> room_230] {cost = 3}
+  atomic-path [room_230_out <-> room_229_out] {cost = 3}
+  atomic-path [room_222 <-> room_222_out] {cost = 3}
+  atomic-path [room_220 <-> room_220_out] {cost = 3}
+  atomic-path [room_201_out_1 <-> room_205A_205C_out] {cost = 3}
+  atomic-path [toilet_2_accessible <-> toilet_2_out] {cost = 3}
+  atomic-path [toilet_2_female <-> toilet_2_out] {cost = 3}
+
+  atomic-path [Stair_L <-> left_elevator_hall] {cost = 5}
+}
