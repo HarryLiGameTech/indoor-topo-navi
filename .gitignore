@@ -16,6 +16,8 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
+.bsp
+
 ### Eclipse ###
 .apt_generated
 .classpath
@@ -43,12 +45,14 @@ bin/
 
 .idea
 
-### Secrets — never commit real values ###
+### Secrets ###
 .env
-.env.example
+.env.local
+.env.production
 *.pem
 
-run.sh
+# Spring Boot local config override
+application-local.yml
 
 *.hprof
 
@@ -56,3 +60,5 @@ bfg-1.15.0.jar
 bootrun.log
 
 .claude
+
+..bfg-report

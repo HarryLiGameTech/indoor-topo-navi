@@ -1,0 +1,326 @@
+topo-map floor4(){
+   let params: {permResident: Int} = {
+       permResident = 0
+    }
+  topo-node Stair_RRT
+  topo-node room_452_453_out_2
+  topo-node room_453 {description = "PhD office"}
+  topo-node room_451B_452_out
+  topo-node room_452
+  topo-node room_451B
+  topo-node room_451A_out
+  topo-node room_451A
+  topo-node room_450 {description = "director of graduate school"}
+  topo-node room_449
+  topo-node room_449_450_out
+  topo-node toilet_3_out
+  topo-node toilet_3_female
+  topo-node toilet_3_male
+  topo-node Stair_R
+  topo-node right_elevator_hall
+  topo-node door_448_toilet3 {description = "the door between room 448 and toilet 3"}
+  topo-node room_458_out
+  topo-node room_458
+  topo-node room_447B_out
+  topo-node room_447A_out
+  topo-node room_447A {description = "HR office"}
+  topo-node Stair_RT
+  topo-node room_446_out
+  topo-node room_446 {description = "president office"}
+  topo-node room_448
+  topo-node room_447B {description = "HR"}
+  topo-node room_454_459_460_out
+  topo-node room_459
+  topo-node room_454
+  topo-node room_456_457_462_out
+  topo-node room_456
+  topo-node room_457
+  topo-node room_462
+  topo-node toilet_4_out
+  topo-node toilet_4_male
+  topo-node toilet_4_female
+  topo-node room_467_470_out
+  topo-node room_467 {description = "CPC secretary office"}
+  topo-node room_470
+  topo-node Stair_RB
+  topo-node room_465_466_out
+  topo-node room_465
+  topo-node room_466
+  topo-node room_467
+  topo-node room_468B
+  topo-node room_468A
+  topo-node room_472
+  topo-node room_473 {description = "department of chinese culture"}
+  topo-node room_474
+  topo-node room_475
+  topo-node room_476
+  topo-node room_477 {description = "university stamp service", open_time = 32400, close_time = 43200}
+  topo-node room_478
+  topo-node room_479
+  topo-node room_480
+  topo-node room_482
+  topo-node room_483
+  topo-node Stair_RRB
+  topo-node room_483_out
+  topo-node room_422_out
+  topo-node Stair_LLB
+  topo-node room_422
+  topo-node room_423
+  topo-node room_424
+  topo-node room_425
+  topo-node room_426
+  topo-node room_427
+  topo-node room_430 {description = "confucius institute"}
+  topo-node room_432
+  topo-node room_434
+  topo-node Stair_LB
+  topo-node room_436
+  topo-node room_437_out
+  topo-node room_439_out
+  topo-node room_439
+  topo-node room_437
+  topo-node room_441
+  topo-node room_441_out
+  topo-node toilet_2_out
+  topo-node toilet_2_female
+  topo-node toilet_2_male
+  topo-node room_415_416_420_out
+  topo-node room_416 {description = "stuff launge"}
+  topo-node room_415
+  topo-node room_412
+  topo-node room_412_418_out
+  topo-node room_406a_412_out_1
+  topo-node room_436_out
+  topo-node Stair_L
+  topo-node left_elevator_hall
+  topo-node room_405
+  topo-node room_401B_402_405_out
+  topo-node room_402_out_2
+  topo-node room_403_404_out
+  topo-node room_403
+  topo-node room_404
+  topo-node room_402 {description = "research and knowledge exchange"}
+  topo-node toilet_1_out
+  topo-node toilet_1_female
+  topo-node toilet_1_male
+  topo-node door_toilet1_406A {description = "the door between toilet1 and room 406A"}
+  topo-node room_406A
+  topo-node room_406A_406B_out
+  topo-node room_406B
+  topo-node room_407A_out
+  topo-node room_407B_out
+  topo-node room_407A
+  topo-node room_407B
+  topo-node Stair_LT
+  topo-node room_408_409_out
+  topo-node room_408
+  topo-node room_409
+  topo-node room_410_out
+  topo-node room_410 {description = "provost office"}
+  topo-node room_411_out
+  topo-node room_411
+  topo-node main_elevator_hall
+  topo-node room_401B {description = "research and knowledge exchange"}
+  topo-node room_401A_405_out
+  topo-node Stair_LLT
+  topo-node room_401A {description = "research and knowledge exchange"}
+  topo-node Stair_top {description = "to top of trent building"}
+  topo-node room_418
+  topo-node room_420
+  topo-node toilet_2_accessible
+  topo-node smoke_L {description = "smoking area on the gate1-facing area of the building, on a small balcony"}
+  topo-node room_434_out
+  topo-node room_423_out
+  topo-node room_424_out
+  topo-node room_425_out
+  topo-node room_426_out
+  topo-node room_427_out
+  topo-node room_430_out
+  topo-node room_432_out
+  topo-node room_448_out
+  topo-node toilet_3_accessible
+  topo-node smoke_R {description = "smoking area on the library-facing area of the building, on a small balcony"}
+  topo-node room_460
+  topo-node room_467_out
+  topo-node room_468B_out
+  topo-node room_468A_out
+  topo-node room_472_out
+  topo-node room_473_out
+  topo-node room_474_out
+  topo-node room_475_out
+  topo-node room_476_out
+  topo-node room_477_out
+  topo-node room_478_out
+  topo-node room_479_out
+  topo-node room_480_out
+  topo-node room_481
+  topo-node room_481_out
+  topo-node room_482_out
+  atomic-path [Stair_RRT <-> room_452_453_out_2] {cost = 3}
+  atomic-path [room_451B_452_out <-> room_453] {cost = 7}
+  atomic-path [room_452_453_out_2 <-> room_453] {cost = 7}
+  atomic-path [room_451B_452_out <-> room_452_453_out_2] {cost = 7}
+  atomic-path [room_452 <-> room_451B_452_out] {cost = 3}
+  atomic-path [room_452 <-> room_452_453_out_2] {cost = 3}
+  atomic-path [room_451B <-> room_451B_452_out] {cost = 3}
+  atomic-path [room_451A_out <-> room_451B_452_out] {cost = 4}
+  atomic-path [room_449 <-> room_449_450_out] {cost = 3}
+  atomic-path [room_450 <-> room_449_450_out] {cost = 3}
+  atomic-path [room_449_450_out <-> room_451A_out] {cost = 3}
+  atomic-path [room_451A <-> room_451A_out] {cost = 3}
+  atomic-path [toilet_3_male <-> toilet_3_out] {cost = 3}
+  atomic-path [toilet_3_female <-> toilet_3_out] {cost = 3}
+  atomic-path [toilet_3_out <-> room_449_450_out] {cost = 3}
+  atomic-path [right_elevator_hall <-> Stair_R] {cost = 3}
+  atomic-path [room_451B_452_out <-> right_elevator_hall] {cost = 9}
+  atomic-path [room_453 <-> right_elevator_hall] {cost = 9}
+  atomic-path [room_446 <-> room_446_out] {cost = 3}
+  atomic-path [room_446_out <-> Stair_RT] {cost = 3}
+  atomic-path [room_447A <-> room_447A_out] {cost = 3}
+  atomic-path [room_447A_out <-> Stair_RT] {cost = 3}
+  atomic-path [room_447A_out <-> room_447B_out] {cost = 3}
+  atomic-path [room_458 <-> room_458_out] {cost = 3}
+  atomic-path [room_447B <-> room_447B_out] {cost = 3}
+  atomic-path [room_448 <-> room_447B_out] {cost = 3}
+  atomic-path [door_448_toilet3 <-> room_458_out] {cost = 3}
+  atomic-path [room_454_459_460_out <-> room_459] {cost = 3}
+  atomic-path [room_454_459_460_out <-> room_454] {cost = 3}
+  atomic-path [room_458_out <-> room_454_459_460_out] {cost = 3}
+  atomic-path [room_456_457_462_out <-> room_457] {cost = 3}
+  atomic-path [room_456 <-> room_456_457_462_out] {cost = 3}
+  atomic-path [room_454_459_460_out <-> room_456_457_462_out] {cost = 3}
+  atomic-path [room_462 <-> room_456_457_462_out] {cost = 3}
+  atomic-path [toilet_4_out <-> toilet_4_male] {cost = 3}
+  atomic-path [toilet_4_female <-> toilet_4_out] {cost = 3}
+  atomic-path [room_456_457_462_out <-> toilet_4_out] {cost = 3}
+  atomic-path [room_467_470_out <-> room_467] {cost = 3}
+  atomic-path [room_470 <-> room_467_470_out] {cost = 3}
+  atomic-path [room_465 <-> room_465_466_out] {cost = 3}
+  atomic-path [room_465_466_out <-> room_466] {cost = 3}
+  atomic-path [room_439_out <-> room_439] {cost = 3}
+  atomic-path [room_437_out <-> room_437] {cost = 3}
+  atomic-path [room_441_out <-> room_439_out] {cost = 3}
+  atomic-path [room_441_out <-> room_441] {cost = 3}
+  atomic-path [room_439_out <-> room_437_out] {cost = 3}
+  atomic-path [toilet_2_male <-> toilet_2_out] {cost = 3}
+  atomic-path [toilet_2_female <-> toilet_2_out] {cost = 3}
+  atomic-path [room_415_416_420_out <-> room_416] {cost = 3}
+  atomic-path [room_412 <-> room_415] {cost = 3}
+  atomic-path [room_412_418_out <-> room_412] {cost = 3}
+  atomic-path [room_406a_412_out_1 <-> room_412] {cost = 3}
+  atomic-path [room_415_416_420_out <-> toilet_2_out] {cost = 3}
+  atomic-path [room_436_out <-> room_436] {cost = 3}
+  atomic-path [room_437_out <-> room_436_out] {cost = 3}
+  atomic-path [left_elevator_hall <-> room_405] {cost = 11}
+  atomic-path [left_elevator_hall <-> Stair_L] {cost = 3}
+  atomic-path [room_401B_402_405_out <-> left_elevator_hall] {cost = 8}
+  atomic-path [room_403_404_out <-> room_402_out_2] {cost = 3}
+  atomic-path [room_404 <-> room_403_404_out] {cost = 3}
+  atomic-path [room_403 <-> room_403_404_out] {cost = 3}
+  atomic-path [room_402 <-> room_401B_402_405_out] {cost = 3}
+  atomic-path [room_402 <-> room_402_out_2] {cost = 3}
+  atomic-path [toilet_1_male <-> toilet_1_out] {cost = 3}
+  atomic-path [toilet_1_female <-> toilet_1_out] {cost = 3}
+  atomic-path [room_403_404_out <-> toilet_1_out] {cost = 3}
+  atomic-path [toilet_1_out <-> door_toilet1_406A] {cost = 3}
+  atomic-path [room_406A <-> room_406a_412_out_1] {cost = 5}
+  atomic-path [room_406A_406B_out <-> room_406a_412_out_1] {cost = 3}
+  atomic-path [room_406B <-> room_406A_406B_out] {cost = 3}
+  atomic-path [room_407A <-> room_407A_out] {cost = 3}
+  atomic-path [room_406A_406B_out <-> room_407A_out] {cost = 3}
+  atomic-path [Stair_LT <-> room_407B_out] {cost = 3}
+  atomic-path [room_407B <-> room_407B_out] {cost = 3}
+  atomic-path [room_407A_out <-> room_407B_out] {cost = 3}
+  atomic-path [room_409 <-> room_408_409_out] {cost = 3}
+  atomic-path [room_408 <-> room_408_409_out] {cost = 3}
+  atomic-path [room_407B_out <-> room_408_409_out] {cost = 3}
+  atomic-path [room_410 <-> room_410_out] {cost = 3}
+  atomic-path [room_408_409_out <-> room_410_out] {cost = 3}
+  atomic-path [room_411_out <-> room_411] {cost = 3}
+  atomic-path [room_410_out <-> room_411_out] {cost = 3}
+  atomic-path [room_401B <-> room_401B_402_405_out] {cost = 3}
+  atomic-path [room_401A_405_out <-> room_405] {cost = 12}
+  atomic-path [Stair_LLT <-> room_401A_405_out] {cost = 3}
+  atomic-path [room_401A <-> room_401A_405_out] {cost = 3}
+  atomic-path [room_401A_405_out <-> room_401B_402_405_out] {cost = 9}
+  atomic-path [toilet_4_out <-> room_467_470_out] {cost = 3}
+  atomic-path [Stair_top <-> main_elevator_hall] {cost = 3}
+  atomic-path [room_437_out <-> Stair_LB] {cost = 3}
+  atomic-path [room_406a_412_out_1 <-> door_toilet1_406A] {cost = 3}
+  atomic-path [room_418 <-> room_412_418_out] {cost = 3}
+  atomic-path [room_418 <-> room_420] {cost = 3}
+  atomic-path [room_420 <-> room_415_416_420_out] {cost = 3}
+  atomic-path [room_415 <-> room_415_416_420_out] {cost = 3}
+  atomic-path [toilet_2_out <-> room_436_out] {cost = 3}
+  atomic-path [toilet_2_accessible <-> toilet_2_out] {cost = 3}
+  atomic-path [toilet_2_female <-> toilet_2_out] {cost = 3}
+  atomic-path [toilet_2_male <-> toilet_2_out] {cost = 3}
+  atomic-path [smoke_L <-> toilet_2_out] {cost = 3}
+  atomic-path [room_434_out <-> room_434] {cost = 3}
+  atomic-path [room_434_out <-> room_436_out] {cost = 3}
+  atomic-path [room_422_out <-> Stair_LLB] {cost = 3}
+  atomic-path [room_423_out <-> room_423] {cost = 3}
+  atomic-path [room_423_out <-> room_422_out] {cost = 3}
+  atomic-path [room_422_out <-> room_422] {cost = 3}
+  atomic-path [room_424_out <-> room_423_out] {cost = 3}
+  atomic-path [room_424_out <-> room_424] {cost = 3}
+  atomic-path [room_425_out <-> room_425] {cost = 3}
+  atomic-path [room_425_out <-> room_424_out] {cost = 3}
+  atomic-path [room_426_out <-> room_426] {cost = 3}
+  atomic-path [room_426_out <-> room_425_out] {cost = 3}
+  atomic-path [room_427_out <-> room_427] {cost = 3}
+  atomic-path [room_427_out <-> room_426_out] {cost = 3}
+  atomic-path [room_427 <-> room_430] {cost = 3}
+  atomic-path [room_430_out <-> room_427_out] {cost = 6}
+  atomic-path [room_430_out <-> room_430] {cost = 3}
+  atomic-path [room_432_out <-> room_432] {cost = 3}
+  atomic-path [room_432_out <-> room_430_out] {cost = 3}
+  atomic-path [room_432_out <-> room_434_out] {cost = 3}
+  atomic-path [room_465 <-> room_465_466_out] {cost = 3}
+  atomic-path [room_411_out <-> main_elevator_hall] {cost = 3}
+  atomic-path [room_411_out <-> room_446_out] {cost = 15}
+  atomic-path [room_448_out <-> room_448] {cost = 3}
+  atomic-path [room_448_out <-> room_447B_out] {cost = 3}
+  atomic-path [room_448_out <-> room_458_out] {cost = 3}
+  atomic-path [room_447B_out <-> room_448_out] {cost = 3}
+  atomic-path [door_448_toilet3 <-> toilet_3_out] {cost = 3}
+  atomic-path [toilet_3_accessible <-> toilet_3_out] {cost = 3}
+  atomic-path [room_451B <-> room_451A] {cost = 3}
+  atomic-path [smoke_R <-> toilet_4_out] {cost = 3}
+  atomic-path [room_460 <-> room_459] {cost = 3}
+  atomic-path [room_460 <-> room_454_459_460_out] {cost = 3}
+  atomic-path [room_467_out <-> room_467] {cost = 3}
+  atomic-path [room_467_out <-> room_465_466_out] {cost = 3}
+  atomic-path [room_468B_out <-> room_468B] {cost = 3}
+  atomic-path [room_468B_out <-> room_467_out] {cost = 3}
+  atomic-path [room_468A_out <-> room_468A] {cost = 3}
+  atomic-path [room_468A_out <-> room_468B_out] {cost = 3}
+  atomic-path [room_468A_out <-> Stair_RB] {cost = 3}
+  atomic-path [room_468A_out <-> room_467_470_out] {cost = 3}
+  atomic-path [room_472_out <-> room_472] {cost = 3}
+  atomic-path [room_472_out <-> room_467_470_out] {cost = 3}
+  atomic-path [room_473_out <-> room_473] {cost = 3}
+  atomic-path [room_473_out <-> room_472_out] {cost = 3}
+  atomic-path [room_474_out <-> room_474] {cost = 3}
+  atomic-path [room_474_out <-> room_473_out] {cost = 3}
+  atomic-path [room_475_out <-> room_475] {cost = 3}
+  atomic-path [room_475_out <-> room_474_out] {cost = 3}
+  atomic-path [room_476_out <-> room_476] {cost = 3}
+  atomic-path [room_476_out <-> room_475_out] {cost = 3}
+  atomic-path [room_477_out <-> room_476_out] {cost = 3}
+  atomic-path [room_477_out <-> room_477] {cost = 3}
+  atomic-path [room_478_out <-> room_478] {cost = 3}
+  atomic-path [room_478_out <-> room_477_out] {cost = 3}
+  atomic-path [room_479_out <-> room_479] {cost = 3}
+  atomic-path [room_479_out <-> room_478_out] {cost = 3}
+  atomic-path [room_480 <-> room_480_out] {cost = 3}
+  atomic-path [room_480_out <-> room_479_out] {cost = 3}
+  atomic-path [room_481 <-> room_480] {cost = 3}
+  atomic-path [room_481_out <-> room_481] {cost = 3}
+  atomic-path [room_481_out <-> room_480_out] {cost = 3}
+  atomic-path [room_482_out <-> room_482] {cost = 3}
+  atomic-path [room_482_out <-> room_481_out] {cost = 3}
+  atomic-path [room_482_out <-> room_483_out] {cost = 3}
+  atomic-path [room_483 <-> room_483_out] {cost = 3}
+  atomic-path [room_483_out <-> Stair_RRB] {cost = 3}
+}
