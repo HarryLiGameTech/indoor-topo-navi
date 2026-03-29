@@ -3,7 +3,7 @@ transport ST_RRB is Stairs{
         turnBackCost = 3
     }
 
-    // station F4 at Floor4:: {location = 12.0, directSegmentIndex = 6}
+    station F4 at Floor4::Stair_RRB {location = 12.0, directSegmentIndex = 6}
     station F3 at Floor3::room_382_out {location = 8.0, directSegmentIndex = 4}
     station F2 at Floor2::room_267_out {location = 3.5, directSegmentIndex = 2}
     station F1 at Floor1::stair_RRB {location = 0.0, directSegmentIndex = 0}
