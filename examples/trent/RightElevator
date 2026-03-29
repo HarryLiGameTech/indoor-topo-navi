@@ -5,7 +5,7 @@ transport Right is Elevator{
         cars = 1
     }
 
-    // station F4 at Floor4::right_elevator_hall {location = 12.0, departureRate = 0.01}
+    station F4 at Floor4::right_elevator_hall {location = 12.0, departureRate = 0.01}
     station F3 at Floor3::right_elevator_hall {location = 8.0, departureRate = 0.01}
     station F2 at Floor2::right_elevator_hall {location = 3.5, departureRate = 0.97}
     station F1 at Floor1::right_elevator_hall {location = 0.0, departureRate = 0.01}

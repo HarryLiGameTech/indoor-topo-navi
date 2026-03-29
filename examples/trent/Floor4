@@ -28,7 +28,7 @@ topo-map floor4(){
   topo-node room_446_out
   topo-node room_446 {description = "president office"}
   topo-node room_448
-  topo-node room_447B {description = "HR"}
+  topo-node room_447B {description = "HR office"}
   topo-node room_454_459_460_out
   topo-node room_459
   topo-node room_454
