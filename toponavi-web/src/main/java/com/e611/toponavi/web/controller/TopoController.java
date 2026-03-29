@@ -293,6 +293,69 @@ public class TopoController {
         }
     }
 
+    @GetMapping("/quick-demo-node-info")
+    public ResponseEntity<?> getNodeInfo(@RequestParam String nodeIdentifier) {
+        try {
+            Map<String, String> exampleFiles = loadExampleFiles();
+
+            if (exampleFiles.isEmpty()) {
+                return ResponseEntity.badRequest().body(
+                        Map.of("error", "No example files found")
+                );
+            }
+
+            // Check cache; compile and save if miss
+            CompilationCacheService.CachedResult cached =
+                    cacheService.load(exampleFiles).orElse(null);
+            String message;
+            CompilationResult result;
+            if (cached != null) {
+                result = cached.getResult();
+                message = "Compilation Successful (from cache)";
+            } else {
+                result = TopoNaviService.compile(exampleFiles);
+                cacheService.save(exampleFiles, result);
+                message = "Compilation Successful";
+            }
+
+            // nodeIdentifier format: "{graph_identifier}::{node_identifier}"
+            String[] parts = nodeIdentifier.split("::");
+            if (parts.length != 2) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid node identifier format. Expected '{graph_identifier}::{node_identifier}'"));
+            }
+            String graphId = parts[0];
+            String nodeId = parts[1];
+
+            NavigationGraph graph = CollectionConverters.asJava(result.graphs()).get(graphId);
+            if (graph == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Graph not found: " + graphId));
+            }
+            data.TopoNode node = CollectionConverters.asJava(graph.nodes()).stream()
+                    .filter(n -> n.identifier().equals(nodeId))
+                    .findFirst()
+                    .orElse(null);
+            if (node == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Node not found: " + nodeId));
+            }
+
+            Map<String, Object> attrs = new HashMap<>();
+            CollectionConverters.asJava(node.attributes()).forEach((attrKey, attrVal) ->
+                    attrs.put(attrKey, toJavaValue(attrVal))
+            );
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", message,
+                    "nodeIdentifier", nodeIdentifier,
+                    "attributes", attrs
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", e.getMessage())
+            );
+        }
+    }
+
     @PostMapping("/cache/invalidate")
     public ResponseEntity<?> invalidateCache(
             @RequestParam(required = false) String projectIdentifier) {
