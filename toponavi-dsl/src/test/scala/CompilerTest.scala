@@ -1,6 +1,7 @@
 import api.TopoNaviService
 import compiler.TopoScriptCompiler
 import data.NavigationOutputPath
+import enums.RoutePlanningPreferences.MinimizeTime
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should
 
@@ -130,7 +131,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       val compiler = new TopoScriptCompiler()
       val result = compiler.compile(examplesDir.getAbsolutePath)
 
-      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "FloorB2::GE3_hall", "FloorB1::FS4_6_hall");
+      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "FloorB2::GE3_hall", "FloorB1::FS4_6_hall", MinimizeTime);
 
       assert(result != null)
       println("Real project compilation result: ")

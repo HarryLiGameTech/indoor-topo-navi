@@ -49,15 +49,22 @@ root NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int){
     // Define what means "TenantsOnly"
     constraint TenantsOnly{
         require myInt > 2 ...
-        require haveStaffCard == true otherwise UNAUTHORIZED
+        require haveStaffCard otherwise UNAUTHORIZED
     }
 
     // [Unauthorized, ReallyUnauthorized]
 
     // Define what means ManagementOnly 
     constraint ManagementOnly{ 
-        require haveManagetmentCard == true otherwise UnauthorizedVisitExcepion
-    } 
+        require haveManagetmentCard otherwise UnauthorizedVisitExcepion
+    }
+
+    constraint canFitIntoElevator{
+        require person < 13
+        require weight < 1000
+    }
+
+    def ManagementOnly: Bool = haveManagementCard
 
     // Define what means EmergencyEgress 
     constraint EmergencyEgress{ 

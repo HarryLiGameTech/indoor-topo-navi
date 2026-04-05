@@ -8,8 +8,6 @@ type Context = Env
 case class RootValue(
   name: String,
   params: List[(String, Type)],
-//  submaps: Set[TopoMapValue],
-//  transportations: Set[TopoTransportationValue],
   context: Context,
 ) {
   

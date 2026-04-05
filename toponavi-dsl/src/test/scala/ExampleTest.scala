@@ -13,7 +13,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     val rootCode =
       """
       root TestBuilding(p1: String){
-        let a: Int = 1
+        def a: Int = 1
 //        {
 //          let a: Int = 1;
 //        }
@@ -25,10 +25,10 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       }
       """
       
-    val subMapCode = // Unbound a
+    val subMapCode = // Unbound symbol: a
       """
       topo-map TestSubMap(){
-          let a: Int = 114
+          // let a: Int = 114
           let b: Int = a + 400
 
 //          def magicFunc(): Int = {
@@ -82,8 +82,8 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     pprintln(rootProgram)
     
     // TODO: Shitty one!
-//    val rootElaborated = rootProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
-//    pprintln(rootElaborated)
+    val rootElaborated = rootProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+    pprintln(rootElaborated)
 
     val stripedCode1 = subMapCode.strip()
 
@@ -103,7 +103,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
       }
     }
 
-    val submapElaborated = submapProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+    val submapElaborated = submapProgram.elaborate(using TopoEnvironment(rootElaborated.context, Map.empty, Map.empty, Map.empty))
 
     val stripedCode2 = subMapCode2.strip()
     val submap2Program = catchError(stripedCode2) { listener =>
@@ -164,3 +164,18 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     pprint.pprintln(vehicleElaborated)
   }
 }
+
+
+/*
+RootValue(
+  name = "TestBuilding",
+  params = List(("p1", StringType)),
+  context = Environment(
+    types = Map(),
+    values = Map(
+      Symbol(name = "a") -> IntVal(n = 1L),
+      Symbol(name = "magicFunc") -> IntVal(n = 114515L)
+    )
+  )
+)
+*/
