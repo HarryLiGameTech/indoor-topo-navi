@@ -37,6 +37,10 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
             require p1 == "satisfy"
         }
 
+        constraint TestConstraint2 {
+            require p2 == 42
+        }
+
       }
       """
       
@@ -53,7 +57,8 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
           topo-node tt1 {number = a}
           topo-node tt2
           topo-node tt3
-          atomic-path [tt1 <-> tt2] {cost = a+5} requires TestConstraint
+          atomic-path [tt1 -> tt2] {cost = a+5} requires TestConstraint
+          atomic-path [tt2 -> tt1] {cost = 10} requires TestConstraint2
           let params: {area: Int} = {area = 114514}
       }
       """
@@ -98,7 +103,7 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
     pprintln(rootProgram)
     
     val rootElaborated = rootProgram.elaborate(using envWithParams(
-      "p1" -> Value.StringVal("satisfy"),
+      "p1" -> Value.StringVal("not-satisfy"),
       "p2" -> Value.IntVal(42),
       "p3" -> Value.BoolVal(true)
     ))

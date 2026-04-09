@@ -16,18 +16,25 @@ object TopoNaviService {
   private val compiler = new TopoScriptCompiler()
 
   // 1. Compile and return result (for use by web layer with caching)
+  def compile(files: JMap[String, String], params: JMap[String, AnyRef]): CompilationResult =
+    compiler.compileProject(files, params)
+
+  // Backward-compatible overload with no params
   def compile(files: JMap[String, String]): CompilationResult =
     compiler.compileProject(files)
 
   // 2. Compilation Check (stateless, no cache)
-  def validateCode(files: JMap[String, String]): String = {
+  def validateCode(files: JMap[String, String], params: JMap[String, AnyRef]): String = {
     try {
-      compiler.compileProject(files)
+      compiler.compileProject(files, params)
       "Compilation Successful"
     } catch {
       case e: Exception => throw new RuntimeException(e.getMessage)
     }
   }
+
+  def validateCode(files: JMap[String, String]): String =
+    validateCode(files, java.util.Collections.emptyMap())
 
   // 3. Navigate from a pre-compiled result; returns NavigationOutputPath for structured access.
   //    Throws RuntimeException on navigation error (Java-friendly).
@@ -59,21 +66,38 @@ object TopoNaviService {
   // 5. Navigation Request (stateless - compiles on-the-fly, no cache)
   def findPath(
     files: JMap[String, String],
+    params: JMap[String, AnyRef],
     startNodeName: String,
     endNodeName: String,
     preference: RoutePlanningPreferences
   ): String = {
-    val result: CompilationResult = compiler.compileProject(files)
+    val result: CompilationResult = compiler.compileProject(files, params)
     findPathFromResult(result, startNodeName, endNodeName, preference)
   }
 
+  // Backward-compatible overload with no params
+  def findPath(
+    files: JMap[String, String],
+    startNodeName: String,
+    endNodeName: String,
+    preference: RoutePlanningPreferences
+  ): String = findPath(files, java.util.Collections.emptyMap(), startNodeName, endNodeName, preference)
+
   // Java-friendly overloads: accept preference as a String to avoid Scala enum interop issues
+  def findPath(
+    files: JMap[String, String],
+    params: JMap[String, AnyRef],
+    startNodeName: String,
+    endNodeName: String,
+    preference: String
+  ): String = findPath(files, params, startNodeName, endNodeName, parsePreference(preference))
+
   def findPath(
     files: JMap[String, String],
     startNodeName: String,
     endNodeName: String,
     preference: String
-  ): String = findPath(files, startNodeName, endNodeName, parsePreference(preference))
+  ): String = findPath(files, java.util.Collections.emptyMap(), startNodeName, endNodeName, parsePreference(preference))
 
   def findRoutePlan(
     result: CompilationResult,

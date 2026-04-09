@@ -2,10 +2,10 @@ package compiler
 
 import util.catchError
 import syntax.TopoMapVisitor
-import surfacelang.{GlobalConfigExpr, TopoEnvironment}
+import surfacelang.{GlobalConfigExpr, RootExpr, TopoEnvironment}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import data.{ElevatorBank, LinearTransport, NavigationGraph, StairCase, TransportGraph}
-import corelang.{Environment, Value}
+import corelang.{Environment, Identifier, Value}
 import enums.ElevatorStationCategory.{Entrance, Occupant}
 import surfacelang.{TopoMapValue, TransportValue}
 import pprint.pprintln
@@ -20,7 +20,7 @@ class TopoScriptCompiler() {
 
   private val metadata = new CompilerMetadataContext()
 
-  def compile(targetDirectory: String): CompilationResult = {
+  def compile(targetDirectory: String, params: Map[String, Value] = Map.empty): CompilationResult = {
     // 1. Parse Global Config
     val configFile = new File(targetDirectory, "configuration.tcfg")
     val configFileNoExt = new File(targetDirectory, "configuration")
@@ -35,17 +35,32 @@ class TopoScriptCompiler() {
       case _ => throw new RuntimeException("Global config parsing did not return a GlobalConfigExpr")
     }
 
-
     // Populate the global SubmapRefRegistry from the parsed config
     metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
-    
+
+    // 1b. Parse and elaborate the root file (declares params, constraints, shared defs).
+    //     Its elaborated context becomes the base Env for all submaps and transports.
+    val rootFile = new File(targetDirectory, "root")
+    val rootEnv = if (rootFile.exists()) {
+      val rootCode = scala.io.Source.fromFile(rootFile).mkString
+      val rootExpr = parseRootFile(rootCode)
+      val paramEnv = params.foldLeft(Environment.empty[Identifier, corelang.Type, Value]) { case (acc, (k, v)) =>
+        acc.addValueVar(Identifier.Symbol(k), v)
+      }
+      rootExpr.elaborate(using TopoEnvironment(paramEnv, Map.empty, Map.empty, Map.empty)).context
+    } else {
+      // No root file — build the base env directly from the supplied params
+      params.foldLeft(Environment.empty[Identifier, corelang.Type, Value]) { case (acc, (k, v)) =>
+        acc.addValueVar(Identifier.Symbol(k), v)
+      }
+    }
+
     // 2. Parse and Elaborate each topo-map file
     val topoMapFiles = globalConfig.submaps.map(_.name)
     val elaboratedMaps = mutable.Map[String, TopoMapValue]()
     
     for (mapName <- topoMapFiles) {
       val mapFile = new File(targetDirectory, mapName + ".tmap")
-      // If .tm doesn't exist, try without extension
       val fileToRead = if (mapFile.exists()) mapFile else new File(targetDirectory, mapName)
       
       if (!fileToRead.exists()) {
@@ -53,14 +68,13 @@ class TopoScriptCompiler() {
       } else {
         val mapCode = scala.io.Source.fromFile(fileToRead).mkString
         val topoMapExpr = parseMapFile(mapCode)
-        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(rootEnv, Map.empty, Map.empty, Map.empty))
         elaboratedMaps.put(mapName, elaboratedMap)
       }
     }
 
     // 2b. Also parse and elaborate any base maps referenced via "using" that were not
-    //     listed as standalone submaps (e.g. "submap Floor3 using Zone1" requires Zone1.tmap
-    //     to be elaborated even though Zone1 has no standalone "submap Zone1" entry).
+    //     listed as standalone submaps.
     for (baseRef <- metadata.submapRefRegistry.submapUsages.keys if !elaboratedMaps.contains(baseRef.name)) {
       val baseMapFile = new File(targetDirectory, baseRef.name + ".tmap")
       val fileToRead  = if (baseMapFile.exists()) baseMapFile else new File(targetDirectory, baseRef.name)
@@ -69,17 +83,15 @@ class TopoScriptCompiler() {
       } else {
         val mapCode     = scala.io.Source.fromFile(fileToRead).mkString
         val topoMapExpr = parseMapFile(mapCode)
-        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(rootEnv, Map.empty, Map.empty, Map.empty))
         elaboratedMaps.put(baseRef.name, elaboratedMap)
       }
     }
 
-    // 3. Parse each transport files, and link them with the topo-maps
+    // 3. Parse each transport file and link with the topo-maps
     val transFiles = globalConfig.vehicles.map(_.name)
     val elaboratedTransports = mutable.ListBuffer[TransportValue]()
 
-    // Expand elaboratedMaps with registry-derived entries so that copy-ref names
-    // (e.g. "Floor3 using Zone1") are resolvable during transport elaboration.
     val derivedMaps: Map[String, TopoMapValue] = metadata.submapRefRegistry.submapUsages.flatMap {
       case (baseRef, userNames) =>
         elaboratedMaps.get(baseRef.name) match {
@@ -89,7 +101,7 @@ class TopoScriptCompiler() {
         }
     }.toMap
 
-    val topoEnvForTransport = TopoEnvironment(Environment.empty, Map.empty, Map.empty, elaboratedMaps.toMap ++ derivedMaps)
+    val topoEnvForTransport = TopoEnvironment(rootEnv, Map.empty, Map.empty, elaboratedMaps.toMap ++ derivedMaps)
 
     for (transName <- transFiles) {
       val transFile = new File(targetDirectory, transName + ".ttr")
@@ -111,7 +123,6 @@ class TopoScriptCompiler() {
       name -> buildNavigationGraph(mapVal)
     }.toMap
 
-    // Apply SubmapRefRegistry: for each "submap X using Y", register X as a copy of Y's graph
     val navigationGraphs = baseNavigationGraphs ++ metadata.submapRefRegistry.submapUsages.flatMap {
       case (baseRef, userNames) =>
         baseNavigationGraphs.get(baseRef.name) match {
@@ -151,11 +162,23 @@ class TopoScriptCompiler() {
   }
 
   // Java-friendly overload
-  def compileProject(files: JMap[String, String]): CompilationResult = {
-    // Convert Java Map to Scala Map
+  def compileProject(files: JMap[String, String], params: JMap[String, AnyRef] = java.util.Collections.emptyMap()): CompilationResult = {
     val scalaFiles = files.asScala.toMap
 
-    // Reuse logic (or implement here) to parse config from string content
+    // Convert Java params map to Scala Map[String, Value]
+    val scalaParams: Map[String, Value] = params.asScala.toMap.map { case (k, v) =>
+      val value: Value = v match {
+        case b: java.lang.Boolean => Value.BoolVal(b.booleanValue())
+        case i: java.lang.Integer => Value.IntVal(i.longValue())
+        case l: java.lang.Long    => Value.IntVal(l.longValue())
+        case d: java.lang.Double  => Value.FloatVal(d.doubleValue())
+        case f: java.lang.Float   => Value.FloatVal(f.doubleValue())
+        case s: java.lang.String  => Value.StringVal(s)
+        case other => throw new RuntimeException(s"Unsupported param type for key '$k': ${other.getClass.getName}")
+      }
+      k -> value
+    }
+
     val configContent = scalaFiles.getOrElse("configuration.tcfg",
       scalaFiles.getOrElse("configuration", throw new RuntimeException("Missing configuration.tcfg")))
 
@@ -164,8 +187,20 @@ class TopoScriptCompiler() {
       case _ => throw new RuntimeException("Global config parsing failed")
     }
 
-    // Populate the global SubmapRefRegistry from the parsed config
     metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
+
+    // 1b. Parse and elaborate the root file to get the base env with constraint BoolVals bound.
+    val rootEnv = scalaFiles.get("root").map { rootCode =>
+      val rootExpr = parseRootFile(rootCode)
+      val paramEnv = scalaParams.foldLeft(Environment.empty[Identifier, corelang.Type, Value]) { case (acc, (k, v)) =>
+        acc.addValueVar(Identifier.Symbol(k), v)
+      }
+      rootExpr.elaborate(using TopoEnvironment(paramEnv, Map.empty, Map.empty, Map.empty)).context
+    }.getOrElse {
+      scalaParams.foldLeft(Environment.empty[Identifier, corelang.Type, Value]) { case (acc, (k, v)) =>
+        acc.addValueVar(Identifier.Symbol(k), v)
+      }
+    }
 
     // 2. Parse and Elaborate each topo-map file
     val topoMapFiles = globalConfig.submaps.map(_.name)
@@ -179,31 +214,27 @@ class TopoScriptCompiler() {
       } else {
         val mapCode = mapCodeOption.get
         val topoMapExpr = parseMapFile(mapCode)
-        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(rootEnv, Map.empty, Map.empty, Map.empty))
         elaboratedMaps.put(mapName, elaboratedMap)
       }
     }
 
-    // 2b. Also parse and elaborate any base maps referenced via "using" that were not
-    //     listed as standalone submaps (e.g. "submap Floor3 using Zone1" requires Zone1
-    //     to be elaborated even though it has no standalone "submap Zone1" entry).
+    // 2b. Also parse and elaborate any base maps referenced via "using".
     for (baseRef <- metadata.submapRefRegistry.submapUsages.keys if !elaboratedMaps.contains(baseRef.name)) {
       val baseCodeOption = scalaFiles.get(baseRef.name + ".tmap").orElse(scalaFiles.get(baseRef.name))
       if (baseCodeOption.isEmpty) {
         println(s"${Console.YELLOW}Warning: Base map file not found in provided files: ${baseRef.name}${Console.RESET}")
       } else {
         val topoMapExpr   = parseMapFile(baseCodeOption.get)
-        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+        val elaboratedMap = topoMapExpr.elaborate(using TopoEnvironment(rootEnv, Map.empty, Map.empty, Map.empty))
         elaboratedMaps.put(baseRef.name, elaboratedMap)
       }
     }
 
-    // 3. Parse each transport files, and link them with the topo-maps
+    // 3. Parse each transport file and link with the topo-maps
     val transFiles = globalConfig.vehicles.map(_.name)
     val elaboratedTransports = mutable.ListBuffer[TransportValue]()
 
-    // Expand elaboratedMaps with registry-derived entries so that copy-ref names
-    // (e.g. "Floor3 using Zone1") are resolvable during transport elaboration.
     val derivedMaps: Map[String, TopoMapValue] = metadata.submapRefRegistry.submapUsages.flatMap {
       case (baseRef, userNames) =>
         elaboratedMaps.get(baseRef.name) match {
@@ -213,7 +244,7 @@ class TopoScriptCompiler() {
         }
     }.toMap
 
-    val topoEnvForTransport = TopoEnvironment(Environment.empty, Map.empty, Map.empty, elaboratedMaps.toMap ++ derivedMaps)
+    val topoEnvForTransport = TopoEnvironment(rootEnv, Map.empty, Map.empty, elaboratedMaps.toMap ++ derivedMaps)
 
     for (transName <- transFiles) {
       val transCodeOption = scalaFiles.get(transName + ".ttr").orElse(scalaFiles.get(transName))
@@ -227,14 +258,12 @@ class TopoScriptCompiler() {
         elaboratedTransports += elaboratedTransport
       }
     }
-//    pprintln(elaboratedTransports)
 
     // 4. Convert to toponavi-core Data Structures
     val baseNavigationGraphs = elaboratedMaps.map { case (name, mapVal) =>
       name -> buildNavigationGraph(mapVal)
     }.toMap
 
-    // Apply SubmapRefRegistry: for each "submap X using Y", register X as a copy of Y's graph
     val navigationGraphs = baseNavigationGraphs ++ metadata.submapRefRegistry.submapUsages.flatMap {
       case (baseRef, userNames) =>
         baseNavigationGraphs.get(baseRef.name) match {
@@ -264,15 +293,9 @@ class TopoScriptCompiler() {
     val transportGraph = TransportGraph(linearTransports)
 
     println("=== navigationGraphs ===")
-//    pprintln(navigationGraphs)
     println("=== linearTransports ===")
-//    pprintln(linearTransports)
     println("=== transportGraph ===")
-//    pprintln(transportGraph)
 
-    // Return result
-    // Note: ensure CompilationResult and its fields are accessible to Java 
-    // (Case classes work fine, but Java sees them as normal classes with getters)
     CompilationResult(navigationGraphs, transportGraph, globalConfig.orderedSubmapNames)
   }
 
@@ -329,6 +352,25 @@ class TopoScriptCompiler() {
         case ctx: MapFileParser.SurfaceDefTransportExprContext =>
           new TopoMapVisitor().visitSurfaceDefTransportExpr(ctx)
         case _ => throw new RuntimeException("Unexpected surface definition type. Need Transport here!")
+      }
+    }
+  }
+
+  def parseRootFile(rawCode: String): RootExpr = {
+    val stripedCode = rawCode.strip()
+    catchError(stripedCode) { listener =>
+      val lexer = MapFileLexer(CharStreams.fromString(stripedCode))
+      lexer.removeErrorListeners()
+      lexer.addErrorListener(listener)
+      val parser = MapFileParser(CommonTokenStream(lexer))
+      parser.removeErrorListeners()
+      parser.addErrorListener(listener)
+
+      val surface = parser.surfaceDef()
+      surface match {
+        case ctx: MapFileParser.SurfaceDefRootExprContext =>
+          new TopoMapVisitor().visitSurfaceDefRootExpr(ctx)
+        case _ => throw new RuntimeException("Unexpected surface definition type. Need Root here!")
       }
     }
   }

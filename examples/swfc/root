@@ -1,0 +1,27 @@
+
+root SWFC(haveStaffCard: Bool, haveManagementCard: Bool, id: Int, aggregatedWeight: Int){
+
+    def buildingHeight: Int = 492
+
+    // Define what means "TenantsOnly"
+    constraint TenantsOnly{
+        require haveStaffCard
+    }
+
+    // Define what means ManagementOnly 
+    constraint ManagementOnly{ 
+        require haveManagementCard
+    }
+
+    // Define what means CanFitIntoPassengerElevator
+    constraint CanFitIntoPassengerElevator{
+        require aggregatedWeight < 200
+    }
+
+    
+    // Actually parsed as (after visiting):
+    def CanFitIntoPassengerElevator(aggregatedWeight: Int): Bool = {
+        aggregatedWeight < 200
+    }
+
+}
