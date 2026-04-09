@@ -2,7 +2,7 @@ package syntax
 
 import corelang.{Environment, Expr, Identifier, OpKind, Type}
 import org.antlr.v4.runtime.tree.ParseTree
-import surfacelang.{AtomicPathExpr, GlobalConfigExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, VehicleRef}
+import surfacelang.{AtomicPathExpr, ConstraintExpr, GlobalConfigExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, VehicleRef}
 import topomap.grammar.MapFileParser.*
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser, MapFileVisitor}
 
@@ -29,6 +29,9 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       case coreDefCtx: SurfaceElementCoreDefContext =>
         val envUpdate = visitSurfaceElementCoreDef(coreDefCtx)
         acc.copy(env = acc.env.merge(envUpdate))
+      case constraintCtx: SurfaceElementConstraintContext =>
+        val constraint = visitSurfaceElementConstraint(constraintCtx)
+        acc.copy(constraints = acc.constraints :+ constraint)
       case _ => acc // Ignore other elements for now
     }
   }
@@ -55,6 +58,9 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       case atomicPathCtx: SurfaceElementAtomicPathContext =>
         val path = visitSurfaceElementAtomicPath(atomicPathCtx)
         acc.copy(paths = acc.paths :+ path)
+      case constraintCtx: SurfaceElementConstraintContext =>
+        val constraint = visitSurfaceElementConstraint(constraintCtx)
+        acc.copy(constraints = acc.constraints :+ constraint)
       case arrowCtx: SurfaceElementArrowContext =>
         ??? // TODO: to-be-updated for implementation
       case _ => acc // Ignore other elements for now
@@ -85,6 +91,9 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
         acc.copy(env = acc.env.merge(envUpdate))
       case stationCtx: SurfaceElementStationContext =>
         acc.copy(stations = acc.stations :+ parseStationDef(stationCtx))
+      case constraintCtx: SurfaceElementConstraintContext =>
+        val constraint = visitSurfaceElementConstraint(constraintCtx)
+        acc.copy(constraints = acc.constraints :+ constraint)
       case _ => acc // Ignore other elements for now
     }
   }
@@ -229,9 +238,23 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       .map(_.asScala.map(f => (f.ID().getText, f.expr().visit)).toMap)
       .getOrElse(Map.empty)
 
-    StationDef(nodeRef, Expr.Record(recordFields))
+    val constraintExprs = Option(ctx.requirements()).map { rCtx =>
+      rCtx.ID().asScala.map { idNode =>
+        Expr.Var(idNode.getText)
+      }.toList
+    }.getOrElse(List.empty)
+
+    StationDef(nodeRef, Expr.Record(recordFields), constraintExprs)
   }
   
+  override def visitSurfaceElementConstraint(ctx: SurfaceElementConstraintContext): ConstraintExpr = {
+    val name = ctx.ID().getText
+    val predicates = ctx.constraintBody().requireClause().asScala.map { clause =>
+      clause.expr().visit
+    }.toList
+    ConstraintExpr(name, predicates)
+  }
+
   // TODO: to-be-updated for implementation
   override def visitSurfaceElementArrow(ctx: SurfaceElementArrowContext): TopoMapRef = {
     ???

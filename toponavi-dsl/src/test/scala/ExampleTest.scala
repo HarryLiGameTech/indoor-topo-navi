@@ -1,4 +1,4 @@
-import corelang.Environment
+import corelang.{Environment, Identifier, Value}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
@@ -9,17 +9,32 @@ import pprint.pprintln
 import syntax.TopoMapVisitor
 
 class ExampleTest extends AnyFunSuite with should.Matchers{
+
+  // Build a TopoEnvironment with a set of named params of any Value type already bound.
+  // Usage: envWithParams("flag" -> Value.BoolVal(true), "name" -> Value.StringVal("x"), "n" -> Value.IntVal(3))
+  def envWithParams(bindings: (String, Value)*): TopoEnvironment = {
+    TopoEnvironment(
+      env = bindings.foldLeft(Environment.empty[Identifier, corelang.Type, Value]) { (acc, kv) =>
+        acc.addValueVar(Identifier.Symbol(kv._1), kv._2)
+      },
+      nodes = Map.empty,
+      paths = Map.empty,
+      submaps = Map.empty
+    )
+  }
+
   test("example test"){
     val rootCode =
       """
-      root TestBuilding(p1: String){
+      root TestBuilding(p1: String, p2: Int, p3: Bool){
         def a: Int = 1
-//        {
-//          let a: Int = 1;
-//        }
 
         def magicFunc(): Int = {
             a + 114514
+        }
+
+        constraint TestConstraint {
+            require p1 == "satisfy"
         }
 
       }
@@ -37,7 +52,8 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
 
           topo-node tt1 {number = a}
           topo-node tt2
-          atomic-path [tt1 <-> tt2] {cost = a+5}
+          topo-node tt3
+          atomic-path [tt1 <-> tt2] {cost = a+5} requires TestConstraint
           let params: {area: Int} = {area = 114514}
       }
       """
@@ -81,8 +97,11 @@ class ExampleTest extends AnyFunSuite with should.Matchers{
 
     pprintln(rootProgram)
     
-    // TODO: Shitty one!
-    val rootElaborated = rootProgram.elaborate(using TopoEnvironment(Environment.empty, Map.empty, Map.empty, Map.empty))
+    val rootElaborated = rootProgram.elaborate(using envWithParams(
+      "p1" -> Value.StringVal("satisfy"),
+      "p2" -> Value.IntVal(42),
+      "p3" -> Value.BoolVal(true)
+    ))
     pprintln(rootElaborated)
 
     val stripedCode1 = subMapCode.strip()

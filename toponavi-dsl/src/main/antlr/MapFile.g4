@@ -31,6 +31,7 @@ surfaceBodyElement
     | 'atomic-path' pathSpec recordAssign requirements?   # SurfaceElementAtomicPath
     | 'station' ID 'at' identifier ('at' expr)* recordAssign (requirements ('on' expr)?)?  # SurfaceElementStation
     | 'arrow' arrowSpec arrowHeading '>>' expr            # SurfaceElementArrow
+    | 'constraint' ID constraintBody                      # SurfaceElementConstraint
     ;
 
 // Core language
@@ -142,6 +143,16 @@ arrowHeading
 requirements
     : 'requires' ID
     | 'requires' '<' (ID ('&&' ID)*)? '>'
+    ;
+
+// constraint <Name> { require <expr>; require <expr>; ... }
+// A named, compile-time boolean expression set evaluated against invocation params.
+constraintBody
+    : '{' NL* (requireClause NL+)* requireClause? NL* '}'
+    ;
+
+requireClause
+    : 'require' expr
     ;
 
 recordAssign

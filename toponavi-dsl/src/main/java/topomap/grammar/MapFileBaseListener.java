@@ -173,6 +173,18 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSurfaceElementConstraint(MapFileParser.SurfaceElementConstraintContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSurfaceElementConstraint(MapFileParser.SurfaceElementConstraintContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterTypeDef(MapFileParser.TypeDefContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -552,6 +564,30 @@ public class MapFileBaseListener implements MapFileListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitRequirements(MapFileParser.RequirementsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterConstraintBody(MapFileParser.ConstraintBodyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitConstraintBody(MapFileParser.ConstraintBodyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterRequireClause(MapFileParser.RequireClauseContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRequireClause(MapFileParser.RequireClauseContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -8,9 +8,8 @@ case class TopoEnvironment (
   paths: Map[String, AtomicPathValue],
   submaps: Map[String, TopoMapValue]
 ) {
-  def merge(rhsEnv: Env): TopoEnvironment = TopoEnvironment(
-    env = env.merge(rhsEnv), nodes = nodes, paths = paths, submaps = submaps
-  )
+  def merge(rhsEnv: Env): TopoEnvironment =
+    copy(env = env.merge(rhsEnv))
 
   // Resolve TopoNodeRef
   def resolveNode(mapName: String, nodeName: String): Option[TopoNodeValue] = {

@@ -1,23 +1,11 @@
 
-root NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int){
+root NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int, aggregatedWeight: Int){
 
     enum MapType {
         TransHub,
         StdFloor,
     }
 
-    floors: List = [Lobby, Floor2, ..., Floor80]
-    // 10-20 same topology
-
-    def f (a : Int) => a + 1
-    let myInt = f 2
-
-    def fib = fix fib: Int -> Int. {
-        fun n: Int =>
-          if n < 2 then 1
-          else fib (n - 1) + fib (n - 2)
-    }
-    // ==> 55
 
     def fib (n: Int) =>
       if n < 2 then 1
@@ -42,42 +30,27 @@ root NBC4(haveStaffCard: Bool, haveManagementCard: Bool, id: Int){
         description : String?,
     }
 
-    #forall($level in [4 .. 17]) {
-        alias Floor$level := FloorZ1
-    }
+
 
     // Define what means "TenantsOnly"
     constraint TenantsOnly{
-        require myInt > 2 ...
-        require haveStaffCard otherwise UNAUTHORIZED
+        require haveStaffCard
     }
-
-    // [Unauthorized, ReallyUnauthorized]
 
     // Define what means ManagementOnly 
     constraint ManagementOnly{ 
-        require haveManagetmentCard otherwise UnauthorizedVisitExcepion
+        require haveManagementCard
     }
 
-    constraint canFitIntoElevator{
-        require person < 13
-        require weight < 1000
+    // Define what means CanFitIntoPassengerElevator
+    constraint CanFitIntoPassengerElevator{
+        require aggregatedWeight < 200
     }
 
-    def ManagementOnly: Bool = haveManagementCard
-
-    // Define what means EmergencyEgress 
-    constraint EmergencyEgress{ 
-        require(circumstance == "Emergency", PathUnavailableException) 
-    }
     
-    constraint myConstraint(cond: Int) {
-        require cond > myInt
-    }
-    
-    // Actually:
-    def myConstraint(cond: Int): Constraint = constraint {
-        require cond > myInt;
+    // Actually parsed as (after visiting):
+    def CanFitIntoPassengerElevator(aggregatedWeight: Int): Bool = {
+        aggregatedWeight < 200
     }
 
 }

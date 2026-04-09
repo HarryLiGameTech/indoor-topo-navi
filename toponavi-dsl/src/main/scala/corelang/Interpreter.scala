@@ -59,6 +59,11 @@ object Interpreter {
     case Term.FloatLit(v) => done(Value.FloatVal(v))
     case Term.BoolLit(b) => done(Value.BoolVal(b))
     case Term.StringLit(s) => done(Value.StringVal(s))
+    case Term.Proposition(predicates) =>
+      predicates.toList.map(evalTramp(_)).sequence.map { evaluated =>
+        Value.PropositionVal(evaluated.toSet)
+      }
+
     case Term.ListLit(tpe, elements) => for {
       evaluatedElements <- elements.map(evalTramp(_)).sequence
     } yield {
@@ -91,6 +96,7 @@ object Interpreter {
         case (OpKind.Gt, Value.IntVal(l), Value.IntVal(r)) => Value.BoolVal(l > r)
         // Other operations
         case (OpKind.Eq, Value.BoolVal(l), Value.BoolVal(r)) => Value.BoolVal(l == r)
+        case (OpKind.Eq, Value.StringVal(l), Value.StringVal(r)) => Value.BoolVal(l == r)
         case (OpKind.Concat, Value.StringVal(l), Value.StringVal(r)) => Value.StringVal(l ++ r)
         case (OpKind.Concat, Value.ListVal(t1, l), Value.ListVal(t2, r)) if t1 == t2 => Value.ListVal(t1, l ++ r)
         case _ => throw new RuntimeException("Interpreter: Binary operation on incompatible types")

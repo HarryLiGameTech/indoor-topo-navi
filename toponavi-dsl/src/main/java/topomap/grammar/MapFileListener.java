@@ -160,6 +160,18 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code SurfaceElementConstraint}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterSurfaceElementConstraint(MapFileParser.SurfaceElementConstraintContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SurfaceElementConstraint}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitSurfaceElementConstraint(MapFileParser.SurfaceElementConstraintContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code TypeDef}
 	 * labeled alternative in {@link MapFileParser#coreDef}.
 	 * @param ctx the parse tree
@@ -517,6 +529,26 @@ public interface MapFileListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitRequirements(MapFileParser.RequirementsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#constraintBody}.
+	 * @param ctx the parse tree
+	 */
+	void enterConstraintBody(MapFileParser.ConstraintBodyContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#constraintBody}.
+	 * @param ctx the parse tree
+	 */
+	void exitConstraintBody(MapFileParser.ConstraintBodyContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#requireClause}.
+	 * @param ctx the parse tree
+	 */
+	void enterRequireClause(MapFileParser.RequireClauseContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#requireClause}.
+	 * @param ctx the parse tree
+	 */
+	void exitRequireClause(MapFileParser.RequireClauseContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MapFileParser#recordAssign}.
 	 * @param ctx the parse tree

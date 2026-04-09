@@ -77,17 +77,22 @@ trait Elaborateable[T] {
 }
 
 trait ConstrainedElaborateable[T] extends Elaborateable[Option[T]] {
+  // Each expr is evaluated against topoEnv.env as a Bool.
+  // Named constraints (e.g. `requires TenantsOnly`) are simply Expr.Var references
+  // that resolve to a BoolVal already registered in topoEnv.env by the enclosing surface body.
   def constraints: Iterable[Expr]
   def constrainedElaborate(using topoEnv: TopoEnvironment): T
   override def elaborate(using topoEnv: TopoEnvironment): Option[T] = {
-    if constraints.forall { expr =>
-      given Env = topoEnv.env
-      expr.toTerm(topoEnv.env).eval match {
+    val allPass = constraints.forall { expr =>
+      Interpreter.eval(expr.toTerm(topoEnv.env))(using topoEnv.env) match {
         case BoolVal(b) => b
-        case _ => throw RuntimeException("Constraint must be a boolean value")
+        case other => throw new RuntimeException(
+          s"Constraint expression must evaluate to Bool, got: $other"
+        )
       }
-    } then Some(this.constrainedElaborate) else None
-  } 
+    }
+    if allPass then Some(this.constrainedElaborate) else None
+  }
 }
 
 // Root TopoMap definition
@@ -95,16 +100,25 @@ case class RootExpr(
   name: String,
   params: Params = List.empty, // paramName -> type
   env: Environment[Identifier, Type, Expr] = Environment.empty,
-  data: List[Data] = List.empty
+  data: List[Data] = List.empty,
+  constraints: List[ConstraintExpr] = List.empty
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[RootValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): RootValue = {
-    val evaluatedEnv = this.synthesisEnv
+    // Evaluate each named constraint and bind its BoolVal result into the core env by name,
+    // so that `requires <Name>` in child elements resolves as a plain Expr.Var lookup.
+    val envWithConstraints = constraints.foldLeft(topoEnv) { (acc, c) =>
+      acc.copy(env = acc.env.addValueVar(Identifier.Symbol(c.name), c.elaborate(using acc)))
+    }
+    // Merge local definitions on top; also carry constraint BoolVals into the
+    // returned context so that submaps elaborated from this root can resolve them.
+    val evaluatedEnv = this.synthesisEnv(using envWithConstraints)
+    val contextWithConstraints = envWithConstraints.env.merge(evaluatedEnv)
 
     RootValue(
       name = name,
       params = params,
-      context = evaluatedEnv
+      context = contextWithConstraints
     )
   }
 }
@@ -116,22 +130,28 @@ case class SubTopoMapExpr(
   env: Environment[Identifier, Type, Expr] = Environment.empty,
   data: List[Data] = List.empty,
   nodes: List[TopoNodeExpr] = List.empty,
-  paths: List[AtomicPathExpr] = List.empty
+  paths: List[AtomicPathExpr] = List.empty,
+  constraints: List[ConstraintExpr] = List.empty
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue] {
 
-  // TODO: Verify correctness of context
   override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = {
     val newEnvValues = this.synthesisEnv
 
-    // We merge the new environment values into the current topological environment
-    // to ensure that nodes and paths can access the variables defined in this scope.
+    // Merge local definitions into the topological environment so that nodes and paths
+    // can access variables defined in this scope.
     val envWithCore = topoEnv.merge(newEnvValues)
 
-    val elaboratedNodes = nodes.map(_.elaborate(using envWithCore))
+    // Evaluate each named constraint and bind its BoolVal result into the core env by name,
+    // so that `requires <Name>` in atomic-paths resolves as a plain Expr.Var lookup.
+    val envWithConstraints = constraints.foldLeft(envWithCore) { (acc, c) =>
+      acc.copy(env = acc.env.addValueVar(Identifier.Symbol(c.name), c.elaborate(using acc)))
+    }
+
+    val elaboratedNodes = nodes.map(_.elaborate(using envWithConstraints))
 
     // Add nodes to environment so paths can find them
-    val envWithNodes = envWithCore.copy(
-      nodes = envWithCore.nodes ++ elaboratedNodes.map(n => n.name -> n)
+    val envWithNodes = envWithConstraints.copy(
+      nodes = envWithConstraints.nodes ++ elaboratedNodes.map(n => n.name -> n)
     )
 
     TopoMapValue(
@@ -145,7 +165,8 @@ case class SubTopoMapExpr(
 
 case class StationDef(
   node: TopoNodeRef,
-  data: Data
+  data: Data,
+  constraints: List[Expr] = List.empty
 )
 
 case class TransportExpr(
@@ -153,7 +174,8 @@ case class TransportExpr(
   surfaceType: String = "Elevator", // e.g., "Elevator", "Escalator", "Stairs"
   stations: List[StationDef],
   env: Environment[Identifier, Type, Expr] = Environment.empty,
-  data: Data
+  data: Data,
+  constraints: List[ConstraintExpr] = List.empty
 ) extends SyntaxNameSpace with SurfaceSyntax with Elaborateable[TransportValue] {
   override def elaborate(using topoEnv: TopoEnvironment): TransportValue = {
     // Evaluate local definitions (e.g., let bindings inside the transport block)
@@ -161,25 +183,40 @@ case class TransportExpr(
     // Create an environment that includes both global values and local definitions
     val envWithLocals = topoEnv.merge(localCtx)
 
+    // Evaluate each named constraint and bind its BoolVal into the env by name,
+    // so that `requires <Name>` on stations resolves as a plain Expr.Var lookup.
+    val envWithConstraints = constraints.foldLeft(envWithLocals) { (acc, c) =>
+      acc.copy(env = acc.env.addValueVar(Identifier.Symbol(c.name), c.elaborate(using acc)))
+    }
+
     TransportValue(
       name = name,
       surfaceType = this.surfaceType,
-      stations = stations.map { station =>
-        // Strict Validation: Ensure the referenced node exists
-        if (topoEnv.resolveNode(station.node.fromMapName, station.node.nodeName).isEmpty) {
-          throw new RuntimeException(s"Station refers to unknown node: ${station.node.fromMapName}::${station.node.nodeName}")
+      stations = stations.flatMap { station =>
+        // Evaluate the station's requires-clause; skip this station if any constraint fails.
+        val passes = station.constraints.forall { expr =>
+          Interpreter.eval(expr.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
+            case Value.BoolVal(b) => b
+            case other => throw new RuntimeException(s"Station constraint must evaluate to Bool, got: $other")
+          }
         }
-        
-        val nodeValue = station.node.elaborate
-        // Use envWithLocals to allow station data to reference local variables
-        val stationDataVal = Interpreter.eval(station.data.toTerm(envWithLocals.env))(using envWithLocals.env) match {
-          case rv: Value.RecordVal => rv
-          case other => throw new RuntimeException(s"Station data must evaluate to RecordVal, got: $other")
+        if !passes then None
+        else {
+          // Strict Validation: Ensure the referenced node exists
+          if (topoEnv.resolveNode(station.node.fromMapName, station.node.nodeName).isEmpty) {
+            throw new RuntimeException(s"Station refers to unknown node: ${station.node.fromMapName}::${station.node.nodeName}")
+          }
+
+          val nodeValue = station.node.elaborate
+          val stationDataVal = Interpreter.eval(station.data.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
+            case rv: Value.RecordVal => rv
+            case other => throw new RuntimeException(s"Station data must evaluate to RecordVal, got: $other")
+          }
+          Some((nodeValue, stationDataVal))
         }
-        (nodeValue, stationDataVal)
       },
-      // Use envWithLocals to allow transport data to reference local variables
-      data = Interpreter.eval(data.toTerm(envWithLocals.env))(using envWithLocals.env) match {
+      // Use envWithConstraints to allow transport data to reference local variables
+      data = Interpreter.eval(data.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
         case rv: Value.RecordVal => rv
         case other => throw new RuntimeException(s"Transport data must evaluate to RecordVal, got: $other")
       },
@@ -257,3 +294,24 @@ case class GlobalConfigExpr(
   submapUsages: Map[TopoMapRef, List[String]] = Map.empty,
   orderedSubmapNames: List[String] = List.empty
 ) extends SurfaceSyntax
+
+// Named compile-time constraint: a set of boolean predicates evaluated against invocation params.
+// elaborate() returns a BoolVal — true iff ALL predicates hold — so it can be bound
+// directly into the core env by name and resolved via a plain Expr.Var lookup.
+case class ConstraintExpr(
+  name: String,
+  predicates: List[Expr]
+) extends SurfaceSyntax with Elaborateable[Value.BoolVal] {
+  override def elaborate(using topoEnv: TopoEnvironment): Value.BoolVal = {
+    val result = predicates.forall { predExpr =>
+      Interpreter.eval(predExpr.toTerm(topoEnv.env))(using topoEnv.env) match {
+        case Value.BoolVal(b) => b
+        case other => throw new RuntimeException(
+          s"Constraint '$name': predicate must evaluate to Bool, got: $other"
+        )
+      }
+    }
+    Value.BoolVal(result)
+  }
+}
+
