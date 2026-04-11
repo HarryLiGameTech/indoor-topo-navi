@@ -1,4 +1,4 @@
-root SWFC(haveStaffCard: Bool, haveManagementCard: Bool, id: Int, aggregatedWeight: Int){
+root SWFC(haveStaffCard: Bool, haveManagementCard: Bool, haveRoomKey: Bool, id: Int, aggregatedWeight: Int){
 
     def buildingHeight: Int = 492
 
@@ -11,6 +11,10 @@ root SWFC(haveStaffCard: Bool, haveManagementCard: Bool, id: Int, aggregatedWeig
     constraint ManagementOnly{ 
         require haveManagementCard
     }
+
+    constraint HotelGuestOnly{
+            require haveRoomKey
+        }
 
     // Define what means CanFitIntoPassengerElevator
     constraint CanFitIntoPassengerElevator{

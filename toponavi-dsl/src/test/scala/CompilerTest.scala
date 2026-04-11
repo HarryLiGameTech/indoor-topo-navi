@@ -130,7 +130,13 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       println(s"Compiling real project at: ${examplesDir.getAbsolutePath}")
 
       val compiler = new TopoScriptCompiler()
-      val result = compiler.compile(examplesDir.getAbsolutePath, Map("haveStaffCard" -> Value.BoolVal(true), "haveManagementCard" -> Value.BoolVal(true), "id" -> Value.IntVal(1919810), "aggregatedWeight" -> Value.IntVal(10)))
+      val result = compiler.compile(examplesDir.getAbsolutePath, Map(
+        "haveStaffCard" -> Value.BoolVal(true),
+        "haveManagementCard" -> Value.BoolVal(true),
+        "haveRoomKey" -> Value.BoolVal(true),
+        "id" -> Value.IntVal(1919810),
+        "aggregatedWeight" -> Value.IntVal(10))
+      )
 
       val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "FloorB2::GE3_hall", "FloorB1::FS4_6_hall", MinimizeTime);
 
