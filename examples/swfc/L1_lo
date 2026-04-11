@@ -5,11 +5,11 @@ transport L1_lo is Elevator{
         cars = 4
     }
 
-    station F17 at Floor17::L1_hall {location = 74.0, departureRate = 0.01}
-    station F15 at Floor15::L1_hall {location = 66.0, departureRate = 0.01}
-    station F13 at Floor13::L1_hall {location = 57.5, departureRate = 0.01}
-    station F11 at Floor11::L1_hall {location = 49.0, departureRate = 0.01}
-    station F9 at Floor9::L1_hall {location = 40.5, departureRate = 0.01}
-    station F7 at Floor7::L1_hall {location = 32.0, departureRate = 0.01}
+    station F17 at Floor17::L1_hall {location = 74.0, departureRate = 0.01} requires TenantsOnly
+    station F15 at Floor15::L1_hall {location = 66.0, departureRate = 0.01} requires TenantsOnly
+    station F13 at Floor13::L1_hall {location = 57.5, departureRate = 0.01} requires TenantsOnly
+    station F11 at Floor11::L1_hall {location = 49.0, departureRate = 0.01} requires TenantsOnly
+    station F9 at Floor9::L1_hall {location = 40.5, departureRate = 0.01} requires TenantsOnly
+    station F7 at Floor7::L1_hall {location = 32.0, departureRate = 0.01} requires TenantsOnly
     station F1 at LowerLobby::L1_hall {location = 0.0, departureRate = 0.94} 
 }

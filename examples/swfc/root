@@ -1,4 +1,3 @@
-
 root SWFC(haveStaffCard: Bool, haveManagementCard: Bool, id: Int, aggregatedWeight: Int){
 
     def buildingHeight: Int = 492

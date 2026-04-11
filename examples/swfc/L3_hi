@@ -5,10 +5,10 @@ transport L3_hi is Elevator{
         cars = 4
     }
 
-    station F40 at Floor40::L3_hall {location = 173.5, departureRate = 0.01}
-    station F38 at Floor38::L3_hall {location = 165.0, departureRate = 0.01}
-    station F36 at Floor36::L3_hall {location = 156.5, departureRate = 0.01}
-    station F34 at Floor34::L3_hall {location = 148.5, departureRate = 0.01}
-    station F32 at Floor32::L3_hall {location = 140.0, departureRate = 0.01}
+    station F40 at Floor40::L3_hall {location = 173.5, departureRate = 0.01} requires TenantsOnly
+    station F38 at Floor38::L3_hall {location = 165.0, departureRate = 0.01} requires TenantsOnly
+    station F36 at Floor36::L3_hall {location = 156.5, departureRate = 0.01} requires TenantsOnly
+    station F34 at Floor34::L3_hall {location = 148.5, departureRate = 0.01} requires TenantsOnly
+    station F32 at Floor32::L3_hall {location = 140.0, departureRate = 0.01} requires TenantsOnly
     station F29 at SL29::L3_hall {location = 126.0, departureRate = 0.95}
 }

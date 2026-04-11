@@ -5,9 +5,9 @@ transport L4_hi is Elevator{
         cars = 4
     }
 
-    station F50 at Floor50::L4_hall {location = 216.0, departureRate = 0.01}
-    station F48 at Floor48::L4_hall {location = 207.5, departureRate = 0.01}
-    station F46 at Floor46::L4_hall {location = 199.0, departureRate = 0.01}
-    station F44 at Floor44::L4_hall {location = 190.5, departureRate = 0.01}
+    station F50 at Floor50::L4_hall {location = 216.0, departureRate = 0.01} requires TenantsOnly
+    station F48 at Floor48::L4_hall {location = 207.5, departureRate = 0.01} requires TenantsOnly
+    station F46 at Floor46::L4_hall {location = 199.0, departureRate = 0.01} requires TenantsOnly
+    station F44 at Floor44::L4_hall {location = 190.5, departureRate = 0.01} requires TenantsOnly
     station F29 at SL29::L4_hall {location = 126.0, departureRate = 0.95}
 }

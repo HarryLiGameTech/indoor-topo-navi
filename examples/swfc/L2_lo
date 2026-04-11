@@ -5,10 +5,10 @@ transport L2_lo is Elevator{
         cars = 4
     }
 
-    station F27 at Floor27::L2_hall {location = 116.5, departureRate = 0.01}
-    station F25 at Floor25::L2_hall {location = 108.0, departureRate = 0.01}
-    station F23 at Floor23::L2_hall {location = 99.5, departureRate = 0.01}
-    station F21 at Floor21::L2_hall {location = 91.5, departureRate = 0.01}
-    station F19 at Floor19::L2_hall {location = 82.5, departureRate = 0.01}
+    station F27 at Floor27::L2_hall {location = 116.5, departureRate = 0.01} requires TenantsOnly
+    station F25 at Floor25::L2_hall {location = 108.0, departureRate = 0.01} requires TenantsOnly
+    station F23 at Floor23::L2_hall {location = 99.5, departureRate = 0.01} requires TenantsOnly
+    station F21 at Floor21::L2_hall {location = 91.5, departureRate = 0.01} requires TenantsOnly
+    station F19 at Floor19::L2_hall {location = 82.5, departureRate = 0.01} requires TenantsOnly
     station F1 at LowerLobby::L2_hall {location = 0.0, departureRate = 0.95}
 }

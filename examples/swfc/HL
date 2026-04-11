@@ -5,14 +5,14 @@ transport HL is Elevator{
         cars = 4
     }
 
-    station F88 at Floor88::HL_hall {location = 392.0, departureRate = 0.059}
+    station F88 at Floor88::HL_hall {location = 392.0, departureRate = 0.059} requires HotelGuestOnly
     station F87 at HL87::HL_hall {location = 386.0, departureRate = 0.294}
     station F86 at Floor86::HL_hall {location = 380.0, departureRate = 0.118}
-    station F85 at Floor85::HL_hall {location = 374.0, departureRate = 0.176}
-    station F84 at Floor84::HL_hall {location = 368.3, departureRate = 0.059}
-    station F83 at Floor83::HL_hall {location = 362.7, departureRate = 0.059}
-    station F82 at Floor82::HL_hall {location = 357.0, departureRate = 0.059}
-    station F81 at Floor81::HL_hall {location = 351.3, departureRate = 0.059} 
-    station F80 at Floor80::HL_hall {location = 345.7, departureRate = 0.059} 
-    station F79 at Floor79::HL_hall {location = 340.0, departureRate = 0.058} 
+    station F85 at Floor85::HL_hall {location = 374.0, departureRate = 0.176} requires HotelGuestOnly
+    station F84 at Floor84::HL_hall {location = 368.3, departureRate = 0.059} requires HotelGuestOnly
+    station F83 at Floor83::HL_hall {location = 362.7, departureRate = 0.059} requires HotelGuestOnly
+    station F82 at Floor82::HL_hall {location = 357.0, departureRate = 0.059} requires HotelGuestOnly
+    station F81 at Floor81::HL_hall {location = 351.3, departureRate = 0.059} requires HotelGuestOnly
+    station F80 at Floor80::HL_hall {location = 345.7, departureRate = 0.059} requires HotelGuestOnly
+    station F79 at Floor79::HL_hall {location = 340.0, departureRate = 0.058} requires HotelGuestOnly
 }
