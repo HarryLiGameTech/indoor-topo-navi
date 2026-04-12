@@ -158,7 +158,20 @@ class TopoScriptCompiler() {
     println("=== transportGraph ===")
     pprintln(transportGraph)
 
-    CompilationResult(navigationGraphs, transportGraph, globalConfig.orderedSubmapNames)
+    val enrichedGraphs: Map[String, NavigationGraph] =
+      reasoner.SpatialMetadataExtractor.extract(
+        rootEnv              = rootEnv,
+        graphs               = navigationGraphs,
+        elaboratedTransports = elaboratedTransports.toList,
+        linearTransports     = linearTransports
+      ) match {
+        case Some(metadataMap) =>
+          reasoner.CoordEstimator.estimate(navigationGraphs, metadataMap)
+        case None =>
+          navigationGraphs // coord estimation disabled or not configured
+      }
+
+    CompilationResult(enrichedGraphs, transportGraph, globalConfig.orderedSubmapNames)
   }
 
   // Java-friendly overload
@@ -296,7 +309,20 @@ class TopoScriptCompiler() {
     println("=== linearTransports ===")
     println("=== transportGraph ===")
 
-    CompilationResult(navigationGraphs, transportGraph, globalConfig.orderedSubmapNames)
+    val enrichedGraphs: Map[String, NavigationGraph] =
+      reasoner.SpatialMetadataExtractor.extract(
+        rootEnv              = rootEnv,
+        graphs               = navigationGraphs,
+        elaboratedTransports = elaboratedTransports.toList,
+        linearTransports     = linearTransports
+      ) match {
+        case Some(metadataMap) =>
+          reasoner.CoordEstimator.estimate(navigationGraphs, metadataMap)
+        case None =>
+          navigationGraphs // coord estimation disabled or not configured
+      }
+
+    CompilationResult(enrichedGraphs, transportGraph, globalConfig.orderedSubmapNames)
   }
 
   def parseConfigFile(rawCode: String): GlobalConfigExpr = {

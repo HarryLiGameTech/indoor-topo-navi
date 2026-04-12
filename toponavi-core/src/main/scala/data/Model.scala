@@ -12,7 +12,8 @@ case class TopoNodeAttribute(
 
 case class TopoNode(
   identifier: String,
-  attributes: Map[String, AttributeValue] = Map.empty
+  attributes: Map[String, AttributeValue] = Map.empty,
+  estimatedCoord: Option[TpccCoord] = None
 ){
   override def toString: String = identifier
 }
@@ -202,3 +203,9 @@ case class NavigationOutputPath(
       }
     }.reverse
 }
+
+
+case class TpccCoord(
+  x: Int,
+  y: Int
+)

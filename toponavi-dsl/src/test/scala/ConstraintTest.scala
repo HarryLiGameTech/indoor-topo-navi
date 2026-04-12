@@ -293,7 +293,7 @@ class ConstraintTest extends AnyFunSuite with Matchers {
     transport.elaborate(using topoEnv).stations should have size 1
   }
 
-  test("station with failing constraint is excluded from the elaborated transport") {
+  test("station with failing constraint is kept with _permission=NoAccess in the elaborated transport") {
     val submapCode =
       """
       topo-map TestMap() {
@@ -312,7 +312,10 @@ class ConstraintTest extends AnyFunSuite with Matchers {
     val submap   = parseTopoMap(submapCode).elaborate(using envWithParams())
     val transport = parseTransport(transportCode)
     val topoEnv  = envWithParams("haveStaffCard" -> Value.BoolVal(false)).copy(submaps = Map("TestMap" -> submap))
-    transport.elaborate(using topoEnv).stations shouldBe empty
+    val result   = transport.elaborate(using topoEnv)
+    // Station is still present but marked NoAccess
+    result.stations should have size 1
+    result.stations.head._2.fields.get("_permission") shouldBe Some(Value.StringVal("NoAccess"))
   }
 
   test("unrestricted station is always kept regardless of other param values") {
@@ -337,8 +340,12 @@ class ConstraintTest extends AnyFunSuite with Matchers {
 
     val topoEnvFail = envWithParams("haveStaffCard" -> Value.BoolVal(false)).copy(submaps = Map("TestMap" -> submap))
     val result = transport.elaborate(using topoEnvFail)
-    // Restricted station dropped, unrestricted Lobby kept
-    result.stations should have size 1
-    result.stations.head._1.nodeName shouldBe "hall"
+    // Both stations present: restricted one has _permission=NoAccess, unrestricted one has no _permission
+    result.stations should have size 2
+    val restricted   = result.stations.find(_._2.fields.contains("_permission"))
+    val unrestricted = result.stations.find(!_._2.fields.contains("_permission"))
+    restricted   should not be empty
+    unrestricted should not be empty
+    restricted.get._2.fields.get("_permission") shouldBe Some(Value.StringVal("NoAccess"))
   }
 }
