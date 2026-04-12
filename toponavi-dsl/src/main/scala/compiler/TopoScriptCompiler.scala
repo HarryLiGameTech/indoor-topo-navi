@@ -497,10 +497,17 @@ class TopoScriptCompiler() {
       (loopGraph, depRate)
     }.toMap
 
-    // TODO: Awaiting constraint system to determine permissions properly. For now, default to FullyGranted for all graphs.
-    // We need permissions only for station graphs
-    val stPermissions = stations.keys.map { g =>
-      g -> enums.TransportServicePermission.FullyGranted
+    // Read "_permission" from each station's RecordVal (injected by the constraint evaluation).
+    // If the field is absent the station is FullyGranted; "NoAccess" maps to NoAccess.
+    val stPermissions = transVal.stations.map { case (nodeRef, stationData) =>
+      val loopGraph = graphs(nodeRef.fromMapName)
+      val permission = stationData.fields.get("_permission") match {
+        case Some(Value.StringVal("NoAccess"))    => enums.TransportServicePermission.NoAccess
+        case Some(Value.StringVal("ArriveOnly"))  => enums.TransportServicePermission.ArriveOnly
+        case Some(Value.StringVal("DepartOnly"))  => enums.TransportServicePermission.DepartOnly
+        case _                                    => enums.TransportServicePermission.FullyGranted
+      }
+      loopGraph -> permission
     }.toMap
 
     // TODO: Refactor with the stationCategories enum values in TopoScript

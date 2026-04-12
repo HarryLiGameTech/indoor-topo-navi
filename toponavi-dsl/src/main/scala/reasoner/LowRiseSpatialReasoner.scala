@@ -33,7 +33,7 @@ case class SpatialMetadata(
   arrows: List[DirectionArrow],
   beaconNodes: Set[TopoNode],     // from _isBeacon transports
   excludedNodes: Set[TopoNode],   // from _excluded_from_coord
-  sensitivity: Int,
+  sensitivity: Float,
   startNode: TopoNode,
   startMap: String
 )

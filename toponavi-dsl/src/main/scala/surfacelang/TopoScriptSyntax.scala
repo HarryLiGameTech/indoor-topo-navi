@@ -192,28 +192,30 @@ case class TransportExpr(
     TransportValue(
       name = name,
       surfaceType = this.surfaceType,
-      stations = stations.flatMap { station =>
-        // Evaluate the station's requires-clause; skip this station if any constraint fails.
+      stations = stations.map { station =>
+        // Evaluate the station's requires-clause; if any constraint fails, mark with NoAccess.
         val passes = station.constraints.forall { expr =>
           Interpreter.eval(expr.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
             case Value.BoolVal(b) => b
             case other => throw new RuntimeException(s"Station constraint must evaluate to Bool, got: $other")
           }
         }
-        if !passes then None
-        else {
-          // Strict Validation: Ensure the referenced node exists
-          if (topoEnv.resolveNode(station.node.fromMapName, station.node.nodeName).isEmpty) {
-            throw new RuntimeException(s"Station refers to unknown node: ${station.node.fromMapName}::${station.node.nodeName}")
-          }
 
-          val nodeValue = station.node.elaborate
-          val stationDataVal = Interpreter.eval(station.data.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
-            case rv: Value.RecordVal => rv
-            case other => throw new RuntimeException(s"Station data must evaluate to RecordVal, got: $other")
-          }
-          Some((nodeValue, stationDataVal))
+        // Strict Validation: Ensure the referenced node exists
+        if (topoEnv.resolveNode(station.node.fromMapName, station.node.nodeName).isEmpty) {
+          throw new RuntimeException(s"Station refers to unknown node: ${station.node.fromMapName}::${station.node.nodeName}")
         }
+
+        val nodeValue = station.node.elaborate
+        val stationDataVal = Interpreter.eval(station.data.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
+          case rv: Value.RecordVal => rv
+          case other => throw new RuntimeException(s"Station data must evaluate to RecordVal, got: $other")
+        }
+
+        // If constraint failed, inject "_permission" -> "NoAccess" into the station RecordVal
+        val finalDataVal: Value.RecordVal = if passes then stationDataVal
+                           else Value.RecordVal(stationDataVal.fields + ("_permission" -> Value.StringVal("NoAccess")))
+        (nodeValue, finalDataVal)
       },
       // Use envWithConstraints to allow transport data to reference local variables
       data = Interpreter.eval(data.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
