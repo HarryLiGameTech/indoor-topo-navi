@@ -1,8 +1,9 @@
 package syntax
 
 import corelang.{Environment, Expr, Identifier, OpKind, Type}
+import enums.TPCCRelationship
 import org.antlr.v4.runtime.tree.ParseTree
-import surfacelang.{AtomicPathExpr, ConstraintExpr, GlobalConfigExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, VehicleRef}
+import surfacelang.{AtomicPathExpr, ConstraintExpr, DirectionalArrowExpr, GlobalConfigExpr, LinearPathExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, VehicleRef}
 import topomap.grammar.MapFileParser.*
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser, MapFileVisitor}
 
@@ -62,7 +63,11 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
         val constraint = visitSurfaceElementConstraint(constraintCtx)
         acc.copy(constraints = acc.constraints :+ constraint)
       case arrowCtx: SurfaceElementArrowContext =>
-        ??? // TODO: to-be-updated for implementation
+        val arrow = visitSurfaceElementArrow(arrowCtx)
+        acc.copy(arrows = acc.arrows :+ arrow)
+      case lineCtx: SurfaceElementLinearPathContext =>
+        val linearPath = visitSurfaceElementLinearPath(lineCtx)
+        acc.copy(linearPaths = acc.linearPaths :+ linearPath)
       case _ => acc // Ignore other elements for now
     }
   }
@@ -255,8 +260,36 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     ConstraintExpr(name, predicates)
   }
 
-  // TODO: to-be-updated for implementation
-  override def visitSurfaceElementArrow(ctx: SurfaceElementArrowContext): TopoMapRef = {
-    ???
+  override def visitSurfaceElementArrow(ctx: SurfaceElementArrowContext): DirectionalArrowExpr = {
+    val spec       = ctx.arrowSpec()
+    val anchorName = spec.ID(0).getText
+    val refName    = spec.ID(1).getText
+    val invertFacing = spec.getChild(1).getText == "<-"  // true if '<-', false if '->'
+    val targetName = ctx.ID(0).getText
+    val directionStr = ctx.ID(1).getText
+
+    // Validate direction string against TPCCRelationship
+    val direction = directionStr match {
+      case "FRONT" => TPCCRelationship.FRONT
+      case "FRONT_RIGHT" => TPCCRelationship.FRONT_RIGHT
+      case "RIGHT" => TPCCRelationship.RIGHT
+      case "REAR_RIGHT" => TPCCRelationship.REAR_RIGHT
+      case "REAR" => TPCCRelationship.REAR
+      case "REAR_LEFT" => TPCCRelationship.REAR_LEFT
+      case "LEFT" => TPCCRelationship.LEFT
+      case "FRONT_LEFT" => TPCCRelationship.FRONT_LEFT
+      case other => throw new RuntimeException(
+        s"Unknown TPCC direction '$other'. Valid values: FRONT, FRONT_RIGHT, RIGHT, REAR_RIGHT, REAR, REAR_LEFT, LEFT, FRONT_LEFT"
+      )
+    }
+
+    DirectionalArrowExpr(anchorName, refName, invertFacing, targetName, direction)
+  }
+  
+  override def visitSurfaceElementLinearPath(ctx: SurfaceElementLinearPathContext): LinearPathExpr = {
+    val nodeNames: List[String] = ctx.linearPathSpec().ID().asScala.map(_.getText).toList
+    if (nodeNames.size < 3)
+      throw new RuntimeException("linear-path must contain at least 3 nodes")
+    LinearPathExpr(nodeNames)
   }
 }

@@ -9,6 +9,7 @@ import corelang.{Environment, Identifier, Value}
 import enums.ElevatorStationCategory.{Entrance, Occupant}
 import surfacelang.{TopoMapValue, TransportValue}
 import pprint.pprintln
+import reasoner.CoordEstimator
 import topomap.grammar.{MapFileLexer, MapFileParser}
 
 import java.io.File
@@ -159,14 +160,15 @@ class TopoScriptCompiler() {
     pprintln(transportGraph)
 
     val enrichedGraphs: Map[String, NavigationGraph] =
-      reasoner.SpatialMetadataExtractor.extract(
+      SpatialMetadataExtractor.extract(
         rootEnv              = rootEnv,
         graphs               = navigationGraphs,
+        elaboratedMaps       = elaboratedMaps.toMap,
         elaboratedTransports = elaboratedTransports.toList,
         linearTransports     = linearTransports
       ) match {
         case Some(metadataMap) =>
-          reasoner.CoordEstimator.estimate(navigationGraphs, metadataMap)
+          CoordEstimator.estimate(navigationGraphs, metadataMap)
         case None =>
           navigationGraphs // coord estimation disabled or not configured
       }
@@ -310,14 +312,15 @@ class TopoScriptCompiler() {
     println("=== transportGraph ===")
 
     val enrichedGraphs: Map[String, NavigationGraph] =
-      reasoner.SpatialMetadataExtractor.extract(
+      compiler.SpatialMetadataExtractor.extract(
         rootEnv              = rootEnv,
         graphs               = navigationGraphs,
+        elaboratedMaps       = elaboratedMaps.toMap,
         elaboratedTransports = elaboratedTransports.toList,
         linearTransports     = linearTransports
       ) match {
         case Some(metadataMap) =>
-          reasoner.CoordEstimator.estimate(navigationGraphs, metadataMap)
+          CoordEstimator.estimate(navigationGraphs, metadataMap)
         case None =>
           navigationGraphs // coord estimation disabled or not configured
       }

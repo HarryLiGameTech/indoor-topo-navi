@@ -160,6 +160,18 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code SurfaceElementLinearPath}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterSurfaceElementLinearPath(MapFileParser.SurfaceElementLinearPathContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SurfaceElementLinearPath}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitSurfaceElementLinearPath(MapFileParser.SurfaceElementLinearPathContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code SurfaceElementConstraint}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
@@ -510,15 +522,15 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitArrowSpec(MapFileParser.ArrowSpecContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MapFileParser#arrowHeading}.
+	 * Enter a parse tree produced by {@link MapFileParser#linearPathSpec}.
 	 * @param ctx the parse tree
 	 */
-	void enterArrowHeading(MapFileParser.ArrowHeadingContext ctx);
+	void enterLinearPathSpec(MapFileParser.LinearPathSpecContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MapFileParser#arrowHeading}.
+	 * Exit a parse tree produced by {@link MapFileParser#linearPathSpec}.
 	 * @param ctx the parse tree
 	 */
-	void exitArrowHeading(MapFileParser.ArrowHeadingContext ctx);
+	void exitLinearPathSpec(MapFileParser.LinearPathSpecContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MapFileParser#requirements}.
 	 * @param ctx the parse tree

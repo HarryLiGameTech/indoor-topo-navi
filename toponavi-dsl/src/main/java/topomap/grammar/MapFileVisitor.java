@@ -100,6 +100,13 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code SurfaceElementLinearPath}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSurfaceElementLinearPath(MapFileParser.SurfaceElementLinearPathContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code SurfaceElementConstraint}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
@@ -306,11 +313,11 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitArrowSpec(MapFileParser.ArrowSpecContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MapFileParser#arrowHeading}.
+	 * Visit a parse tree produced by {@link MapFileParser#linearPathSpec}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitArrowHeading(MapFileParser.ArrowHeadingContext ctx);
+	T visitLinearPathSpec(MapFileParser.LinearPathSpecContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MapFileParser#requirements}.
 	 * @param ctx the parse tree

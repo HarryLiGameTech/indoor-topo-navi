@@ -3,6 +3,7 @@ package surfacelang
 import corelang.Value.BoolVal
 import corelang.{Env, Environment, Expr, Identifier, Interpreter, Term, Type, TypeOnlyEnvironment, Value}
 import cp.util.Graph
+import enums.TPCCRelationship
 
 trait SurfaceSyntax
 
@@ -131,6 +132,8 @@ case class SubTopoMapExpr(
   data: List[Data] = List.empty,
   nodes: List[TopoNodeExpr] = List.empty,
   paths: List[AtomicPathExpr] = List.empty,
+  arrows: List[DirectionalArrowExpr] = List.empty,
+  linearPaths: List[LinearPathExpr] = List.empty,
   constraints: List[ConstraintExpr] = List.empty
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue] {
 
@@ -158,6 +161,8 @@ case class SubTopoMapExpr(
       name = name,
       nodes = elaboratedNodes.toSet,
       paths = paths.flatMap(_.elaborate(using envWithNodes)).toSet,
+      arrows = Set.empty, // TODO
+      lines = Set.empty, // TODO
       context = newEnvValues,
     )
   }
@@ -265,6 +270,35 @@ case class AtomicPathExpr(
       case other => throw new RuntimeException(s"Path data must evaluate to RecordVal, got: $other")
     }
   }
+}
+
+case class DirectionalArrowExpr(
+  anchorName: String,
+  referenceName: String,
+  invertFacing: Boolean,
+  targetName: String,
+  direction: TPCCRelationship
+) extends SurfaceSyntax with Elaborateable[DirectionalArrowValue] {
+  override def elaborate(using topoEnv: TopoEnvironment): DirectionalArrowValue = {
+    DirectionalArrowValue(
+      anchor = topoEnv.nodes.getOrElse(anchorName, throw RuntimeException(s"No such node in topoEnv: $anchorName")),
+      reference = topoEnv.nodes.getOrElse(referenceName, throw RuntimeException(s"No such node in topoEnv: $referenceName")),
+      invertFacing = invertFacing,
+      target = topoEnv.nodes.getOrElse(targetName, throw RuntimeException(s"No such node in topoEnv: $targetName")),
+      direction = direction,
+      context = topoEnv.env
+    )
+  }
+}
+
+case class LinearPathExpr(
+  nodeNames: List[String]  // resolved to TopoNode later during elaboration
+) extends SurfaceSyntax with Elaborateable[LinearPathValue] {
+  override def elaborate(using topoEnv: TopoEnvironment): LinearPathValue = {
+    val nodes = nodeNames.map { name =>
+      topoEnv.nodes.getOrElse(name, throw RuntimeException(s"No such node in topoEnv: $name"))
+    }.toSet
+    LinearPathValue(nodes = nodes, context = topoEnv.env)  }
 }
 
 case class TopoNodeRef(

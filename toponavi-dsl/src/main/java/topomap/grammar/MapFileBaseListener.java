@@ -173,6 +173,18 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSurfaceElementLinearPath(MapFileParser.SurfaceElementLinearPathContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSurfaceElementLinearPath(MapFileParser.SurfaceElementLinearPathContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterSurfaceElementConstraint(MapFileParser.SurfaceElementConstraintContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -545,13 +557,13 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterArrowHeading(MapFileParser.ArrowHeadingContext ctx) { }
+	@Override public void enterLinearPathSpec(MapFileParser.LinearPathSpecContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitArrowHeading(MapFileParser.ArrowHeadingContext ctx) { }
+	@Override public void exitLinearPathSpec(MapFileParser.LinearPathSpecContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

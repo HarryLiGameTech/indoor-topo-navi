@@ -26,20 +26,21 @@ globalConfigElement
     ;
 
 surfaceBodyElement
-    : coreDef                                             # SurfaceElementCoreDef
-    | 'topo-node' ID recordAssign?                         # SurfaceElementTopoNode
-    | 'atomic-path' pathSpec recordAssign requirements?   # SurfaceElementAtomicPath
+    : coreDef                                               # SurfaceElementCoreDef
+    | 'topo-node' ID recordAssign?                          # SurfaceElementTopoNode
+    | 'atomic-path' pathSpec recordAssign requirements?     # SurfaceElementAtomicPath
     | 'station' ID 'at' identifier ('at' expr)* recordAssign (requirements ('on' expr)?)?  # SurfaceElementStation
-    | 'arrow' arrowSpec arrowHeading '>>' expr            # SurfaceElementArrow
-    | 'constraint' ID constraintBody                      # SurfaceElementConstraint
+    | 'directional-arrow' arrowSpec ID ID                   # SurfaceElementArrow
+    | 'linear-path' linearPathSpec                          # SurfaceElementLinearPath
+    | 'constraint' ID constraintBody                        # SurfaceElementConstraint
     ;
 
 // Core language
 coreDef
-    : 'type' ID '=' typeExpr                                    # TypeDef
+    : 'type' ID '=' typeExpr                                     # TypeDef
     | 'def' ID ('(' paramList? ')')? (':' typeExpr)? '=' expr    # FuncDef
-    | 'let' ID (':' typeExpr)? '=' expr                         # LetDef
-    | expr                                                      # ScriptExpr
+    | 'let' ID (':' typeExpr)? '=' expr                          # LetDef
+    | expr                                                       # ScriptExpr
     ;
 
 paramList
@@ -132,12 +133,11 @@ pathSpec
     ;
 
 arrowSpec
-    : '[' ID '->' ID ']'
+    : '[' ID ('->' | '<-') ID ']'
     ;
 
-arrowHeading
-    : '^^'
-    | '\\/' // '\/'
+linearPathSpec
+    : '[' ID (',' ID)* ']'
     ;
 
 requirements

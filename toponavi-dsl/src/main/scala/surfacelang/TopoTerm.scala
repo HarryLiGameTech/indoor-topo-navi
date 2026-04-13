@@ -2,6 +2,7 @@ package surfacelang
 
 import corelang.Value.RecordVal
 import corelang.{Env, Type, Value}
+import enums.TPCCRelationship
 
 type Context = Env
 
@@ -25,7 +26,9 @@ case class TopoMapValue(
   name: String,
   nodes: Set[TopoNodeValue],
   paths: Set[AtomicPathValue],
-  context: Context,
+  lines: Set[LinearPathValue],
+  arrows: Set[DirectionalArrowValue],
+  context: Context
 )
 
 case class TopoNodeValue(
@@ -41,10 +44,24 @@ case class AtomicPathValue(
   to: TopoNodeValue,
   bidirectional: Boolean,
   data: Value.RecordVal,
-  context: Context,
+  context: Context
 ) {
   
 }
+
+case class LinearPathValue(
+  nodes: Set[TopoNodeValue],
+  context: Context
+)
+
+case class DirectionalArrowValue(
+  anchor: TopoNodeValue,
+  reference: TopoNodeValue,
+  invertFacing: Boolean,
+  target: TopoNodeValue,
+  direction: TPCCRelationship, // e.g., "LEFT", "RIGHT", "FORWARD", "BACKWARD"
+  context: Context
+)
 
 case class TopoNodeRefValue(
   fromMapName: String,
