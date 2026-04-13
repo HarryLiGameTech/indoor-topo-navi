@@ -117,18 +117,19 @@ object SpatialMetadataExtractor {
     }
 
     // ── 4. LinearPath and DirectionArrow — extracted from elaborated TopoMapValues ─
-    def resolveNode(graph: NavigationGraph, name: String): TopoNode =
+    def resolveNode(graph: NavigationGraph, name: String): TopoNode = {
       graph.nodes.find(_.identifier == name).getOrElse(
         throw new RuntimeException(
           s"SpatialMetadataExtractor: node '$name' not found in graph '${graph.identifier}'"
         )
       )
+    }
 
     val linearPathsPerGraph: Map[String, List[LinearPath]] = graphs.map { case (mapName, graph) =>
       val lines = elaboratedMaps.get(mapName).map { mapVal =>
-        mapVal.paths.map { lp =>
-          LinearPath(lp.nodeNames.map(n => resolveNode(graph, n)))
-        }
+        mapVal.lines.map { lp =>
+          LinearPath(lp.nodes.map(n => resolveNode(graph, n.name)).toList)
+        }.toList
       }.getOrElse(List.empty)
       mapName -> lines
     }
@@ -137,13 +138,13 @@ object SpatialMetadataExtractor {
       val arrows = elaboratedMaps.get(mapName).map { mapVal =>
         mapVal.arrows.map { da =>
           DirectionArrow(
-            anchor = resolveNode(graph, da.anchorName),
-            reference = resolveNode(graph, da.referenceName),
+            anchor = resolveNode(graph, da.anchor.name),
+            reference = resolveNode(graph, da.reference.name),
             invertFacing = da.invertFacing,
-            target = resolveNode(graph, da.targetName),
+            target = resolveNode(graph, da.target.name),
             direction = da.direction
           )
-        }
+        }.toList
       }.getOrElse(List.empty)
       mapName -> arrows
     }
