@@ -159,7 +159,7 @@ class TopoScriptCompiler() {
     println("=== transportGraph ===")
     pprintln(transportGraph)
 
-    val enrichedGraphs: Map[String, NavigationGraph] =
+    val (finalGraphs, finalLinearPaths, finalArrows) =
       SpatialMetadataExtractor.extract(
         rootEnv              = rootEnv,
         graphs               = navigationGraphs,
@@ -167,24 +167,18 @@ class TopoScriptCompiler() {
         elaboratedTransports = elaboratedTransports.toList,
         linearTransports     = linearTransports
       ) match {
-        case Some(metadataMap) =>
-          CoordEstimator.estimate(navigationGraphs, metadataMap)
-        case None =>
-          navigationGraphs // coord estimation disabled or not configured
+        case ExtractionResult(linearPaths, directionalArrows, Some(metadataMap)) =>
+          (CoordEstimator.estimate(navigationGraphs, metadataMap), linearPaths, directionalArrows)
+        case ExtractionResult(linearPaths, directionalArrows, None) =>
+          (navigationGraphs, linearPaths, directionalArrows)
       }
 
-    val allLinearPaths: Map[String, Set[surfacelang.LinearPathValue]] =
-      elaboratedMaps.toMap.map { case (name, mapVal) => name -> mapVal.lines }
-
-    val allDirectionalArrows: Map[String, Set[surfacelang.DirectionalArrowValue]] =
-      elaboratedMaps.toMap.map { case (name, mapVal) => name -> mapVal.arrows }
-
     CompilationResult(
-      graphs             = enrichedGraphs,
-      transportGraph     = transportGraph,
-      graphSequence      = globalConfig.orderedSubmapNames,
-      linearPaths        = allLinearPaths,
-      directionalArrows  = allDirectionalArrows
+      graphs            = finalGraphs,
+      transportGraph    = transportGraph,
+      graphSequence     = globalConfig.orderedSubmapNames,
+      linearPaths       = finalLinearPaths,
+      directionalArrows = finalArrows
     )
   }
 
@@ -323,7 +317,7 @@ class TopoScriptCompiler() {
     println("=== linearTransports ===")
     println("=== transportGraph ===")
 
-    val enrichedGraphs: Map[String, NavigationGraph] =
+    val (finalGraphs, finalLinearPaths, finalArrows) =
       compiler.SpatialMetadataExtractor.extract(
         rootEnv              = rootEnv,
         graphs               = navigationGraphs,
@@ -331,24 +325,18 @@ class TopoScriptCompiler() {
         elaboratedTransports = elaboratedTransports.toList,
         linearTransports     = linearTransports
       ) match {
-        case Some(metadataMap) =>
-          CoordEstimator.estimate(navigationGraphs, metadataMap)
-        case None =>
-          navigationGraphs // coord estimation disabled or not configured
+        case ExtractionResult(lp, da, Some(metadataMap)) =>
+          (CoordEstimator.estimate(navigationGraphs, metadataMap), lp, da)
+        case ExtractionResult(lp, da, None) =>
+          (navigationGraphs, lp, da)
       }
 
-    val allLinearPaths: Map[String, Set[surfacelang.LinearPathValue]] =
-      elaboratedMaps.toMap.map { case (name, mapVal) => name -> mapVal.lines }
-
-    val allDirectionalArrows: Map[String, Set[surfacelang.DirectionalArrowValue]] =
-      elaboratedMaps.toMap.map { case (name, mapVal) => name -> mapVal.arrows }
-
     CompilationResult(
-      graphs             = enrichedGraphs,
-      transportGraph     = transportGraph,
-      graphSequence      = globalConfig.orderedSubmapNames,
-      linearPaths        = allLinearPaths,
-      directionalArrows  = allDirectionalArrows
+      graphs            = finalGraphs,
+      transportGraph    = transportGraph,
+      graphSequence     = globalConfig.orderedSubmapNames,
+      linearPaths       = finalLinearPaths,
+      directionalArrows = finalArrows
     )
   }
 
