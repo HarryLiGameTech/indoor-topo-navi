@@ -173,7 +173,19 @@ class TopoScriptCompiler() {
           navigationGraphs // coord estimation disabled or not configured
       }
 
-    CompilationResult(enrichedGraphs, transportGraph, globalConfig.orderedSubmapNames)
+    val allLinearPaths: Map[String, Set[surfacelang.LinearPathValue]] =
+      elaboratedMaps.toMap.map { case (name, mapVal) => name -> mapVal.lines }
+
+    val allDirectionalArrows: Map[String, Set[surfacelang.DirectionalArrowValue]] =
+      elaboratedMaps.toMap.map { case (name, mapVal) => name -> mapVal.arrows }
+
+    CompilationResult(
+      graphs             = enrichedGraphs,
+      transportGraph     = transportGraph,
+      graphSequence      = globalConfig.orderedSubmapNames,
+      linearPaths        = allLinearPaths,
+      directionalArrows  = allDirectionalArrows
+    )
   }
 
   // Java-friendly overload
@@ -325,7 +337,19 @@ class TopoScriptCompiler() {
           navigationGraphs // coord estimation disabled or not configured
       }
 
-    CompilationResult(enrichedGraphs, transportGraph, globalConfig.orderedSubmapNames)
+    val allLinearPaths: Map[String, Set[surfacelang.LinearPathValue]] =
+      elaboratedMaps.toMap.map { case (name, mapVal) => name -> mapVal.lines }
+
+    val allDirectionalArrows: Map[String, Set[surfacelang.DirectionalArrowValue]] =
+      elaboratedMaps.toMap.map { case (name, mapVal) => name -> mapVal.arrows }
+
+    CompilationResult(
+      graphs             = enrichedGraphs,
+      transportGraph     = transportGraph,
+      graphSequence      = globalConfig.orderedSubmapNames,
+      linearPaths        = allLinearPaths,
+      directionalArrows  = allDirectionalArrows
+    )
   }
 
   def parseConfigFile(rawCode: String): GlobalConfigExpr = {

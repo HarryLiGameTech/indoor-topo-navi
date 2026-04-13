@@ -2,7 +2,7 @@ package compiler
 
 import corelang.{Environment, Identifier, Value}
 import data.{LinearTransport, NavigationGraph, TopoNode}
-import enums.AttributeValue
+import enums.{AttributeValue, TPCCRelationship}
 import reasoner.{DirectionArrow, LinearPath, SpatialMetadata}
 import surfacelang.{TopoMapValue, TransportValue}
 
@@ -126,7 +126,7 @@ object SpatialMetadataExtractor {
 
     val linearPathsPerGraph: Map[String, List[LinearPath]] = graphs.map { case (mapName, graph) =>
       val lines = elaboratedMaps.get(mapName).map { mapVal =>
-        mapVal.linearPaths.map { lp =>
+        mapVal.paths.map { lp =>
           LinearPath(lp.nodeNames.map(n => resolveNode(graph, n)))
         }
       }.getOrElse(List.empty)
@@ -136,13 +136,12 @@ object SpatialMetadataExtractor {
     val arrowsPerGraph: Map[String, List[DirectionArrow]] = graphs.map { case (mapName, graph) =>
       val arrows = elaboratedMaps.get(mapName).map { mapVal =>
         mapVal.arrows.map { da =>
-          val direction = TPCCRelationship.valueOf(da.direction)
           DirectionArrow(
             anchor = resolveNode(graph, da.anchorName),
             reference = resolveNode(graph, da.referenceName),
             invertFacing = da.invertFacing,
             target = resolveNode(graph, da.targetName),
-            direction = direction
+            direction = da.direction
           )
         }
       }.getOrElse(List.empty)

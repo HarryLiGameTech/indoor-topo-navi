@@ -13,8 +13,8 @@ root SWFC(haveStaffCard: Bool, haveManagementCard: Bool, haveRoomKey: Bool, id: 
     }
 
     constraint HotelGuestOnly{
-            require haveRoomKey
-        }
+        require haveRoomKey
+    }
 
     // Define what means CanFitIntoPassengerElevator
     constraint CanFitIntoPassengerElevator{

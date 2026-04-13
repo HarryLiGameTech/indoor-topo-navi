@@ -161,8 +161,8 @@ case class SubTopoMapExpr(
       name = name,
       nodes = elaboratedNodes.toSet,
       paths = paths.flatMap(_.elaborate(using envWithNodes)).toSet,
-      arrows = Set.empty, // TODO
-      lines = Set.empty, // TODO
+      arrows = arrows.map(_.elaborate(using envWithNodes)).toSet,
+      lines = linearPaths.map(_.elaborate(using envWithNodes)).toSet,
       context = newEnvValues,
     )
   }
