@@ -1,6 +1,6 @@
 package reasoner
 
-import data.NavigationGraph
+import data.{NavigationGraph, TopoNode}
 
 /** Stub coordinate estimator.
   *
@@ -15,12 +15,22 @@ import data.NavigationGraph
 object CoordEstimator {
 
   def estimate(
-    graphs: Map[String, NavigationGraph],
-    metadata: Map[String, SpatialMetadata]
+    graphs: Map[String, NavigationGraph], // for graph's O(1) lookup by name
+    metadata: Map[String, SpatialMetadata], // per graph. Map from graph name to graph's metadata
+    startGraph: NavigationGraph,
+    startNode: TopoNode
   ): Map[String, NavigationGraph] = {
     // TODO: Implement full TPCC-based coordinate estimation.
     // For now return the graphs unchanged (all TopoNode.estimatedCoord remain None).
-    graphs
+    
+    
+    // Start from the startNode in the startGraph, assign it to coordinate (0, 0)
+    // Exploit the line the startNode is in. If this node is not at an end of the line, throw exception. The line is in the metadata
+    
+    
+    
+    // When finished the startGraph's estimation, handle other graphs. First look at the beacon nodes, and then try to interpolate between them. The beacon nodes are in the metadata.
+    
   }
 }
 

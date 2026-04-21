@@ -17,7 +17,9 @@ import surfacelang.{DirectionalArrowValue, LinearPathValue, TopoMapValue, Transp
 case class ExtractionResult(
   linearPaths: Map[String, Set[LinearPathValue]],
   directionalArrows: Map[String, Set[DirectionalArrowValue]],
-  coordMetadata: Option[Map[String, SpatialMetadata]]
+  coordMetadata: Option[Map[String, SpatialMetadata]],
+  startMap: Option[NavigationGraph] = None,
+  startNode: Option[TopoNode] = None
 )
 
 object SpatialMetadataExtractor {
@@ -174,14 +176,12 @@ object SpatialMetadataExtractor {
         arrows        = coreArrowsPerGraph.getOrElse(name, List.empty),
         beaconNodes   = beaconPerGraph.getOrElse(name, Set.empty),
         excludedNodes = excludedPerGraph.getOrElse(name, Set.empty),
-        sensitivity   = sensitivity,
-        startNode     = startGraph.nodes.find(_.identifier == startNodeName).get,
-        startMap      = startMapName
+        sensitivity   = sensitivity
       )
       name -> meta
     }
 
-    ExtractionResult(linearPathsPerGraph, arrowsPerGraph, coordMetadata = Some(metadataMap))
+    ExtractionResult(linearPathsPerGraph, arrowsPerGraph, coordMetadata = Some(metadataMap), startGraph, startGraph.nodes.find(_.identifier == startNodeName).get)
   }
 }
 

@@ -1,0 +1,27 @@
+root SWFC(haveStaffCard: Bool, timeOfDay: Int){
+
+    // Define what means "TenantsOnly"
+    constraint StaffOnly{
+        require haveStaffCard
+    }
+
+    // 8:00 to 22:00
+    constraint InBusinessHours{
+        require timeOfDay > 28799
+        require timeOfDat < 79201
+    }
+
+
+    def coord_estimation_data = {
+        enabled = true,
+        sensitivity = 3.0,
+        startNode = "storage_3_out",
+        startMap = "Floor1"
+    }
+
+
+
+    
+
+
+}

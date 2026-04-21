@@ -116,15 +116,63 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
 //    }
 //  }
 
-  test("Compiler should parse and elaborate real project"){
+//  test("Compiler should parse and elaborate real high-rise project"){
+//    // Try to locate the examples directory relative to the module or project root
+//    val possiblePaths = List(
+//      new File("../examples/swfc"),
+//      new File("examples/swfc"),
+//      new File("H:/Academic/UNNC/FoSE/Y4/FYP/indoor-topo-navi/examples/swfc")
+//    )
+//
+//    val examplesDir = possiblePaths.find(_.exists()).getOrElse(new File("../examples/swfc"))
+//
+//    if (examplesDir.exists() && examplesDir.isDirectory) {
+//      println(s"Compiling real project at: ${examplesDir.getAbsolutePath}")
+//
+//      val compiler = new TopoScriptCompiler()
+//      val result = compiler.compile(examplesDir.getAbsolutePath, Map(
+//        "haveStaffCard" -> Value.BoolVal(true),
+//        "haveManagementCard" -> Value.BoolVal(true),
+//        "haveRoomKey" -> Value.BoolVal(true),
+//        "id" -> Value.IntVal(1919810),
+//        "aggregatedWeight" -> Value.IntVal(10))
+//      )
+//
+//      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "UpperLobby::SS3_4_hall", "UpperLobby::retail_conn1_in", MinimizeTime);
+//
+//      assert(result != null)
+//      println("Real project compilation result: ")
+//      pprintln(result)
+//      println("Real project compilation successful!")
+//
+//      val stairCases = result.transportGraph.nodes
+//        .map(_.ownerLine)
+//        .distinct
+//        .collect { case sc: data.StairCase => sc }
+//
+//      if (stairCases.isEmpty) {
+//        fail("No StairCase found in the transport graph. Check that a Stairs transport is defined and compiled correctly.")
+//      } else {
+//        println("StairCase objects found in transport graph:")
+//        stairCases.foreach(pprint.pprintln(_))
+//      }
+//
+//      pprint.pprintln(plan)
+//    } else {
+//      println(s"Skipping real project test: 'examples' directory not found. Checked: ${possiblePaths.map(_.getAbsolutePath).mkString(", ")}")
+//    }
+//  }
+
+
+  test("Compiler should parse and elaborate real low-rise project") {
     // Try to locate the examples directory relative to the module or project root
     val possiblePaths = List(
-      new File("../examples/swfc"),
-      new File("examples/swfc"),
-      new File("H:/Academic/UNNC/FoSE/Y4/FYP/indoor-topo-navi/examples/swfc")
+      new File("../examples/trent"),
+      new File("examples/trent"),
+      new File("H:/Academic/UNNC/FoSE/Y4/FYP/indoor-topo-navi/examples/trent")
     )
 
-    val examplesDir = possiblePaths.find(_.exists()).getOrElse(new File("../examples/swfc"))
+    val examplesDir = possiblePaths.find(_.exists()).getOrElse(new File("../examples/trent"))
 
     if (examplesDir.exists() && examplesDir.isDirectory) {
       println(s"Compiling real project at: ${examplesDir.getAbsolutePath}")
@@ -132,18 +180,15 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       val compiler = new TopoScriptCompiler()
       val result = compiler.compile(examplesDir.getAbsolutePath, Map(
         "haveStaffCard" -> Value.BoolVal(true),
-        "haveManagementCard" -> Value.BoolVal(true),
-        "haveRoomKey" -> Value.BoolVal(true),
-        "id" -> Value.IntVal(1919810),
-        "aggregatedWeight" -> Value.IntVal(10))
-      )
+        "timeOfDay" -> Value.IntVal(12000) // 10:00
+      ))
 
-      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "UpperLobby::SS3_4_hall", "UpperLobby::retail_conn1_in", MinimizeTime);
+      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "Floor1::arabica_out_T", "Floor3::riverview_podium", MinimizeTime);
 
       assert(result != null)
-      println("Real project compilation result: ")
-      pprintln(result)
-      println("Real project compilation successful!")
+//      println("Real project compilation result: ")
+//      pprintln(result)
+//      println("Real project compilation successful!")
 
       val stairCases = result.transportGraph.nodes
         .map(_.ownerLine)
@@ -153,11 +198,11 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       if (stairCases.isEmpty) {
         fail("No StairCase found in the transport graph. Check that a Stairs transport is defined and compiled correctly.")
       } else {
-        println("StairCase objects found in transport graph:")
-        stairCases.foreach(pprint.pprintln(_))
+//        println("StairCase objects found in transport graph:")
+//        stairCases.foreach(pprint.pprintln(_))
       }
 
-      pprint.pprintln(plan)
+      pprint.pprintln(plan.routeEdges)
     } else {
       println(s"Skipping real project test: 'examples' directory not found. Checked: ${possiblePaths.map(_.getAbsolutePath).mkString(", ")}")
     }

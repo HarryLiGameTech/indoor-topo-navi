@@ -167,7 +167,7 @@ class TopoScriptCompiler() {
         elaboratedTransports = elaboratedTransports.toList,
         linearTransports     = linearTransports
       ) match {
-        case ExtractionResult(linearPaths, directionalArrows, Some(metadataMap)) =>
+        case ExtractionResult(linearPaths, directionalArrows, Some(metadataMap), Some(startGraph), Some(startNode)) =>
           (CoordEstimator.estimate(navigationGraphs, metadataMap), linearPaths, directionalArrows)
         case ExtractionResult(linearPaths, directionalArrows, None) =>
           (navigationGraphs, linearPaths, directionalArrows)
