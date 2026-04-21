@@ -216,19 +216,15 @@ object CoordEstimator {
     while (queue.nonEmpty) {
       val n = queue.dequeue()
       val coordN = coordMap.getOrElse(n, null)
-      if (coordN == null) {} else {
-        // Determine the "FRONT" direction for node n from arrows anchored there
-        val frontArrow = meta.arrows.find(a => a.anchor == n)
+      if (coordN != null) {
 
+        // ── Forward expansion: n is the ANCHOR, fire each arrow toward its target ──
         for (arrow <- meta.arrows if arrow.anchor == n) {
           val target = arrow.target
           if (!meta.excludedNodes.contains(target) && !coordMap.contains(target)) {
-            // Get path cost from n to target
             val costOpt = graph.findPath(n, target, VisitingMode.Normal).map(_.totalCost(VisitingMode.Normal))
             costOpt.foreach { cost =>
-              val magnitude = discretize(cost, sensitivity)
-              // Rotate direction according to facing: determine what absolute
-              // direction "FRONT" corresponds to for this node.
+              val magnitude  = discretize(cost, sensitivity)
               val rotatedDir = rotateDirection(arrow.direction, arrow, coordMap, n, graph, meta, sensitivity)
               val (dx, dy)   = tpccOffset(rotatedDir, magnitude)
               val newCoord   = TpccCoord(coordN.x + dx, coordN.y + dy)
@@ -237,6 +233,29 @@ object CoordEstimator {
             }
           }
         }
+
+        // ── Reverse expansion: n is the TARGET, back-compute the ANCHOR's coord ──
+        // If anchor doesn't have a coord yet, infer it as: anchor = n - offset(direction).
+        // This is valid because the arrow declares a fixed spatial relationship.
+        for (arrow <- meta.arrows if arrow.target == n) {
+          val anchor = arrow.anchor
+          if (!meta.excludedNodes.contains(anchor) && !coordMap.contains(anchor)) {
+            val costOpt = graph.findPath(anchor, n, VisitingMode.Normal).map(_.totalCost(VisitingMode.Normal))
+            costOpt.foreach { cost =>
+              val magnitude = discretize(cost, sensitivity)
+              // For reverse expansion we need the facing at the anchor, which we don't
+              // know yet (anchor has no coord). Use back-node or reference node to
+              // approximate. If neither is available fall back to declared direction as-is.
+              val rotatedDir = rotateDirection(arrow.direction, arrow, coordMap, anchor, graph, meta, sensitivity)
+              val (dx, dy)   = tpccOffset(rotatedDir, magnitude)
+              // anchor = target - offset  →  newCoord = coordN - (dx, dy)
+              val newCoord   = TpccCoord(coordN.x - dx, coordN.y - dy)
+              assignCoord(anchor, newCoord, coordMap, graph.identifier)
+              queue.enqueue(anchor)
+            }
+          }
+        }
+
       }
     }
   }
