@@ -151,7 +151,7 @@ object SpatialMetadataExtractor {
 
     val coreLinearPathsPerGraph: Map[String, List[LinearPath]] = graphs.map { case (mapName, graph) =>
       val lines = linearPathsPerGraph.getOrElse(mapName, Set.empty).map { lp =>
-        LinearPath(lp.nodes.map(n => resolveNode(graph, n.name)).toList)
+        LinearPath(lp.nodes.map(n => resolveNode(graph, n.name)))
       }.toList
       mapName -> lines
     }

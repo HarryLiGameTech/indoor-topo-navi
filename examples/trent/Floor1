@@ -3,7 +3,7 @@ topo-map Floor1(){
     permResident = 50
   }
   topo-node gate_elevator_B {description = "Gate towards the main elevator hall, near the car parking area"}
-  topo-node main_elevator_hall {description = "The main elevator hall in the middle of the building. It has 2 cars, but heavily used by occupants and visitors due to its significant location advantage."}
+  topo-node main_elevator_hall {description = "The main elevator hall in the middle of the building. It has 2 cars, but heavily used by occupants and visitors due to its significant location advantage.", _isBeacon = true}
   topo-node gate_elevator_T {description = "Gate towards the main elevator hall, near the e-bike parking area"}
   topo-node slope_L
   topo-node slope_R
@@ -24,8 +24,8 @@ topo-map Floor1(){
   topo-node room_102_out
   topo-node n_3ac94cd52b0842d4a1361e7d699aa88c
   topo-node n_5db631184caa4c398ee3130c2106ff80
-  topo-node left_elevator_hall {description = "The elevator hall towards the gate1-facing area of the building, which is less crowded than the main elevator hall. It has 1 car."}
-  topo-node right_elevator_hall {description = "The elevator hall towards the library-facing area of the building, which is less crowded than the main elevator hall. It has 1 car."}
+  topo-node left_elevator_hall {description = "The elevator hall towards the gate1-facing area of the building, which is less crowded than the main elevator hall. It has 1 car.", _isBeacon = true}
+  topo-node right_elevator_hall {description = "The elevator hall towards the library-facing area of the building, which is less crowded than the main elevator hall. It has 1 car.", _isBeacon = true}
   topo-node toilet_4_male
   topo-node toilet_4_female
   topo-node bathroom_pathway
@@ -290,7 +290,7 @@ topo-map Floor1(){
   atomic-path [room_104_out <-> toilet_1_out] {cost = 2}
   atomic-path [room_105 <-> left_elevator_hall] {cost = 7}
   atomic-path [room_105_out <-> room_105] {cost = 9}
-  atomic-path [room_101AB_105_out <-> room_105] {cost = 9}
+  atomic-path [room_101AB_105_out <-> room_105_out] {cost = 9}
   atomic-path [main_elevator_hall <-> room_27] {cost = 2}
   atomic-path [main_elevator_hall <-> room_28] {cost = 2}
   atomic-path [room_125_out_1 <-> room_125_out_2] {cost = 2}
@@ -310,4 +310,10 @@ topo-map Floor1(){
   atomic-path [stair_RT <-> n_c37ca698740b4651b440d60b1e6c086d] {cost = 3}
 
 
+  linear-path [stair_LLB, storage_3_out, storage_2_out, storage_1_out, n_78ea44f7495546cf8e27ec4d2abad30f, room_113_out, room_115_out, room_116_out, room_117_out, room_118_out, room_119_out, room_120_out, stair_LB, room_121_out, room_122_out]
+  linear-path [stair_LLT, room_101AB_out_1, room_101AB_105_out, room_101C_out, room_102_out, room_104_out, toilet_1_out, door_M1_48, n_7571e637a9364053bdb4eb4aef09df18]
+  linear-path [room_148_149_out, room_149, stair_LT, outdoor_LT]
+  linear-path [room_148_149_out, n_7571e637a9364053bdb4eb4aef09df18, room_109_out, room_108_110_out, room_111_out, room_112_out, toilet_2_out, room_119_out]
+
+  directional-arrow [room_119_out -> room_120_out] toilet_2_out LEFT
 }

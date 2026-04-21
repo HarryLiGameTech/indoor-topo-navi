@@ -15,7 +15,7 @@ root SWFC(haveStaffCard: Bool, timeOfDay: Int){
     def coord_estimation_data = {
         enabled = true,
         sensitivity = 3.0,
-        startNode = "storage_3_out",
+        startNode = "stair_LLB",
         startMap = "Floor1"
     }
 

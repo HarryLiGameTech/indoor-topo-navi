@@ -183,8 +183,9 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
         "timeOfDay" -> Value.IntVal(12000) // 10:00
       ))
 
-      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "Floor1::arabica_out_T", "Floor3::riverview_podium", MinimizeTime);
-
+//      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "Floor1::arabica_out_T", "Floor3::riverview_podium", MinimizeTime);
+      
+      
       assert(result != null)
 //      println("Real project compilation result: ")
 //      pprintln(result)
@@ -202,7 +203,25 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
 //        stairCases.foreach(pprint.pprintln(_))
       }
 
-      pprint.pprintln(plan.routeEdges)
+//      pprint.pprintln(plan.routeEdges)
+      // List all Floor1 nodes with their estimated coords
+      result.graphs.get("Floor1") match {
+        case Some(floor1Graph) =>
+          println(s"\n=== Floor1 estimated coords (${floor1Graph.nodes.size} nodes) ===")
+          val (assigned, unassigned) = floor1Graph.nodes.partition(_.estimatedCoord.isDefined)
+          assigned
+            .sortBy(n => (n.estimatedCoord.get.x, n.estimatedCoord.get.y))
+            .foreach { n =>
+              val c = n.estimatedCoord.get
+              println(f"  ${n.identifier}%-40s -> (${c.x}%4d, ${c.y}%4d)")
+            }
+          if (unassigned.nonEmpty) {
+            println(s"  --- ${unassigned.size} node(s) with no estimated coord ---")
+            unassigned.foreach(n => println(s"  ${n.identifier}"))
+          }
+        case None =>
+          println("Floor1 graph not found in compilation result")
+      }
     } else {
       println(s"Skipping real project test: 'examples' directory not found. Checked: ${possiblePaths.map(_.getAbsolutePath).mkString(", ")}")
     }

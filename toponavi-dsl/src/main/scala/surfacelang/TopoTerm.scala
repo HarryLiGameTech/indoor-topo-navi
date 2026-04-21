@@ -50,7 +50,7 @@ case class AtomicPathValue(
 }
 
 case class LinearPathValue(
-  nodes: Set[TopoNodeValue],
+  nodes: List[TopoNodeValue],
   context: Context
 )
 

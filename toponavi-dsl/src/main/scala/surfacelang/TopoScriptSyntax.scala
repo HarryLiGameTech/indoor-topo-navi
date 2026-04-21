@@ -297,8 +297,9 @@ case class LinearPathExpr(
   override def elaborate(using topoEnv: TopoEnvironment): LinearPathValue = {
     val nodes = nodeNames.map { name =>
       topoEnv.nodes.getOrElse(name, throw RuntimeException(s"No such node in topoEnv: $name"))
-    }.toSet
-    LinearPathValue(nodes = nodes, context = topoEnv.env)  }
+    }
+    LinearPathValue(nodes = nodes, context = topoEnv.env)
+  }
 }
 
 case class TopoNodeRef(
