@@ -315,5 +315,13 @@ topo-map Floor1(){
   linear-path [room_148_149_out, room_149, stair_LT, outdoor_LT]
   linear-path [room_148_149_out, n_7571e637a9364053bdb4eb4aef09df18, room_109_out, room_108_110_out, room_111_out, room_112_out, toilet_2_out, room_119_out]
 
+  linear-path [gate_elevator_T, main_elevator_hall, gate_elevator_B]
+  linear-path [n_3ac94cd52b0842d4a1361e7d699aa88c, slope_L, room_125_out_1, room_125_out_2, slope_R, n_5db631184caa4c398ee3130c2106ff80]
+
+
+
   directional-arrow [room_119_out -> room_120_out] toilet_2_out LEFT
+  directional-arrow [n_7571e637a9364053bdb4eb4aef09df18 -> room_148_149_out] door_M1_48 LEFT
+  directional-arrow [room_122_out <- room_121_out] n_3ac94cd52b0842d4a1361e7d699aa88c LEFT
+
 }

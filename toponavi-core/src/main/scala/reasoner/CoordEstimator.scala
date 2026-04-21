@@ -115,10 +115,14 @@ object CoordEstimator {
     val seedLine = meta.lines.find(_.nodes.contains(seedNode)).orNull
 
     if (seedLine == null) {
-      // No line for this seed; only do arrow expansion from the seed if it has a coord.
+      // No line for this seed; only do arrow/interpolation fixpoint if the seed has a coord.
       if (coordMap.contains(seedNode)) {
-        expandViaArrows(graph, meta, coordMap, sensitivity)
-        interpolateLines(graph, meta, coordMap, sensitivity)
+        var prevSize = -1
+        while (coordMap.size != prevSize) {
+          prevSize = coordMap.size
+          expandViaArrows(graph, meta, coordMap, sensitivity)
+          interpolateLines(graph, meta, coordMap, sensitivity)
+        }
       }
       break(())
     }
@@ -135,18 +139,19 @@ object CoordEstimator {
       assignCoord(seedNode, TpccCoord(0, 0), coordMap, graph.identifier)
     }
 
-    // ── Step 1.3 + 1.4: traverse the line ────────────────────────────────
+    // ── Step 1.3 + 1.4: traverse the start line ──────────────────────────
     traverseLine(seedLine, graph, meta, coordMap, sensitivity)
 
-    // ── Step 1.5: expand off-line nodes via arrows ────────────────────────
-    expandViaArrows(graph, meta, coordMap, sensitivity)
-
-    // ── Step 1.6: interpolate remaining lines ─────────────────────────────
-    interpolateLines(graph, meta, coordMap, sensitivity)
-
-    // ── Step 1.7: second arrow-expansion pass (catches nodes that were
-    //    assigned during interpolation and may have arrows pointing outward)
-    expandViaArrows(graph, meta, coordMap, sensitivity)
+    // ── Steps 1.5 / 1.6: fixpoint — keep alternating arrow-expansion and
+    //    line-interpolation until no new coords are assigned in a full round.
+    //    This handles chains where:
+    //      line-traversal → arrow → interpolation → arrow → interpolation → …
+    var prevSize = -1
+    while (coordMap.size != prevSize) {
+      prevSize = coordMap.size
+      expandViaArrows(graph, meta, coordMap, sensitivity)
+      interpolateLines(graph, meta, coordMap, sensitivity)
+    }
   }
 
   // ── Line traversal ─────────────────────────────────────────────────────────

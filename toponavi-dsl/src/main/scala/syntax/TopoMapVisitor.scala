@@ -264,7 +264,7 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     val spec       = ctx.arrowSpec()
     val anchorName = spec.ID(0).getText
     val refName    = spec.ID(1).getText
-    val invertFacing = spec.getChild(1).getText == "<-"  // true if '<-', false if '->'
+    val invertFacing = spec.getChild(2).getText == "<-"  // true if '<-', false if '->'
     val targetName = ctx.ID(0).getText
     val directionStr = ctx.ID(1).getText
 

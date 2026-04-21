@@ -184,8 +184,8 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       ))
 
 //      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "Floor1::arabica_out_T", "Floor3::riverview_podium", MinimizeTime);
-      
-      
+
+
       assert(result != null)
 //      println("Real project compilation result: ")
 //      pprintln(result)
@@ -207,8 +207,8 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       // List all Floor1 nodes with their estimated coords
       result.graphs.get("Floor1") match {
         case Some(floor1Graph) =>
-          println(s"\n=== Floor1 estimated coords (${floor1Graph.nodes.size} nodes) ===")
           val (assigned, unassigned) = floor1Graph.nodes.partition(_.estimatedCoord.isDefined)
+          println(s"\n=== Floor1 estimated coords (${assigned.size}/${floor1Graph.nodes.size} nodes) ===")
           assigned
             .sortBy(n => (n.estimatedCoord.get.x, n.estimatedCoord.get.y))
             .foreach { n =>
