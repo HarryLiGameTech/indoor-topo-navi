@@ -181,7 +181,7 @@ object SpatialMetadataExtractor {
       name -> meta
     }
 
-    ExtractionResult(linearPathsPerGraph, arrowsPerGraph, coordMetadata = Some(metadataMap), startGraph, startGraph.nodes.find(_.identifier == startNodeName).get)
+    ExtractionResult(linearPathsPerGraph, arrowsPerGraph, coordMetadata = Some(metadataMap), Some(startGraph), Some(startGraph.nodes.find(_.identifier == startNodeName).get))
   }
 }
 

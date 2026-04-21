@@ -168,8 +168,15 @@ class TopoScriptCompiler() {
         linearTransports     = linearTransports
       ) match {
         case ExtractionResult(linearPaths, directionalArrows, Some(metadataMap), Some(startGraph), Some(startNode)) =>
-          (CoordEstimator.estimate(navigationGraphs, metadataMap), linearPaths, directionalArrows)
-        case ExtractionResult(linearPaths, directionalArrows, None) =>
+          val enriched = CoordEstimator.estimate(
+            graphs           = navigationGraphs,
+            metadata         = metadataMap,
+            startGraph       = startGraph,
+            startNode        = startNode,
+            linearTransports = linearTransports
+          )
+          (enriched, linearPaths, directionalArrows)
+        case ExtractionResult(linearPaths, directionalArrows, None, _, _) =>
           (navigationGraphs, linearPaths, directionalArrows)
       }
 
@@ -325,9 +332,16 @@ class TopoScriptCompiler() {
         elaboratedTransports = elaboratedTransports.toList,
         linearTransports     = linearTransports
       ) match {
-        case ExtractionResult(lp, da, Some(metadataMap)) =>
-          (CoordEstimator.estimate(navigationGraphs, metadataMap), lp, da)
-        case ExtractionResult(lp, da, None) =>
+        case ExtractionResult(lp, da, Some(metadataMap), Some(startGraph), Some(startNode)) =>
+          val enriched = CoordEstimator.estimate(
+            graphs           = navigationGraphs,
+            metadata         = metadataMap,
+            startGraph       = startGraph,
+            startNode        = startNode,
+            linearTransports = linearTransports
+          )
+          (enriched, lp, da)
+        case ExtractionResult(lp, da, None, _, _) =>
           (navigationGraphs, lp, da)
       }
 

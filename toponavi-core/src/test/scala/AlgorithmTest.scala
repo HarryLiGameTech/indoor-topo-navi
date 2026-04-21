@@ -599,7 +599,7 @@ object TransportTester extends App {
     // Test adjacency list
     println(s"\n=== Testing Adjacency List ===")
     graph.adjacencyList.foreach { case (node, neighbors) =>
-      println(s"${node.identifier} -> ${neighbors.map(_.identifier).mkString(", ")}")
+      println(s"${node.identifier} -> ${neighbors.keys.map(_.identifier).mkString(", ")}")
     }
   }
 
