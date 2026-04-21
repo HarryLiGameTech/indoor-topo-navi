@@ -138,7 +138,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
         "aggregatedWeight" -> Value.IntVal(10))
       )
 
-      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "FloorB2::GE3_hall", "FloorB1::FS4_6_hall", MinimizeTime);
+      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "UpperLobby::SS3_4_hall", "UpperLobby::retail_conn1_in", MinimizeTime);
 
       assert(result != null)
       println("Real project compilation result: ")

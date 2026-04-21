@@ -68,11 +68,11 @@ topo-map LowerLobby(){
   atomic-path [garbage_room <-> loading_bay] {cost = 6}
   atomic-path [logistics_center_intersact <-> MC1_hall] {cost = 15}
   atomic-path [gate_2 <-> entrance_Z1_2_B] {cost = 5}
-  atomic-path [entrance_Z1_2_B <-> L1_2_hall_end_B] {cost = 5}
+  atomic-path [entrance_Z1_2_B <-> L1_2_hall_end_B] {cost = 5} requires TenantsOnly
   atomic-path [L1_2_hall_end_B <-> L2_hall] {cost = 3}
   atomic-path [L2_hall <-> L1_hall] {cost = 5}
   atomic-path [L1_hall <-> service_corr_A] {cost = 3}
-  atomic-path [service_corr_A <-> entrance_Z1_2_A] {cost = 5}
+  atomic-path [service_corr_A <-> entrance_Z1_2_A] {cost = 5} requires TenantsOnly
   atomic-path [entrance_Z1_2_A <-> entrance_Z5_6] {cost = 12}
   atomic-path [entrance_Z5_6 <-> S2_hall] {cost = 5}
   atomic-path [entrance_Z1_2_A <-> retail_conn_out] {cost = 5}
