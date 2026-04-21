@@ -261,9 +261,11 @@ object CoordEstimator {
   }
 
   /** Rotate the arrow's declared direction to account for the anchor's facing.
-    * We use the anchor→front vector already in the coordMap to determine what
-    * "FRONT" physically is, then rotate the declared direction accordingly.
-    * If we cannot determine the facing, we return the direction unchanged.
+    *
+    * The "facing" of the anchor is determined by the anchor→front vector.
+    * Falls back to anchor→back (inverted) when front has no coord.
+    * When the anchor itself has no coord (reverse-expansion case), uses
+    * back→target or target→back to approximate the same axis.
     */
   private def rotateDirection(
     direction: TPCCRelationship,
@@ -274,24 +276,98 @@ object CoordEstimator {
     meta: SpatialMetadata,
     sensitivity: Float
   ): TPCCRelationship = {
-    // Find the "front" node of this anchor to determine its facing
-    val frontNode = arrow.front
-    val backNode  = arrow.back
+    val frontNode = arrow.front   // node in the FRONT direction from anchor
+    val backNode  = arrow.back    // node in the REAR direction from anchor
 
-    // Try to read the front node's coord (may not be assigned yet)
-    (coordMap.get(anchor), coordMap.get(frontNode)) match {
-      case (Some(anchorCoord), Some(frontCoord)) =>
-        val dxFront = frontCoord.x - anchorCoord.x
-        val dyFront = frontCoord.y - anchorCoord.y
-        // Determine canonical "FRONT" rotation offset (in 45° steps)
-        // +Y is canonical FRONT (0 steps). Compute how many 45-deg steps the
-        // actual front vector is rotated from +Y.
-        val steps = vectorToSteps(dxFront, dyFront)
-        rotateBySteps(direction, steps)
-      case _ =>
-        // Cannot determine facing — return direction unchanged
-        direction
+    // Helper: derive rotation steps from a known (from, to) coord pair where
+    // the from→to direction corresponds to `fromIsBack` ? REAR : FRONT.
+    def stepsFrom(fromCoord: TpccCoord, toCoord: TpccCoord, fromIsBack: Boolean): Int = {
+      val dx = toCoord.x - fromCoord.x
+      val dy = toCoord.y - fromCoord.y
+      val rawSteps = vectorToSteps(dx, dy) // steps as if this were the FRONT vector
+      if (fromIsBack)
+        // from→to is the REAR vector; actual FRONT is 4 steps ahead of REAR
+        (rawSteps + 4) % 8
+      else
+        rawSteps
     }
+
+    // Case 1: anchor and front both have coords → anchor→front = FRONT vector
+    (coordMap.get(anchor), coordMap.get(frontNode)) match {
+      case (Some(ac), Some(fc)) if ac != fc =>
+        return rotateBySteps(direction, stepsFrom(ac, fc, fromIsBack = false))
+      case _ =>
+    }
+
+    // Case 2: anchor and back both have coords → anchor→back = REAR vector
+    (coordMap.get(anchor), coordMap.get(backNode)) match {
+      case (Some(ac), Some(bc)) if ac != bc =>
+        return rotateBySteps(direction, stepsFrom(ac, bc, fromIsBack = true))
+      case _ =>
+    }
+
+    // Case 3: anchor has no coord (reverse-expansion) — use back→front or
+    // any two known nodes on the same axis to infer the FRONT direction.
+    (coordMap.get(backNode), coordMap.get(frontNode)) match {
+      case (Some(bc), Some(fc)) if bc != fc =>
+        // back→front is the FRONT vector (pointing from REAR toward FRONT)
+        return rotateBySteps(direction, stepsFrom(bc, fc, fromIsBack = false))
+      case _ =>
+    }
+
+    // Case 4: only the back node is known (reverse-expansion with front=anchor=unknown)
+    // Use back→target: since target is in `direction` from anchor, and anchor is
+    // between back and target on the FRONT axis, back→target approximates FRONT.
+    (coordMap.get(backNode), coordMap.get(arrow.target)) match {
+      case (Some(bc), Some(tc)) if bc != tc =>
+        return rotateBySteps(direction, stepsFrom(bc, tc, fromIsBack = false))
+      case _ =>
+    }
+
+    // Case 5 (reverse-expansion): neither anchor nor its front/back have coords yet.
+    // Infer anchor's facing from the axis of the line that contains the TARGET node.
+    // Two consecutive assigned nodes on that line give us the corridor direction.
+    // The anchor's corridor is parallel to the target's corridor, so same axis.
+    // We then figure out which way the anchor faces by consulting the arrow's back node
+    // relative to the target: if back is "further along" the axis than the target,
+    // anchor faces the opposite direction; otherwise the same direction.
+    val targetLine = meta.lines.find(_.nodes.contains(arrow.target))
+    targetLine.foreach { line =>
+      val assignedOnLine = line.nodes.filter(n => coordMap.contains(n) && !meta.excludedNodes.contains(n))
+      if (assignedOnLine.size >= 2) {
+        // Pick the two assigned nodes closest to the target to get a clean direction
+        val targetIdx     = line.nodes.indexOf(arrow.target)
+        val sorted        = assignedOnLine.sortBy(n => math.abs(line.nodes.indexOf(n) - targetIdx))
+        val n0            = sorted(0)
+        val n1            = sorted(1)
+        val c0            = coordMap(n0)
+        val c1            = coordMap(n1)
+        // Determine the line's "forward" direction (index-increasing direction)
+        val (fwdDx, fwdDy) =
+          if (line.nodes.indexOf(n0) < line.nodes.indexOf(n1))
+            (Integer.signum(c1.x - c0.x), Integer.signum(c1.y - c0.y))
+          else
+            (Integer.signum(c0.x - c1.x), Integer.signum(c0.y - c1.y))
+
+        // The anchor faces TOWARD its back node (back = REAR direction means
+        // the back node is behind the anchor, i.e. anchor→back = REAR vector).
+        // We approximate anchor→back direction using the target's line axis:
+        // if backNode is "after" the target in the line's forward direction,
+        // anchor's REAR = forward → anchor's FRONT = backward = (-fwdDx, -fwdDy).
+        // Since we don't know where backNode is on the anchor's line, use a simpler
+        // heuristic: the anchor's FRONT direction = the line's forward direction if
+        // invertFacing==false, or the reverse if invertFacing==true (anchor came FROM
+        // the forward direction).
+        val (frontDx, frontDy) =
+          if (arrow.invertFacing) (-fwdDx, -fwdDy) else (fwdDx, fwdDy)
+
+        val steps = vectorToSteps(frontDx, frontDy)
+        return rotateBySteps(direction, steps)
+      }
+    }
+
+    // Fallback: cannot determine facing — return direction unchanged
+    direction
   }
 
   /** Map a (dx,dy) vector to the number of 45-degree clockwise steps from FRONT (+Y). */
