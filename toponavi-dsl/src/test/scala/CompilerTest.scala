@@ -204,24 +204,28 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
       }
 
 //      pprint.pprintln(plan.routeEdges)
-      // List all Floor1 nodes with their estimated coords
-      result.graphs.get("Floor1") match {
-        case Some(floor1Graph) =>
-          val (assigned, unassigned) = floor1Graph.nodes.partition(_.estimatedCoord.isDefined)
-          println(s"\n=== Floor1 estimated coords (${assigned.size}/${floor1Graph.nodes.size} nodes) ===")
-          assigned
-            .sortBy(n => (n.estimatedCoord.get.x, n.estimatedCoord.get.y))
-            .foreach { n =>
-              val c = n.estimatedCoord.get
-              println(f"  ${n.identifier}%-40s -> (${c.x}%4d, ${c.y}%4d)")
+      // List nodes with their estimated coords for a given floor
+      def printFloorCoords(floorName: String): Unit =
+        result.graphs.get(floorName) match {
+          case Some(floorGraph) =>
+            val (assigned, unassigned) = floorGraph.nodes.partition(_.estimatedCoord.isDefined)
+            println(s"\n=== $floorName estimated coords (${assigned.size}/${floorGraph.nodes.size} nodes) ===")
+            assigned
+              .sortBy(n => (n.estimatedCoord.get.x, n.estimatedCoord.get.y))
+              .foreach { n =>
+                val c = n.estimatedCoord.get
+                println(f"  ${n.identifier}%-40s -> (${c.x}%4d, ${c.y}%4d)")
+              }
+            if (unassigned.nonEmpty) {
+              println(s"  --- ${unassigned.size} node(s) with no estimated coord ---")
+              unassigned.foreach(n => println(s"  ${n.identifier}"))
             }
-          if (unassigned.nonEmpty) {
-            println(s"  --- ${unassigned.size} node(s) with no estimated coord ---")
-            unassigned.foreach(n => println(s"  ${n.identifier}"))
-          }
-        case None =>
-          println("Floor1 graph not found in compilation result")
-      }
+          case None =>
+            println(s"$floorName graph not found in compilation result")
+        }
+
+      printFloorCoords("Floor1")
+      printFloorCoords("Floor2")
     } else {
       println(s"Skipping real project test: 'examples' directory not found. Checked: ${possiblePaths.map(_.getAbsolutePath).mkString(", ")}")
     }
