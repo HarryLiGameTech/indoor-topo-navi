@@ -262,6 +262,7 @@ topo-map Floor1(){
   atomic-path [room_131_out_1 <-> toilet_3_out] {cost = 2}
   atomic-path [room_131_out_1 <-> room_132] {cost = 3}
   atomic-path [room_131 <-> room_131_out_2] {cost = 4}
+  atomic-path [room_131_out_1 <-> room_131_out_2] {cost = 4}
   atomic-path [room_131_out_2 <-> n_a18f70e20ba94eb99dc87bfb725cac47] {cost = 4}
   atomic-path [room_133 <-> room_133_135E_out_1] {cost = 3}
   atomic-path [room_133 <-> room_133_out_2] {cost = 4}
@@ -319,10 +320,20 @@ topo-map Floor1(){
   linear-path [n_3ac94cd52b0842d4a1361e7d699aa88c, slope_L, room_125_out_1, room_125_out_2, slope_R, n_5db631184caa4c398ee3130c2106ff80]
 
   linear-path [room_136_out_1, room_136_out_2, stair_RB, n_86e104a7e1404c3b8f8721c6835cde01, room_137_out, room_138_out, room_139_out, room_140_out, room_141_out, room_142_out, room_143_out, room_144_out, stair_RRB]
+  linear-path [n_86e104a7e1404c3b8f8721c6835cde01, bathroom_pathway, arabica_out_B, arabica, arabica_out_T]
+  linear-path [gate_carpark_RT, n_c37ca698740b4651b440d60b1e6c086d, room_130_out_1, room_130_out_2]
+  linear-path [arabica_out_T, door_M3_30, toilet_3_out, room_131_out_1, room_131_out_2, n_a18f70e20ba94eb99dc87bfb725cac47, room_133_135E_out_1, room_133_out_2, room_135F_out]
 
   directional-arrow [room_119_out -> room_120_out] toilet_2_out LEFT
   directional-arrow [n_7571e637a9364053bdb4eb4aef09df18 -> room_148_149_out] door_M1_48 LEFT
   directional-arrow [room_122_out <- room_121_out] n_3ac94cd52b0842d4a1361e7d699aa88c LEFT
   directional-arrow [room_136_out_1 <- room_136_out_2] n_5db631184caa4c398ee3130c2106ff80 RIGHT
+  directional-arrow [room_142_out -> room_143_out] R_garden_pathway LEFT
+  directional-arrow [n_86e104a7e1404c3b8f8721c6835cde01 -> room_137_out] bathroom_pathway LEFT
+  directional-arrow [arabica_out_T -> door_M3_30] arabica RIGHT
+  directional-arrow [door_M3_30 -> arabica_out_T] room_130_out_2 RIGHT
+
+  directional-arrow [n_3ac94cd52b0842d4a1361e7d699aa88c -> room_125_out_1] gate_elevator_B FRONT_LEFT
+  directional-arrow [gate_elevator_B <- room_125_out_1] main_elevator_hall LEFT
 
 }
