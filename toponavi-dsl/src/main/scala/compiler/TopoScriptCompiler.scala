@@ -6,6 +6,7 @@ import surfacelang.{GlobalConfigExpr, RootExpr, TopoEnvironment}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import data.{ElevatorBank, LinearTransport, NavigationGraph, StairCase, TransportGraph}
 import corelang.{Environment, Identifier, Value}
+import enums.AttributeValue
 import enums.ElevatorStationCategory.{Entrance, Occupant}
 import surfacelang.{TopoMapValue, TransportValue}
 import pprint.pprintln
@@ -324,6 +325,9 @@ class TopoScriptCompiler() {
     println("=== linearTransports ===")
     println("=== transportGraph ===")
 
+
+    val compilationResultMetadata = mutable.Map[String, AttributeValue]()
+
     val (finalGraphs, finalLinearPaths, finalArrows) =
       compiler.SpatialMetadataExtractor.extract(
         rootEnv              = rootEnv,
@@ -340,6 +344,7 @@ class TopoScriptCompiler() {
             startNode        = startNode,
             linearTransports = linearTransports
           )
+          compilationResultMetadata.put("coordEstimated", AttributeValue.BoolValue(true))
           (enriched, lp, da)
         case ExtractionResult(lp, da, None, _, _) =>
           (navigationGraphs, lp, da)
@@ -350,7 +355,8 @@ class TopoScriptCompiler() {
       transportGraph    = transportGraph,
       graphSequence     = globalConfig.orderedSubmapNames,
       linearPaths       = finalLinearPaths,
-      directionalArrows = finalArrows
+      directionalArrows = finalArrows,
+      metadata          = compilationResultMetadata.toMap
     )
   }
 

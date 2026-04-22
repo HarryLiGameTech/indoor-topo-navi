@@ -44,7 +44,11 @@ object TopoNaviService {
     endNodeName: String,
     preference: RoutePlanningPreferences
   ): NavigationOutputPath = {
-    val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, true)
+    val isHighRise = result.metadata.get("coord_estimated") match {
+      case Some(enums.AttributeValue.BoolValue(true)) => false // If coordinates were estimated, we assume it's a standard building.
+      case _ => true
+    }
+    val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, isHighRise)
     val (startGraphName, startNode) = resolveNode(startNodeName, result)
     val (endGraphName, endNode) = resolveNode(endNodeName, result)
     routePlanner.navigate(startGraphName, endGraphName, startNode, endNode, Normal, preference) match {
