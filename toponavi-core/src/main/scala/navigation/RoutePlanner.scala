@@ -1,6 +1,6 @@
 package navigation
 
-import data.{GlobalNode, NavigationGraph, NavigationOutputPath, RouteEdge, TopoNode, TransportGraph}
+import data.{GlobalNode, NavigationGraph, NavigationOutputPath, RouteEdge, StairCase, TopoNode, TransportGraph}
 import enums.{NavigationError, RouteEdgeCategory, RoutePlanningPreferences}
 import enums.NavigationError.{InvalidData, NoRouteFound}
 import enums.ElevatorTrafficPattern.UpRush
@@ -170,8 +170,288 @@ class RoutePlanner private(
     visitingMode: enums.VisitingMode,
     preference: RoutePlanningPreferences
   ): Either[NavigationError, NavigationOutputPath] = {
-    // TODO: Implement standard building route planning logic here
-    Left(NoRouteFound("Route planning for standard buildings not yet implemented"))
+    // Cross-graph A* over the super-graph formed by:
+    //   - all intra-graph AtomicPath edges (one direction each)
+    //   - all inter-graph transport edges from transportGraph (respects canDepart/canArrive)
+    //
+    // Heuristic (inadmissible but acceptable for indoor environments):
+    //   h = horizontal_component + vertical_component
+    //   horizontal: Manhattan distance on TPCC grid (no sensitivity scaling needed — grid units ≈ cost units)
+    //   vertical:   |floorIndex(src) - floorIndex(dst)| × 3.0  (3 m/floor ÷ 1 m·s⁻¹ = 3 s lower bound)
+    //
+    // Nodes without estimatedCoord are too trivial to be part of the TPCC grid and are therefore
+    // excluded from the A* super-graph.  We first find the nearest coord-having node reachable
+    // forward from sourceNode (effectiveSource) and the nearest one reachable backward from
+    // goalNode (effectiveGoal), walk to/from them with plain intra-graph Dijkstra, and stitch
+    // those legs around the cross-graph A* result.
+
+    // ── Step 0: resolve effective source and goal ──────────────────────────
+    val effectiveSource: TopoNode = findNearestCoordNodeForward(sourceGraph, sourceNode, visitingMode) match {
+      case Some(n) => n
+      case None    => return Left(NoRouteFound(
+        s"No coord-estimated node reachable from ${sourceGraph.identifier}::${sourceNode.identifier}"))
+    }
+    val effectiveGoal: TopoNode = findNearestCoordNodeBackward(goalGraph, goalNode, visitingMode) match {
+      case Some(n) => n
+      case None    => return Left(NoRouteFound(
+        s"No coord-estimated node that can reach ${goalGraph.identifier}::${goalNode.identifier}"))
+    }
+
+    // Prefix leg: sourceNode → effectiveSource  (empty if they are the same)
+    val prefixPath: Option[data.IntraMapPath] =
+      if (sourceNode == effectiveSource) None
+      else sourceGraph.findPath(sourceNode, effectiveSource, visitingMode) match {
+        case Some(p) => Some(p)
+        case None    => return Left(NoRouteFound(
+          s"Cannot build prefix leg from ${sourceNode.identifier} to ${effectiveSource.identifier}"))
+      }
+
+    // Suffix leg: effectiveGoal → goalNode  (empty if they are the same)
+    val suffixPath: Option[data.IntraMapPath] =
+      if (effectiveGoal == goalNode) None
+      else goalGraph.findPath(effectiveGoal, goalNode, visitingMode) match {
+        case Some(p) => Some(p)
+        case None    => return Left(NoRouteFound(
+          s"Cannot build suffix leg from ${effectiveGoal.identifier} to ${goalNode.identifier}"))
+      }
+
+    type LowRiseGlobalNode = (NavigationGraph, TopoNode)
+
+    // Floor index derived from subMapNames ordering
+    val floorIndex: Map[String, Int] = subMapNames.zipWithIndex.toMap
+
+    def verticalH(aFloor: NavigationGraph, bFloor: NavigationGraph): Double = {
+      val aFloorIndex = floorIndex.getOrElse(aFloor.identifier, 0)
+      val bFloorIndex = floorIndex.getOrElse(bFloor.identifier, 0)
+      math.abs(aFloorIndex - bFloorIndex) * 3.0
+    }
+
+    def horizontalH(a: TopoNode, b: TopoNode): Double = {
+      (a.estimatedCoord, b.estimatedCoord) match {
+        case (Some(ca), Some(cb)) => (math.abs(ca.x - cb.x) + math.abs(ca.y - cb.y)).toDouble
+        case _ => 0.0
+      }
+    }
+
+    def heuristic(v: LowRiseGlobalNode): Double =
+      horizontalH(v._2, effectiveGoal) + verticalH(v._1, goalGraph)
+
+    // Priority queue: (vertex, gScore), min-heap
+    implicit val ord: Ordering[(LowRiseGlobalNode, Double)] = Ordering.by[(LowRiseGlobalNode, Double), Double](_._2).reverse
+
+    val openSet  = mutable.PriorityQueue.empty[(LowRiseGlobalNode, Double)]
+    val gScore   = mutable.Map[LowRiseGlobalNode, Double]().withDefaultValue(Double.PositiveInfinity)
+    val fScore   = mutable.Map[LowRiseGlobalNode, Double]().withDefaultValue(Double.PositiveInfinity)
+    val cameFrom = mutable.Map[LowRiseGlobalNode, (LowRiseGlobalNode, Double, RouteEdgeCategory, String)]() // vertex -> (parent, cost, category, description)
+    val visited  = mutable.Set[LowRiseGlobalNode]()
+
+    val start: LowRiseGlobalNode = (sourceGraph, effectiveSource)
+    val goal:  LowRiseGlobalNode = (goalGraph,   effectiveGoal)
+
+    gScore(start) = 0.0
+    fScore(start) = heuristic(start)
+    openSet.enqueue((start, fScore(start)))
+
+    var found = false
+
+    while (openSet.nonEmpty && !found) {
+      val (current, currentF) = openSet.dequeue()
+
+      if (currentF > fScore(current)) {
+        // stale entry — skip
+      } else if (!visited.contains(current)) {
+        visited.add(current)
+
+        if (current == goal) {
+          found = true
+        } else {
+          val (curGraph, curNode) = current
+
+          // ── Intra-graph edges ──────────────────────────────────────────
+          for (edge <- curGraph.adjacencyList if edge.source == curNode) {
+            val nb: LowRiseGlobalNode = (curGraph, edge.target)
+            // Only admit coord-having nodes into the A* super-graph; coord-less
+            // nodes are handled by the prefix/suffix uninformed legs.
+            if (!visited.contains(nb) && edge.target.estimatedCoord.isDefined) {
+              val tentG = gScore(current) + edge.costs(visitingMode)
+              if (tentG < gScore(nb)) {
+                gScore(nb) = tentG
+                fScore(nb) = tentG + heuristic(nb)
+                cameFrom(nb) = (current, edge.costs(visitingMode), RouteEdgeCategory.Walking,
+                  s"Walk from ${curNode.identifier} to ${edge.target.identifier}")
+                openSet.enqueue((nb, fScore(nb)))
+              }
+            }
+          }
+
+          // ── Inter-graph edges via TransportGraph ───────────────────────
+          // Find all StationNodes that live on curGraph and whose localNode == curNode
+          for (stationNode <- transportGraph.nodes if stationNode.ownerGraph == curGraph && stationNode.localNode == curNode) {
+            for ((neighborStation, edgeCost) <- transportGraph.adjacencyList.getOrElse(stationNode, Map.empty)) {
+              val nb: LowRiseGlobalNode = (neighborStation.ownerGraph, neighborStation.localNode)
+              if (!visited.contains(nb)) {
+                val tentG = gScore(current) + edgeCost
+                if (tentG < gScore(nb)) {
+                  gScore(nb) = tentG
+                  fScore(nb) = tentG + heuristic(nb)
+                  val category = stationNode.ownerLine match {
+                    case _: StairCase => RouteEdgeCategory.Climbing
+                    case _            => RouteEdgeCategory.Transport
+                  }
+                  cameFrom(nb) = (current, edgeCost, category,
+                    s"Take ${stationNode.ownerLine.identifier} from ${curGraph.identifier} to ${neighborStation.ownerGraph.identifier}")
+                  openSet.enqueue((nb, fScore(nb)))
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // ── Step 3: stitch prefix ++ A* ++ suffix ─────────────────────────────
+    val allGlobalNodes = mutable.ListBuffer[GlobalNode]()
+    val allRouteEdges  = mutable.ListBuffer[RouteEdge]()
+
+    // Prefix leg (sourceNode → effectiveSource), if any
+    prefixPath match {
+      case Some(p) => appendIntraPath(p, sourceGraph, visitingMode, allGlobalNodes, allRouteEdges, skipFirstNode = false)
+      case None    => allGlobalNodes += GlobalNode(sourceGraph, sourceNode) // just the start node
+    }
+
+    // A* middle segment
+    var cur = goal
+    val reversePath = mutable.ListBuffer[(LowRiseGlobalNode, LowRiseGlobalNode, Double, RouteEdgeCategory, String)]()
+
+    while (cameFrom.contains(cur)) {
+      val (parent, cost, category, desc) = cameFrom(cur)
+      reversePath.prepend((parent, cur, cost, category, desc))
+      cur = parent
+    }
+
+    // Append A* nodes/edges (skip the very first node — already in allGlobalNodes from prefix or seed)
+    val astarIsNoop = (effectiveSource == effectiveGoal && sourceGraph == goalGraph)
+    if (!astarIsNoop) {
+      for ((from, to, cost, category, desc) <- reversePath) {
+        allGlobalNodes += GlobalNode(to._1, to._2)
+        allRouteEdges  += RouteEdge(
+          source = GlobalNode(from._1, from._2),
+          target = GlobalNode(to._1,   to._2),
+          cost   = cost,
+          category = category,
+          movementDescription = desc
+        )
+      }
+    }
+
+    // Suffix leg (effectiveGoal → goalNode), if any — skip first node (effectiveGoal already added)
+    suffixPath match {
+      case Some(p) => appendIntraPath(p, goalGraph, visitingMode, allGlobalNodes, allRouteEdges, skipFirstNode = true)
+      case None    => () // goalNode already the last node added
+    }
+
+    Right(NavigationOutputPath(allGlobalNodes.toList, allRouteEdges.toList))
+  }
+
+  // ── Helpers for coord-less source / goal ─────────────────────────────────
+
+  /**
+   * Forward Dijkstra within `graph` starting from `start`.
+   * Returns the first (cheapest-to-reach) node whose `estimatedCoord` is defined.
+   * Returns None if no coord-having node is reachable at all (i.e. the whole graph is coord-less).
+   */
+  private def findNearestCoordNodeForward(
+    graph: NavigationGraph,
+    start: TopoNode,
+    visitingMode: enums.VisitingMode
+  ): Option[TopoNode] = {
+    if (start.estimatedCoord.isDefined) return Some(start)
+
+    implicit val ord: Ordering[(TopoNode, Double)] = Ordering.by[(TopoNode, Double), Double](_._2).reverse
+    val pq      = mutable.PriorityQueue.empty[(TopoNode, Double)]
+    val dist    = mutable.Map[TopoNode, Double]().withDefaultValue(Double.PositiveInfinity)
+    val visited = mutable.Set[TopoNode]()
+
+    dist(start) = 0.0
+    pq.enqueue((start, 0.0))
+
+    while (pq.nonEmpty) {
+      val (cur, curDist) = pq.dequeue()
+      if (curDist <= dist(cur) && !visited.contains(cur)) {
+        visited.add(cur)
+        if (cur.estimatedCoord.isDefined) return Some(cur)
+        for (edge <- graph.adjacencyList if edge.source == cur) {
+          val nb = edge.target
+          val tentG = curDist + edge.costs(visitingMode)
+          if (tentG < dist(nb)) {
+            dist(nb) = tentG
+            pq.enqueue((nb, tentG))
+          }
+        }
+      }
+    }
+    None
+  }
+
+  /**
+   * Backward Dijkstra within `graph` starting from `end` (traversing edges in reverse).
+   * Returns the first (cheapest-to-reach-backwards) node whose `estimatedCoord` is defined —
+   * i.e. the nearest coord-having node from which `end` is forward-reachable.
+   * Returns None if no such node exists.
+   */
+  private def findNearestCoordNodeBackward(
+    graph: NavigationGraph,
+    end: TopoNode,
+    visitingMode: enums.VisitingMode
+  ): Option[TopoNode] = {
+    if (end.estimatedCoord.isDefined) return Some(end)
+
+    // Build reverse adjacency on the fly: target -> List[(source, cost)]
+    val reverseAdj = mutable.Map[TopoNode, mutable.ListBuffer[(TopoNode, Double)]]()
+    for (edge <- graph.adjacencyList) {
+      reverseAdj.getOrElseUpdate(edge.target, mutable.ListBuffer()).addOne((edge.source, edge.costs(visitingMode)))
+    }
+
+    implicit val ord: Ordering[(TopoNode, Double)] = Ordering.by[(TopoNode, Double), Double](_._2).reverse
+    val pq      = mutable.PriorityQueue.empty[(TopoNode, Double)]
+    val dist    = mutable.Map[TopoNode, Double]().withDefaultValue(Double.PositiveInfinity)
+    val visited = mutable.Set[TopoNode]()
+
+    dist(end) = 0.0
+    pq.enqueue((end, 0.0))
+
+    while (pq.nonEmpty) {
+      val (cur, curDist) = pq.dequeue()
+      if (curDist <= dist(cur) && !visited.contains(cur)) {
+        visited.add(cur)
+        if (cur != end && cur.estimatedCoord.isDefined) return Some(cur)
+        for ((pred, cost) <- reverseAdj.getOrElse(cur, mutable.ListBuffer())) {
+          val tentG = curDist + cost
+          if (tentG < dist(pred)) {
+            dist(pred) = tentG
+            pq.enqueue((pred, tentG))
+          }
+        }
+      }
+    }
+    None
+  }
+
+  /**
+   * Converts an IntraMapPath into (GlobalNode list, RouteEdge list) appended into the given buffers.
+   * `skipFirstNode` avoids duplicate junction nodes when concatenating segments.
+   */
+  private def appendIntraPath(
+    path: data.IntraMapPath,
+    graph: NavigationGraph,
+    visitingMode: enums.VisitingMode,
+    nodesOut: mutable.ListBuffer[GlobalNode],
+    edgesOut: mutable.ListBuffer[RouteEdge],
+    skipFirstNode: Boolean
+  ): Unit = {
+    val nodes = if (skipFirstNode) path.routeNodes.tail else path.routeNodes
+    nodesOut ++= nodes.map(GlobalNode(graph, _))
+    edgesOut ++= path.routeEdges.map(RouteEdge.fromAtomicPath(graph, _, visitingMode))
   }
 
 

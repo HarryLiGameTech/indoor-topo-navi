@@ -160,6 +160,8 @@ class TopoScriptCompiler() {
     println("=== transportGraph ===")
     pprintln(transportGraph)
 
+    val compilationResultMetadata = mutable.Map[String, AttributeValue]()
+
     val (finalGraphs, finalLinearPaths, finalArrows) =
       SpatialMetadataExtractor.extract(
         rootEnv              = rootEnv,
@@ -176,6 +178,7 @@ class TopoScriptCompiler() {
             startNode        = startNode,
             linearTransports = linearTransports
           )
+          compilationResultMetadata.put("coordEstimated", AttributeValue.BoolValue(true))
           (enriched, linearPaths, directionalArrows)
         case ExtractionResult(linearPaths, directionalArrows, None, _, _) =>
           (navigationGraphs, linearPaths, directionalArrows)
@@ -186,7 +189,8 @@ class TopoScriptCompiler() {
       transportGraph    = transportGraph,
       graphSequence     = globalConfig.orderedSubmapNames,
       linearPaths       = finalLinearPaths,
-      directionalArrows = finalArrows
+      directionalArrows = finalArrows,
+      metadata          = compilationResultMetadata.toMap
     )
   }
 

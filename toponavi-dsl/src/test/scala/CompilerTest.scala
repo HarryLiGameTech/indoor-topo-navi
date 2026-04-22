@@ -183,7 +183,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
         "timeOfDay" -> Value.IntVal(12000) // 10:00
       ))
 
-//      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "Floor1::arabica_out_T", "Floor3::riverview_podium", MinimizeTime);
+      val plan: NavigationOutputPath = TopoNaviService.findRoutePlan(result, "Floor1::arabica_out_T", "Floor2::main_elevator_hall", MinimizeTime);
 
 
       assert(result != null)
@@ -203,7 +203,7 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
 //        stairCases.foreach(pprint.pprintln(_))
       }
 
-//      pprint.pprintln(plan.routeEdges)
+      pprint.pprintln(plan.routeEdges)
       // List nodes with their estimated coords for a given floor
       def printFloorCoords(floorName: String): Unit =
         result.graphs.get(floorName) match {
@@ -224,8 +224,8 @@ class CompilerTest extends AnyFunSuite with should.Matchers {
             println(s"$floorName graph not found in compilation result")
         }
 
-      printFloorCoords("Floor1")
-      printFloorCoords("Floor2")
+//      printFloorCoords("Floor1")
+//      printFloorCoords("Floor2")
     } else {
       println(s"Skipping real project test: 'examples' directory not found. Checked: ${possiblePaths.map(_.getAbsolutePath).mkString(", ")}")
     }
