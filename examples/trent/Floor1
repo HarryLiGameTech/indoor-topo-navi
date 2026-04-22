@@ -147,6 +147,11 @@ topo-map Floor1(){
   topo-node room_130_out_2
   topo-node room_130
   topo-node room_135E_out
+  topo-node L_garden_pathway
+
+
+
+
   atomic-path [room_102_out <-> room_102] {cost = 2}
   atomic-path [gate_carpark_LT <-> gate_elevator_T] {cost = 9}
   atomic-path [main_elevator_hall <-> gate_elevator_T] {cost = 3}
@@ -177,11 +182,13 @@ topo-map Floor1(){
   atomic-path [room_101AB_out_1 <-> room_101AB_105_out] {cost = 5}
   atomic-path [room_101AB_105_out <-> room_101C_out] {cost = 6}
   atomic-path [gate_carpark_RT <-> n_c37ca698740b4651b440d60b1e6c086d] {cost = 3}
-  atomic-path [gate_carpark_RT <-> gate_elevator_T] {cost = 9}
+  atomic-path [outdoor_RT <-> gate_elevator_T] {cost = 9}
   atomic-path [storage_3_out <-> storage_3] {cost = 3}
   atomic-path [storage_2_out <-> storage_2] {cost = 3}
   atomic-path [storage_3_out <-> storage_2_out] {cost = 4}
   atomic-path [storage_1_out <-> storage_1] {cost = 3}
+  atomic-path [n_78ea44f7495546cf8e27ec4d2abad30f <-> L_garden_pathway] {cost = 4}
+  atomic-path [L_garden_pathway <-> left_elevator_hall] {cost = 9}
   atomic-path [storage_2_out <-> storage_1_out] {cost = 3}
   atomic-path [n_78ea44f7495546cf8e27ec4d2abad30f <-> room_113_out] {cost = 3}
   atomic-path [n_78ea44f7495546cf8e27ec4d2abad30f <-> storage_1_out] {cost = 3}
@@ -209,6 +216,7 @@ topo-map Floor1(){
   atomic-path [room_111 <-> room_111_out] {cost = 3}
   atomic-path [room_112 <-> room_112_out] {cost = 3}
   atomic-path [room_129 <-> room_129_out] {cost = 2}
+  atomic-path [gate_elevator_T <-> outdoor_LT] {cost = 9}
   atomic-path [outdoor_RT <-> n_b9e8c052ee5a4a48ad63945567c75f85] {cost = 2}
   atomic-path [room_129_out <-> gate_carpark_RT] {cost = 5}
   atomic-path [n_b9e8c052ee5a4a48ad63945567c75f85 <-> n_c37ca698740b4651b440d60b1e6c086d] {cost = 4}
@@ -275,7 +283,7 @@ topo-map Floor1(){
   atomic-path [n_a18f70e20ba94eb99dc87bfb725cac47 <-> room_132_out] {cost = 2}
   atomic-path [room_132_out <-> right_elevator_hall] {cost = 4}
   atomic-path [room_132_out <-> room_132] {cost = 5}
-  atomic-path [R_garden_pathway <-> room_142_out] {cost = 10}
+  atomic-path [R_garden_pathway <-> room_142_out] {cost = 9}
   atomic-path [outdoor_LB <-> stair_LLB] {cost = 2}
   atomic-path [stair_LLB <-> storage_3_out] {cost = 2}
   atomic-path [room_105_out <-> outdoor_LLT] {cost = 2}
@@ -301,6 +309,7 @@ topo-map Floor1(){
   atomic-path [toilet_2_out <-> room_112_out] {cost = 2}
   atomic-path [room_130 <-> room_130_out_1] {cost = 2}
   atomic-path [room_130 <-> room_130_out_2] {cost = 2}
+  atomic-path [room_130_out_1 <-> room_130_out_2] {cost = 5}
   atomic-path [room_130_out_2 <-> arabica_out_T] {cost = 2}
   atomic-path [room_133_135E_out_1 <-> n_a18f70e20ba94eb99dc87bfb725cac47] {cost = 2}
   
@@ -313,7 +322,7 @@ topo-map Floor1(){
 
   linear-path [stair_LLB, storage_3_out, storage_2_out, storage_1_out, n_78ea44f7495546cf8e27ec4d2abad30f, room_113_out, room_115_out, room_116_out, room_117_out, room_118_out, room_119_out, room_120_out, stair_LB, room_121_out, room_122_out]
   linear-path [stair_LLT, room_101AB_out_1, room_101AB_105_out, room_101C_out, room_102_out, room_104_out, toilet_1_out, door_M1_48, n_7571e637a9364053bdb4eb4aef09df18]
-  linear-path [room_148_149_out, room_149, stair_LT, outdoor_LT]
+  linear-path [room_148_149_out, room_149, stair_LT, outdoor_LT, gate_elevator_T, outdoor_RT, gate_carpark_RT, n_c37ca698740b4651b440d60b1e6c086d, room_130_out_1, room_130_out_2]
   linear-path [room_148_149_out, n_7571e637a9364053bdb4eb4aef09df18, room_109_out, room_108_110_out, room_111_out, room_112_out, toilet_2_out, room_119_out]
 
   linear-path [gate_elevator_T, main_elevator_hall, gate_elevator_B]
@@ -321,9 +330,11 @@ topo-map Floor1(){
 
   linear-path [room_136_out_1, room_136_out_2, stair_RB, n_86e104a7e1404c3b8f8721c6835cde01, room_137_out, room_138_out, room_139_out, room_140_out, room_141_out, room_142_out, room_143_out, room_144_out, stair_RRB]
   linear-path [n_86e104a7e1404c3b8f8721c6835cde01, bathroom_pathway, arabica_out_B, arabica, arabica_out_T]
-  linear-path [gate_carpark_RT, n_c37ca698740b4651b440d60b1e6c086d, room_130_out_1, room_130_out_2]
   linear-path [arabica_out_T, door_M3_30, toilet_3_out, room_131_out_1, room_131_out_2, n_a18f70e20ba94eb99dc87bfb725cac47, room_133_135E_out_1, room_133_out_2, room_135F_out]
+  linear-path [room_142_out, R_garden_pathway, right_elevator_hall, room_132_out]
+  linear-path [n_78ea44f7495546cf8e27ec4d2abad30f, L_garden_pathway, left_elevator_hall]
 
+  directional-arrow [n_78ea44f7495546cf8e27ec4d2abad30f -> room_113_out] L_garden_pathway LEFT
   directional-arrow [room_119_out -> room_120_out] toilet_2_out LEFT
   directional-arrow [n_7571e637a9364053bdb4eb4aef09df18 -> room_148_149_out] door_M1_48 LEFT
   directional-arrow [room_122_out <- room_121_out] n_3ac94cd52b0842d4a1361e7d699aa88c LEFT
@@ -331,7 +342,6 @@ topo-map Floor1(){
   directional-arrow [room_142_out -> room_143_out] R_garden_pathway LEFT
   directional-arrow [n_86e104a7e1404c3b8f8721c6835cde01 -> room_137_out] bathroom_pathway LEFT
   directional-arrow [arabica_out_T -> door_M3_30] arabica RIGHT
-  directional-arrow [door_M3_30 -> arabica_out_T] room_130_out_2 RIGHT
 
   directional-arrow [n_3ac94cd52b0842d4a1361e7d699aa88c -> room_125_out_1] gate_elevator_B FRONT_LEFT
   directional-arrow [gate_elevator_B <- room_125_out_1] main_elevator_hall LEFT

@@ -190,7 +190,10 @@ object CoordEstimator {
               if (dx != 0 || dy != 0) Some((dx, dy)) else None
             }
         }
-    }.getOrElse((0, 1))  // default: advance in +Y
+    }.getOrElse {
+      System.err.println(s"[CoordEstimator WARN] Fallback axis (0,+1) invoked when estimating for '${startAssigned.identifier}' in graph '${graph.identifier}'")
+      (0, 1)
+    }
 
     // Walk the ordered line
     for (i <- 0 until orderedNodes.size - 1) {
@@ -498,7 +501,10 @@ object CoordEstimator {
           .find(a => a.anchor == prevNode && a.front == nextNode)
           .map(_ => (0, 1))
       }
-      .getOrElse((0, 1))
+      .getOrElse {
+        System.err.println(s"[CoordEstimator WARN] Fallback axis (0,+1) invoked when estimating for '${prevNode.identifier}' in graph '${graph.identifier}'")
+        (0, 1)
+      }
   }
 
   // ── Coord assignment with conflict detection ───────────────────────────────
