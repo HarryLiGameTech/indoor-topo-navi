@@ -270,9 +270,10 @@ class RoutePlanner private(
           // ── Intra-graph edges ──────────────────────────────────────────
           for (edge <- curGraph.adjacencyList if edge.source == curNode) {
             val nb: LowRiseGlobalNode = (curGraph, edge.target)
-            // Only admit coord-having nodes into the A* super-graph; coord-less
-            // nodes are handled by the prefix/suffix uninformed legs.
-            if (!visited.contains(nb) && edge.target.estimatedCoord.isDefined) {
+            // All intra-graph neighbours are traversable — coord-less nodes may appear
+            // as intermediate hops.  The heuristic already falls back to 0.0 when a
+            // node has no estimatedCoord, so they are handled gracefully.
+            if (!visited.contains(nb)) {
               val tentG = gScore(current) + edge.costs(visitingMode)
               if (tentG < gScore(nb)) {
                 gScore(nb) = tentG
@@ -285,22 +286,31 @@ class RoutePlanner private(
           }
 
           // ── Inter-graph edges via TransportGraph ───────────────────────
-          // Find all StationNodes that live on curGraph and whose localNode == curNode
-          for (stationNode <- transportGraph.nodes if stationNode.ownerGraph == curGraph && stationNode.localNode == curNode) {
+          // Match by graph identifier, not reference equality: CoordEstimator rebuilds
+          // NavigationGraph instances (new object identity) while TransportGraph still
+          // holds references to the original pre-enrichment graphs.
+          for (stationNode <- transportGraph.nodes
+               if stationNode.ownerGraph.identifier == curGraph.identifier
+               && stationNode.localNode.identifier == curNode.identifier) {
             for ((neighborStation, edgeCost) <- transportGraph.adjacencyList.getOrElse(stationNode, Map.empty)) {
-              val nb: LowRiseGlobalNode = (neighborStation.ownerGraph, neighborStation.localNode)
-              if (!visited.contains(nb)) {
-                val tentG = gScore(current) + edgeCost
-                if (tentG < gScore(nb)) {
-                  gScore(nb) = tentG
-                  fScore(nb) = tentG + heuristic(nb)
-                  val category = stationNode.ownerLine match {
-                    case _: StairCase => RouteEdgeCategory.Climbing
-                    case _            => RouteEdgeCategory.Transport
+              // Resolve to enriched graph/node by identifier
+              val nbGraphOpt = graphs.get(neighborStation.ownerGraph.identifier)
+              val nbNodeOpt  = nbGraphOpt.flatMap(g => g.nodes.find(_.identifier == neighborStation.localNode.identifier))
+              for (nbGraph <- nbGraphOpt; nbNode <- nbNodeOpt) {
+                val nb: LowRiseGlobalNode = (nbGraph, nbNode)
+                if (!visited.contains(nb)) {
+                  val tentG = gScore(current) + edgeCost
+                  if (tentG < gScore(nb)) {
+                    gScore(nb) = tentG
+                    fScore(nb) = tentG + heuristic(nb)
+                    val category = stationNode.ownerLine match {
+                      case _: StairCase => RouteEdgeCategory.Climbing
+                      case _            => RouteEdgeCategory.Transport
+                    }
+                    cameFrom(nb) = (current, edgeCost, category,
+                      s"Take ${stationNode.ownerLine.identifier} from ${curGraph.identifier} to ${neighborStation.ownerGraph.identifier}")
+                    openSet.enqueue((nb, fScore(nb)))
                   }
-                  cameFrom(nb) = (current, edgeCost, category,
-                    s"Take ${stationNode.ownerLine.identifier} from ${curGraph.identifier} to ${neighborStation.ownerGraph.identifier}")
-                  openSet.enqueue((nb, fScore(nb)))
                 }
               }
             }
@@ -310,10 +320,16 @@ class RoutePlanner private(
     }
 
     // ── Step 3: stitch prefix ++ A* ++ suffix ─────────────────────────────
+    if (!found) {
+      return Left(NoRouteFound(
+        s"No route found in standard building from ${sourceGraph.identifier}::${effectiveSource.identifier} to ${goalGraph.identifier}::${effectiveGoal.identifier}"))
+    }
+
     val allGlobalNodes = mutable.ListBuffer[GlobalNode]()
     val allRouteEdges  = mutable.ListBuffer[RouteEdge]()
 
-    // Prefix leg (sourceNode → effectiveSource), if any
+    // Prefix leg (sourceNode → effectiveSource), if any.
+    // appendIntraPath emits one RouteEdge per AtomicPath
     prefixPath match {
       case Some(p) => appendIntraPath(p, sourceGraph, visitingMode, allGlobalNodes, allRouteEdges, skipFirstNode = false)
       case None    => allGlobalNodes += GlobalNode(sourceGraph, sourceNode) // just the start node
@@ -330,6 +346,12 @@ class RoutePlanner private(
     }
 
     // Append A* nodes/edges (skip the very first node — already in allGlobalNodes from prefix or seed)
+    // TODO: Each entry in reversePath currently represents one A* super-graph hop, which may span
+    //   multiple atomic-paths internally (e.g. a walking leg that was collapsed into a single gScore
+    //   step). RouteEdge granularity here should be atomic-path-level — i.e. each RouteEdge should
+    //   correspond to exactly one AtomicPath, the same way appendIntraPath works for prefix/suffix.
+    //   For intra-graph hops this requires storing the full IntraMapPath in cameFrom instead of just
+    //   the aggregate cost; for inter-graph transport hops a single RouteEdge per ride is fine.
     val astarIsNoop = (effectiveSource == effectiveGoal && sourceGraph == goalGraph)
     if (!astarIsNoop) {
       for ((from, to, cost, category, desc) <- reversePath) {
@@ -344,7 +366,8 @@ class RoutePlanner private(
       }
     }
 
-    // Suffix leg (effectiveGoal → goalNode), if any — skip first node (effectiveGoal already added)
+    // Suffix leg (effectiveGoal → goalNode), if any — skip first node (effectiveGoal already added).
+    // Also atomic-path-level via appendIntraPath.
     suffixPath match {
       case Some(p) => appendIntraPath(p, goalGraph, visitingMode, allGlobalNodes, allRouteEdges, skipFirstNode = true)
       case None    => () // goalNode already the last node added

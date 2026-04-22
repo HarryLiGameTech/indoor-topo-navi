@@ -151,6 +151,13 @@ class TopoScriptCompiler() {
       buildLinearTransport(transVal, navigationGraphs)
     }.toList
 
+    // TODO: TransportGraph is built here from the original navigationGraphs, BEFORE CoordEstimator
+    //   enriches them with estimated coords. This causes a stale-reference problem: StationNode.ownerGraph
+    //   and StationNode.localNode inside TransportGraph point to the old graph/node objects, while
+    //   RoutePlanner works with the enriched copies — breaking reference equality checks.
+    //   Fix: move TransportGraph construction to AFTER CoordEstimator.estimate() completes, so all
+    //   references are consistently to the enriched graphs. See RoutePlanner inter-graph edge expansion
+    //   for the current identifier-based workaround.
     val transportGraph = TransportGraph(linearTransports)
 
     println("=== navigationGraphs ===")
@@ -323,6 +330,7 @@ class TopoScriptCompiler() {
       buildLinearTransport(transVal, navigationGraphs)
     }.toList
 
+    // TODO: Same stale-reference issue as above — TransportGraph must be built after CoordEstimator.
     val transportGraph = TransportGraph(linearTransports)
 
     println("=== navigationGraphs ===")
