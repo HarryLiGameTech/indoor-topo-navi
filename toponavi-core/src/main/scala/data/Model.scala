@@ -132,11 +132,12 @@ case class NavigationOutputPath(
 
   def toStructuredSteps: java.util.List[java.util.Map[String, Object]] = {
     import scala.jdk.CollectionConverters.*
-    buildLegs.zipWithIndex.map { case (leg, i) => legToMap(leg, i + 1) }.asJava
+    buildLegs.zipWithIndex.map { case (leg, i) => legToStructuredMap(leg, i + 1) }.asJava
   }
 
   private sealed trait Leg
   private case class WalkLeg(floor: String, edges: List[RouteEdge]) extends Leg
+  private case class StraightLineLeg(floor: String, edge: List[RouteEdge]) extends Leg
   private case class TransportLeg(edge: RouteEdge) extends Leg
 
   private def isInternalNode(id: String): Boolean =
@@ -160,7 +161,7 @@ case class NavigationOutputPath(
       s"Step $stepNum | ${edge.movementDescription} | ${edge.cost.toInt}s"
   }
 
-  private def legToMap(leg: Leg, stepNum: Int): java.util.Map[String, Object] = {
+  private def legToStructuredMap(leg: Leg, stepNum: Int): java.util.Map[String, Object] = {
     import scala.jdk.CollectionConverters.*
     val m = new java.util.LinkedHashMap[String, Object]()
     leg match {
@@ -188,7 +189,7 @@ case class NavigationOutputPath(
     m
   }
 
-  private def buildLegs: List[Leg] =
+  private def buildLegs: List[Leg] = {
     routeEdges.foldLeft(List.empty[Leg]) { (acc, edge) =>
       edge.category match {
         case RouteEdgeCategory.Walking =>
@@ -202,6 +203,7 @@ case class NavigationOutputPath(
           TransportLeg(edge) :: acc
       }
     }.reverse
+  }
 }
 
 
