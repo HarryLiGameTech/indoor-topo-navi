@@ -100,13 +100,13 @@ public class TopoController {
 
     @GetMapping("/quick-demo-navigation")
     public ResponseEntity<?> quickDemoNavigation(
+            @RequestParam String buildingName,
             @RequestParam String startNode,
             @RequestParam String endNode,
             @RequestParam(required = false) String routePlanningPreference,
             @RequestParam(required = false) String forceRecompile) {
         try {
-            // Load example files from examples directory
-            Map<String, String> exampleFiles = loadExampleFiles();
+            Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
             if (exampleFiles.isEmpty()) {
                 return ResponseEntity.badRequest().body(
@@ -115,21 +115,11 @@ public class TopoController {
             }
 
             // Check cache
-            String cacheKey = cacheService.generateCacheHash(exampleFiles);
-            CompilationCacheService.CachedResult cached = !"true".equals(forceRecompile) ?
-                    cacheService.load(exampleFiles).orElse(null) : null;
-            boolean fromCache = cached != null;
+            String cacheKey = cacheService.generateCacheHash(buildingName, exampleFiles);
+            if ("true".equals(forceRecompile)) cacheService.invalidate(cacheKey);
 
-            // Compile (from cache or fresh)
-            CompilationResult compilationResult;
-            if (fromCache) {
-                compilationResult = cached.getResult();
-            } else {
-                compilationResult = TopoNaviService.compile(exampleFiles);
-                cacheService.save(exampleFiles, compilationResult);
-            }
-
-            NavigationOutputPath plan = TopoNaviService.findRoutePlan(compilationResult, startNode, endNode, routePlanningPreference);
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            NavigationOutputPath plan = TopoNaviService.findRoutePlan(outcome.result(), startNode, endNode, routePlanningPreference);
 
             return ResponseEntity.ok(Map.of(
                 "status", "success",
@@ -137,7 +127,7 @@ public class TopoController {
                 "steps", plan.toStructuredSteps(),
                 "filesLoaded", exampleFiles.size(),
                 "cacheKey", cacheKey.substring(0, 8),
-                "fromCache", fromCache
+                "fromCache", outcome.fromCache()
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
@@ -147,9 +137,9 @@ public class TopoController {
     }
 
     @GetMapping("/quick-demo-available-submaps")
-    public ResponseEntity<?> getAvailableSubmaps() {
+    public ResponseEntity<?> getAvailableSubmaps(@RequestParam String buildingName) {
         try {
-            Map<String, String> exampleFiles = loadExampleFiles();
+            Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
             if (exampleFiles.isEmpty()) {
                 return ResponseEntity.badRequest().body(
@@ -157,25 +147,14 @@ public class TopoController {
                 );
             }
 
-            // Check cache; compile and save if miss
-            CompilationCacheService.CachedResult cached =
-                    cacheService.load(exampleFiles).orElse(null);
-            String message;
-            CompilationResult result;
-            if (cached != null) {
-                result = cached.getResult();
-                message = "Compilation Successful (from cache)";
-            } else {
-                result = TopoNaviService.compile(exampleFiles);
-                cacheService.save(exampleFiles, result);
-                message = "Compilation Successful";
-            }
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            CompilationResult result = outcome.result();
 
             Set<String> submaps = CollectionConverters.asJava(result.graphs().keySet());
 
             return ResponseEntity.ok(Map.of(
                 "status", "success",
-                "message", message,
+                "message", outcome.message(),
                 "availableMaps", submaps
             ));
         } catch (Exception e) {
@@ -185,10 +164,10 @@ public class TopoController {
         }
     }
 
-    @GetMapping("/quick-demo-available-nodes")
-    public ResponseEntity<?> getAvailableNodesFromMap(@RequestParam String mapName) {
+    @GetMapping("/quick-demo-available-nodes-in-map")
+    public ResponseEntity<?> getAvailableNodesFromMap(@RequestParam String buildingName, @RequestParam String mapName) {
         try {
-            Map<String, String> exampleFiles = loadExampleFiles();
+            Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
             if (exampleFiles.isEmpty()) {
                 return ResponseEntity.badRequest().body(
@@ -196,19 +175,8 @@ public class TopoController {
                 );
             }
 
-            // Check cache; compile and save if miss
-            CompilationCacheService.CachedResult cached =
-                    cacheService.load(exampleFiles).orElse(null);
-            String message;
-            CompilationResult result;
-            if (cached != null) {
-                result = cached.getResult();
-                message = "Compilation Successful (from cache)";
-            } else {
-                result = TopoNaviService.compile(exampleFiles);
-                cacheService.save(exampleFiles, result);
-                message = "Compilation Successful";
-            }
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            CompilationResult result = outcome.result();
 
             NavigationGraph graph = CollectionConverters.asJava(result.graphs()).get(mapName);
             if (graph == null) {
@@ -221,7 +189,7 @@ public class TopoController {
 
             return ResponseEntity.ok(Map.of(
                     "status", "success",
-                    "message", message,
+                    "message", outcome.message(),
                     "availableFiles", nodesInMap
             ));
         } catch (Exception e) {
@@ -232,9 +200,9 @@ public class TopoController {
     }
 
     @GetMapping("/quick-demo-all-available-nodes")
-    public ResponseEntity<?> getAllAvailableNodes(@RequestParam(required = false) String withNodesAttributes) {
+    public ResponseEntity<?> getAllAvailableNodes(@RequestParam String buildingName, @RequestParam(required = false) String withNodesAttributes) {
         try {
-            Map<String, String> exampleFiles = loadExampleFiles();
+            Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
             if (exampleFiles.isEmpty()) {
                 return ResponseEntity.badRequest().body(
@@ -242,19 +210,8 @@ public class TopoController {
                 );
             }
 
-            // Check cache; compile and save if miss
-            CompilationCacheService.CachedResult cached =
-                    cacheService.load(exampleFiles).orElse(null);
-            String message;
-            CompilationResult result;
-            if (cached != null) {
-                result = cached.getResult();
-                message = "Compilation Successful (from cache)";
-            } else {
-                result = TopoNaviService.compile(exampleFiles);
-                cacheService.save(exampleFiles, result);
-                message = "Compilation Successful";
-            }
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            CompilationResult result = outcome.result();
 
             // Get all the nodes inside the result, formatted as "{graph_identifier}::{node_identifier}"
             Map<String, NavigationGraph> graphs = CollectionConverters.asJava(result.graphs());
@@ -283,7 +240,7 @@ public class TopoController {
 
             return ResponseEntity.ok(Map.of(
                     "status", "success",
-                    "message", message,
+                    "message", outcome.message(),
                     "allNodes", nodesData
             ));
         } catch (Exception e) {
@@ -294,9 +251,9 @@ public class TopoController {
     }
 
     @GetMapping("/quick-demo-node-info")
-    public ResponseEntity<?> getNodeInfo(@RequestParam String nodeIdentifier) {
+    public ResponseEntity<?> getNodeInfo(@RequestParam String buildingName, @RequestParam String nodeIdentifier) {
         try {
-            Map<String, String> exampleFiles = loadExampleFiles();
+            Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
             if (exampleFiles.isEmpty()) {
                 return ResponseEntity.badRequest().body(
@@ -304,19 +261,8 @@ public class TopoController {
                 );
             }
 
-            // Check cache; compile and save if miss
-            CompilationCacheService.CachedResult cached =
-                    cacheService.load(exampleFiles).orElse(null);
-            String message;
-            CompilationResult result;
-            if (cached != null) {
-                result = cached.getResult();
-                message = "Compilation Successful (from cache)";
-            } else {
-                result = TopoNaviService.compile(exampleFiles);
-                cacheService.save(exampleFiles, result);
-                message = "Compilation Successful";
-            }
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            CompilationResult result = outcome.result();
 
             // nodeIdentifier format: "{graph_identifier}::{node_identifier}"
             String[] parts = nodeIdentifier.split("::");
@@ -345,7 +291,7 @@ public class TopoController {
 
             return ResponseEntity.ok(Map.of(
                     "status", "success",
-                    "message", message,
+                    "message", outcome.message(),
                     "nodeIdentifier", nodeIdentifier,
                     "attributes", attrs
             ));
@@ -358,7 +304,8 @@ public class TopoController {
 
     @PostMapping("/cache/invalidate")
     public ResponseEntity<?> invalidateCache(
-            @RequestParam(required = false) String projectIdentifier) {
+            @RequestParam(required = false) String projectIdentifier,
+            @RequestParam(required = false, defaultValue = "") String buildingName) {
         try {
             String cacheKey = projectIdentifier != null ? projectIdentifier : "all";
 
@@ -366,9 +313,8 @@ public class TopoController {
                 cacheService.clearAll();
                 return ResponseEntity.ok(Map.of("status", "success", "cacheKey", "all"));
             } else {
-                // Load files to generate proper key
-                Map<String, String> exampleFiles = loadExampleFiles();
-                String key = cacheService.generateCacheHash(exampleFiles);
+                Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+                String key = cacheService.generateCacheHash(buildingName, exampleFiles);
                 boolean invalidated = cacheService.invalidate(key);
 
                 return ResponseEntity.ok(Map.of(
@@ -384,11 +330,11 @@ public class TopoController {
     }
 
     @GetMapping("/cache/status")
-    public ResponseEntity<?> getCacheStatus() {
+    public ResponseEntity<?> getCacheStatus(@RequestParam(required = false, defaultValue = "") String buildingName) {
         try {
-            Map<String, String> exampleFiles = loadExampleFiles();
-            String cacheKey = cacheService.generateCacheHash(exampleFiles);
-            boolean cacheExists = cacheService.load(exampleFiles).isPresent();
+            Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+            String cacheKey = cacheService.generateCacheHash(buildingName, exampleFiles);
+            boolean cacheExists = cacheService.load(buildingName, exampleFiles).isPresent();
 
             return ResponseEntity.ok(Map.of(
                 "cacheKey", cacheKey.substring(0, 8),
@@ -402,6 +348,18 @@ public class TopoController {
         }
     }
 
+    private record CompileOutcome(CompilationResult result, String message, boolean fromCache) {}
+
+    private CompileOutcome compileWithCache(String buildingName, Map<String, String> exampleFiles) {
+        CompilationCacheService.CachedResult cached = cacheService.load(buildingName, exampleFiles).orElse(null);
+        if (cached != null) {
+            return new CompileOutcome(cached.getResult(), "Compilation Successful (from cache)", true);
+        }
+        CompilationResult result = TopoNaviService.compile(exampleFiles);
+        cacheService.save(buildingName, exampleFiles, result);
+        return new CompileOutcome(result, "Compilation Successful", false);
+    }
+
     private Object toJavaValue(enums.AttributeValue av) {
         if (av instanceof enums.AttributeValue.IntValue v) return v.value();
         if (av instanceof enums.AttributeValue.StringValue v) return v.value();
@@ -410,9 +368,9 @@ public class TopoController {
         return av.toString();
     }
 
-    private Map<String, String> loadExampleFiles() {
+    private Map<String, String> loadExampleFiles(String buildingName) {
         Map<String, String> files = new HashMap<>();
-        java.nio.file.Path examplesPath = java.nio.file.Paths.get(examplesPathConfig);
+        java.nio.file.Path examplesPath = java.nio.file.Paths.get(examplesPathConfig, buildingName.toLowerCase());
 
         if (!java.nio.file.Files.exists(examplesPath)) {
             System.err.println("Examples directory not found: " + examplesPath.toAbsolutePath());

@@ -21,13 +21,10 @@ public class CompilationCacheService {
     }
 
     /**
-     * Loads cached CompilationResult if available and valid (matches current file hash).
-     *
-     * @param files Map of filename -> file content to check against cache
-     * @return Optional CompilationResult if found and valid, empty otherwise
+     * Loads cached CompilationResult if available, scoped to a building name.
      */
-    public Optional<CachedResult> load(java.util.Map<String, String> files) {
-        String currentHash = generateCacheHash(files);
+    public Optional<CachedResult> load(String buildingName, java.util.Map<String, String> files) {
+        String currentHash = generateCacheHash(buildingName, files);
         Path cacheFile = cacheDir.resolve(currentHash + ".ser");
         Path metaFile = cacheDir.resolve(currentHash + ".meta");
 
@@ -36,19 +33,18 @@ public class CompilationCacheService {
         }
 
         try {
-            // Verify meta file hasn't been corrupted before deserializing
             if (Files.exists(metaFile)) {
                 String storedHash = Files.readString(metaFile).trim();
                 if (!storedHash.equals(currentHash)) {
                     System.out.println("Cache INVALIDATED: hash mismatch, recompiling needed");
-                    Files.deleteIfExists(cacheFile); // clean up stale entry
+                    Files.deleteIfExists(cacheFile);
                     return Optional.empty();
                 }
             }
 
             try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(cacheFile))) {
                 CompilationResult result = (CompilationResult) ois.readObject();
-                System.out.println("Cache HIT: " + currentHash.substring(0, 8) + "...");
+                System.out.println("Cache HIT [" + buildingName + "]: " + currentHash.substring(0, 8) + "...");
                 return Optional.of(new CachedResult(result, currentHash));
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -58,27 +54,37 @@ public class CompilationCacheService {
     }
 
     /**
-     * Saves CompilationResult to cache along with hash metadata.
-     *
-     * @param files Map of filename -> file content to compute hash from
-     * @param result CompilationResult to cache
+     * @deprecated Use {@link #load(String, java.util.Map)} with explicit buildingName instead.
      */
-    public void save(java.util.Map<String, String> files, CompilationResult result) {
-        String cacheHash = generateCacheHash(files);
+    @Deprecated
+    public Optional<CachedResult> load(java.util.Map<String, String> files) {
+        return load("", files);
+    }
+
+    /**
+     * Saves CompilationResult to cache, scoped to a building name.
+     */
+    public void save(String buildingName, java.util.Map<String, String> files, CompilationResult result) {
+        String cacheHash = generateCacheHash(buildingName, files);
         Path cacheFile = cacheDir.resolve(cacheHash + ".ser");
         Path metaFile = cacheDir.resolve(cacheHash + ".meta");
 
         try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(cacheFile))) {
             oos.writeObject(result);
-
-            // Write meta file with hash for validation
             Files.writeString(metaFile, cacheHash);
-
-            System.out.println("Cache SAVED: " + cacheHash.substring(0, 8) + "...");
+            System.out.println("Cache SAVED [" + buildingName + "]: " + cacheHash.substring(0, 8) + "...");
         } catch (IOException e) {
             System.err.println("Cache write failed for " + cacheHash.substring(0, 8) + "...: " + e.getMessage());
             throw new RuntimeException("Failed to cache compilation result", e);
         }
+    }
+
+    /**
+     * @deprecated Use {@link #save(String, java.util.Map, CompilationResult)} with explicit buildingName instead.
+     */
+    @Deprecated
+    public void save(java.util.Map<String, String> files, CompilationResult result) {
+        save("", files, result);
     }
 
     /**
@@ -126,22 +132,26 @@ public class CompilationCacheService {
     }
 
     /**
-     * Generates SHA-256 hash from all file contents.
-     * Hash is deterministic and changes if ANY file content changes.
+     * Generates SHA-256 hash from all file contents, scoped to a building name.
+     * Prevents cache collisions between buildings that share identical file names/contents.
      *
-     * @param files Map of filename -> file content
+     * @param buildingName The building identifier (e.g. "swfc", "nbc4")
+     * @param files        Map of filename -> file content
      * @return Hex-encoded SHA-256 hash
      */
-    public String generateCacheHash(java.util.Map<String, String> files) {
+    public String generateCacheHash(String buildingName, java.util.Map<String, String> files) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-            // Sort filenames for consistent hash regardless of iteration order
+            // Seed with building name to scope the hash per building
+            digest.update(buildingName.toLowerCase().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
             java.util.List<String> sortedFilenames = files.keySet().stream()
                 .sorted()
                 .toList();
 
             for (String filename : sortedFilenames) {
+                digest.update(filename.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 String content = files.get(filename);
                 if (content != null) {
                     digest.update(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -153,6 +163,14 @@ public class CompilationCacheService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 algorithm not available", e);
         }
+    }
+
+    /**
+     * @deprecated Use {@link #generateCacheHash(String, java.util.Map)} with explicit buildingName instead.
+     */
+    @Deprecated
+    public String generateCacheHash(java.util.Map<String, String> files) {
+        return generateCacheHash("", files);
     }
 
     /**
