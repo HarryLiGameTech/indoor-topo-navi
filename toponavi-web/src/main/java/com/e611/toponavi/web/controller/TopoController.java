@@ -99,11 +99,6 @@ public class TopoController {
         }
     }
 
-    // DTO for endpoints that accept userParams in request body
-    record UserParamsBody(Map<String, Object> userParams) {
-        UserParamsBody { if (userParams == null) userParams = Collections.emptyMap(); }
-    }
-
     @GetMapping("/quick-demo-navigation")
     public ResponseEntity<?> quickDemoNavigationGet(
             @RequestParam String buildingName,
@@ -121,9 +116,9 @@ public class TopoController {
             @RequestParam String endNode,
             @RequestParam(required = false) String routePlanningPreference,
             @RequestParam(required = false) String forceRecompile,
-            @RequestBody(required = false) UserParamsBody body) {
+            @RequestBody(required = false) Map<String, Object> body) {
         return quickDemoNavigation(buildingName, startNode, endNode, routePlanningPreference, forceRecompile,
-                body != null ? body.userParams() : Collections.emptyMap());
+                extractUserParams(body));
     }
 
     private ResponseEntity<?> quickDemoNavigation(
@@ -161,8 +156,8 @@ public class TopoController {
     @PostMapping("/quick-demo-available-submaps")
     public ResponseEntity<?> getAvailableSubmapsPost(
             @RequestParam String buildingName,
-            @RequestBody(required = false) UserParamsBody body) {
-        return getAvailableSubmaps(buildingName, body != null ? body.userParams() : Collections.emptyMap());
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getAvailableSubmaps(buildingName, extractUserParams(body));
     }
 
     private ResponseEntity<?> getAvailableSubmaps(String buildingName, Map<String, Object> userParams) {
@@ -194,8 +189,8 @@ public class TopoController {
     public ResponseEntity<?> getAvailableNodesFromMapPost(
             @RequestParam String buildingName,
             @RequestParam String mapName,
-            @RequestBody(required = false) UserParamsBody body) {
-        return getAvailableNodesFromMap(buildingName, mapName, body != null ? body.userParams() : Collections.emptyMap());
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getAvailableNodesFromMap(buildingName, mapName, extractUserParams(body));
     }
 
     private ResponseEntity<?> getAvailableNodesFromMap(String buildingName, String mapName, Map<String, Object> userParams) {
@@ -232,8 +227,8 @@ public class TopoController {
     public ResponseEntity<?> getAllAvailableNodesPost(
             @RequestParam String buildingName,
             @RequestParam(required = false) String withNodesAttributes,
-            @RequestBody(required = false) UserParamsBody body) {
-        return getAllAvailableNodes(buildingName, withNodesAttributes, body != null ? body.userParams() : Collections.emptyMap());
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getAllAvailableNodes(buildingName, withNodesAttributes, extractUserParams(body));
     }
 
     private ResponseEntity<?> getAllAvailableNodes(String buildingName, String withNodesAttributes, Map<String, Object> userParams) {
@@ -288,8 +283,8 @@ public class TopoController {
     public ResponseEntity<?> getNodeInfoPost(
             @RequestParam String buildingName,
             @RequestParam String nodeIdentifier,
-            @RequestBody(required = false) UserParamsBody body) {
-        return getNodeInfo(buildingName, nodeIdentifier, body != null ? body.userParams() : Collections.emptyMap());
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getNodeInfo(buildingName, nodeIdentifier, extractUserParams(body));
     }
 
     private ResponseEntity<?> getNodeInfo(String buildingName, String nodeIdentifier, Map<String, Object> userParams) {
@@ -387,6 +382,15 @@ public class TopoController {
         CompilationResult result = TopoNaviService.compile(exampleFiles, userParams);
         cacheService.save(buildingName, exampleFiles, userParams, result);
         return new CompileOutcome(result, "Compilation Successful", false);
+    }
+
+    /** Extracts the "userParams" key from a raw JSON body map, or returns empty map. */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractUserParams(Map<String, Object> body) {
+        if (body == null) return Collections.emptyMap();
+        Object up = body.get("userParams");
+        if (up instanceof Map<?, ?> m) return (Map<String, Object>) m;
+        return Collections.emptyMap();
     }
 
 
