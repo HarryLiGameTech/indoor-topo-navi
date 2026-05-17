@@ -17,6 +17,9 @@ dependencies {
     // PostgreSQL driver
     runtimeOnly 'org.postgresql:postgresql'
 
+    // H2 in-memory DB for local dev/testing (activated via application-local.yml)
+    runtimeOnly 'com.h2database:h2'
+
     // JWT (platform session tokens)
     implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
     runtimeOnly  'io.jsonwebtoken:jjwt-impl:0.12.5'

@@ -1,1 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:toponavi;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: dummy
+            client-secret: dummy
 
+platform:
+  examples-path: ../examples
