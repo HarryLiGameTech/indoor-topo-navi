@@ -6,8 +6,6 @@ import data.NavigationGraph;
 import data.NavigationOutputPath;
 import com.e611.toponavi.web.dto.NavigationRequest;
 import com.e611.toponavi.web.cache.CompilationCacheService;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -102,29 +100,39 @@ public class TopoController {
     }
 
     @GetMapping("/quick-demo-navigation")
-    public ResponseEntity<?> quickDemoNavigation(
+    public ResponseEntity<?> quickDemoNavigationGet(
+            @RequestParam String buildingName,
+            @RequestParam String startNode,
+            @RequestParam String endNode,
+            @RequestParam(required = false) String routePlanningPreference,
+            @RequestParam(required = false) String forceRecompile) {
+        return quickDemoNavigation(buildingName, startNode, endNode, routePlanningPreference, forceRecompile, Collections.emptyMap());
+    }
+
+    @PostMapping("/quick-demo-navigation")
+    public ResponseEntity<?> quickDemoNavigationPost(
             @RequestParam String buildingName,
             @RequestParam String startNode,
             @RequestParam String endNode,
             @RequestParam(required = false) String routePlanningPreference,
             @RequestParam(required = false) String forceRecompile,
-            @RequestParam(required = false) String userParams) {
+            @RequestBody(required = false) Map<String, Object> body) {
+        return quickDemoNavigation(buildingName, startNode, endNode, routePlanningPreference, forceRecompile,
+                extractUserParams(body));
+    }
+
+    private ResponseEntity<?> quickDemoNavigation(
+            String buildingName, String startNode, String endNode,
+            String routePlanningPreference, String forceRecompile,
+            Map<String, Object> userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+            if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found in examples directory"));
 
-            if (exampleFiles.isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        Map.of("error", "No example files found in examples directory")
-                );
-            }
-
-            Map<String, Object> parsedParams = parseUserParams(userParams);
-
-            // Check cache
-            String cacheKey = cacheService.generateCacheHash(buildingName, exampleFiles, parsedParams);
+            String cacheKey = cacheService.generateCacheHash(buildingName, exampleFiles, userParams);
             if ("true".equals(forceRecompile)) cacheService.invalidate(cacheKey);
 
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
             NavigationOutputPath plan = TopoNaviService.findRoutePlan(outcome.result(), startNode, endNode, routePlanningPreference);
 
             return ResponseEntity.ok(Map.of(
@@ -136,30 +144,29 @@ public class TopoController {
                 "fromCache", outcome.fromCache()
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                        Map.of("error", e.getMessage())
-            );
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
     @GetMapping("/quick-demo-available-submaps")
-    public ResponseEntity<?> getAvailableSubmaps(
+    public ResponseEntity<?> getAvailableSubmapsGet(@RequestParam String buildingName) {
+        return getAvailableSubmaps(buildingName, Collections.emptyMap());
+    }
+
+    @PostMapping("/quick-demo-available-submaps")
+    public ResponseEntity<?> getAvailableSubmapsPost(
             @RequestParam String buildingName,
-            @RequestParam(required = false) String userParams) {
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getAvailableSubmaps(buildingName, extractUserParams(body));
+    }
+
+    private ResponseEntity<?> getAvailableSubmaps(String buildingName, Map<String, Object> userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+            if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found"));
 
-            if (exampleFiles.isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        Map.of("error", "No example files found")
-                );
-            }
-
-            Map<String, Object> parsedParams = parseUserParams(userParams);
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
-            CompilationResult result = outcome.result();
-
-            Set<String> submaps = CollectionConverters.asJava(result.graphs().keySet());
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
+            Set<String> submaps = CollectionConverters.asJava(outcome.result().graphs().keySet());
 
             return ResponseEntity.ok(Map.of(
                 "status", "success",
@@ -167,36 +174,35 @@ public class TopoController {
                 "availableMaps", submaps
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                        Map.of("error", e.getMessage())
-            );
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
     @GetMapping("/quick-demo-available-nodes-in-map")
-    public ResponseEntity<?> getAvailableNodesFromMap(
+    public ResponseEntity<?> getAvailableNodesFromMapGet(
+            @RequestParam String buildingName,
+            @RequestParam String mapName) {
+        return getAvailableNodesFromMap(buildingName, mapName, Collections.emptyMap());
+    }
+
+    @PostMapping("/quick-demo-available-nodes-in-map")
+    public ResponseEntity<?> getAvailableNodesFromMapPost(
             @RequestParam String buildingName,
             @RequestParam String mapName,
-            @RequestParam(required = false) String userParams) {
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getAvailableNodesFromMap(buildingName, mapName, extractUserParams(body));
+    }
+
+    private ResponseEntity<?> getAvailableNodesFromMap(String buildingName, String mapName, Map<String, Object> userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+            if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found"));
 
-            if (exampleFiles.isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        Map.of("error", "No example files found")
-                );
-            }
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
+            NavigationGraph graph = CollectionConverters.asJava(outcome.result().graphs()).get(mapName);
+            if (graph == null) return ResponseEntity.badRequest().body(Map.of("error", "Map not found: " + mapName));
 
-            Map<String, Object> parsedParams = parseUserParams(userParams);
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
-            CompilationResult result = outcome.result();
-
-            NavigationGraph graph = CollectionConverters.asJava(result.graphs()).get(mapName);
-            if (graph == null) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Map not found: " + mapName));
-            }
-            Set<String> nodesInMap = CollectionConverters.asJava(graph.nodes())
-                    .stream()
+            Set<String> nodesInMap = CollectionConverters.asJava(graph.nodes()).stream()
                     .map(node -> node.identifier())
                     .collect(java.util.stream.Collectors.toSet());
 
@@ -206,32 +212,33 @@ public class TopoController {
                     "availableFiles", nodesInMap
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("error", e.getMessage())
-            );
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
     @GetMapping("/quick-demo-all-available-nodes")
-    public ResponseEntity<?> getAllAvailableNodes(
+    public ResponseEntity<?> getAllAvailableNodesGet(
+            @RequestParam String buildingName,
+            @RequestParam(required = false) String withNodesAttributes) {
+        return getAllAvailableNodes(buildingName, withNodesAttributes, Collections.emptyMap());
+    }
+
+    @PostMapping("/quick-demo-all-available-nodes")
+    public ResponseEntity<?> getAllAvailableNodesPost(
             @RequestParam String buildingName,
             @RequestParam(required = false) String withNodesAttributes,
-            @RequestParam(required = false) String userParams) {
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getAllAvailableNodes(buildingName, withNodesAttributes, extractUserParams(body));
+    }
+
+    private ResponseEntity<?> getAllAvailableNodes(String buildingName, String withNodesAttributes, Map<String, Object> userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+            if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found"));
 
-            if (exampleFiles.isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        Map.of("error", "No example files found")
-                );
-            }
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
+            Map<String, NavigationGraph> graphs = CollectionConverters.asJava(outcome.result().graphs());
 
-            Map<String, Object> parsedParams = parseUserParams(userParams);
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
-            CompilationResult result = outcome.result();
-
-            // Get all the nodes inside the result, formatted as "{graph_identifier}::{node_identifier}"
-            Map<String, NavigationGraph> graphs = CollectionConverters.asJava(result.graphs());
             List<String> allNodes = graphs.entrySet().stream()
                     .flatMap(entry -> CollectionConverters.asJava(entry.getValue().nodes()).stream()
                             .map(node -> entry.getKey() + "::" + node.identifier()))
@@ -261,49 +268,47 @@ public class TopoController {
                     "allNodes", nodesData
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("error", e.getMessage())
-            );
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
     @GetMapping("/quick-demo-node-info")
-    public ResponseEntity<?> getNodeInfo(
+    public ResponseEntity<?> getNodeInfoGet(
+            @RequestParam String buildingName,
+            @RequestParam String nodeIdentifier) {
+        return getNodeInfo(buildingName, nodeIdentifier, Collections.emptyMap());
+    }
+
+    @PostMapping("/quick-demo-node-info")
+    public ResponseEntity<?> getNodeInfoPost(
             @RequestParam String buildingName,
             @RequestParam String nodeIdentifier,
-            @RequestParam(required = false) String userParams) {
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getNodeInfo(buildingName, nodeIdentifier, extractUserParams(body));
+    }
+
+    private ResponseEntity<?> getNodeInfo(String buildingName, String nodeIdentifier, Map<String, Object> userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+            if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found"));
 
-            if (exampleFiles.isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        Map.of("error", "No example files found")
-                );
-            }
-
-            Map<String, Object> parsedParams = parseUserParams(userParams);
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
             CompilationResult result = outcome.result();
 
-            // nodeIdentifier format: "{graph_identifier}::{node_identifier}"
             String[] parts = nodeIdentifier.split("::");
-            if (parts.length != 2) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Invalid node identifier format. Expected '{graph_identifier}::{node_identifier}'"));
-            }
+            if (parts.length != 2) return ResponseEntity.badRequest().body(Map.of("error", "Invalid node identifier format. Expected '{graph_identifier}::{node_identifier}'"));
+
             String graphId = parts[0];
             String nodeId = parts[1];
 
             NavigationGraph graph = CollectionConverters.asJava(result.graphs()).get(graphId);
-            if (graph == null) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Graph not found: " + graphId));
-            }
+            if (graph == null) return ResponseEntity.badRequest().body(Map.of("error", "Graph not found: " + graphId));
+
             data.TopoNode node = CollectionConverters.asJava(graph.nodes()).stream()
                     .filter(n -> n.identifier().equals(nodeId))
                     .findFirst()
                     .orElse(null);
-            if (node == null) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Node not found: " + nodeId));
-            }
+            if (node == null) return ResponseEntity.badRequest().body(Map.of("error", "Node not found: " + nodeId));
 
             Map<String, Object> attrs = new HashMap<>();
             CollectionConverters.asJava(node.attributes()).forEach((attrKey, attrVal) ->
@@ -317,9 +322,7 @@ public class TopoController {
                     "attributes", attrs
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("error", e.getMessage())
-            );
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
@@ -381,15 +384,70 @@ public class TopoController {
         return new CompileOutcome(result, "Compilation Successful", false);
     }
 
-    /** Parses a JSON string like {"haveStaffCard":true,"aggregatedWeight":60} into a Map. */
-    private Map<String, Object> parseUserParams(String json) {
-        if (json == null || json.isBlank()) return Collections.emptyMap();
+    /** Extracts the "userParams" key from a raw JSON body map, or returns empty map. */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractUserParams(Map<String, Object> body) {
+        if (body == null) return Collections.emptyMap();
+        Object up = body.get("userParams");
+        if (up instanceof Map<?, ?> m) return (Map<String, Object>) m;
+        return Collections.emptyMap();
+    }
+
+    /** Formats an exception into a diagnostic map with type, message, and cause chain. */
+    private Map<String, Object> formatError(Exception e) {
+        List<String> causeChain = new java.util.ArrayList<>();
+        Throwable t = e;
+        while (t != null) {
+            causeChain.add(t.getClass().getName() + ": " + t.getMessage());
+            t = t.getCause();
+        }
+        return Map.of(
+            "error", e.getMessage() != null ? e.getMessage() : "(null message)",
+            "exceptionType", e.getClass().getName(),
+            "causeChain", causeChain
+        );
+    }
+
+    @PostMapping("/quick-demo-compile-check")
+    public ResponseEntity<?> quickDemoCompileCheck(
+            @RequestParam String buildingName,
+            @RequestBody(required = false) Map<String, Object> body) {
+        Map<String, Object> userParams = extractUserParams(body);
+        Map<String, String> exampleFiles;
         try {
-            return new ObjectMapper().readValue(json, new TypeReference<Map<String, Object>>() {});
+            exampleFiles = loadExampleFiles(buildingName);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid userParams JSON: " + e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of("stage", "loadFiles", "receivedUserParams", userParams, "error", formatError(e)));
+        }
+        if (exampleFiles.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("stage", "loadFiles", "error", "No example files found for: " + buildingName));
+        }
+        try {
+            CompilationResult result = TopoNaviService.compile(exampleFiles, userParams);
+            Map<String, NavigationGraph> graphs = CollectionConverters.asJava(result.graphs());
+            List<String> graphNames = new java.util.ArrayList<>(graphs.keySet());
+            long totalNodes = graphs.values().stream()
+                    .mapToLong(g -> CollectionConverters.asJava(g.nodes()).size())
+                    .sum();
+            return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "buildingName", buildingName,
+                "receivedUserParams", userParams,
+                "filesLoaded", exampleFiles.keySet(),
+                "graphsCompiled", graphNames,
+                "totalNodeCount", totalNodes
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "stage", "compilation",
+                "buildingName", buildingName,
+                "receivedUserParams", userParams,
+                "filesLoaded", exampleFiles.keySet(),
+                "error", formatError(e)
+            ));
         }
     }
+
 
     private Object toJavaValue(enums.AttributeValue av) {
         if (av instanceof enums.AttributeValue.IntValue v) return v.value();
