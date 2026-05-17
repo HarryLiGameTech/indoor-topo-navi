@@ -6,6 +6,8 @@ import data.NavigationGraph;
 import data.NavigationOutputPath;
 import com.e611.toponavi.web.dto.NavigationRequest;
 import com.e611.toponavi.web.cache.CompilationCacheService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -16,6 +18,7 @@ import scala.jdk.javaapi.CollectionConverters;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -104,7 +107,8 @@ public class TopoController {
             @RequestParam String startNode,
             @RequestParam String endNode,
             @RequestParam(required = false) String routePlanningPreference,
-            @RequestParam(required = false) String forceRecompile) {
+            @RequestParam(required = false) String forceRecompile,
+            @RequestParam(required = false) String userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
@@ -114,11 +118,13 @@ public class TopoController {
                 );
             }
 
+            Map<String, Object> parsedParams = parseUserParams(userParams);
+
             // Check cache
-            String cacheKey = cacheService.generateCacheHash(buildingName, exampleFiles);
+            String cacheKey = cacheService.generateCacheHash(buildingName, exampleFiles, parsedParams);
             if ("true".equals(forceRecompile)) cacheService.invalidate(cacheKey);
 
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
             NavigationOutputPath plan = TopoNaviService.findRoutePlan(outcome.result(), startNode, endNode, routePlanningPreference);
 
             return ResponseEntity.ok(Map.of(
@@ -137,7 +143,9 @@ public class TopoController {
     }
 
     @GetMapping("/quick-demo-available-submaps")
-    public ResponseEntity<?> getAvailableSubmaps(@RequestParam String buildingName) {
+    public ResponseEntity<?> getAvailableSubmaps(
+            @RequestParam String buildingName,
+            @RequestParam(required = false) String userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
@@ -147,7 +155,8 @@ public class TopoController {
                 );
             }
 
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            Map<String, Object> parsedParams = parseUserParams(userParams);
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
             CompilationResult result = outcome.result();
 
             Set<String> submaps = CollectionConverters.asJava(result.graphs().keySet());
@@ -165,7 +174,10 @@ public class TopoController {
     }
 
     @GetMapping("/quick-demo-available-nodes-in-map")
-    public ResponseEntity<?> getAvailableNodesFromMap(@RequestParam String buildingName, @RequestParam String mapName) {
+    public ResponseEntity<?> getAvailableNodesFromMap(
+            @RequestParam String buildingName,
+            @RequestParam String mapName,
+            @RequestParam(required = false) String userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
@@ -175,7 +187,8 @@ public class TopoController {
                 );
             }
 
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            Map<String, Object> parsedParams = parseUserParams(userParams);
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
             CompilationResult result = outcome.result();
 
             NavigationGraph graph = CollectionConverters.asJava(result.graphs()).get(mapName);
@@ -200,7 +213,10 @@ public class TopoController {
     }
 
     @GetMapping("/quick-demo-all-available-nodes")
-    public ResponseEntity<?> getAllAvailableNodes(@RequestParam String buildingName, @RequestParam(required = false) String withNodesAttributes) {
+    public ResponseEntity<?> getAllAvailableNodes(
+            @RequestParam String buildingName,
+            @RequestParam(required = false) String withNodesAttributes,
+            @RequestParam(required = false) String userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
@@ -210,7 +226,8 @@ public class TopoController {
                 );
             }
 
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            Map<String, Object> parsedParams = parseUserParams(userParams);
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
             CompilationResult result = outcome.result();
 
             // Get all the nodes inside the result, formatted as "{graph_identifier}::{node_identifier}"
@@ -251,7 +268,10 @@ public class TopoController {
     }
 
     @GetMapping("/quick-demo-node-info")
-    public ResponseEntity<?> getNodeInfo(@RequestParam String buildingName, @RequestParam String nodeIdentifier) {
+    public ResponseEntity<?> getNodeInfo(
+            @RequestParam String buildingName,
+            @RequestParam String nodeIdentifier,
+            @RequestParam(required = false) String userParams) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
 
@@ -261,7 +281,8 @@ public class TopoController {
                 );
             }
 
-            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles);
+            Map<String, Object> parsedParams = parseUserParams(userParams);
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, parsedParams);
             CompilationResult result = outcome.result();
 
             // nodeIdentifier format: "{graph_identifier}::{node_identifier}"
@@ -350,14 +371,24 @@ public class TopoController {
 
     private record CompileOutcome(CompilationResult result, String message, boolean fromCache) {}
 
-    private CompileOutcome compileWithCache(String buildingName, Map<String, String> exampleFiles) {
-        CompilationCacheService.CachedResult cached = cacheService.load(buildingName, exampleFiles).orElse(null);
+    private CompileOutcome compileWithCache(String buildingName, Map<String, String> exampleFiles, Map<String, Object> userParams) {
+        CompilationCacheService.CachedResult cached = cacheService.load(buildingName, exampleFiles, userParams).orElse(null);
         if (cached != null) {
             return new CompileOutcome(cached.getResult(), "Compilation Successful (from cache)", true);
         }
-        CompilationResult result = TopoNaviService.compile(exampleFiles);
-        cacheService.save(buildingName, exampleFiles, result);
+        CompilationResult result = TopoNaviService.compile(exampleFiles, userParams);
+        cacheService.save(buildingName, exampleFiles, userParams, result);
         return new CompileOutcome(result, "Compilation Successful", false);
+    }
+
+    /** Parses a JSON string like {"haveStaffCard":true,"aggregatedWeight":60} into a Map. */
+    private Map<String, Object> parseUserParams(String json) {
+        if (json == null || json.isBlank()) return Collections.emptyMap();
+        try {
+            return new ObjectMapper().readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid userParams JSON: " + e.getMessage(), e);
+        }
     }
 
     private Object toJavaValue(enums.AttributeValue av) {

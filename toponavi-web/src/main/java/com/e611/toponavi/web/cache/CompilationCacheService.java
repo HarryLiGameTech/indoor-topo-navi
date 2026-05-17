@@ -21,6 +21,39 @@ public class CompilationCacheService {
     }
 
     /**
+     * Loads cached CompilationResult if available, scoped to a building name and user params.
+     */
+    public Optional<CachedResult> load(String buildingName, java.util.Map<String, String> files, java.util.Map<String, Object> userParams) {
+        String currentHash = generateCacheHash(buildingName, files, userParams);
+        Path cacheFile = cacheDir.resolve(currentHash + ".ser");
+        Path metaFile = cacheDir.resolve(currentHash + ".meta");
+
+        if (!Files.exists(cacheFile)) {
+            return Optional.empty();
+        }
+
+        try {
+            if (Files.exists(metaFile)) {
+                String storedHash = Files.readString(metaFile).trim();
+                if (!storedHash.equals(currentHash)) {
+                    System.out.println("Cache INVALIDATED: hash mismatch, recompiling needed");
+                    Files.deleteIfExists(cacheFile);
+                    return Optional.empty();
+                }
+            }
+
+            try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(cacheFile))) {
+                CompilationResult result = (CompilationResult) ois.readObject();
+                System.out.println("Cache HIT [" + buildingName + "]: " + currentHash.substring(0, 8) + "...");
+                return Optional.of(new CachedResult(result, currentHash));
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Cache read failed for " + currentHash.substring(0, 8) + "...: " + e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Loads cached CompilationResult if available, scoped to a building name.
      */
     public Optional<CachedResult> load(String buildingName, java.util.Map<String, String> files) {
@@ -59,6 +92,24 @@ public class CompilationCacheService {
     @Deprecated
     public Optional<CachedResult> load(java.util.Map<String, String> files) {
         return load("", files);
+    }
+
+    /**
+     * Saves CompilationResult to cache, scoped to a building name and user params.
+     */
+    public void save(String buildingName, java.util.Map<String, String> files, java.util.Map<String, Object> userParams, CompilationResult result) {
+        String cacheHash = generateCacheHash(buildingName, files, userParams);
+        Path cacheFile = cacheDir.resolve(cacheHash + ".ser");
+        Path metaFile = cacheDir.resolve(cacheHash + ".meta");
+
+        try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(cacheFile))) {
+            oos.writeObject(result);
+            Files.writeString(metaFile, cacheHash);
+            System.out.println("Cache SAVED [" + buildingName + "]: " + cacheHash.substring(0, 8) + "...");
+        } catch (IOException e) {
+            System.err.println("Cache write failed for " + cacheHash.substring(0, 8) + "...: " + e.getMessage());
+            throw new RuntimeException("Failed to cache compilation result", e);
+        }
     }
 
     /**
@@ -140,6 +191,14 @@ public class CompilationCacheService {
      * @return Hex-encoded SHA-256 hash
      */
     public String generateCacheHash(String buildingName, java.util.Map<String, String> files) {
+        return generateCacheHash(buildingName, files, java.util.Collections.emptyMap());
+    }
+
+    /**
+     * Generates SHA-256 hash from building name, file contents, and user params.
+     * Different params produce different cache entries for the same files.
+     */
+    public String generateCacheHash(String buildingName, java.util.Map<String, String> files, java.util.Map<String, Object> userParams) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
@@ -156,6 +215,16 @@ public class CompilationCacheService {
                 if (content != null) {
                     digest.update(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 }
+            }
+
+            // Include sorted user params in hash to avoid cross-param cache collisions
+            if (userParams != null && !userParams.isEmpty()) {
+                userParams.entrySet().stream()
+                    .sorted(java.util.Map.Entry.comparingByKey())
+                    .forEach(e -> {
+                        digest.update(e.getKey().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        digest.update(String.valueOf(e.getValue()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    });
             }
 
             byte[] hash = digest.digest();

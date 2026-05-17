@@ -2,7 +2,7 @@ package api
 
 import compiler.TopoScriptCompiler
 import compiler.CompilationResult
-import data.NavigationOutputPath
+import data.{LinearSegment, NavigationOutputPath, TurnHint}
 import enums.{NavigationError, RoutePlanningPreferences}
 import enums.RoutePlanningPreferences.MinimizeTime
 import enums.VisitingMode.Normal
@@ -54,7 +54,26 @@ object TopoNaviService {
     val (endGraphName, endNode) = resolveNode(endNodeName, result)
     routePlanner.navigate(startGraphName, endGraphName, startNode, endNode, Normal, preference) match {
       case Left(error) => throw new RuntimeException(formatError(error))
-      case Right(plan) => plan
+      case Right(plan) =>
+        // Convert DSL-level spatial annotations into slim core-level types and attach to the plan
+        val segments: List[LinearSegment] = result.linearPaths.flatMap { case (graphId, lpSet) =>
+          lpSet.map(lp => LinearSegment(graphId, lp.nodes.map(_.name)))
+        }.toList
+
+        val hints: List[TurnHint] = result.directionalArrows.flatMap { case (graphId, arrowSet) =>
+          arrowSet.map { da =>
+            TurnHint(
+              graphId       = graphId,
+              fromNode      = da.anchor.name,
+              referenceNode = da.reference.name,
+              invertFacing  = da.invertFacing,
+              toNode        = da.target.name,
+              direction     = da.direction
+            )
+          }
+        }.toList
+
+        plan.copy(linearSegments = segments, turnHints = hints)
     }
   }
 
