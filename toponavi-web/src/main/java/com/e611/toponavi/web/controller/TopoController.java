@@ -144,7 +144,7 @@ public class TopoController {
                 "fromCache", outcome.fromCache()
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
@@ -174,7 +174,7 @@ public class TopoController {
                 "availableMaps", submaps
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
@@ -212,7 +212,7 @@ public class TopoController {
                     "availableFiles", nodesInMap
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
@@ -268,7 +268,7 @@ public class TopoController {
                     "allNodes", nodesData
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
@@ -322,7 +322,7 @@ public class TopoController {
                     "attributes", attrs
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(formatError(e));
         }
     }
 
@@ -391,6 +391,61 @@ public class TopoController {
         Object up = body.get("userParams");
         if (up instanceof Map<?, ?> m) return (Map<String, Object>) m;
         return Collections.emptyMap();
+    }
+
+    /** Formats an exception into a diagnostic map with type, message, and cause chain. */
+    private Map<String, Object> formatError(Exception e) {
+        List<String> causeChain = new java.util.ArrayList<>();
+        Throwable t = e;
+        while (t != null) {
+            causeChain.add(t.getClass().getName() + ": " + t.getMessage());
+            t = t.getCause();
+        }
+        return Map.of(
+            "error", e.getMessage() != null ? e.getMessage() : "(null message)",
+            "exceptionType", e.getClass().getName(),
+            "causeChain", causeChain
+        );
+    }
+
+    @PostMapping("/quick-demo-compile-check")
+    public ResponseEntity<?> quickDemoCompileCheck(
+            @RequestParam String buildingName,
+            @RequestBody(required = false) Map<String, Object> body) {
+        Map<String, Object> userParams = extractUserParams(body);
+        Map<String, String> exampleFiles;
+        try {
+            exampleFiles = loadExampleFiles(buildingName);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("stage", "loadFiles", "receivedUserParams", userParams, "error", formatError(e)));
+        }
+        if (exampleFiles.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("stage", "loadFiles", "error", "No example files found for: " + buildingName));
+        }
+        try {
+            CompilationResult result = TopoNaviService.compile(exampleFiles, userParams);
+            Map<String, NavigationGraph> graphs = CollectionConverters.asJava(result.graphs());
+            List<String> graphNames = new java.util.ArrayList<>(graphs.keySet());
+            long totalNodes = graphs.values().stream()
+                    .mapToLong(g -> CollectionConverters.asJava(g.nodes()).size())
+                    .sum();
+            return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "buildingName", buildingName,
+                "receivedUserParams", userParams,
+                "filesLoaded", exampleFiles.keySet(),
+                "graphsCompiled", graphNames,
+                "totalNodeCount", totalNodes
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "stage", "compilation",
+                "buildingName", buildingName,
+                "receivedUserParams", userParams,
+                "filesLoaded", exampleFiles.keySet(),
+                "error", formatError(e)
+            ));
+        }
     }
 
 
