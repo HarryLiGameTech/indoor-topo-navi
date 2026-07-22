@@ -226,6 +226,7 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
     }
     else if (ctx.getText == "true") Expr.BoolLit(true)
     else if (ctx.getText == "false") Expr.BoolLit(false)
+    else if (ctx.listLiteral() != null) visitListLiteral(ctx.listLiteral())
     else if (ctx.identifier() != null) {
       val ids = ctx.identifier().ID().asScala.map(_.getText).toList
       if (ids.size == 1) Expr.Var(Identifier.Symbol(ids.head))
@@ -235,6 +236,9 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
     else if (ctx.getChild(0).getText == "{") visitRecordLiteral(ctx)
     else visitExpr(ctx.expr()) // Parentheses
   }
+
+  override def visitListLiteral(ctx: ListLiteralContext): Expr =
+    Expr.ListLit(None, ctx.expr().asScala.map(visitExpr).toList)
 
   protected def visitRecordLiteral(ctx: AtomContext): Expr = {
     val fields = ctx.fieldAssign().asScala.map { field =>

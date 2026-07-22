@@ -24,10 +24,11 @@ enum AttributeValue: // TODO: Use dsl.Value
   case StringValue(value: String)
   case BoolValue(value: Boolean)
   case DoubleValue(value: Double)
-  
+  case ListValue(values: List[AttributeValue])
+
   override def toString: String = this match
     case IntValue(v) => v.toString
     case StringValue(v) => v
     case BoolValue(v) => v.toString
     case DoubleValue(v) => v.toString
-    case _ => ""
+    case ListValue(values) => values.mkString("[", ", ", "]")

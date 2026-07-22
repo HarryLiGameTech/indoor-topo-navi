@@ -106,6 +106,7 @@ atom
     | STRING
     | 'true'
     | 'false'
+    | listLiteral
     | identifier
     | '{' NL* (fieldAssign (',' NL* fieldAssign)*)? NL* '}'   // Record Literal
     | block                                       // Code Block
@@ -161,6 +162,10 @@ recordAssign
 
 identifier
     : path+=ID ('::' path+=ID)*
+    ;
+
+listLiteral
+    : '[' NL* (expr (',' NL* expr)*)? NL* ']'
     ;
 
 // -----------------------------------------------------------------------------

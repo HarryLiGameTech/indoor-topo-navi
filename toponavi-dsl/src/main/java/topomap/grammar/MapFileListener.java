@@ -581,4 +581,14 @@ public interface MapFileListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIdentifier(MapFileParser.IdentifierContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#listLiteral}.
+	 * @param ctx the parse tree
+	 */
+	void enterListLiteral(MapFileParser.ListLiteralContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#listLiteral}.
+	 * @param ctx the parse tree
+	 */
+	void exitListLiteral(MapFileParser.ListLiteralContext ctx);
 }

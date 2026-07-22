@@ -348,4 +348,10 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIdentifier(MapFileParser.IdentifierContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#listLiteral}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitListLiteral(MapFileParser.ListLiteralContext ctx);
 }

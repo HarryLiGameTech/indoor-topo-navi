@@ -660,15 +660,18 @@ class TopoScriptCompiler() {
 
   private def convertAttributes(record: Value.RecordVal): Map[String, enums.AttributeValue] = {
     record.fields.map { case (k, v) =>
-      val attrVal = v match {
-        case Value.IntVal(n) => enums.AttributeValue.IntValue(n.toInt)
-        case Value.FloatVal(n) => enums.AttributeValue.DoubleValue(n)
-        case Value.BoolVal(b) => enums.AttributeValue.BoolValue(b)
-        case Value.StringVal(s) => enums.AttributeValue.StringValue(s)
-        case _ => enums.AttributeValue.StringValue(v.toString)
-      }
-      k -> attrVal
+      k -> convertAttributeValue(v)
     }
+  }
+
+  private def convertAttributeValue(value: Value): enums.AttributeValue = value match {
+    case Value.IntVal(n) => enums.AttributeValue.IntValue(n.toInt)
+    case Value.FloatVal(n) => enums.AttributeValue.DoubleValue(n)
+    case Value.BoolVal(b) => enums.AttributeValue.BoolValue(b)
+    case Value.StringVal(s) => enums.AttributeValue.StringValue(s)
+    case Value.ListVal(_, elements) =>
+      enums.AttributeValue.ListValue(elements.map(convertAttributeValue))
+    case other => enums.AttributeValue.StringValue(other.toString)
   }
 
 }
