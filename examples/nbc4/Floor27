@@ -1,4 +1,4 @@
-topo-sketchMap Floor27() { // Each floor in Zone 2
+topo-map Floor27() { // Each floor in Zone 2
 
     let params: {permResident: Int} = {
         permResident = 120
@@ -59,18 +59,6 @@ topo-sketchMap Floor27() { // Each floor in Zone 2
     topo-node female_toilet
     topo-node male_toilet_outside
     topo-node female_toilet_outside
-
-    // Define Relationships 
-    // NTPP(toilet_hall, this) // Toilet hall is strictly inside this floor 
-    // TPP(male_toilet, toilet_hall) 
-    // TPP(female_toilet, toilet_hall) 
-    // EC(toilet_hall, staircase_1) // Toilets and staircase externally touches 
-    // DC(male_toilet, female_toilet) 
-    // DC(room_xx01, room_xx03) // These 2 rooms are on different side 
-    // DC(room_xx02, room_xx03) // These 2 rooms are on different side 
-    // EC(room_xx01, room_xx02) // Rooms next door 
-    // Rest to be discussed in later sections....
-
 
     // In/Out rooms
     atomic-path [outside_room_01F <-> inside_room_01F] {cost = 2}

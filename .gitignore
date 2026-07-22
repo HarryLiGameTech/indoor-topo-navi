@@ -44,6 +44,7 @@ bin/
 .DS_Store
 
 .idea
+.idea/
 
 ### Secrets ###
 .env

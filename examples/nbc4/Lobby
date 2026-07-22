@@ -1,4 +1,4 @@
-topo-sketchMap Lobby(){
+topo-map Lobby(){
 
     // TODO: Separate UpperLobby and Lobby
 
