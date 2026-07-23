@@ -8,6 +8,7 @@ import syntax.TopoMapVisitor
 import topomap.grammar.{MapFileLexer, MapFileParser}
 
 import java.util.HashMap
+import scala.jdk.CollectionConverters.*
 
 class ListLiteralCompilationTest extends AnyFunSuite with Matchers {
 
@@ -48,7 +49,8 @@ class ListLiteralCompilationTest extends AnyFunSuite with Matchers {
         |  topo-node lobby
         |  atomic-path [entrance -> lobby] {
         |    cost = 5.0,
-        |    tags = ["outdoor"]
+        |    tags = ["outdoor"],
+        |    requiredActions = ["cross_door"]
         |  }
         |}
         |""".stripMargin
@@ -77,5 +79,21 @@ class ListLiteralCompilationTest extends AnyFunSuite with Matchers {
     path.attributes("tags") shouldBe AttributeValue.ListValue(List(
       AttributeValue.StringValue("outdoor")
     ))
+
+    val plan = TopoNaviService.findRoutePlan(
+      result,
+      "Floor1::entrance",
+      "Floor1::lobby",
+      "MinimizeTime"
+    )
+    val routeEdge = plan.routeEdges.head
+    routeEdge.attributes shouldBe path.attributes
+    routeEdge.traversalMetadata.tags shouldBe Set("outdoor")
+    routeEdge.traversalMetadata.requiredActions shouldBe List("cross_door")
+
+    val step = plan.toStructuredSteps.get(0)
+    step.get("tags").asInstanceOf[java.util.List[String]].asScala.toList shouldBe List("outdoor")
+    step.get("requiredActions").asInstanceOf[java.util.List[String]].asScala.toList shouldBe List("cross_door")
+    step.containsKey("attributes") shouldBe false
   }
 }

@@ -1,7 +1,7 @@
 package navigation
 
 import data.{GlobalNode, NavigationGraph, NavigationOutputPath, RouteEdge, StairCase, TopoNode, TransportGraph}
-import enums.{NavigationError, RouteEdgeCategory, RoutePlanningPreferences}
+import enums.{AttributeValue, NavigationError, RouteEdgeCategory, RoutePlanningPreferences}
 import enums.NavigationError.{InvalidData, NoRouteFound}
 import enums.ElevatorTrafficPattern.UpRush
 import enums.ElevatorTrafficPattern.Flat
@@ -216,6 +216,13 @@ class RoutePlanner private(
       }
 
     type LowRiseGlobalNode = (NavigationGraph, TopoNode)
+    case class RouteHop(
+      parent: LowRiseGlobalNode,
+      cost: Double,
+      category: RouteEdgeCategory,
+      description: String,
+      attributes: Map[String, AttributeValue] = Map.empty
+    )
 
     // Floor index derived from subMapNames ordering
     val floorIndex: Map[String, Int] = subMapNames.zipWithIndex.toMap
@@ -242,7 +249,7 @@ class RoutePlanner private(
     val openSet  = mutable.PriorityQueue.empty[(LowRiseGlobalNode, Double)]
     val gScore   = mutable.Map[LowRiseGlobalNode, Double]().withDefaultValue(Double.PositiveInfinity)
     val fScore   = mutable.Map[LowRiseGlobalNode, Double]().withDefaultValue(Double.PositiveInfinity)
-    val cameFrom = mutable.Map[LowRiseGlobalNode, (LowRiseGlobalNode, Double, RouteEdgeCategory, String)]() // vertex -> (parent, cost, category, description)
+    val cameFrom = mutable.Map[LowRiseGlobalNode, RouteHop]()
     val visited  = mutable.Set[LowRiseGlobalNode]()
 
     val start: LowRiseGlobalNode = (sourceGraph, effectiveSource)
@@ -278,8 +285,13 @@ class RoutePlanner private(
               if (tentG < gScore(nb)) {
                 gScore(nb) = tentG
                 fScore(nb) = tentG + heuristic(nb)
-                cameFrom(nb) = (current, edge.costs(visitingMode), RouteEdgeCategory.Walking,
-                  s"Walk from ${curNode.identifier} to ${edge.target.identifier}")
+                cameFrom(nb) = RouteHop(
+                  parent = current,
+                  cost = edge.costs(visitingMode),
+                  category = RouteEdgeCategory.Walking,
+                  description = s"Walk from ${curNode.identifier} to ${edge.target.identifier}",
+                  attributes = edge.attributes
+                )
                 openSet.enqueue((nb, fScore(nb)))
               }
             }
@@ -307,8 +319,12 @@ class RoutePlanner private(
                       case _: StairCase => RouteEdgeCategory.Climbing
                       case _            => RouteEdgeCategory.Transport
                     }
-                    cameFrom(nb) = (current, edgeCost, category,
-                      s"Take ${stationNode.ownerLine.identifier} from ${curGraph.identifier} to ${neighborStation.ownerGraph.identifier}")
+                    cameFrom(nb) = RouteHop(
+                      parent = current,
+                      cost = edgeCost,
+                      category = category,
+                      description = s"Take ${stationNode.ownerLine.identifier} from ${curGraph.identifier} to ${neighborStation.ownerGraph.identifier}"
+                    )
                     openSet.enqueue((nb, fScore(nb)))
                   }
                 }
@@ -337,31 +353,26 @@ class RoutePlanner private(
 
     // A* middle segment
     var cur = goal
-    val reversePath = mutable.ListBuffer[(LowRiseGlobalNode, LowRiseGlobalNode, Double, RouteEdgeCategory, String)]()
+    val reversePath = mutable.ListBuffer[(LowRiseGlobalNode, LowRiseGlobalNode, RouteHop)]()
 
     while (cameFrom.contains(cur)) {
-      val (parent, cost, category, desc) = cameFrom(cur)
-      reversePath.prepend((parent, cur, cost, category, desc))
-      cur = parent
+      val hop = cameFrom(cur)
+      reversePath.prepend((hop.parent, cur, hop))
+      cur = hop.parent
     }
 
     // Append A* nodes/edges (skip the very first node — already in allGlobalNodes from prefix or seed)
-    // TODO: Each entry in reversePath currently represents one A* super-graph hop, which may span
-    //   multiple atomic-paths internally (e.g. a walking leg that was collapsed into a single gScore
-    //   step). RouteEdge granularity here should be atomic-path-level — i.e. each RouteEdge should
-    //   correspond to exactly one AtomicPath, the same way appendIntraPath works for prefix/suffix.
-    //   For intra-graph hops this requires storing the full IntraMapPath in cameFrom instead of just
-    //   the aggregate cost; for inter-graph transport hops a single RouteEdge per ride is fine.
     val astarIsNoop = (effectiveSource == effectiveGoal && sourceGraph == goalGraph)
     if (!astarIsNoop) {
-      for ((from, to, cost, category, desc) <- reversePath) {
+      for ((from, to, hop) <- reversePath) {
         allGlobalNodes += GlobalNode(to._1, to._2)
         allRouteEdges  += RouteEdge(
           source = GlobalNode(from._1, from._2),
           target = GlobalNode(to._1,   to._2),
-          cost   = cost,
-          category = category,
-          movementDescription = desc
+          cost = hop.cost,
+          category = hop.category,
+          movementDescription = hop.description,
+          attributes = hop.attributes
         )
       }
     }

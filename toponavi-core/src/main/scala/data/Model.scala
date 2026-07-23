@@ -46,8 +46,38 @@ case class RouteEdge(
   target: GlobalNode,
   cost: Double,
   category: RouteEdgeCategory,
-  movementDescription: String
+  movementDescription: String,
+  attributes: Map[String, AttributeValue] = Map.empty
+) {
+  def traversalMetadata: RouteTraversalMetadata =
+    RouteTraversalMetadata.from(attributes)
+}
+
+case class RouteTraversalMetadata(
+  tags: Set[String] = Set.empty,
+  requiredActions: List[String] = List.empty
 )
+
+object RouteTraversalMetadata {
+  def from(attributes: Map[String, AttributeValue]): RouteTraversalMetadata =
+    RouteTraversalMetadata(
+      tags = stringList(attributes, "tags").toSet,
+      requiredActions = stringList(attributes, "requiredActions")
+    )
+
+  private def stringList(attributes: Map[String, AttributeValue], key: String): List[String] =
+    attributes.get(key) match {
+      case None => List.empty
+      case Some(AttributeValue.ListValue(values)) =>
+        values.map {
+          case AttributeValue.StringValue(value) => value
+          case other => throw IllegalArgumentException(
+            s"RouteEdge attribute '$key' must contain only strings, found: $other")
+        }
+      case Some(other) => throw IllegalArgumentException(
+        s"RouteEdge attribute '$key' must be a list of strings, found: $other")
+    }
+}
 
 object RouteEdge {
   def fromAtomicPath(
@@ -62,7 +92,8 @@ object RouteEdge {
       target = targetGlobalNode,
       cost = atomicPath.costs(visitingMode),
       category = RouteEdgeCategory.Walking,
-      movementDescription = s"Move from ${atomicPath.source.identifier} to ${atomicPath.target.identifier} via ${atomicPath.pathType}"
+      movementDescription = s"Move from ${atomicPath.source.identifier} to ${atomicPath.target.identifier} via ${atomicPath.pathType}",
+      attributes = atomicPath.attributes
     )
   }
 }
@@ -194,6 +225,7 @@ case class NavigationOutputPath(
           .map(n => s"${n.identifier} (${n.attributes.getOrElse("description", "{NO-DESCRIPTION-FOUND}").toString})")
           .asJava)
         m.put("costSeconds", Double.box(edges.map(_.cost).sum))
+        putTraversalMetadata(m, edges)
       case StraightLineLeg(floor, edges, hint) =>
         val named = namedNodesOf(edges)
         m.put("step", Int.box(stepNum))
@@ -211,6 +243,7 @@ case class NavigationOutputPath(
           m.put("turnAtNode", atNode)
         }
         m.put("costSeconds", Double.box(edges.map(_.cost).sum))
+        putTraversalMetadata(m, edges)
       case TransportLeg(edge) =>
         m.put("step", Int.box(stepNum))
         m.put("type", edge.category.toString)
@@ -218,8 +251,21 @@ case class NavigationOutputPath(
         m.put("fromGraph", edge.source.owningGraph.identifier)
         m.put("toGraph",   edge.target.owningGraph.identifier)
         m.put("costSeconds", Double.box(edge.cost))
+        putTraversalMetadata(m, List(edge))
     }
     m
+  }
+
+  private def putTraversalMetadata(
+    target: java.util.Map[String, Object],
+    edges: List[RouteEdge]
+  ): Unit = {
+    import scala.jdk.CollectionConverters.*
+    val metadata = edges.map(_.traversalMetadata)
+    val tags = metadata.flatMap(_.tags).distinct.sorted
+    val requiredActions = metadata.flatMap(_.requiredActions)
+    target.put("tags", tags.asJava)
+    target.put("requiredActions", requiredActions.asJava)
   }
 
   private def buildLegs: List[Leg] = {
