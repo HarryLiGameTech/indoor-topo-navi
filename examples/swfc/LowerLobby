@@ -7,38 +7,38 @@ topo-map LowerLobby(){
   }
 
   topo-node CP1_2_hall {tags = ["indoor", "elevator_hall"], description = "Retail elevator hall A"}
-  topo-node entrance_Z3_4 {tags = ["indoor"]}
-  topo-node SS3_4_hall {tags = ["indoor", "elevator_hall"]}
+  topo-node entrance_Z3_4 {tags = ["indoor"], description = "Entrance to S1 express elevator hall"}
+  topo-node SS3_4_hall {tags = ["indoor", "elevator_hall"], description = "Retail service elevator hall near retail elevator hall B"}
   topo-node gate_2 {tags = ["indoor", "door", "airlock"], description = "Building's gate near the drop-off area"}
   topo-node GE3_4_out {tags = ["indoor", "manual_door"], description = "A highly-invisible door at the outer wall of the lobby, leads to the observation deck service elevator hall"}
   topo-node entrance_Z1_2_B {tags = ["indoor", "turnstile"]}
-  topo-node L1_2_hall_end_B {tags = ["indoor"]}
-  topo-node L2_hall {tags = ["indoor", "elevator_hall"]}
-  topo-node L1_hall {tags = ["indoor", "elevator_hall"]}
-  topo-node service_corr_A {tags = ["indoor", "service_area"]}
-  topo-node entrance_Z1_2_A {tags = ["indoor", "turnstile"]}
-  topo-node entrance_Z5_6 {tags = ["indoor"]}
+  topo-node L1_2_hall_end_B {tags = ["indoor"], description = "Local elevator hall end located near gate 2"}
+  topo-node L2_hall {tags = ["indoor", "elevator_hall"], description = "Office zone 2 elevator hall, bounds for odd-numbered floors"}
+  topo-node L1_hall {tags = ["indoor", "elevator_hall"], description = "Office zone 1 elevator hall, bounds for odd-numbered floors"}
+  topo-node service_corr_A {tags = ["indoor", "service_area"], description = "Service corridor connecting office lobby and fire service hall A"}
+  topo-node entrance_Z1_2_A {tags = ["indoor", "turnstile"], description = "Local elevator hall end located near the cafe"}
+  topo-node entrance_Z5_6 {tags = ["indoor"], description = "Entrance to S2 express elevator hall"}
   topo-node S2_hall {tags = ["indoor", "elevator_hall"], description = "High-rise express elevator hall (to floor 52)"}
-  topo-node A_hall_outside {tags = ["indoor"]}
+  topo-node A_hall_outside {tags = ["indoor"], description = "Outside the door of fire service hall A (Staircase A and FS1/3 elevator)"}
   topo-node LS2_hall {tags = ["indoor", "elevator_hall"], description = "LS2 local service elevator"}
   topo-node FS4_6_hall {tags = ["indoor", "elevator_hall"], description = "FS4 and FS6 express service elevator"}
   topo-node ST_A {tags = ["indoor"], description = "Staircase A's landing at this floor"}
-  topo-node cafe {tags = ["indoor", "cafe", "staffed"], description = "Starbucks Coffee"}
+  topo-node cafe {tags = ["indoor", "cafe", "staffed"], description = "Starbucks Coffee", shop_name = "Starbucks Coffee"}
   topo-node gate_1 {tags = ["indoor", "door", "airlock"], description = "Building's gate near the street"}
   topo-node retail_conn_out {tags = ["indoor"]}
   topo-node retail_conn_in {tags = ["indoor"]}
-  topo-node SP_hall {tags = ["indoor", "elevator_hall"]}
-  topo-node escalator_1out_retail {tags = ["indoor"]}
-  topo-node gate_retail {tags = ["indoor", "door"]}
+  topo-node SP_hall {tags = ["indoor", "elevator_hall"], description = "Retail elevator hall C"}
+  topo-node escalator_1out_retail {tags = ["indoor"], description = "Retail escalator (connecting floor 1 and 2) landing at this floor"}
+  topo-node gate_retail {tags = ["indoor", "door"], description = "Building's gate near the retail area"}
   topo-node MC1_hall {tags = ["indoor", "elevator_hall", "service_area"]}
   topo-node loading_bay {tags = ["indoor", "service_area", "vehicle_prone"]}
-  topo-node SS5_6_hall {tags = ["indoor", "elevator_hall", "service_area"]}
+  topo-node SS5_6_hall {tags = ["indoor", "elevator_hall", "service_area"], description = "Retail service elevator hall near the control center"}
   topo-node logistics_center_intersact {tags = ["indoor", "service_area"]}
   topo-node garbage_room {tags = ["indoor", "service_area", "odor_prone"], description = "Building's main garbage processing center, next to logistics entrance"}
   topo-node S1_hall {tags = ["indoor", "elevator_hall"], description = "Mid-rise express elevator hall (to floor 28)"}
   topo-node service_corr_B {tags = ["indoor", "service_area"]}
-  topo-node hotel_staff_conn {tags = ["indoor"]}
-  topo-node B_hall_outside {tags = ["indoor"]}
+  topo-node hotel_staff_conn {tags = ["indoor"], description = "A tiny staff area located between hotel-office link corridor and the fire service hall A"}
+  topo-node B_hall_outside {tags = ["indoor"], description = "Outside the door of fire service hall B (Staircase B and FS4/6 elevator)"}
   topo-node LS1_hall {tags = ["indoor", "elevator_hall"], description = "LS1 local service elevator"}
   topo-node FS1_3_hall {tags = ["indoor", "elevator_hall"], description = "FS1 and FS3 express service elevator"}
   topo-node ST_B {tags = ["indoor"], description = "Staircase B's landing at this floor"}
@@ -50,9 +50,9 @@ topo-map LowerLobby(){
   topo-node gate_hotel_out {tags = ["indoor", "door", "automatic_door"], description = "Outside the gate of Park Hyatt hotel"}
   topo-node reception {tags = ["indoor", "staffed"], description = "Office reception desk, available for visitor registration"}
   topo-node GE3_4_hall {tags = ["indoor", "elevator_hall"], description = "Observation desk service elevator hall"}
-  topo-node escalator_1Lobby {tags = ["indoor"]}
+  topo-node escalator_1Lobby {tags = ["indoor"], description = "Office lobby escalator's landing at this floor"}
   topo-node MP3_hall {tags = ["indoor", "elevator_hall"], description = "Convention center main elevator"}
-  topo-node escalator_1conv {tags = ["indoor"]}
+  topo-node escalator_1conv {tags = ["indoor"], description = "Convention center escalator's landing at this floor"}
   topo-node gate_convention {tags = ["indoor", "door", "automatic_door"], description = "Building's gate near convention center"}
   topo-node CP3_4_hall {tags = ["indoor", "elevator_hall"], description = "Retail elevator hall B"}
   topo-node guest_toilet {tags = ["indoor", "toilet"], description = "Main toilet in the lobby, next to CP3/4 elevator"}

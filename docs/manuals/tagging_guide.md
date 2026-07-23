@@ -50,6 +50,132 @@ For a door, turnstile, or airlock boundary:
 - Tag the crossing path because it is authoritative for traversal filtering and preference scoring.
 - Do not interpret the duplicated node tags as multiple facilities. A route crosses one facility once when it traverses the tagged path.
 
+## Node Narration
+
+The optional `narration` attribute controls whether an intermediate node should be presented as a named place in user-facing directions. It is a string-based pseudo-enum with three canonical values:
+
+```text
+explicit | auto | implicit
+```
+
+### `explicit`
+
+The route narration must explicitly mention that the user reaches or passes this place. Use it for locations that are operationally important or consistently useful as landmarks.
+
+An `explicit` node must have a human-readable `description` or future display-label attribute. A compiler should warn when an `explicit` node has no human-readable representation.
+
+### `auto`
+
+The default behavior when `narration` is omitted. The response layer exposes the node's human-readable metadata and allows the navigation agent to decide whether mentioning the place improves the instruction.
+
+### `implicit`
+
+The node remains part of routing and geometry but should not be introduced as a named place when it is an intermediate waypoint. Use it for topology-only connectors and other locations whose names would add noise.
+
+`implicit` suppresses mention of the place, not actions. A turn or required traversal action associated with the route must still be narrated without exposing the node identifier.
+
+### Narration Overrides
+
+- Route start and destination locations must still be expressed in human-readable form even when their nodes are `implicit`.
+- Runtime maneuvers, such as turns derived from route geometry, are narrated independently of the node's `narration` value.
+- Edge `requiredActions` must always be narrated and override node-level suppression.
+- A node identifier is internal routing data and must never be used as a user-facing fallback when a label or description is unavailable. Omit the place name or produce an unnamed maneuver instead.
+
+Example:
+
+```toposcript
+topo-node reception {
+  narration = "explicit",
+  description = "Office reception desk"
+}
+
+topo-node corridor_geometry_joint {
+  narration = "implicit"
+}
+```
+
+## Edge Required Actions
+
+The optional `requiredActions` attribute is an ordered list of traversal instructions that must be communicated when a route uses an `atomic-path`.
+
+When the attribute is omitted, the edge represents ordinary walking and no `simply_walk` value should be stored. Because the current surface language cannot infer the element type of an empty list, do not write `requiredActions = []`; omit the field instead.
+
+Actions are composable and must be executed and narrated in list order:
+
+```toposcript
+atomic-path [lobby -> secure_hall] {
+  cost = 5,
+  tags = ["door", "card_locked_door"],
+  requiredActions = ["tap_access_card", "cross_door"]
+}
+```
+
+### Canonical Actions
+
+Boundary traversal:
+
+```text
+cross_door
+cross_airlock
+cross_turnstile
+```
+
+Credential and checkpoint actions:
+
+```text
+unlock_with_key
+tap_access_card
+scan_qr_code
+enter_access_code
+show_id
+pass_security_check
+use_intercom
+request_staff_access
+```
+
+Movement actions:
+
+```text
+ride_travelator
+up_slope
+down_slope
+```
+
+Use composition instead of inventing compound action names:
+
+```text
+["unlock_with_key", "cross_door"]
+["tap_access_card", "cross_door"]
+["tap_access_card", "cross_turnstile"]
+["show_id", "pass_security_check", "cross_door"]
+```
+
+Do not use `cross_keyed_door` to cover both physical keys and access cards. The action list must tell the agent which credential interaction to describe.
+
+### Directionality
+
+A bidirectional `<->` path may only carry actions that apply in the same way in both directions. When the actions differ by direction, define two directed paths:
+
+```toposcript
+atomic-path [outside -> inside] {
+  cost = 5,
+  requiredActions = ["tap_access_card", "cross_door"]
+}
+
+atomic-path [inside -> outside] {
+  cost = 3,
+  requiredActions = ["cross_door"]
+}
+```
+
+Direction-sensitive actions such as `up_slope` and `down_slope` should use directed paths for now. Automatic action inversion for `<->` paths is deferred.
+
+### Relationship to Tags and Constraints
+
+- Tags describe stable route or facility properties; `requiredActions` describe what the route instruction must tell the user to do.
+- `requiredActions` do not grant access and do not replace `requires` or `subject-to`.
+- Unknown action strings should produce a compiler warning. Add new canonical actions to this guide before using them across maps.
+
 ## Environment Tags
 
 ### `indoor`
@@ -206,3 +332,6 @@ Before accepting tags in a submap, verify that:
 4. Boundary tags are applied to both side nodes and the crossing path.
 5. Access restrictions still use `requires` or `subject-to` where appropriate.
 6. Dynamic or subjective observations have not been represented as permanent facts.
+7. Every `explicit` node has a human-readable description or display label.
+8. `implicit` nodes are not exposed through identifier fallbacks.
+9. `requiredActions` are canonical, ordered, and valid for the path direction.
