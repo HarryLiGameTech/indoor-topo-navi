@@ -15,6 +15,8 @@ These requirements are not access-control constraints. They describe route envir
 
 The preferred design is to annotate navigable segments with tags and pass user traversal preferences at navigation time.
 
+Canonical tag names and map-authoring rules are defined in the [TopoScript Tagging Guide](../manuals/tagging_guide.md). New map files and examples in this specification should use that vocabulary.
+
 ## Goals
 
 - Represent route environment semantics directly with tags on paths and, where useful, nodes.
@@ -68,7 +70,7 @@ Use `tags` for route qualities:
 ```toposcript
 atomic-path [corridor_A <-> kitchen_back_door] {
   cost = 6,
-  tags = ["service_corridor", "kitchen_smell"]
+  tags = ["service_area", "odor_prone"]
 }
 ```
 
@@ -87,8 +89,8 @@ The quick-demo navigation POST request should accept `traversalPreference` in th
   "traversalPreference": {
     "routePlanningPreference": "MinimizeTime",
     "banTags": ["outdoor", "rain_exposed"],
-    "minimizeTag": "kitchen_smell",
-    "maximizeTag": "shops"
+    "minimizeTag": "odor_prone",
+    "maximizeTag": "shop"
   }
 }
 ```
@@ -137,7 +139,7 @@ Example: a goods mover says "avoid the kitchen back door if possible"; the agent
 
 ```json
 {
-  "minimizeTag": "kitchen_smell"
+  "minimizeTag": "odor_prone"
 }
 ```
 
@@ -155,7 +157,7 @@ Example: a user says "I like routes with many shops"; the agent maps this to:
 
 ```json
 {
-  "maximizeTag": "shops"
+  "maximizeTag": "shop"
 }
 ```
 
@@ -239,7 +241,7 @@ Request:
 {
   "traversalPreference": {
     "routePlanningPreference": "MinimizeTime",
-    "minimizeTag": "kitchen_smell"
+    "minimizeTag": "odor_prone"
   }
 }
 ```
@@ -252,7 +254,7 @@ Request:
 {
   "traversalPreference": {
     "routePlanningPreference": "MinimizeTime",
-    "maximizeTag": "shops"
+    "maximizeTag": "shop"
   }
 }
 ```

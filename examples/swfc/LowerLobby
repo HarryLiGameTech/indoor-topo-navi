@@ -2,59 +2,61 @@ topo-map LowerLobby(){
    // Based on on-site study and legacy floor plan designs, may NOT be accurate
    // For usage illustration only, do NOT put into production use without verifying the map first!
 
-   let params: {permResident: Int} = {
-       permResident = 30
-    }
-  topo-node CP1_2_hall
-  topo-node entrance_Z3_4
-  topo-node SS3_4_hall
-  topo-node gate_2
-  topo-node GE3_4_out
-  topo-node entrance_Z1_2_B
-  topo-node L1_2_hall_end_B
-  topo-node L2_hall
-  topo-node L1_hall
-  topo-node service_corr_A
-  topo-node entrance_Z1_2_A
-  topo-node entrance_Z5_6
-  topo-node S2_hall
-  topo-node A_hall_outside
-  topo-node LS2_hall
-  topo-node FS4_6_hall
-  topo-node ST_A
-  topo-node cafe
-  topo-node gate_1
-  topo-node retail_conn_out
-  topo-node retail_conn_in
-  topo-node SP_hall
-  topo-node escalator_1out_retail
-  topo-node gate_retail
-  topo-node MC1_hall
-  topo-node loading_bay
-  topo-node SS5_6_hall
-  topo-node logistics_center_intersact
-  topo-node garbage_room
-  topo-node S1_hall
-  topo-node service_corr_B
-  topo-node hotel_staff_conn
-  topo-node B_hall_outside
-  topo-node LS1_hall
-  topo-node FS1_3_hall
-  topo-node ST_B
-  topo-node SH_hall {description = "Hotel express elevator hall"}
-  topo-node hotel_entrance_first_door
-  topo-node hotel_concierge
-  topo-node side_gate_in
-  topo-node side_gate_out
-  topo-node gate_hotel_out
-  topo-node reception
-  topo-node GE3_4_hall
-  topo-node escalator_1Lobby
-  topo-node MP3_hall
-  topo-node escalator_1conv
-  topo-node gate_convention
-  topo-node CP3_4_hall
-  topo-node guest_toilet
+  let params: {permResident: Int} = {
+      permResident = 30
+  }
+
+  topo-node CP1_2_hall {tags = ["indoor", "elevator_hall"], description = "Retail elevator hall A"}
+  topo-node entrance_Z3_4 {tags = ["indoor"]}
+  topo-node SS3_4_hall {tags = ["indoor", "elevator_hall"]}
+  topo-node gate_2 {tags = ["indoor", "door", "airlock"], description = "Building's gate near the drop-off area"}
+  topo-node GE3_4_out {tags = ["indoor", "manual_door"], description = "A highly-invisible door at the outer wall of the lobby, leads to the observation deck service elevator hall"}
+  topo-node entrance_Z1_2_B {tags = ["indoor", "turnstile"]}
+  topo-node L1_2_hall_end_B {tags = ["indoor"]}
+  topo-node L2_hall {tags = ["indoor", "elevator_hall"]}
+  topo-node L1_hall {tags = ["indoor", "elevator_hall"]}
+  topo-node service_corr_A {tags = ["indoor", "service_area"]}
+  topo-node entrance_Z1_2_A {tags = ["indoor", "turnstile"]}
+  topo-node entrance_Z5_6 {tags = ["indoor"]}
+  topo-node S2_hall {tags = ["indoor", "elevator_hall"], description = "High-rise express elevator hall (to floor 52)"}
+  topo-node A_hall_outside {tags = ["indoor"]}
+  topo-node LS2_hall {tags = ["indoor", "elevator_hall"], description = "LS2 local service elevator"}
+  topo-node FS4_6_hall {tags = ["indoor", "elevator_hall"], description = "FS4 and FS6 express service elevator"}
+  topo-node ST_A {tags = ["indoor"], description = "Staircase A's landing at this floor"}
+  topo-node cafe {tags = ["indoor", "cafe", "staffed"], description = "Starbucks Coffee"}
+  topo-node gate_1 {tags = ["indoor", "door", "airlock"], description = "Building's gate near the street"}
+  topo-node retail_conn_out {tags = ["indoor"]}
+  topo-node retail_conn_in {tags = ["indoor"]}
+  topo-node SP_hall {tags = ["indoor", "elevator_hall"]}
+  topo-node escalator_1out_retail {tags = ["indoor"]}
+  topo-node gate_retail {tags = ["indoor", "door"]}
+  topo-node MC1_hall {tags = ["indoor", "elevator_hall", "service_area"]}
+  topo-node loading_bay {tags = ["indoor", "service_area", "vehicle_prone"]}
+  topo-node SS5_6_hall {tags = ["indoor", "elevator_hall", "service_area"]}
+  topo-node logistics_center_intersact {tags = ["indoor", "service_area"]}
+  topo-node garbage_room {tags = ["indoor", "service_area", "odor_prone"], description = "Building's main garbage processing center, next to logistics entrance"}
+  topo-node S1_hall {tags = ["indoor", "elevator_hall"], description = "Mid-rise express elevator hall (to floor 28)"}
+  topo-node service_corr_B {tags = ["indoor", "service_area"]}
+  topo-node hotel_staff_conn {tags = ["indoor"]}
+  topo-node B_hall_outside {tags = ["indoor"]}
+  topo-node LS1_hall {tags = ["indoor", "elevator_hall"], description = "LS1 local service elevator"}
+  topo-node FS1_3_hall {tags = ["indoor", "elevator_hall"], description = "FS1 and FS3 express service elevator"}
+  topo-node ST_B {tags = ["indoor"], description = "Staircase B's landing at this floor"}
+  topo-node SH_hall {description = "Hotel express elevator hall", tags = ["indoor", "elevator_hall"]}
+  topo-node hotel_entrance_first_door {tags = ["indoor", "door", "automatic_door"], description = "The first automatic door, counting from hotel concierge to SH express elevator"}
+  topo-node hotel_concierge {tags = ["indoor", "staffed"], description = "Park Hyatt hotel concierge, provides left luggage and logistics services to guests"}
+  topo-node side_gate_in {tags = ["indoor", "door"]}
+  topo-node side_gate_out {tags = ["indoor", "door"]}
+  topo-node gate_hotel_out {tags = ["indoor", "door", "automatic_door"], description = "Outside the gate of Park Hyatt hotel"}
+  topo-node reception {tags = ["indoor", "staffed"], description = "Office reception desk, available for visitor registration"}
+  topo-node GE3_4_hall {tags = ["indoor", "elevator_hall"], description = "Observation desk service elevator hall"}
+  topo-node escalator_1Lobby {tags = ["indoor"]}
+  topo-node MP3_hall {tags = ["indoor", "elevator_hall"], description = "Convention center main elevator"}
+  topo-node escalator_1conv {tags = ["indoor"]}
+  topo-node gate_convention {tags = ["indoor", "door", "automatic_door"], description = "Building's gate near convention center"}
+  topo-node CP3_4_hall {tags = ["indoor", "elevator_hall"], description = "Retail elevator hall B"}
+  topo-node guest_toilet {tags = ["indoor", "toilet"], description = "Main toilet in the lobby, next to CP3/4 elevator"}
+
   atomic-path [service_corr_A <-> A_hall_outside] {cost = 2}
   atomic-path [A_hall_outside <-> LS2_hall] {cost = 5}
   atomic-path [LS2_hall <-> FS4_6_hall] {cost = 1}
