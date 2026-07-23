@@ -5,7 +5,10 @@ import compiler.CompilationResult;
 import data.NavigationGraph;
 import data.NavigationOutputPath;
 import com.e611.toponavi.web.dto.NavigationRequest;
+import com.e611.toponavi.web.dto.QuickDemoNavigationRequest;
+import com.e611.toponavi.web.dto.TraversalPreferenceRequest;
 import com.e611.toponavi.web.cache.CompilationCacheService;
+import com.e611.toponavi.web.serialization.AttributeValueJsonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -16,6 +19,7 @@ import scala.jdk.javaapi.CollectionConverters;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -26,6 +30,9 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1")
 public class TopoController {
+
+    private static final Set<String> ROUTE_PLANNING_PREFERENCES = Set.of(
+            "MinimizeTime", "MinimizeTransfers", "MinimizePhysicalDemands");
 
     @Autowired
     private CompilationCacheService cacheService;
@@ -106,7 +113,12 @@ public class TopoController {
             @RequestParam String endNode,
             @RequestParam(required = false) String routePlanningPreference,
             @RequestParam(required = false) String forceRecompile) {
-        return quickDemoNavigation(buildingName, startNode, endNode, routePlanningPreference, forceRecompile, Collections.emptyMap());
+        try {
+            String resolvedPreference = resolveRoutePlanningPreference(routePlanningPreference, null);
+            return quickDemoNavigation(buildingName, startNode, endNode, resolvedPreference, forceRecompile, Collections.emptyMap());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
+        }
     }
 
     @PostMapping("/quick-demo-navigation")
@@ -116,9 +128,24 @@ public class TopoController {
             @RequestParam String endNode,
             @RequestParam(required = false) String routePlanningPreference,
             @RequestParam(required = false) String forceRecompile,
-            @RequestBody(required = false) Map<String, Object> body) {
-        return quickDemoNavigation(buildingName, startNode, endNode, routePlanningPreference, forceRecompile,
-                extractUserParams(body));
+            @RequestBody(required = false) QuickDemoNavigationRequest body) {
+        try {
+            List<String> unsupportedFields = unsupportedTraversalFields(body);
+            if (!unsupportedFields.isEmpty()) {
+                return ResponseEntity.status(501).body(Map.of(
+                        "status", "error",
+                        "code", "TRAVERSAL_PREFERENCE_NOT_IMPLEMENTED",
+                        "message", "These traversalPreference fields are parsed but not yet supported by the route planner.",
+                        "unsupportedFields", unsupportedFields
+                ));
+            }
+
+            String resolvedPreference = resolveRoutePlanningPreference(routePlanningPreference, body);
+            return quickDemoNavigation(buildingName, startNode, endNode, resolvedPreference, forceRecompile,
+                    extractUserParams(body));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
+        }
     }
 
     private ResponseEntity<?> quickDemoNavigation(
@@ -139,6 +166,7 @@ public class TopoController {
                 "status", "success",
                 "path", plan.prettyPrint(),
                 "steps", plan.toStructuredSteps(),
+                "appliedTraversalPreference", Map.of("routePlanningPreference", routePlanningPreference),
                 "filesLoaded", exampleFiles.size(),
                 "cacheKey", cacheKey.substring(0, 8),
                 "fromCache", outcome.fromCache()
@@ -252,7 +280,7 @@ public class TopoController {
                     CollectionConverters.asJava(graph.nodes()).forEach(node -> {
                         Map<String, Object> attrs = new HashMap<>();
                         CollectionConverters.asJava(node.attributes()).forEach((attrKey, attrVal) ->
-                            attrs.put(attrKey, toJavaValue(attrVal))
+                            attrs.put(attrKey, AttributeValueJsonMapper.toJavaValue(attrVal))
                         );
                         nodesWithAttrs.put(graphId + "::" + node.identifier(), attrs);
                     })
@@ -312,7 +340,7 @@ public class TopoController {
 
             Map<String, Object> attrs = new HashMap<>();
             CollectionConverters.asJava(node.attributes()).forEach((attrKey, attrVal) ->
-                    attrs.put(attrKey, toJavaValue(attrVal))
+                    attrs.put(attrKey, AttributeValueJsonMapper.toJavaValue(attrVal))
             );
 
             return ResponseEntity.ok(Map.of(
@@ -393,6 +421,40 @@ public class TopoController {
         return Collections.emptyMap();
     }
 
+    private Map<String, Object> extractUserParams(QuickDemoNavigationRequest body) {
+        if (body == null || body.userParams == null) return Collections.emptyMap();
+        return body.userParams;
+    }
+
+    static String resolveRoutePlanningPreference(String queryPreference, QuickDemoNavigationRequest body) {
+        String bodyPreference = body == null || body.traversalPreference == null
+                ? null
+                : body.traversalPreference.routePlanningPreference;
+        String resolved = hasText(bodyPreference)
+                ? bodyPreference
+                : hasText(queryPreference) ? queryPreference : "MinimizeTime";
+        if (!ROUTE_PLANNING_PREFERENCES.contains(resolved)) {
+            throw new IllegalArgumentException("Unknown routePlanningPreference: " + resolved);
+        }
+        return resolved;
+    }
+
+    static List<String> unsupportedTraversalFields(QuickDemoNavigationRequest body) {
+        if (body == null || body.traversalPreference == null) return Collections.emptyList();
+
+        TraversalPreferenceRequest preference = body.traversalPreference;
+        List<String> unsupported = new ArrayList<>();
+        if (preference.banTags != null && !preference.banTags.isEmpty()) unsupported.add("banTags");
+        if (hasText(preference.minimizeTag)) unsupported.add("minimizeTag");
+        if (hasText(preference.maximizeTag)) unsupported.add("maximizeTag");
+        if (hasText(preference.riskPreference)) unsupported.add("riskPreference");
+        return unsupported;
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
     /** Formats an exception into a diagnostic map with type, message, and cause chain. */
     private Map<String, Object> formatError(Exception e) {
         List<String> causeChain = new java.util.ArrayList<>();
@@ -448,14 +510,6 @@ public class TopoController {
         }
     }
 
-
-    private Object toJavaValue(enums.AttributeValue av) {
-        if (av instanceof enums.AttributeValue.IntValue v) return v.value();
-        if (av instanceof enums.AttributeValue.StringValue v) return v.value();
-        if (av instanceof enums.AttributeValue.BoolValue v) return v.value();
-        if (av instanceof enums.AttributeValue.DoubleValue v) return v.value();
-        return av.toString();
-    }
 
     private Map<String, String> loadExampleFiles(String buildingName) {
         Map<String, String> files = new HashMap<>();

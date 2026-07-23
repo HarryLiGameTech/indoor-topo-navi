@@ -39,4 +39,11 @@ dependencies {
 
     // Scala library is needed at runtime since the dependency is in Scala
     implementation 'org.scala-lang:scala3-library_3:3.3.4'
+
+    testImplementation platform('org.junit:junit-bom:5.11.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
 }
