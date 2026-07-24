@@ -4,6 +4,7 @@ enum NavigationError:
   case NoRouteFound(message: String)
   case InvalidData(message: String)
   case ConstraintFailure(message: String)
+  case DestinationHasBannedTags(nodeIdentifier: String, tags: List[String])
 
 enum RoutePlanningPreferences:
   case MinimizeTime

@@ -4,10 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.e611.toponavi.web.dto.QuickDemoNavigationRequest;
 import com.e611.toponavi.web.dto.TraversalPreferenceRequest;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -56,7 +54,7 @@ class TopoControllerPreferenceTest {
         body.traversalPreference.riskPreference = "conservative";
 
         assertEquals(
-                List.of("banTags", "minimizeTag", "maximizeTag", "riskPreference"),
+                List.of("minimizeTag", "maximizeTag", "riskPreference"),
                 TopoController.unsupportedTraversalFields(body)
         );
     }
@@ -82,18 +80,23 @@ class TopoControllerPreferenceTest {
     }
 
     @Test
-    void endpointRejectsUnsupportedTagPreferenceExplicitly() {
+    void banTagsAreResolvedAndDeduplicated() {
         QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
-        body.traversalPreference.banTags = List.of("outdoor");
+        body.traversalPreference.banTags = List.of("outdoor", "rain_exposed", "outdoor");
 
-        ResponseEntity<?> response = new TopoController().quickDemoNavigationPost(
-                "swfc", "LowerLobby::gate_1", "LowerLobby::cafe", null, null, body);
+        assertEquals(
+                List.of("outdoor", "rain_exposed"),
+                TopoController.resolveBanTags(body)
+        );
+        assertEquals(List.of(), TopoController.unsupportedTraversalFields(body));
+    }
 
-        assertEquals(501, response.getStatusCode().value());
-        @SuppressWarnings("unchecked")
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("TRAVERSAL_PREFERENCE_NOT_IMPLEMENTED", responseBody.get("code"));
-        assertEquals(List.of("banTags"), responseBody.get("unsupportedFields"));
+    @Test
+    void blankBanTagIsRejected() {
+        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
+        body.traversalPreference.banTags = List.of("outdoor", " ");
+
+        assertThrows(IllegalArgumentException.class, () -> TopoController.resolveBanTags(body));
     }
 
     private QuickDemoNavigationRequest requestWithPreference(String preference) {

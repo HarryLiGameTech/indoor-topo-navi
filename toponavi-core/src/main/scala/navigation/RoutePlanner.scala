@@ -2,7 +2,7 @@ package navigation
 
 import data.{GlobalNode, NavigationGraph, NavigationOutputPath, RouteEdge, StairCase, TopoNode, TransportGraph}
 import enums.{AttributeValue, NavigationError, RouteEdgeCategory, RoutePlanningPreferences}
-import enums.NavigationError.{InvalidData, NoRouteFound}
+import enums.NavigationError.{DestinationHasBannedTags, InvalidData, NoRouteFound}
 import enums.ElevatorTrafficPattern.UpRush
 import enums.ElevatorTrafficPattern.Flat
 
@@ -23,7 +23,8 @@ class RoutePlanner private(
     sourceNodeName: String,
     goalNodeName: String,
     visitingMode: enums.VisitingMode,
-    preference: RoutePlanningPreferences
+    preference: RoutePlanningPreferences,
+    tagPolicy: TraversalTagPolicy = TraversalTagPolicy.AllowAll
   ): Either[NavigationError, NavigationOutputPath] = {
     // This would involve combining intra-map paths and transportation paths
     // to create a complete route from startNode in startGraph to goalNode in goalGraph
@@ -33,11 +34,18 @@ class RoutePlanner private(
         (sourceGraph.nodes.find(_.identifier == sourceNodeName),
           goalGraph.nodes.find(_.identifier == goalNodeName)) match {
           case (Some(sourceNode), Some(goalNode)) =>
-            if isHighRise then{
-              findRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference)
+            val destinationConflicts = tagPolicy.conflictingTags(goalNode)
+            if destinationConflicts.nonEmpty then {
+              Left(DestinationHasBannedTags(
+                s"${goalGraph.identifier}::${goalNode.identifier}",
+                destinationConflicts.toList.sorted
+              ))
+            }
+            else if isHighRise then{
+              findRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, tagPolicy)
             }
             else{
-              findRouteForStandardBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference)
+              findRouteForStandardBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, tagPolicy)
             }
           case (None, _) => Left(InvalidData(s"sourceGraphName and sourceNodeName: ${sourceGraphName}, ${sourceNodeName} not found"))
           case (_, None) => Left(InvalidData(s"goalGraphName and goalNodeName: ${goalGraphName}, ${goalNodeName} not found"))
@@ -54,13 +62,14 @@ class RoutePlanner private(
     goalGraph: NavigationGraph,
     goalNode: TopoNode,
     visitingMode: enums.VisitingMode,
-    preference: RoutePlanningPreferences
+    preference: RoutePlanningPreferences,
+    tagPolicy: TraversalTagPolicy
   ): Either[NavigationError, NavigationOutputPath] = {
     // High-rise specific route planning logic
     // Prioritizing elevators, escalators, as T_trans >> T_walk, catching a coming ride saves much more time than over-optimizing walking paths
     
     if sourceGraph.identifier == goalGraph.identifier then { // Intra-map pathfinding within the same graph
-      sourceGraph.findPath(sourceNode, goalNode, visitingMode) match {
+      sourceGraph.findPath(sourceNode, goalNode, visitingMode, tagPolicy, allowBannedStart = true) match {
         case Some(intraPath) =>
           // Convert IntraMapPath to NavigationOutputPath
           val globalNodes = intraPath.routeNodes.map(node => GlobalNode.fromTopoNode(sourceGraph, node))
@@ -70,7 +79,7 @@ class RoutePlanner private(
       }
     }
     else{ // Collect all path segments between interchange nodes
-      findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, 0)
+      findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, tagPolicy, 0)
     }
   }
 
@@ -81,6 +90,7 @@ class RoutePlanner private(
     goalNode: TopoNode,
     visitingMode: enums.VisitingMode,
     preference: RoutePlanningPreferences,
+    tagPolicy: TraversalTagPolicy,
     transportSolutionIndex: Int
   ): Either[NavigationError, NavigationOutputPath] = {
     val allRouteEdges = mutable.ListBuffer[RouteEdge]()
@@ -90,14 +100,31 @@ class RoutePlanner private(
         val interchangeNodes = transportPath.routeNodes
         println("interchangeNodes.size = " + interchangeNodes.size)
 
+        val containsBannedInterchange = interchangeNodes.exists { stationNode =>
+          val resolvedNode = graphs
+            .get(stationNode.ownerGraph.identifier)
+            .flatMap(_.nodes.find(_.identifier == stationNode.localNode.identifier))
+            .getOrElse(stationNode.localNode)
+          val isActualSource = stationNode.ownerGraph.identifier == sourceGraph.identifier &&
+            resolvedNode.identifier == sourceNode.identifier
+          !isActualSource && !tagPolicy.allowsEntry(resolvedNode)
+        }
+        if containsBannedInterchange then
+          return findCrossGraphRouteForHighRiseBuilding(
+            sourceGraph, sourceNode, goalGraph, goalNode, visitingMode,
+            preference, tagPolicy, transportSolutionIndex + 1)
+
         // 1. Add the starting point (sourceNode to first interchange)
-        sourceGraph.findPath(sourceNode, interchangeNodes.head.localNode, visitingMode) match {
+        sourceGraph.findPath(
+          sourceNode, interchangeNodes.head.localNode, visitingMode,
+          tagPolicy, allowBannedStart = true
+        ) match {
           case Some(startPath) =>
             allGlobalNodes ++= startPath.routeNodes.map(GlobalNode.fromTopoNode(sourceGraph, _))
             allRouteEdges ++= startPath.routeEdges.map(RouteEdge.fromAtomicPath(sourceGraph, _, visitingMode))
           case None =>
             // Recurse with next index
-            return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, transportSolutionIndex + 1)
+            return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, tagPolicy, transportSolutionIndex + 1)
         }
 
         // 2. Add paths between interchange nodes - only when on the same floor
@@ -110,7 +137,8 @@ class RoutePlanner private(
             currentInterchange.ownerGraph.findPath(
               currentInterchange.localNode,
               nextInterchange.localNode,
-              visitingMode
+              visitingMode,
+              tagPolicy
             ) match {
               case Some(path) =>
                 // Skip the first node to avoid duplicates
@@ -118,7 +146,7 @@ class RoutePlanner private(
                 allRouteEdges ++= path.routeEdges.map(RouteEdge.fromAtomicPath(currentInterchange.ownerGraph, _, visitingMode))
               case None =>
                 // Recurse with next index
-                return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, transportSolutionIndex + 1)
+                return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, tagPolicy, transportSolutionIndex + 1)
             }
           } else {
             // Different floors - this is a vehicle-ride, so create direct transport edge
@@ -140,14 +168,14 @@ class RoutePlanner private(
 
         // 3. Add the final segment (last interchange to goalNode) - only if on same floor
         if (interchangeNodes.last.ownerGraph == goalGraph) {
-          goalGraph.findPath(interchangeNodes.last.localNode, goalNode, visitingMode) match {
+          goalGraph.findPath(interchangeNodes.last.localNode, goalNode, visitingMode, tagPolicy) match {
             case Some(finalPath) =>
               // Skip the first node to avoid duplicates
               allGlobalNodes ++= finalPath.routeNodes.tail.map(GlobalNode.fromTopoNode(goalGraph, _))
               allRouteEdges ++= finalPath.routeEdges.map(RouteEdge.fromAtomicPath(goalGraph, _, visitingMode))
             case None =>
               // Recurse with next index
-              return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, transportSolutionIndex + 1)
+              return findCrossGraphRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, tagPolicy, transportSolutionIndex + 1)
           }
         } else {
           
@@ -168,7 +196,8 @@ class RoutePlanner private(
     goalGraph: NavigationGraph,
     goalNode: TopoNode,
     visitingMode: enums.VisitingMode,
-    preference: RoutePlanningPreferences
+    preference: RoutePlanningPreferences,
+    tagPolicy: TraversalTagPolicy
   ): Either[NavigationError, NavigationOutputPath] = {
     // Cross-graph A* over the super-graph formed by:
     //   - all intra-graph AtomicPath edges (one direction each)
@@ -186,12 +215,12 @@ class RoutePlanner private(
     // those legs around the cross-graph A* result.
 
     // ── Step 0: resolve effective source and goal ──────────────────────────
-    val effectiveSource: TopoNode = findNearestCoordNodeForward(sourceGraph, sourceNode, visitingMode) match {
+    val effectiveSource: TopoNode = findNearestCoordNodeForward(sourceGraph, sourceNode, visitingMode, tagPolicy) match {
       case Some(n) => n
       case None    => return Left(NoRouteFound(
         s"No coord-estimated node reachable from ${sourceGraph.identifier}::${sourceNode.identifier}"))
     }
-    val effectiveGoal: TopoNode = findNearestCoordNodeBackward(goalGraph, goalNode, visitingMode) match {
+    val effectiveGoal: TopoNode = findNearestCoordNodeBackward(goalGraph, goalNode, visitingMode, tagPolicy) match {
       case Some(n) => n
       case None    => return Left(NoRouteFound(
         s"No coord-estimated node that can reach ${goalGraph.identifier}::${goalNode.identifier}"))
@@ -200,7 +229,7 @@ class RoutePlanner private(
     // Prefix leg: sourceNode → effectiveSource  (empty if they are the same)
     val prefixPath: Option[data.IntraMapPath] =
       if (sourceNode == effectiveSource) None
-      else sourceGraph.findPath(sourceNode, effectiveSource, visitingMode) match {
+      else sourceGraph.findPath(sourceNode, effectiveSource, visitingMode, tagPolicy, allowBannedStart = true) match {
         case Some(p) => Some(p)
         case None    => return Left(NoRouteFound(
           s"Cannot build prefix leg from ${sourceNode.identifier} to ${effectiveSource.identifier}"))
@@ -209,7 +238,7 @@ class RoutePlanner private(
     // Suffix leg: effectiveGoal → goalNode  (empty if they are the same)
     val suffixPath: Option[data.IntraMapPath] =
       if (effectiveGoal == goalNode) None
-      else goalGraph.findPath(effectiveGoal, goalNode, visitingMode) match {
+      else goalGraph.findPath(effectiveGoal, goalNode, visitingMode, tagPolicy) match {
         case Some(p) => Some(p)
         case None    => return Left(NoRouteFound(
           s"Cannot build suffix leg from ${effectiveGoal.identifier} to ${goalNode.identifier}"))
@@ -275,12 +304,13 @@ class RoutePlanner private(
           val (curGraph, curNode) = current
 
           // ── Intra-graph edges ──────────────────────────────────────────
-          for (edge <- curGraph.adjacencyList if edge.source == curNode) {
+          for (edge <- curGraph.adjacencyList
+               if edge.source == curNode && tagPolicy.allows(edge)) {
             val nb: LowRiseGlobalNode = (curGraph, edge.target)
             // All intra-graph neighbours are traversable — coord-less nodes may appear
             // as intermediate hops.  The heuristic already falls back to 0.0 when a
             // node has no estimatedCoord, so they are handled gracefully.
-            if (!visited.contains(nb)) {
+            if (!visited.contains(nb) && tagPolicy.allowsEntry(edge.target)) {
               val tentG = gScore(current) + edge.costs(visitingMode)
               if (tentG < gScore(nb)) {
                 gScore(nb) = tentG
@@ -310,7 +340,7 @@ class RoutePlanner private(
               val nbNodeOpt  = nbGraphOpt.flatMap(g => g.nodes.find(_.identifier == neighborStation.localNode.identifier))
               for (nbGraph <- nbGraphOpt; nbNode <- nbNodeOpt) {
                 val nb: LowRiseGlobalNode = (nbGraph, nbNode)
-                if (!visited.contains(nb)) {
+                if (!visited.contains(nb) && tagPolicy.allowsEntry(nbNode)) {
                   val tentG = gScore(current) + edgeCost
                   if (tentG < gScore(nb)) {
                     gScore(nb) = tentG
@@ -397,7 +427,8 @@ class RoutePlanner private(
   private def findNearestCoordNodeForward(
     graph: NavigationGraph,
     start: TopoNode,
-    visitingMode: enums.VisitingMode
+    visitingMode: enums.VisitingMode,
+    tagPolicy: TraversalTagPolicy
   ): Option[TopoNode] = {
     if (start.estimatedCoord.isDefined) return Some(start)
 
@@ -414,12 +445,15 @@ class RoutePlanner private(
       if (curDist <= dist(cur) && !visited.contains(cur)) {
         visited.add(cur)
         if (cur.estimatedCoord.isDefined) return Some(cur)
-        for (edge <- graph.adjacencyList if edge.source == cur) {
+        for (edge <- graph.adjacencyList
+             if edge.source == cur && tagPolicy.allows(edge)) {
           val nb = edge.target
-          val tentG = curDist + edge.costs(visitingMode)
-          if (tentG < dist(nb)) {
-            dist(nb) = tentG
-            pq.enqueue((nb, tentG))
+          if (tagPolicy.allowsEntry(nb)) {
+            val tentG = curDist + edge.costs(visitingMode)
+            if (tentG < dist(nb)) {
+              dist(nb) = tentG
+              pq.enqueue((nb, tentG))
+            }
           }
         }
       }
@@ -436,14 +470,15 @@ class RoutePlanner private(
   private def findNearestCoordNodeBackward(
     graph: NavigationGraph,
     end: TopoNode,
-    visitingMode: enums.VisitingMode
+    visitingMode: enums.VisitingMode,
+    tagPolicy: TraversalTagPolicy
   ): Option[TopoNode] = {
     if (end.estimatedCoord.isDefined) return Some(end)
 
-    // Build reverse adjacency on the fly: target -> List[(source, cost)]
-    val reverseAdj = mutable.Map[TopoNode, mutable.ListBuffer[(TopoNode, Double)]]()
-    for (edge <- graph.adjacencyList) {
-      reverseAdj.getOrElseUpdate(edge.target, mutable.ListBuffer()).addOne((edge.source, edge.costs(visitingMode)))
+    // Build reverse adjacency on the fly while preserving the traversed AtomicPath.
+    val reverseAdj = mutable.Map[TopoNode, mutable.ListBuffer[data.AtomicPath]]()
+    for (edge <- graph.adjacencyList if tagPolicy.allows(edge)) {
+      reverseAdj.getOrElseUpdate(edge.target, mutable.ListBuffer()).addOne(edge)
     }
 
     implicit val ord: Ordering[(TopoNode, Double)] = Ordering.by[(TopoNode, Double), Double](_._2).reverse
@@ -459,11 +494,14 @@ class RoutePlanner private(
       if (curDist <= dist(cur) && !visited.contains(cur)) {
         visited.add(cur)
         if (cur != end && cur.estimatedCoord.isDefined) return Some(cur)
-        for ((pred, cost) <- reverseAdj.getOrElse(cur, mutable.ListBuffer())) {
-          val tentG = curDist + cost
-          if (tentG < dist(pred)) {
-            dist(pred) = tentG
-            pq.enqueue((pred, tentG))
+        for (edge <- reverseAdj.getOrElse(cur, mutable.ListBuffer())) {
+          val pred = edge.source
+          if (tagPolicy.allowsEntry(pred)) {
+            val tentG = curDist + edge.costs(visitingMode)
+            if (tentG < dist(pred)) {
+              dist(pred) = tentG
+              pq.enqueue((pred, tentG))
+            }
           }
         }
       }

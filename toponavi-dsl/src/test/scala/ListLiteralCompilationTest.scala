@@ -1,4 +1,4 @@
-import api.TopoNaviService
+import api.{NavigationRequestException, TopoNaviService}
 import corelang.Expr
 import enums.AttributeValue
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
@@ -47,11 +47,14 @@ class ListLiteralCompilationTest extends AnyFunSuite with Matchers {
         |    nestedWeights = [[1.0, 2.0], [3.0, 4.0]]
         |  }
         |  topo-node lobby
+        |  topo-node safe_corridor { tags = ["indoor"] }
         |  atomic-path [entrance -> lobby] {
         |    cost = 5.0,
         |    tags = ["outdoor"],
         |    requiredActions = ["cross_door"]
         |  }
+        |  atomic-path [entrance -> safe_corridor] { cost = 4.0 }
+        |  atomic-path [safe_corridor -> lobby] { cost = 4.0 }
         |}
         |""".stripMargin
     )
@@ -95,5 +98,40 @@ class ListLiteralCompilationTest extends AnyFunSuite with Matchers {
     step.get("tags").asInstanceOf[java.util.List[String]].asScala.toList shouldBe List("outdoor")
     step.get("requiredActions").asInstanceOf[java.util.List[String]].asScala.toList shouldBe List("cross_door")
     step.containsKey("attributes") shouldBe false
+
+    val bannedPlan = TopoNaviService.findRoutePlan(
+      result,
+      "Floor1::entrance",
+      "Floor1::lobby",
+      "MinimizeTime",
+      java.util.List.of("outdoor")
+    )
+    bannedPlan.routeNodes.map(_.localNode.identifier) shouldBe
+      List("entrance", "safe_corridor", "lobby")
+    bannedPlan.routeEdges.flatMap(_.traversalMetadata.tags) shouldBe List.empty
+
+    val conflict = intercept[NavigationRequestException] {
+      TopoNaviService.findRoutePlan(
+        result,
+        "Floor1::lobby",
+        "Floor1::entrance",
+        "MinimizeTime",
+        java.util.List.of("outdoor")
+      )
+    }
+    conflict.getCode shouldBe "DESTINATION_HAS_BANNED_TAG"
+    conflict.getDetails.get("conflictingTags") shouldBe java.util.List.of("outdoor")
+
+    val noRoute = intercept[NavigationRequestException] {
+      TopoNaviService.findRoutePlan(
+        result,
+        "Floor1::entrance",
+        "Floor1::lobby",
+        "MinimizeTime",
+        java.util.List.of("outdoor", "indoor")
+      )
+    }
+    noRoute.getCode shouldBe "NO_ROUTE_WITH_BAN_TAGS"
+    noRoute.getDetails.get("banTags") shouldBe java.util.List.of("indoor", "outdoor")
   }
 }

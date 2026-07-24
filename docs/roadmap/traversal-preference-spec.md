@@ -34,7 +34,7 @@ Canonical tag names and map-authoring rules are defined in the [TopoScript Taggi
 
 ## DSL Tagging Model
 
-Tags should be ordinary attributes on `atomic-path` records. Path tags are the primary source of traversal semantics because exposure usually belongs to a segment, not only to a point.
+Tags are ordinary attributes on both `atomic-path` and `topo-node` records. Path tags describe the experience of traversing a segment; node tags describe entering or occupying a place, facility, boundary side, or area.
 
 Example:
 
@@ -54,7 +54,7 @@ topo-node outdoor_LT {
 }
 ```
 
-Planner behavior should primarily inspect path tags. Node tags may be projected onto incident edges later, but that should be an explicit implementation choice rather than an implicit default.
+For hard bans, the planner evaluates node and path tags independently. A path is not usable when either the path itself has a banned tag or its target node has a banned tag. Node tags are not implicitly projected onto incident paths.
 
 ## Access Constraints vs Traversal Tags
 
@@ -121,9 +121,16 @@ Type: list of strings
 
 Default: empty list
 
-Semantics: hard ban. Any path tagged with one of these tags is excluded from traversal.
+Semantics: request-scoped hard ban. A traversal is excluded when either its path or the node being entered has one of these tags.
 
-Short-term implementation may compile or project a graph with banned tagged paths removed before invoking the current route algorithm. This is acceptable because the resulting graph is equivalent to a compile-time filtered graph, but the semantics stay at the traversal-preference layer rather than becoming root DSL parameters.
+The compiled graph remains unchanged and reusable across requests. The route planner applies `banTags` while expanding neighbors; `banTags` must not enter the compilation cache key.
+
+Endpoint rules:
+
+- A tagged source node may be departed because the user is already there. Its outgoing paths are still checked normally.
+- A tagged destination is a request conflict and returns `DESTINATION_HAS_BANNED_TAG`.
+- Tagged intermediate nodes are not entered.
+- A valid request for which no route remains returns `NO_ROUTE_WITH_BAN_TAGS`.
 
 ### `minimizeTag`
 
@@ -284,7 +291,7 @@ Short-term:
 - Keep existing quick-demo query parameters working.
 - Add body-level `traversalPreference`.
 - Treat query-string `routePlanningPreference` as a fallback when body `traversalPreference.routePlanningPreference` is absent.
-- Implement `banTags` by graph filtering before invoking the current route algorithm.
+- Apply `banTags` at runtime to both paths and entered nodes without mutating the cached compilation result.
 
 Medium-term:
 

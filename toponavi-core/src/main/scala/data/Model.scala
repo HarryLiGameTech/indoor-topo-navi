@@ -61,9 +61,12 @@ case class RouteTraversalMetadata(
 object RouteTraversalMetadata {
   def from(attributes: Map[String, AttributeValue]): RouteTraversalMetadata =
     RouteTraversalMetadata(
-      tags = stringList(attributes, "tags").toSet,
+      tags = tagsFrom(attributes),
       requiredActions = stringList(attributes, "requiredActions")
     )
+
+  def tagsFrom(attributes: Map[String, AttributeValue]): Set[String] =
+    stringList(attributes, "tags").toSet
 
   private def stringList(attributes: Map[String, AttributeValue], key: String): List[String] =
     attributes.get(key) match {

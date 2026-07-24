@@ -6,10 +6,12 @@ import data.{LinearSegment, NavigationOutputPath, TurnHint}
 import enums.{NavigationError, RoutePlanningPreferences}
 import enums.RoutePlanningPreferences.MinimizeTime
 import enums.VisitingMode.Normal
-import navigation.RoutePlanner
-import enums.NavigationError.{ConstraintFailure, InvalidData, NoRouteFound}
+import navigation.{RoutePlanner, TraversalTagPolicy}
+import enums.NavigationError.{ConstraintFailure, DestinationHasBannedTags, InvalidData, NoRouteFound}
 
+import java.util.List as JList
 import java.util.Map as JMap
+import scala.jdk.CollectionConverters.*
 
 
 object TopoNaviService {
@@ -43,6 +45,15 @@ object TopoNaviService {
     startNodeName: String,
     endNodeName: String,
     preference: RoutePlanningPreferences
+  ): NavigationOutputPath =
+    findRoutePlan(result, startNodeName, endNodeName, preference, Set.empty)
+
+  def findRoutePlan(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: RoutePlanningPreferences,
+    banTags: Set[String]
   ): NavigationOutputPath = {
     val isHighRise = result.metadata.get("coordEstimated") match {
       case Some(enums.AttributeValue.BoolValue(true)) => false // If coordinates were estimated, we assume it's a standard building.
@@ -52,7 +63,23 @@ object TopoNaviService {
     val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, isHighRise)
     val (startGraphName, startNode) = resolveNode(startNodeName, result)
     val (endGraphName, endNode) = resolveNode(endNodeName, result)
-    routePlanner.navigate(startGraphName, endGraphName, startNode, endNode, Normal, preference) match {
+    val tagPolicy = TraversalTagPolicy(banTags)
+    routePlanner.navigate(startGraphName, endGraphName, startNode, endNode, Normal, preference, tagPolicy) match {
+      case Left(DestinationHasBannedTags(nodeIdentifier, conflicts)) =>
+        throw NavigationRequestException(
+          "DESTINATION_HAS_BANNED_TAG",
+          s"Destination '$nodeIdentifier' has banned tags: ${conflicts.mkString(", ")}",
+          Map[String, Object](
+            "nodeIdentifier" -> nodeIdentifier,
+            "conflictingTags" -> conflicts.asJava
+          ).asJava
+        )
+      case Left(NoRouteFound(message)) if banTags.nonEmpty =>
+        throw NavigationRequestException(
+          "NO_ROUTE_WITH_BAN_TAGS",
+          message,
+          Map[String, Object]("banTags" -> banTags.toList.sorted.asJava).asJava
+        )
       case Left(error) => throw new RuntimeException(formatError(error))
       case Right(plan) =>
         // Convert DSL-level spatial annotations into slim core-level types and attach to the plan
@@ -130,6 +157,17 @@ object TopoNaviService {
     preference: String
   ): NavigationOutputPath = findRoutePlan(result, startNodeName, endNodeName, parsePreference(preference))
 
+  def findRoutePlan(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: String,
+    banTags: JList[String]
+  ): NavigationOutputPath = {
+    val tags = if banTags == null then Set.empty else banTags.asScala.toSet
+    findRoutePlan(result, startNodeName, endNodeName, parsePreference(preference), tags)
+  }
+
   private def parsePreference(s: String): RoutePlanningPreferences = s match {
     case "MinimizeTransfers"       => RoutePlanningPreferences.MinimizeTransfers
     case "MinimizePhysicalDemands" => RoutePlanningPreferences.MinimizePhysicalDemands
@@ -161,6 +199,7 @@ object TopoNaviService {
     case NoRouteFound(msg)     => msg
     case InvalidData(msg)      => msg
     case ConstraintFailure(msg) => msg
-    case _                     => "Unknown error occurred during navigation"
+    case DestinationHasBannedTags(nodeIdentifier, tags) =>
+      s"Destination '$nodeIdentifier' has banned tags: ${tags.mkString(", ")}"
   }
 }

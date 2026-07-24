@@ -1,6 +1,7 @@
 package com.e611.toponavi.web.controller;
 
 import api.TopoNaviService; // The Scala Facade
+import api.NavigationRequestException;
 import compiler.CompilationResult;
 import data.NavigationGraph;
 import data.NavigationOutputPath;
@@ -115,7 +116,9 @@ public class TopoController {
             @RequestParam(required = false) String forceRecompile) {
         try {
             String resolvedPreference = resolveRoutePlanningPreference(routePlanningPreference, null);
-            return quickDemoNavigation(buildingName, startNode, endNode, resolvedPreference, forceRecompile, Collections.emptyMap());
+            return quickDemoNavigation(
+                    buildingName, startNode, endNode, resolvedPreference, forceRecompile,
+                    Collections.emptyMap(), Collections.emptyList());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
         }
@@ -141,8 +144,9 @@ public class TopoController {
             }
 
             String resolvedPreference = resolveRoutePlanningPreference(routePlanningPreference, body);
+            List<String> banTags = resolveBanTags(body);
             return quickDemoNavigation(buildingName, startNode, endNode, resolvedPreference, forceRecompile,
-                    extractUserParams(body));
+                    extractUserParams(body), banTags);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
         }
@@ -151,7 +155,7 @@ public class TopoController {
     private ResponseEntity<?> quickDemoNavigation(
             String buildingName, String startNode, String endNode,
             String routePlanningPreference, String forceRecompile,
-            Map<String, Object> userParams) {
+            Map<String, Object> userParams, List<String> banTags) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
             if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found in examples directory"));
@@ -160,16 +164,27 @@ public class TopoController {
             if ("true".equals(forceRecompile)) cacheService.invalidate(cacheKey);
 
             CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
-            NavigationOutputPath plan = TopoNaviService.findRoutePlan(outcome.result(), startNode, endNode, routePlanningPreference);
+            NavigationOutputPath plan = TopoNaviService.findRoutePlan(
+                    outcome.result(), startNode, endNode, routePlanningPreference, banTags);
 
             return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "path", plan.prettyPrint(),
                 "steps", plan.toStructuredSteps(),
-                "appliedTraversalPreference", Map.of("routePlanningPreference", routePlanningPreference),
+                "appliedTraversalPreference", Map.of(
+                        "routePlanningPreference", routePlanningPreference,
+                        "banTags", banTags
+                ),
                 "filesLoaded", exampleFiles.size(),
                 "cacheKey", cacheKey.substring(0, 8),
                 "fromCache", outcome.fromCache()
+            ));
+        } catch (NavigationRequestException e) {
+            return ResponseEntity.unprocessableEntity().body(Map.of(
+                    "status", "error",
+                    "code", e.getCode(),
+                    "message", e.getMessage(),
+                    "details", e.getDetails()
             ));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(formatError(e));
@@ -444,11 +459,23 @@ public class TopoController {
 
         TraversalPreferenceRequest preference = body.traversalPreference;
         List<String> unsupported = new ArrayList<>();
-        if (preference.banTags != null && !preference.banTags.isEmpty()) unsupported.add("banTags");
         if (hasText(preference.minimizeTag)) unsupported.add("minimizeTag");
         if (hasText(preference.maximizeTag)) unsupported.add("maximizeTag");
         if (hasText(preference.riskPreference)) unsupported.add("riskPreference");
         return unsupported;
+    }
+
+    static List<String> resolveBanTags(QuickDemoNavigationRequest body) {
+        if (body == null || body.traversalPreference == null || body.traversalPreference.banTags == null) {
+            return Collections.emptyList();
+        }
+
+        List<String> resolved = new ArrayList<>();
+        for (String tag : body.traversalPreference.banTags) {
+            if (!hasText(tag)) throw new IllegalArgumentException("banTags must contain only non-blank strings");
+            if (!resolved.contains(tag)) resolved.add(tag);
+        }
+        return List.copyOf(resolved);
     }
 
     private static boolean hasText(String value) {

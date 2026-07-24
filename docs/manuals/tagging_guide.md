@@ -47,7 +47,8 @@ atomic-path [gate_out <-> gate_in] {
 For a door, turnstile, or airlock boundary:
 
 - Tag both boundary-side nodes so either side can be discovered and explained correctly.
-- Tag the crossing path because it is authoritative for traversal filtering and preference scoring.
+- Tag the crossing path so traversal of the boundary can be filtered and explained independently of either endpoint.
+- Hard tag bans inspect both the crossing path and the node being entered; node tags are not automatically copied onto incident paths.
 - Do not interpret the duplicated node tags as multiple facilities. A route crosses one facility once when it traverses the tagged path.
 
 ## Node Narration

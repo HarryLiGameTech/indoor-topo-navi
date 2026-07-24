@@ -2,6 +2,7 @@ package data
 
 import enums.VisitingMode.Normal
 import enums.{PathType, VisitingMode}
+import navigation.TraversalTagPolicy
 
 import scala.collection.mutable
 
@@ -16,21 +17,17 @@ class NavigationGraph private(
     adjacencyList.filter(_.source == originNode)
   }
 
-  private def reconstructPath(cameFrom: mutable.Map[TopoNode, TopoNode], current: TopoNode, edges: List[AtomicPath]): IntraMapPath = {
+  private def reconstructPath(cameFrom: mutable.Map[TopoNode, AtomicPath], current: TopoNode): IntraMapPath = {
     val totalPath = mutable.ListBuffer[TopoNode]()
     val pathEdges = mutable.ListBuffer[AtomicPath]() // Track the edges used
     var node = current
 
     // Trace back from goal to start using the cameFrom map
     while (cameFrom.contains(node)) {
-      val parent = cameFrom(node)
+      val edge = cameFrom(node)
       totalPath.prepend(node) // Add current node to front of path
-
-      // Find the edge that connects parent -> node
-      val edge = edges.find(e => e.source == parent && e.target == node)
-      edge.foreach(pathEdges.prepend) // Add the edge to the path
-
-      node = parent // Move to parent node
+      pathEdges.prepend(edge)
+      node = edge.source
     }
     totalPath.prepend(node) // Add the start node
 
@@ -41,15 +38,20 @@ class NavigationGraph private(
   def findPath(
     start: TopoNode,
     goal: TopoNode,
-    visitingMode: VisitingMode
+    visitingMode: VisitingMode,
+    tagPolicy: TraversalTagPolicy = TraversalTagPolicy.AllowAll,
+    allowBannedStart: Boolean = false
   ): Option[IntraMapPath] = {
+    if (!allowBannedStart && !tagPolicy.allowsEntry(start)) return None
+    if (!tagPolicy.allowsEntry(goal)) return None
+
     // Priority queue for nodes to explore (min-heap based on cost)
     implicit val ordering: Ordering[(TopoNode, Double)] =
       Ordering.by[(TopoNode, Double), Double](_._2).reverse
 
     val openSet = mutable.PriorityQueue.empty[(TopoNode, Double)]
     val dist = mutable.Map[TopoNode, Double]().withDefaultValue(Double.PositiveInfinity)
-    val cameFrom = mutable.Map[TopoNode, TopoNode]()
+    val cameFrom = mutable.Map[TopoNode, AtomicPath]()
     val visited = mutable.Set[TopoNode]()
 
     // Initialize starting node
@@ -68,19 +70,19 @@ class NavigationGraph private(
 
         // If we reached the goal, reconstruct the path
         if (current == goal) {
-          return Some(reconstructPath(cameFrom, current, adjacencyList))
+          return Some(reconstructPath(cameFrom, current))
         }
 
         // Explore neighbors using the new adjacency list structure
-        for (edge <- getOutgoingEdges(current)) {
+        for (edge <- getOutgoingEdges(current) if tagPolicy.allows(edge)) {
           val neighbor = edge.target
-          if (!visited.contains(neighbor)) {
+          if (!visited.contains(neighbor) && tagPolicy.allowsEntry(neighbor)) {
             val newDist = dist(current) + edge.costs(visitingMode)
 
             // If we found a better path to neighbor
             if (newDist < dist(neighbor)) {
               dist(neighbor) = newDist
-              cameFrom(neighbor) = current
+              cameFrom(neighbor) = edge
               openSet.enqueue((neighbor, newDist))
             }
           }
