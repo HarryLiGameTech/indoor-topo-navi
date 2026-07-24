@@ -89,8 +89,7 @@ The quick-demo navigation POST request should accept `traversalPreference` in th
   "traversalPreference": {
     "routePlanningPreference": "MinimizeTime",
     "banTags": ["outdoor", "rain_exposed"],
-    "minimizeTag": "odor_prone",
-    "maximizeTag": "shop"
+    "minimizeTag": "odor_prone"
   }
 }
 ```
@@ -138,7 +137,7 @@ Type: nullable string
 
 Default: null
 
-Semantics: soft avoidance. Among routes that are near-ties under the primary route objective, prefer the route with fewer occurrences of this tag.
+Semantics: soft avoidance. Among routes that are near-ties under the primary route objective, prefer the route with the lower exposure score for this tag.
 
 Only one `minimizeTag` is supported in the initial design.
 
@@ -156,7 +155,7 @@ Type: nullable string
 
 Default: null
 
-Semantics: soft attraction. Among routes that are near-ties under the primary route objective, prefer the route with more occurrences of this tag.
+Semantics: soft attraction. Among routes that are near-ties under the primary route objective, prefer the route with the higher exposure score for this tag.
 
 Only one `maximizeTag` is supported in the initial design.
 
@@ -168,14 +167,43 @@ Example: a user says "I like routes with many shops"; the agent maps this to:
 }
 ```
 
+This preference affects ranking only when the map provides positive `shop` exposure through truthful node dwell or tagged-edge traversal. A `shop` node with no `minDwellSeconds` does not receive an artificial occurrence score.
+
+`minimizeTag` and `maximizeTag` are mutually exclusive in the initial design. A request that provides both is invalid and should return HTTP 400 with `CONFLICTING_TAG_PREFERENCES`.
+
+## Tag Exposure Score
+
+For a route `R` and requested tag `t`, the soft-preference score is:
+
+```text
+tagExposureScore(R, t) =
+    sum(traversalSeconds(edge) for each tagged edge in R)
+  + sum(minDwellSeconds(node) for each tagged intermediate node in R)
+```
+
+Rules:
+
+- An edge contributes its traversal time when its `tags` contain `t`.
+- Only intermediate nodes contribute. The route source and destination are excluded because they are fixed across candidates.
+- A tagged intermediate node contributes its explicit `minDwellSeconds` value.
+- Missing `minDwellSeconds` contributes `0`, not an implicit occurrence count.
+- `minDwellSeconds` must be finite and non-negative.
+- When an edge and an intermediate node both carry `t`, both contributions are added. The edge represents traversal exposure; the node represents a separate mandatory dwell.
+- A point-only POI tag does not influence soft ranking merely because its node appears in a route. It needs a truthful positive `minDwellSeconds` or separately modeled tagged-edge exposure.
+- Candidate routes must not repeat a `GlobalNode`. This prevents `maximizeTag` from selecting routes that loop through the same tagged place to inflate the score.
+
+`minDwellSeconds` represents actual mandatory dwell rather than an arbitrary preference weight. When implemented, an intermediate node's dwell must also contribute to the route's total time under `MinimizeTime`, whether or not a soft tag preference is present.
+
 ## Near-Tie Rule
 
 Soft tag preferences are only applied when candidate routes are close enough under the primary objective.
 
-Initial hard-coded threshold:
+Initial hard-coded thresholds:
 
 ```text
-nearTieThresholdSeconds = 15
+MinimizeTime:            +15 seconds
+MinimizeTransfers:       +1 transfer
+MinimizePhysicalDemands: +10 percent
 ```
 
 For `MinimizeTime`, a route is a near-tie if:
@@ -184,7 +212,17 @@ For `MinimizeTime`, a route is a near-tie if:
 candidate.totalCost <= bestPrimary.totalCost + 15 seconds
 ```
 
-For `MinimizeTransfers` and `MinimizePhysicalDemands`, implementation should preserve the existing primary ordering first. The 15-second threshold may be applied to the time component among candidates with equivalent primary-class scores.
+For `MinimizeTransfers`, a route is a near-tie if:
+
+```text
+candidate.transferCount <= bestPrimary.transferCount + 1
+```
+
+For `MinimizePhysicalDemands`, a route is a near-tie if:
+
+```text
+candidate.physicalDemand <= bestPrimary.physicalDemand * 1.10
+```
 
 The exact implementation can be refined later, but the product semantics are:
 
@@ -195,13 +233,26 @@ The exact implementation can be refined later, but the product semantics are:
 Recommended ordering:
 
 1. Exclude any route containing a banned tag.
-2. Rank by the primary `routePlanningPreference`.
-3. Keep candidates within the near-tie threshold.
-4. Apply `minimizeTag` as a tie-breaker, if present.
-5. Apply `maximizeTag` as a tie-breaker, if present.
-6. Use total time as the final deterministic tie-breaker.
+2. Find the best value under the primary `routePlanningPreference`.
+3. Keep loop-free candidates within that objective's near-tie threshold.
+4. Apply the one requested `minimizeTag` or `maximizeTag`, if present.
+5. Use the primary value, then total time, as deterministic tie-breakers.
 
-If both `minimizeTag` and `maximizeTag` are provided, both may be applied in the order above. If this proves confusing in product use, the API can later reject requests that provide both.
+The planner must not turn tag scores into hidden time penalties or rewards.
+
+## Soft-Preference Search Requirements
+
+The existing shortest-path algorithms retain only the best-known way to reach each node. That is sufficient for hard bans but not for near-tie soft preferences: a slightly slower partial route may have a substantially better tag exposure score and still finish within the allowed threshold.
+
+The eventual implementation should therefore:
+
+1. Run the primary planner to obtain the best primary value.
+2. Derive the objective-specific near-tie limit.
+3. Explore loop-free alternative routes within that limit.
+4. Retain multiple non-dominated partial ways to reach a node when they trade primary cost against tag exposure.
+5. Select the complete candidate with the best requested tag score and apply deterministic tie-breakers.
+
+Candidate generation must have deterministic resource limits so that dense maps cannot cause unbounded search. This is a larger planner change than `banTags` filtering and is intentionally deferred. The quick-demo request schema may parse `minimizeTag` and `maximizeTag`, but the endpoint should continue returning `TRAVERSAL_PREFERENCE_NOT_IMPLEMENTED` until this search behavior is implemented end to end.
 
 ## Why Not Numeric Penalties Initially
 
@@ -213,7 +264,7 @@ The proposed design keeps behavior stable:
 
 - `banTags` are hard and easy to explain.
 - `minimizeTag` and `maximizeTag` are soft and only affect near-ties.
-- The 15-second threshold prevents soft preferences from overwhelming the primary objective.
+- Objective-specific near-tie thresholds prevent soft preferences from overwhelming the primary objective.
 
 Numeric penalties may be revisited later as an internal configuration mechanism, but they should not be exposed in the first request contract.
 
@@ -295,9 +346,9 @@ Short-term:
 
 Medium-term:
 
-- Return tags in structured route steps.
 - Add candidate route enumeration for stable near-tie handling.
 - Implement `minimizeTag` and `maximizeTag` as near-tie-breakers.
+- Add `minDwellSeconds` to node-time accounting and soft tag scoring.
 
 Long-term:
 

@@ -51,6 +51,23 @@ For a door, turnstile, or airlock boundary:
 - Hard tag bans inspect both the crossing path and the node being entered; node tags are not automatically copied onto incident paths.
 - Do not interpret the duplicated node tags as multiple facilities. A route crosses one facility once when it traverses the tagged path.
 
+## Node Minimum Dwell Time
+
+The optional `minDwellSeconds` node attribute records mandatory time spent at an intermediate node. It is a non-negative number measured in seconds.
+
+```toposcript
+topo-node security_screening {
+  tags = ["staffed"],
+  minDwellSeconds = 20
+}
+```
+
+When `minDwellSeconds` is omitted, its value is `0`. There is no implicit one-second contribution and no automatic occurrence count.
+
+Use this attribute only for a real minimum dwell caused by the represented place or action. Do not assign an arbitrary value merely to make a POI rank higher under `maximizeTag`. Because the value represents real time, an eventual soft-preference implementation must add an intermediate node's dwell to both total route time and the exposure score of each requested tag carried by that node.
+
+The route source and destination do not contribute node dwell to soft tag ranking. Candidate routes for soft ranking must not revisit the same `GlobalNode` to accumulate dwell repeatedly.
+
 ## Node Narration
 
 The optional `narration` attribute controls whether an intermediate node should be presented as a named place in user-facing directions. It is a string-based pseudo-enum with three canonical values:
@@ -336,3 +353,4 @@ Before accepting tags in a submap, verify that:
 7. Every `explicit` node has a human-readable description or display label.
 8. `implicit` nodes are not exposed through identifier fallbacks.
 9. `requiredActions` are canonical, ordered, and valid for the path direction.
+10. Every `minDwellSeconds` value is finite, non-negative, and represents real mandatory dwell.
