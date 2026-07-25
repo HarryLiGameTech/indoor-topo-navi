@@ -1,0 +1,5 @@
+topo-map Penthouse(){
+  let params: {permResident: Int} = {
+      permResident = 1
+  }
+}

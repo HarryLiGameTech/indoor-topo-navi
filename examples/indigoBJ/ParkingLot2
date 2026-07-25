@@ -1,0 +1,9 @@
+topo-map ParkingLot2(){
+  let params: {permResident: Int} = {
+      permResident = 1
+  }
+
+  topo-node north_elevator_hall {tags = ["indoor", "elevator_hall"]}
+  topo-node south_elevator_hall {tags = ["indoor", "elevator_hall"]}
+  topo-node parking_elevator_hall {tags = ["indoor", "elevator_hall"]}
+}

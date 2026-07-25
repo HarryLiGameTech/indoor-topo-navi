@@ -1,0 +1,13 @@
+transport ElevParking is Elevator{
+    let params: {maxSpeed: Float, maxVelocity: Float, acceleration: Float, cars: Int, carAmount: Int} = {
+        maxSpeed = 1.6,
+        maxVelocity = 1.6,
+        acceleration = 0.8,
+        cars = 3,
+        carAmount = 3
+    }
+
+    station LG at LowerGround::parking_elevator_hall {location = 0.0, departureRate = 0.334}
+    station P1 at ParkingLot1::parking_elevator_hall {location = -1.0, departureRate = 0.333}
+    station P2 at ParkingLot2::parking_elevator_hall {location = -2.0, departureRate = 0.333}
+}

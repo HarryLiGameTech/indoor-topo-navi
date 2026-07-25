@@ -1,0 +1,13 @@
+building-includes{
+    submap Penthouse
+    submap Level3
+    submap Level2
+    submap Level1
+    submap LowerGround
+    submap ParkingLot1
+    submap ParkingLot2
+
+    vehicle ElevNorth
+    vehicle ElevSouth
+    vehicle ElevParking
+}
