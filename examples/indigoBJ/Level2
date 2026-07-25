@@ -203,6 +203,20 @@ topo-map Level2(){
   atomic-path [shop_230_outside <-> shop_228_outside] { tags = ["indoor"], cost = 5 }
   atomic-path [shop_228_outside <-> shop_229_outside] { tags = ["indoor"], cost = 3 }
   atomic-path [shop_228_outside <-> shop_261_outside] { tags = ["indoor"], cost = 3 }
+  atomic-path [shop_261_outside <-> south_garden_atrium_link] { tags = ["indoor"], cost = 4 }
+  atomic-path [south_garden_atrium_link <-> shop_262_outside] { tags = ["indoor"], cost = 8 }
+  atomic-path [south_garden_atrium_link <-> shop_266A_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_262_outside <-> south_elevator_hall_link_end] { tags = ["indoor"], cost = 8 }
+  atomic-path [south_elevator_hall_link_end <-> south_elevator_hall] { tags = ["indoor"], cost = 8 }
+  atomic-path [south_elevator_hall <-> south_elevator_hall_link_intersact] { tags = ["indoor"], cost = 8 }
+  atomic-path [south_elevator_hall_link_intersact <-> toilet_south] { tags = ["indoor"], cost = 25 } // TODO: increase granuity
+  atomic-path [south_elevator_hall_link_end <-> shop_224_outside] { tags = ["indoor"], cost = 8 }
+  atomic-path [shop_224_outside <-> shop_225_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_225_outside <-> shop_223_outside] { tags = ["indoor"], cost = 6 }
+  atomic-path [shop_223_outside <-> south_window_atrium_fence] { tags = ["indoor"], cost = 5 }
+  atomic-path [south_window_atrium_fence <-> shop_222_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [south_window_atrium_fence <-> shop_220_outside] { tags = ["indoor"], cost = 5 }
+
 
 
   atomic-path [shop_201 <-> shop_201_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
