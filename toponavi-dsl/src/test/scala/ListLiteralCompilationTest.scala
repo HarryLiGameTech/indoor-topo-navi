@@ -97,6 +97,7 @@ class ListLiteralCompilationTest extends AnyFunSuite with Matchers {
     val step = plan.toStructuredSteps.get(0)
     step.get("tags").asInstanceOf[java.util.List[String]].asScala.toList shouldBe List("outdoor")
     step.get("requiredActions").asInstanceOf[java.util.List[String]].asScala.toList shouldBe List("cross_door")
+    step.containsKey("required_actions") shouldBe false
     step.containsKey("attributes") shouldBe false
 
     val bannedPlan = TopoNaviService.findRoutePlan(
@@ -133,5 +134,37 @@ class ListLiteralCompilationTest extends AnyFunSuite with Matchers {
     }
     noRoute.getCode shouldBe "NO_ROUTE_WITH_BAN_TAGS"
     noRoute.getDetails.get("banTags") shouldBe java.util.List.of("indoor", "outdoor")
+  }
+
+  test("legacy action_required path attribute reaches structured route actions") {
+    val files = new HashMap[String, String]()
+    files.put("configuration.tcfg", "building-includes { submap Floor1 }")
+    files.put(
+      "Floor1.tmap",
+      """
+        |topo-map Floor1() {
+        |  let params = { permResident = 0 }
+        |  topo-node shop
+        |  topo-node shop_outside
+        |  atomic-path [shop <-> shop_outside] {
+        |    cost = 3.0,
+        |    action_required = ["cross_door"]
+        |  }
+        |}
+        |""".stripMargin
+    )
+
+    val result = TopoNaviService.compile(files)
+    val plan = TopoNaviService.findRoutePlan(
+      result,
+      "Floor1::shop",
+      "Floor1::shop_outside",
+      "MinimizeTime"
+    )
+
+    plan.routeEdges.head.traversalMetadata.requiredActions shouldBe List("cross_door")
+    val step = plan.toStructuredSteps.get(0)
+    step.get("requiredActions").asInstanceOf[java.util.List[String]].asScala.toList shouldBe List("cross_door")
+    step.containsKey("required_actions") shouldBe false
   }
 }

@@ -59,10 +59,13 @@ case class RouteTraversalMetadata(
 )
 
 object RouteTraversalMetadata {
+  private val RequiredActionKeys: List[String] =
+    List("requiredActions", "required_actions", "action_required")
+
   def from(attributes: Map[String, AttributeValue]): RouteTraversalMetadata =
     RouteTraversalMetadata(
       tags = tagsFrom(attributes),
-      requiredActions = stringList(attributes, "requiredActions")
+      requiredActions = RequiredActionKeys.flatMap(key => stringList(attributes, key)).distinct
     )
 
   def tagsFrom(attributes: Map[String, AttributeValue]): Set[String] =
@@ -189,6 +192,22 @@ case class NavigationOutputPath(
       .map(_.localNode.identifier)
       .filterNot(isInternalNode)
 
+  private def waypointNodesOf(edges: List[RouteEdge]): List[GlobalNode] =
+    (edges.head.source :: edges.map(_.target))
+      .filterNot(node => isInternalNode(node.localNode.identifier))
+
+  private def waypointInfoOf(edges: List[RouteEdge]): java.util.List[java.util.Map[String, Object]] = {
+    import scala.jdk.CollectionConverters.*
+    val nodes = waypointNodesOf(edges)
+    nodes.zipWithIndex.map { case (node, index) =>
+      RouteNodeInfoProjection.project(
+        node,
+        isIntermediate = index > 0 && index < nodes.size - 1,
+        isTrivialFallback = RouteNodeInfoProjection.isTrivialNode(node.localNode)
+      )
+    }.asJava
+  }
+
   private def formatLeg(leg: Leg, stepNum: Int): String = leg match {
     case WalkLeg(floor, edges) =>
       val named = namedNodesOf(edges)
@@ -227,6 +246,7 @@ case class NavigationOutputPath(
           .filterNot(n => isInternalNode(n.identifier))
           .map(n => s"${n.identifier} (${n.attributes.getOrElse("description", "{NO-DESCRIPTION-FOUND}").toString})")
           .asJava)
+        m.put("waypoints", waypointInfoOf(edges))
         m.put("costSeconds", Double.box(edges.map(_.cost).sum))
         putTraversalMetadata(m, edges)
       case StraightLineLeg(floor, edges, hint) =>
@@ -241,6 +261,7 @@ case class NavigationOutputPath(
           .filterNot(n => isInternalNode(n.identifier))
           .map(n => s"${n.identifier} (${n.attributes.getOrElse("description", "{NO-DESCRIPTION-FOUND}").toString})")
           .asJava)
+        m.put("waypoints", waypointInfoOf(edges))
         hint.foreach { case (dir, atNode) =>
           m.put("turnDirection", dir.toString)
           m.put("turnAtNode", atNode)
@@ -253,6 +274,7 @@ case class NavigationOutputPath(
         m.put("description", edge.movementDescription)
         m.put("fromGraph", edge.source.owningGraph.identifier)
         m.put("toGraph",   edge.target.owningGraph.identifier)
+        m.put("waypoints", waypointInfoOf(List(edge)))
         m.put("costSeconds", Double.box(edge.cost))
         putTraversalMetadata(m, List(edge))
     }
@@ -266,9 +288,20 @@ case class NavigationOutputPath(
     import scala.jdk.CollectionConverters.*
     val metadata = edges.map(_.traversalMetadata)
     val tags = metadata.flatMap(_.tags).distinct.sorted
-    val requiredActions = metadata.flatMap(_.requiredActions)
+    val requiredActions = metadata.flatMap(_.requiredActions).distinct
+    val requiredActionEvents = edges.flatMap { edge =>
+      edge.traversalMetadata.requiredActions.map { action =>
+        val event = new java.util.LinkedHashMap[String, Object]()
+        event.put("action", action)
+        event.put("from", edge.source.localNode.identifier)
+        event.put("to", edge.target.localNode.identifier)
+        event.put("graph", edge.source.owningGraph.identifier)
+        event
+      }
+    }
     target.put("tags", tags.asJava)
     target.put("requiredActions", requiredActions.asJava)
+    target.put("requiredActionEvents", requiredActionEvents.asJava)
   }
 
   private def buildLegs: List[Leg] = {

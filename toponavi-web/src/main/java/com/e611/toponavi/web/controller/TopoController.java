@@ -5,6 +5,7 @@ import api.NavigationRequestException;
 import compiler.CompilationResult;
 import data.NavigationGraph;
 import data.NavigationOutputPath;
+import com.e611.toponavi.web.contract.RouteResponseDeprecationSpec;
 import com.e611.toponavi.web.dto.NavigationRequest;
 import com.e611.toponavi.web.dto.QuickDemoNavigationRequest;
 import com.e611.toponavi.web.dto.TraversalPreferenceRequest;
@@ -167,18 +168,20 @@ public class TopoController {
             NavigationOutputPath plan = TopoNaviService.findRoutePlan(
                     outcome.result(), startNode, endNode, routePlanningPreference, banTags);
 
-            return ResponseEntity.ok(Map.of(
-                "status", "success",
-                "path", plan.prettyPrint(),
-                "steps", plan.toStructuredSteps(),
-                "appliedTraversalPreference", Map.of(
-                        "routePlanningPreference", routePlanningPreference,
-                        "banTags", banTags
-                ),
-                "filesLoaded", exampleFiles.size(),
-                "cacheKey", cacheKey.substring(0, 8),
-                "fromCache", outcome.fromCache()
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("status", "success");
+            response.put("path", plan.prettyPrint());
+            response.put("steps", plan.toStructuredSteps());
+            response.put("deprecations", RouteResponseDeprecationSpec.activeDeprecations());
+            response.put("appliedTraversalPreference", Map.of(
+                    "routePlanningPreference", routePlanningPreference,
+                    "banTags", banTags
             ));
+            response.put("filesLoaded", exampleFiles.size());
+            response.put("cacheKey", cacheKey.substring(0, 8));
+            response.put("fromCache", outcome.fromCache());
+
+            return ResponseEntity.ok(response);
         } catch (NavigationRequestException e) {
             return ResponseEntity.unprocessableEntity().body(Map.of(
                     "status", "error",
