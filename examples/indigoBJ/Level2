@@ -95,4 +95,162 @@ topo-map Level2(){
   topo-node shop_266B {tags = ["indoor", "shop"], shop_name = "小厨娘淮扬菜", shop_category = "Full-service restaurant"}
   topo-node shop_266A {tags = ["indoor", "shop"], shop_name = "CHEF FEI 费大厨辣椒炒肉", shop_category = "Full-service restaurant"}
   topo-node shop_271S {tags = ["indoor", "shop"], shop_name = "清水亭", shop_category = "Full-service restaurant"}
+  topo-node shop_201_outside {tags = ["indoor"]}
+  topo-node shop_202_outside {tags = ["indoor"]}
+  topo-node shop_206_outside {tags = ["indoor"]}
+  topo-node shop_208_outside {tags = ["indoor"]}
+  topo-node shop_211_outside {tags = ["indoor"]}
+  topo-node shop_212_outside {tags = ["indoor"]}
+  topo-node shop_215_outside {tags = ["indoor"]}
+  topo-node shop_216_outside {tags = ["indoor"]}
+  topo-node shop_218_outside {tags = ["indoor"]}
+  topo-node shop_219_outside {tags = ["indoor"]}
+  topo-node shop_220_outside {tags = ["indoor"]}
+  topo-node shop_222_outside {tags = ["indoor"]}
+  topo-node shop_223_outside {tags = ["indoor"]}
+  topo-node shop_224_outside {tags = ["indoor"]}
+  topo-node shop_225_outside {tags = ["indoor"]}
+  topo-node shop_227_outside {tags = ["indoor"]}
+  topo-node shop_228_outside {tags = ["indoor"]}
+  topo-node shop_229_outside {tags = ["indoor"]}
+  topo-node shop_230_outside {tags = ["indoor"]}
+  topo-node shop_231_outside {tags = ["indoor"]}
+  topo-node shop_232_outside {tags = ["indoor"]}
+  topo-node shop_233_outside {tags = ["indoor"]}
+  topo-node shop_236_outside {tags = ["indoor"]}
+  topo-node shop_238_outside {tags = ["indoor"]}
+  topo-node shop_239_outside {tags = ["indoor"]}
+  topo-node shop_240_outside {tags = ["indoor"]}
+  topo-node shop_242_outside {tags = ["indoor"]}
+  topo-node shop_243_outside {tags = ["indoor"]}
+  topo-node shop_245_outside {tags = ["indoor"]}
+  topo-node shop_247_outside {tags = ["indoor"]}
+  topo-node shop_248_outside {tags = ["indoor"]}
+  topo-node shop_250_outside {tags = ["indoor"]}
+  topo-node shop_252_outside {tags = ["indoor"]}
+  topo-node shop_253_outside {tags = ["indoor"]}
+  topo-node shop_258_outside {tags = ["indoor"]}
+  topo-node shop_261_outside {tags = ["indoor"]}
+  topo-node shop_262_outside {tags = ["indoor"]}
+  topo-node shop_269_outside {tags = ["indoor"]}
+  topo-node shop_270_outside {tags = ["indoor"]}
+  topo-node shop_272_outside {tags = ["indoor"]}
+  topo-node shop_276_outside {tags = ["indoor"]}
+  topo-node shop_280_outside {tags = ["indoor"]}
+  topo-node shop_282_outside {tags = ["indoor"]}
+  topo-node shop_285_outside {tags = ["indoor"]}
+  topo-node shop_266B_outside {tags = ["indoor"]}
+  topo-node shop_266A_outside {tags = ["indoor"]}
+  topo-node shop_271S_outside {tags = ["indoor"]}
+
+  topo-node north_elevator_hall_link_end {tags = ["indoor"]}
+  topo-node north_elevator_hall_intersact {tags = ["indoor"]}
+  topo-node south_elevator_hall_link_end {tags = ["indoor"]}
+  topo-node south_elevator_hall_link_intersact {tags = ["indoor"]}
+
+  topo-node north_outer_intersact {tags = ["indoor"]} // The intersact towards north toilet
+  topo-node toilet_north_link_end {tags = ["indoor"]}
+  topo-node north_garden_atrium_link {tags = ["indoor"]}
+  topo-node north_garden_atrium_link_inner {tags = ["indoor"]}
+  topo-node mid_garden_atrium_link_north {tags = ["indoor"]}
+  topo-node mid_garden_atrium_link_south {tags = ["indoor"]}
+  topo-node south_garden_atrium_link {tags = ["indoor"]}
+
+  topo-node mid_window_atrium_fence {tags = ["indoor"]}
+  topo-node south_window_atrium_fence {tags = ["indoor"]}
+
+  atomic-path [shop_220_outside <-> shop_219_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_219_outside <-> shop_218_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_218_outside <-> shop_217_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_217_outside <-> shop_216_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_216_outside <-> shop_215_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_215_outside <-> mid_window_atrium_fence] { tags = ["indoor"], cost = 5 }
+  atomic-path [mid_window_atrium_fence <-> shop_212_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_212_outside <-> shop_211_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_211_outside <-> shop_210_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_210_outside <-> shop_209_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_209_outside <-> shop_208_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_208_outside <-> shop_206_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_206_outside <-> shop_202_outside] { tags = ["indoor"], cost = 8 }
+  atomic-path [shop_202_outside <-> shop_201_outside] { tags = ["indoor"], cost = 8 }
+  atomic-path [shop_201_outside <-> shop_285_outside] { tags = ["indoor"], cost = 3 }
+  atomic-path [shop_285_outside <-> shop_282_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_282_outside <-> north_elevator_hall_link_end] { tags = ["indoor"], cost = 3 }
+  atomic-path [north_elevator_hall_link_end <-> north_elevator_hall_intersact] { tags = ["indoor"], cost = 5 }
+  atomic-path [north_elevator_hall_intersact <-> north_elevator_hall] { tags = ["indoor"], cost = 5 }
+  atomic-path [north_elevator_hall_link_end <-> shop_280_outside] { tags = ["indoor"], cost = 3 }
+  atomic-path [shop_280_outside <-> shop_278_outside] { tags = ["indoor"], cost = 4 }
+  atomic-path [shop_278_outside <-> shop_276_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_276_outside <-> north_outer_intersact] { tags = ["indoor"], cost = 5 }
+  atomic-path [north_outer_intersact <-> toilet_north_link_end] { tags = ["indoor"], cost = 8 }
+  atomic-path [toilet_north_link_end <-> shop_273_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [toilet_north_link_end <-> shop_272_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_273_outside <-> shop_272_outside] { tags = ["indoor"], cost = 7 }
+  atomic-path [north_outer_intersact <-> north_garden_atrium_link] { tags = ["indoor"], cost = 5 }
+  atomic-path [north_garden_intersect <-> shop_245_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_245_outside <-> shop_243_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_243_outside <-> shop_242_outside] { tags = ["indoor"], cost = 3 }
+  atomic-path [shop_242_outside <-> shop_240_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_240_outside <-> shop_239_outside] { tags = ["indoor"], cost = 3 }
+  atomic-path [shop_239_outside <-> shop_238_outside] { tags = ["indoor"], cost = 3 }
+  atomic-path [shop_238_outside <-> shop_236_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_236_outside <-> mid_garden_atrium_link_north] { tags = ["indoor"], cost = 7 }
+  atomic-path [mid_garden_atrium_link_north <-> mid_garden_atrium_link_south] { tags = ["indoor"], cost = 10 }
+  atomic-path [mid_garden_atrium_link_south <-> shop_233_outside] { tags = ["indoor"], cost = 7 }
+  atomic-path [shop_233_outside <-> shop_232_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_232_outside <-> shop_231_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_231_outside <-> shop_230_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_230_outside <-> shop_228_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_228_outside <-> shop_229_outside] { tags = ["indoor"], cost = 3 }
+  atomic-path [shop_228_outside <-> shop_261_outside] { tags = ["indoor"], cost = 3 }
+
+
+  atomic-path [shop_201 <-> shop_201_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_202 <-> shop_202_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_206 <-> shop_206_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_208 <-> shop_208_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_211 <-> shop_211_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_212 <-> shop_212_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_215 <-> shop_215_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_216 <-> shop_216_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_218 <-> shop_218_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_219 <-> shop_219_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_220 <-> shop_220_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_222 <-> shop_222_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_223 <-> shop_223_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_224 <-> shop_224_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_225 <-> shop_225_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_227 <-> shop_227_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_228 <-> shop_228_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_229 <-> shop_229_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_230 <-> shop_230_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_231 <-> shop_231_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_232 <-> shop_232_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_233 <-> shop_233_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_236 <-> shop_236_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_238 <-> shop_238_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_239 <-> shop_239_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_240 <-> shop_240_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_242 <-> shop_242_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_243 <-> shop_243_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_245 <-> shop_245_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_247 <-> shop_247_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_248 <-> shop_248_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_250 <-> shop_250_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_252 <-> shop_252_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_253 <-> shop_253_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_258 <-> shop_258_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_261 <-> shop_261_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_262 <-> shop_262_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_269 <-> shop_269_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_270 <-> shop_270_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_272 <-> shop_272_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_276 <-> shop_276_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_280 <-> shop_280_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_282 <-> shop_282_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_285 <-> shop_285_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_266B <-> shop_266B_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_266A <-> shop_266A_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_271S <-> shop_271S_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+
 }
