@@ -113,8 +113,9 @@ topo-map Level3(){
   topo-node south_garden_atrium_link {tags = ["indoor"]}
   topo-node mid_bridge_inner_end {tags = ["indoor"]}
   topo-node mid_bridge_outer_end {tags = ["indoor"]}
-  topo-node south_bridge_outer_end {tags = ["indoor", "bridge"]}
+  topo-node south_bridge_inner_end {tags = ["indoor", "bridge"]}
   topo-node north_bridge_outer_end {tags = ["indoor", "bridge"]}
+  topo-node north_bridge_inner_end {tags = ["indoor", "bridge"]}
 
   topo-node mid_window_atrium_fence {tags = ["indoor"]}
   topo-node south_window_atrium_fence {tags = ["indoor"]}
@@ -175,7 +176,8 @@ topo-map Level3(){
   atomic-path [mid_bridge_outer_end <-> shop_306_outside] { tags = ["indoor"], cost = 5 }
   atomic-path [mid_bridge_outer_end <-> mid_window_atrium_fence] { tags = ["indoor"], cost = 4 }
   atomic-path [shop_306_outside <-> shop_305_outside] { tags = ["indoor"], cost = 5 }
-  atomic-path [shop_305_outside <-> shop_302_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_305_outside <-> north_bridge_outer_end] { tags = ["indoor"], cost = 4 }
+  atomic-path [north_bridge_outer_end <-> shop_302_outside] { tags = ["indoor"], cost = 4 }
   atomic-path [shop_302_outside <-> shop_301_outside] { tags = ["indoor"], cost = 15 }
   atomic-path [shop_301_outside <-> shop_387_outside] { tags = ["indoor"], cost = 15 }
   atomic-path [shop_387_outside <-> shop_386] { tags = ["indoor"], cost = 4 }
@@ -196,7 +198,8 @@ topo-map Level3(){
   atomic-path [shop_337_outside <-> shop_336_outside] { tags = ["indoor"], cost = 3 }
   atomic-path [shop_336_outside <-> shop_335_outside] { tags = ["indoor"], cost = 5 }
   atomic-path [shop_335_outside <-> shop_333_outside] { tags = ["indoor"], cost = 5 }
-  atomic-path [shop_333_outside <-> shop_332_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_333_outside <-> north_bridge_inner_end] { tags = ["indoor"], cost = 4 }
+  atomic-path [north_bridge_inner_end <-> shop_332_outside] { tags = ["indoor"], cost = 4 }
   atomic-path [shop_332_outside <-> shop_331_outside] { tags = ["indoor"], cost = 5 }
   atomic-path [shop_331_outside <-> shop_329_outside] { tags = ["indoor"], cost = 5 }
   atomic-path [shop_329_outside <-> mid_garden_atrium_link_north] { tags = ["indoor"], cost = 7 }
@@ -204,7 +207,8 @@ topo-map Level3(){
   atomic-path [mid_bridge_inner_end <-> mid_garden_atrium_link_south] { tags = ["indoor"], cost = 5 }
   atomic-path [mid_garden_atrium_link_south <-> shop_327_outside] { tags = ["indoor"], cost = 7 }
   atomic-path [shop_327_outside <-> shop_326_outside] { tags = ["indoor"], cost = 5 }
-  atomic-path [shop_326_outside <-> shop_325_outside] { tags = ["indoor"], cost = 4 }
+  atomic-path [shop_326_outside <-> south_bridge_inner_end] { tags = ["indoor"], cost = 4 }
+  atomic-path [south_bridge_inner_end <-> shop_325_outside] { tags = ["indoor"], cost = 4 }
   atomic-path [shop_325_outside <-> shop_323_outside] { tags = ["indoor"], cost = 5 }
   atomic-path [shop_323_outside <-> shop_321_outside] { tags = ["indoor"], cost = 3 }
   atomic-path [shop_321_outside <-> shop_322_outside] { tags = ["indoor"], cost = 3 }
@@ -238,9 +242,9 @@ topo-map Level3(){
   atomic-path [shop_355_361_outside <-> south_garden_atrium_link] { tags = ["indoor"], cost = 5 }
 
   // Bridge bodies
-  atomic-path [mid_bridge_inner_end <-> mid_bridge_outer_end] { tags = ["indoor", "bridge"], cost = 10 }
-  atomic-path [south_bridge_outer_end <-> ???] { tags = ["indoor", "bridge"], cost = 10 }
-  atomic-path [north_bridge_outer_end <-> ???] { tags = ["indoor", "bridge"], cost = 10 }
+  atomic-path [mid_bridge_inner_end <-> mid_bridge_outer_end] { tags = ["indoor", "bridge"], action_required = ["cross_bridge"], cost = 10 }
+  atomic-path [shop_311_outside <-> south_bridge_inner_end] { tags = ["indoor", "bridge"], action_required = ["cross_bridge"], cost = 10 }
+  atomic-path [north_bridge_outer_end <-> north_bridge_inner_end] { tags = ["indoor", "bridge"], action_required = ["cross_bridge"], cost = 10 }
 
   // Enter/Exit shops
   atomic-path [shop_313 <-> shop_313_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }

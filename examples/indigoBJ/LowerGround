@@ -5,8 +5,8 @@ topo-map LowerGround(){
 
   topo-node north_elevator_hall {tags = ["indoor", "elevator_hall"]}
   topo-node south_elevator_hall {tags = ["indoor", "elevator_hall"]}
-  topo-node parking_elevator_hall {tags = ["indoor", "elevator_hall"]}
-  topo-node toilet_north {tags = ["indoor", "toilet"], positions = 8, observedThroughput = 4}
+  topo-node parking_elevator_hall {tags = ["indoor", "elevator_hall"], description = "A separate elevator hall that only leads to the carpark, located near the north toilet"}
+  topo-node toilet_north {tags = ["indoor", "toilet", "odor_prone"], positions = 8, observedThroughput = 4}
   topo-node toilet_south {tags = ["indoor", "toilet"], positions = 8, observedThroughput = 4}
   topo-node shop_001 {tags = ["indoor", "shop"], shop_name = "BHG", shop_category = "Supermarket"}
   topo-node shop_002 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}

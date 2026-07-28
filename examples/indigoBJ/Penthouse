@@ -1,5 +1,75 @@
 topo-map Penthouse(){
   let params: {permResident: Int} = {
-      permResident = 1
+      permResident = 10
   }
+
+  // Theaters
+  topo-node theater1 {tags = ["indoor"]}
+  topo-node theater1_enter_gate {tags = ["indoor"]}
+  topo-node theater1_exit_gate {tags = ["indoor"]}
+  topo-node theater2 {tags = ["indoor"]}
+  topo-node theater2_enter_gate {tags = ["indoor"]}
+  topo-node theater2_exit_gate {tags = ["indoor"]}
+  topo-node theater3 {tags = ["indoor"]}
+  topo-node theater3_5_enter_gate {tags = ["indoor"]}
+  topo-node theater3_exit_gate {tags = ["indoor"]}
+  topo-node theater4 {tags = ["indoor"]}
+  topo-node theater4_enter_gate {tags = ["indoor"]}
+  topo-node theater4_exit_gate {tags = ["indoor"]}
+  topo-node theater5 {tags = ["indoor"]}
+  topo-node theater5_exit_gate {tags = ["indoor"]}
+  topo-node theater6 {tags = ["indoor"]}
+  topo-node theater6_enter_gate {tags = ["indoor"]}
+  topo-node theater6_exit_gate {tags = ["indoor"]}
+  topo-node theater7 {tags = ["indoor"], description = "Theater 7 is a special theater that is mainly suitable for couples, with a more romantic atmosphere and a more comfortable seating arrangement"}
+  topo-node theater7_enter_gate {tags = ["indoor"]}
+  topo-node theater7_exit_gate {tags = ["indoor"]}
+
+  // Near the check-in
+  topo-node check_in_gate_outside {tags = ["indoor", "staffed"]}
+  topo-node check_in_gate_inside {tags = ["indoor", "staffed"]}
+  topo-node toilets_outside {tags = ["indoor", "odor_prone"]}
+  topo-node toilet_male {tags = ["indoor", "odor_prone"]}
+  topo-node toilet_female {tags = ["indoor"]}
+
+  // Inside the lobby
+  topo-node snack_shop {tags = ["indoor", "shop", "staffed"], shop_name = "Cinema Snack Shop", shop_category = "snack shop"}
+  topo-node ticketing_counter {tags = ["indoor", "deprecated"], description = "Ticketing counter for the cinema, no longer in service as ticketing has been fully automated"}
+  topo-node ticketing_machine {tags = ["indoor"], description = "Ticketing machine for the cinema, used for purchasing/collecting tickets"}
+  topo-node big_screen {tags = ["indoor"], description = "The big screen in the lobby, used for advertising and showing movie trailers"}
+  topo-node central_seating_area {tags = ["indoor"], description = "The central seating area in the lobby, used for waiting"}
+  topo-node vip_lounge_outside {tags = ["indoor", "staffed"], description = "Right outside the VIP lounge, access is restricted to VIP members only"}
+  topo-node vip_lounge {tags = ["indoor", "staffed"], description = "VIP lounge for guests with VIP membership, access is restricted to VIP members only"}
+  topo-node vip_lounge_toilet {tags = ["indoor", "staffed"], description = "VIP lounge toilet for guests with VIP membership, access is restricted to VIP members only"}
+  topo-node roof_exit_inside {tags = ["indoor"], description = "The exit to the roof from inside the penthouse, leads to the accessible elevator"}
+  topo-node roof_exit_outside {tags = ["outdoor", "rain_exposed", "direct_sunlight"], description = "The exit to the roof from outside the penthouse, inside is the cinema lobby"}
+
+
+  // Access to this floor
+  topo-node escalator_3_4 {tags = ["indoor", "escalator"], description = "The only escalator that goes to this floor"}
+  topo-node north_elevator_hall {tags = ["indoor", "elevator"], description = "The only guest elevator that goes to this floor, only for guests with accessibility needs"}
+
+
+  atomic-path [check_in_gate_outside <-> check_in_gate_inside] { tags = ["indoor"], action_required = ["cross_turnstile"], cost = 5 }
+  atomic-path [check_in_gate_inside <-> theater1_enter_gate] { tags = ["indoor"], cost = 6 }
+  atomic-path [check_in_gate_inside <-> theater2_enter_gate] { tags = ["indoor"], cost = 3 }
+  atomic-path [check_in_gate_inside <-> theater6_enter_gate] { tags = ["indoor"], cost = 8 }
+  atomic-path [theater2_enter_gate <-> theater6_enter_gate] { tags = ["indoor"], cost = 5 }
+  atomic-path [theater2_enter_gate <-> theater3_5_enter_gate] { tags = ["indoor"], cost = 6 }
+  atomic-path [theater6_enter_gate <-> theater3_5_enter_gate] { tags = ["indoor"], cost = 6 }
+  atomic-path [theater3_5_enter_gate <-> theater4_enter_gate] { tags = ["indoor"], cost = 5 }
+
+  atomic-path [theater1_enter_gate <-> theater1] { tags = ["indoor"], action_required = ["cross_door"], cost = 5 }
+  atomic-path [theater2_enter_gate <-> theater2] { tags = ["indoor"], action_required = ["cross_door"], cost = 5 }
+  atomic-path [theater3_5_enter_gate <-> theater3] { tags = ["indoor"], action_required = ["cross_door"], cost = 5 }
+  atomic-path [theater4_enter_gate <-> theater4] { tags = ["indoor"], action_required = ["cross_door"], cost = 5 }
+  atomic-path [theater3_5_enter_gate <-> theater5] { tags = ["indoor"], action_required = ["cross_door"], cost = 5 }
+  atomic-path [theater6_enter_gate <-> theater6] { tags = ["indoor"], action_required = ["cross_door"], cost = 5 }
+  atomic-path [theater7_enter_gate <-> theater7] { tags = ["indoor"], action_required = ["cross_door"], cost = 5 }
+
+  atomic-path [check_in_gate_outside <-> toilets_outside] { tags = ["indoor"], cost = 10 }
+  atomic-path [check_in_gate_outside <-> theater7_enter_gate] { tags = ["indoor"], cost = 8 }
+  atomic-path [toilets_outside <-> toilet_male] { tags = ["indoor"], cost = 5 }
+  atomic-path [toilets_outside <-> toilet_female] { tags = ["indoor"], cost = 7 }
+
 }
