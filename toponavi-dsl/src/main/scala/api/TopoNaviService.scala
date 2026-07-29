@@ -80,6 +80,12 @@ object TopoNaviService {
           message,
           Map[String, Object]("banTags" -> banTags.toList.sorted.asJava).asJava
         )
+      case Left(NoRouteFound(message)) =>
+        throw NavigationRequestException(
+          "NO_ROUTE_FOUND",
+          message,
+          Map.empty[String, Object].asJava
+        )
       case Left(error) => throw new RuntimeException(formatError(error))
       case Right(plan) =>
         // Convert DSL-level spatial annotations into slim core-level types and attach to the plan

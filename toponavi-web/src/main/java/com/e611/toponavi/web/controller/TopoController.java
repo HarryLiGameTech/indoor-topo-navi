@@ -183,12 +183,23 @@ public class TopoController {
 
             return ResponseEntity.ok(response);
         } catch (NavigationRequestException e) {
-            return ResponseEntity.unprocessableEntity().body(Map.of(
-                    "status", "error",
-                    "code", e.getCode(),
-                    "message", e.getMessage(),
-                    "details", e.getDetails()
-            ));
+            String code = e.getCode();
+            String message = e.getMessage();
+            Map<String, Object> details = new LinkedHashMap<>(e.getDetails());
+
+            if ("NO_ROUTE_FOUND".equals(code) && !userParams.isEmpty()) {
+                code = "NO_ROUTE_FOR_USER_PARAMS";
+                details.put("plannerMessage", message);
+                details.put("userParams", new LinkedHashMap<>(userParams));
+                message = "No route is available with the supplied access and capability parameters.";
+            }
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("status", "error");
+            response.put("code", code);
+            response.put("message", message);
+            response.put("details", details);
+            return ResponseEntity.unprocessableEntity().body(response);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(formatError(e));
         }

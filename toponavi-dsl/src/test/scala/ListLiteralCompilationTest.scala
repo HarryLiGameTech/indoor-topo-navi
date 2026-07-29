@@ -134,6 +134,16 @@ class ListLiteralCompilationTest extends AnyFunSuite with Matchers {
     }
     noRoute.getCode shouldBe "NO_ROUTE_WITH_BAN_TAGS"
     noRoute.getDetails.get("banTags") shouldBe java.util.List.of("indoor", "outdoor")
+
+    val plainNoRoute = intercept[NavigationRequestException] {
+      TopoNaviService.findRoutePlan(
+        result,
+        "Floor1::lobby",
+        "Floor1::entrance",
+        "MinimizeTime"
+      )
+    }
+    plainNoRoute.getCode shouldBe "NO_ROUTE_FOUND"
   }
 
   test("legacy action_required path attribute reaches structured route actions") {
