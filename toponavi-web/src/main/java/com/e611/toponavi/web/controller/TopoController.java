@@ -3,8 +3,11 @@ package com.e611.toponavi.web.controller;
 import api.TopoNaviService; // The Scala Facade
 import api.NavigationRequestException;
 import compiler.CompilationResult;
+import data.AtomicPath;
 import data.NavigationGraph;
 import data.NavigationOutputPath;
+import data.RouteTraversalMetadata;
+import enums.VisitingMode;
 import com.e611.toponavi.web.contract.RouteResponseDeprecationSpec;
 import com.e611.toponavi.web.dto.NavigationRequest;
 import com.e611.toponavi.web.dto.QuickDemoNavigationRequest;
@@ -28,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -328,6 +332,185 @@ public class TopoController {
             return ResponseEntity.status(500).body(formatError(e));
         }
     }
+
+    @GetMapping("/quick-demo-all-available-edges")
+    public ResponseEntity<?> getAllAvailableEdgesGet(@RequestParam String buildingName) {
+        return getAllAvailableEdges(buildingName, Collections.emptyMap());
+    }
+
+    @PostMapping("/quick-demo-all-available-edges")
+    public ResponseEntity<?> getAllAvailableEdgesPost(
+            @RequestParam String buildingName,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getAllAvailableEdges(buildingName, extractUserParams(body));
+    }
+
+    private ResponseEntity<?> getAllAvailableEdges(String buildingName, Map<String, Object> userParams) {
+        try {
+            Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+            if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found"));
+
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
+            Map<String, NavigationGraph> graphs = CollectionConverters.asJava(outcome.result().graphs());
+
+            List<CompiledEdgeView> edges = graphs.entrySet().stream()
+                    .flatMap(entry -> CollectionConverters.asJava(entry.getValue().adjacencyList()).stream()
+                            .map(edge -> compiledEdgeView(entry.getKey(), edge)))
+                    .sorted(java.util.Comparator
+                            .comparing(CompiledEdgeView::graph)
+                            .thenComparing(CompiledEdgeView::from)
+                            .thenComparing(CompiledEdgeView::to)
+                            .thenComparingDouble(CompiledEdgeView::costSeconds))
+                    .toList();
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", outcome.message(),
+                    "edges", edges
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(formatError(e));
+        }
+    }
+
+    @GetMapping("/quick-demo-proximity-nodes")
+    public ResponseEntity<?> getProximityNodesGet(
+            @RequestParam String buildingName,
+            @RequestParam String nodeIdentifier,
+            @RequestParam(defaultValue = "5") int amount) {
+        return getProximityNodes(buildingName, nodeIdentifier, amount, Collections.emptyMap());
+    }
+
+    @PostMapping("/quick-demo-proximity-nodes")
+    public ResponseEntity<?> getProximityNodesPost(
+            @RequestParam String buildingName,
+            @RequestParam String nodeIdentifier,
+            @RequestParam(defaultValue = "5") int amount,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getProximityNodes(buildingName, nodeIdentifier, amount, extractUserParams(body));
+    }
+
+    private ResponseEntity<?> getProximityNodes(
+            String buildingName,
+            String nodeIdentifier,
+            int amount,
+            Map<String, Object> userParams) {
+        try {
+            if (amount < 1) return ResponseEntity.badRequest().body(Map.of("error", "amount must be at least 1"));
+
+            String[] parts = nodeIdentifier.split("::", 2);
+            if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Invalid node identifier format. Expected '{graph_identifier}::{node_identifier}'"));
+            }
+
+            Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+            if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found"));
+
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
+            NavigationGraph graph = CollectionConverters.asJava(outcome.result().graphs()).get(parts[0]);
+            if (graph == null) return ResponseEntity.badRequest().body(Map.of("error", "Graph not found: " + parts[0]));
+
+            boolean sourceExists = CollectionConverters.asJava(graph.nodes()).stream()
+                    .anyMatch(node -> node.identifier().equals(parts[1]));
+            if (!sourceExists) return ResponseEntity.badRequest().body(Map.of("error", "Node not found: " + parts[1]));
+
+            List<ProximityNodeView> candidates = CollectionConverters.asJava(graph.adjacencyList()).stream()
+                    .filter(edge -> edge.source().identifier().equals(parts[1]))
+                    .map(edge -> proximityNodeView(parts[0], edge))
+                    .toList();
+            List<ProximityNodeView> proximityNodes = nearestProximityNodes(candidates, amount);
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("status", "success");
+            response.put("message", outcome.message());
+            response.put("sourceNodeIdentifier", nodeIdentifier);
+            response.put("requestedAmount", amount);
+            response.put("proximityNodes", proximityNodes);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(formatError(e));
+        }
+    }
+
+    static List<ProximityNodeView> nearestProximityNodes(List<ProximityNodeView> candidates, int amount) {
+        if (amount < 1) throw new IllegalArgumentException("amount must be at least 1");
+
+        Map<String, ProximityNodeView> cheapestByNode = new LinkedHashMap<>();
+        candidates.forEach(candidate -> cheapestByNode.merge(
+                candidate.nodeIdentifier(),
+                candidate,
+                (left, right) -> left.costSeconds() <= right.costSeconds() ? left : right
+        ));
+        return cheapestByNode.values().stream()
+                .sorted(java.util.Comparator
+                        .comparingDouble(ProximityNodeView::costSeconds)
+                        .thenComparing(ProximityNodeView::nodeIdentifier))
+                .limit(amount)
+                .toList();
+    }
+
+    private static CompiledEdgeView compiledEdgeView(String graphId, AtomicPath edge) {
+        RouteTraversalMetadata metadata = RouteTraversalMetadata.from(edge.attributes());
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        CollectionConverters.asJava(edge.attributes()).forEach((key, value) ->
+                attributes.put(key, AttributeValueJsonMapper.toJavaValue(value)));
+        return new CompiledEdgeView(
+                graphId,
+                edge.source().identifier(),
+                edge.target().identifier(),
+                normalCost(edge),
+                new ArrayList<>(new TreeSet<>(CollectionConverters.asJava(metadata.tags()))),
+                new ArrayList<>(CollectionConverters.asJava(metadata.requiredActions())),
+                attributes
+        );
+    }
+
+    private static ProximityNodeView proximityNodeView(String graphId, AtomicPath edge) {
+        RouteTraversalMetadata metadata = RouteTraversalMetadata.from(edge.attributes());
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        CollectionConverters.asJava(edge.target().attributes()).forEach((key, value) ->
+                attributes.put(key, AttributeValueJsonMapper.toJavaValue(value)));
+        return new ProximityNodeView(
+                graphId + "::" + edge.target().identifier(),
+                graphId,
+                edge.target().identifier(),
+                normalCost(edge),
+                attributes,
+                new ArrayList<>(new TreeSet<>(CollectionConverters.asJava(metadata.tags()))),
+                new ArrayList<>(CollectionConverters.asJava(metadata.requiredActions()))
+        );
+    }
+
+    private static double normalCost(AtomicPath edge) {
+        Map<VisitingMode, Object> costs = CollectionConverters.asJava(edge.costs());
+        Object normal = costs.get(VisitingMode.valueOf("Normal"));
+        if (normal instanceof Number number) return number.doubleValue();
+        return costs.values().stream()
+                .filter(Number.class::isInstance)
+                .map(Number.class::cast)
+                .mapToDouble(Number::doubleValue)
+                .min()
+                .orElse(Double.POSITIVE_INFINITY);
+    }
+
+    record CompiledEdgeView(
+            String graph,
+            String from,
+            String to,
+            double costSeconds,
+            List<String> tags,
+            List<String> requiredActions,
+            Map<String, Object> attributes) {}
+
+    record ProximityNodeView(
+            String nodeIdentifier,
+            String graph,
+            String nodeId,
+            double costSeconds,
+            Map<String, Object> attributes,
+            List<String> edgeTags,
+            List<String> requiredActions) {}
 
     @GetMapping("/quick-demo-node-info")
     public ResponseEntity<?> getNodeInfoGet(

@@ -6,6 +6,7 @@ import com.e611.toponavi.web.dto.TraversalPreferenceRequest;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -99,10 +100,49 @@ class TopoControllerPreferenceTest {
         assertThrows(IllegalArgumentException.class, () -> TopoController.resolveBanTags(body));
     }
 
+    @Test
+    void proximityNodesKeepTheCheapestDirectEdgeAndRespectAmount() {
+        List<TopoController.ProximityNodeView> candidates = List.of(
+                proximityNode("Floor1::b", 8),
+                proximityNode("Floor1::a", 3),
+                proximityNode("Floor1::b", 2),
+                proximityNode("Floor1::c", 4)
+        );
+
+        List<TopoController.ProximityNodeView> nearest =
+                TopoController.nearestProximityNodes(candidates, 2);
+
+        assertEquals(List.of("Floor1::b", "Floor1::a"),
+                nearest.stream().map(TopoController.ProximityNodeView::nodeIdentifier).toList());
+        assertEquals(List.of(2.0, 3.0),
+                nearest.stream().map(TopoController.ProximityNodeView::costSeconds).toList());
+    }
+
+    @Test
+    void proximityAmountMustBePositive() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> TopoController.nearestProximityNodes(List.of(), 0)
+        );
+    }
+
     private QuickDemoNavigationRequest requestWithPreference(String preference) {
         QuickDemoNavigationRequest body = new QuickDemoNavigationRequest();
         body.traversalPreference = new TraversalPreferenceRequest();
         body.traversalPreference.routePlanningPreference = preference;
         return body;
+    }
+
+    private TopoController.ProximityNodeView proximityNode(String nodeIdentifier, double costSeconds) {
+        String[] parts = nodeIdentifier.split("::", 2);
+        return new TopoController.ProximityNodeView(
+                nodeIdentifier,
+                parts[0],
+                parts[1],
+                costSeconds,
+                Map.of(),
+                List.of(),
+                List.of()
+        );
     }
 }
