@@ -52,7 +52,7 @@ topo-map Level3(){
   topo-node shop_344 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_345 {tags = ["indoor", "shop"], shop_name = "HIGH SUKI 和牛寿喜烧专门店", shop_category = "Full-service restaurant"}
   topo-node shop_346 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
-  topo-node shop_347 {tags = ["indoor", "shop"], shop_name = "Meat Mate 鲜食肉铺", shop_category = ""}
+  topo-node shop_347 {tags = ["indoor", "shop"], shop_name = "Meat Mate 鲜食肉铺", shop_category = "", in_construction = true}
   topo-node shop_348 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_349 {tags = ["indoor", "shop"], shop_name = "CHAO JIA XIANG 潮家巷", shop_category = "Full-service restaurant"}
   topo-node shop_350 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
@@ -167,25 +167,25 @@ topo-map Level3(){
   topo-node shop_387_outside {tags = ["indoor"]}
   topo-node shop_303_outside {tags = ["indoor"]}
 
-  atomic-path [shop_313_outside <-> shop_312_outside] { tags = ["indoor"], cost = 5 }
-  atomic-path [shop_312_outside <-> shop_311_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_313_outside <-> shop_312_outside] { tags = ["indoor"], cost = 4 }
+  atomic-path [shop_312_outside <-> shop_311_outside] { tags = ["indoor"], cost = 6 }
   atomic-path [shop_311_outside <-> shop_310_outside] { tags = ["indoor"], cost = 5 }
   atomic-path [shop_310_outside <-> shop_309_outside] { tags = ["indoor"], cost = 5 }
-  atomic-path [shop_309_outside <-> shop_308_outside] { tags = ["indoor"], cost = 5 }
-  atomic-path [shop_308_outside <-> mid_bridge_outer_end] { tags = ["indoor"], cost = 5 }
-  atomic-path [mid_bridge_outer_end <-> shop_306_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_309_outside <-> shop_308_outside] { tags = ["indoor"], cost = 13 }
+  atomic-path [shop_308_outside <-> mid_bridge_outer_end] { tags = ["indoor"], cost = 6 }
+  atomic-path [mid_bridge_outer_end <-> shop_306_outside] { tags = ["indoor"], cost = 8 }
   atomic-path [mid_bridge_outer_end <-> mid_window_atrium_fence] { tags = ["indoor"], cost = 4 }
-  atomic-path [shop_306_outside <-> shop_305_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_306_outside <-> shop_305_outside] { tags = ["indoor"], cost = 14 }
   atomic-path [shop_305_outside <-> north_bridge_outer_end] { tags = ["indoor"], cost = 4 }
   atomic-path [north_bridge_outer_end <-> shop_302_outside] { tags = ["indoor"], cost = 4 }
-  atomic-path [shop_302_outside <-> shop_301_outside] { tags = ["indoor"], cost = 15 }
+  atomic-path [shop_302_outside <-> shop_301_outside] { tags = ["indoor"], cost = 25 }
   atomic-path [shop_301_outside <-> shop_387_outside] { tags = ["indoor"], cost = 15 }
   atomic-path [shop_387_outside <-> shop_386] { tags = ["indoor"], cost = 4 }
   atomic-path [shop_386 <-> north_elevator_hall_link_end] { tags = ["indoor"], cost = 3 }
   atomic-path [north_elevator_hall_link_end <-> north_elevator_hall_intersact] { tags = ["indoor"], cost = 5 }
   atomic-path [north_elevator_hall_intersact <-> north_elevator_hall] { tags = ["indoor"], cost = 5 }
   atomic-path [north_elevator_hall_link_end <-> shop_383_outside] { tags = ["indoor"], cost = 5 }
-  atomic-path [shop_383_outside <-> shop_382_outside] { tags = ["indoor"], cost = 10 }
+  atomic-path [shop_383_outside <-> shop_382_outside] { tags = ["indoor"], cost = 14 }
   atomic-path [shop_382_outside <-> north_outer_intersact] { tags = ["indoor"], cost = 5 }
   atomic-path [north_outer_intersact <-> toilet_north_link_end] { tags = ["indoor"], cost = 8 }
   atomic-path [toilet_north_link_end <-> shop_370_outside] { tags = ["indoor"], cost = 12 }
@@ -216,29 +216,28 @@ topo-map Level3(){
   atomic-path [shop_358_outside <-> shop_356_outside] { tags = ["indoor"], cost = 5 }
   atomic-path [shop_356_outside <-> south_garden_atrium_link] { tags = ["indoor"], cost = 4 }
   atomic-path [south_garden_atrium_link <-> shop_359_outside] { tags = ["indoor"], cost = 8 }
-  atomic-path [shop_359_outside <-> south_elevator_hall_link_end] { tags = ["indoor"], cost = 8 }
+  atomic-path [shop_359_outside <-> south_elevator_hall_link_end] { tags = ["indoor"], cost = 5 }
   atomic-path [south_elevator_hall_link_end <-> south_elevator_hall] { tags = ["indoor"], cost = 8 }
   atomic-path [south_elevator_hall <-> south_elevator_hall_link_intersact] { tags = ["indoor"], cost = 8 }
   atomic-path [south_elevator_hall_link_intersact <-> toilet_south] { tags = ["indoor"], cost = 25 } // TODO: increase granuity
-  atomic-path [south_elevator_hall_link_end <-> shop_318_outside] { tags = ["indoor"], cost = 8 }
-  atomic-path [shop_318_outside <-> shop_316_outside] { tags = ["indoor"], cost = 8 }
+  atomic-path [south_elevator_hall_link_end <-> shop_318_outside] { tags = ["indoor"], cost = 6 }
+  atomic-path [shop_318_outside <-> shop_316_outside] { tags = ["indoor"], cost = 10 }
   atomic-path [shop_316_outside <-> south_window_atrium_fence] { tags = ["indoor"], cost = 5 }
-  atomic-path [south_window_atrium_fence <-> shop_313_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [south_window_atrium_fence <-> shop_313_outside] { tags = ["indoor"], cost = 10 }
 
-  // atomic-path [north_garden_atrium_link <-> ???] { tags = ["indoor"], cost = 4 }
-  // atomic-path [??? <-> north_garden_atrium_link_inner] { tags = ["indoor"], cost = 4 }
-  atomic-path [north_garden_atrium_link_inner <-> shop_373_outside] { tags = ["indoor"], cost = 3 }
-  atomic-path [north_garden_atrium_link_inner <-> shop_341_outside] { tags = ["indoor"], cost = 3 }
-  atomic-path [shop_341_outside <-> shop_345_outside] { tags = ["indoor"], cost = 8 }
+  atomic-path [north_garden_atrium_link <-> north_garden_atrium_link_inner] { tags = ["indoor"], cost = 15 }
+  atomic-path [north_garden_atrium_link_inner <-> shop_373_outside] { tags = ["indoor"], cost = 4 }
+  atomic-path [north_garden_atrium_link_inner <-> shop_341_outside] { tags = ["indoor"], cost = 4 }
+  atomic-path [shop_341_outside <-> shop_345_outside] { tags = ["indoor"], cost = 8 } // TODO: Continue verifying HERE
   atomic-path [shop_345_outside <-> mid_garden_atrium_link_north] { tags = ["indoor"], cost = 15 }
-  atomic-path [shop_345_outside <-> shop_347_outside] { tags = ["indoor"], cost = 10 }
+  atomic-path [shop_345_outside <-> shop_347_outside] { tags = ["indoor"], cost = 13 }
   atomic-path [shop_347_outside <-> mid_garden_atrium_link_south] { tags = ["indoor"], cost = 15 }
   atomic-path [shop_347_outside <-> shop_349_outside] { tags = ["indoor"], cost = 8 }
-  atomic-path [shop_349_outside <-> shop_350_outside] { tags = ["indoor"], cost = 8 }
-  atomic-path [shop_350_outside <-> shop_352_outside] { tags = ["indoor"], cost = 5 }
-  atomic-path [shop_352_outside <-> shop_353_365S_outside] { tags = ["indoor"], cost = 10 }
-  atomic-path [shop_353_365S_outside <-> shop_353_365_outside] { tags = ["indoor"], cost = 5 }
-  atomic-path [shop_353_365_outside <-> shop_355_361_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_349_outside <-> shop_350_outside] { tags = ["indoor"], cost = 5 }
+  atomic-path [shop_350_outside <-> shop_352_outside] { tags = ["indoor"], cost = 9 }
+  atomic-path [shop_352_outside <-> shop_353_365S_outside] { tags = ["indoor"], cost = 13 }
+  atomic-path [shop_353_365S_outside <-> shop_353_365_outside] { tags = ["indoor"], cost = 7 }
+  atomic-path [shop_353_365_outside <-> shop_355_361_outside] { tags = ["indoor"], cost = 7 }
   atomic-path [shop_355_361_outside <-> south_garden_atrium_link] { tags = ["indoor"], cost = 5 }
 
   // Bridge bodies

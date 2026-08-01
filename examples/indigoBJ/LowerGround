@@ -3,7 +3,6 @@ topo-map LowerGround(){
       permResident = 51
   }
 
-  topo-node north_elevator_hall {tags = ["indoor", "elevator_hall"]}
   topo-node south_elevator_hall {tags = ["indoor", "elevator_hall"]}
   topo-node parking_elevator_hall {tags = ["indoor", "elevator_hall"], description = "A separate elevator hall that only leads to the carpark, located near the north toilet"}
   topo-node toilet_north {tags = ["indoor", "toilet", "odor_prone"], positions = 8, observedThroughput = 4}
@@ -112,6 +111,32 @@ topo-map LowerGround(){
   topo-node shop_063_outside {tags = ["indoor"]}
   topo-node shop_065_outside {tags = ["indoor"]}
   topo-node shop_100_outside {tags = ["indoor"]}
+  topo-node north_escalator_to_L1 {tags = ["indoor", "escalator"]}
+  topo-node shop_050_outside_A {tags = ["indoor"]}
+  topo-node shop_050_outside_B {tags = ["indoor"]}
+  topo-node dropoff_atrium_junction {tags = ["indoor", "junction"]}
+  topo-node south_escalator_to_L1 {tags = ["indoor", "escalator"]}
+  topo-node shop_001_exit {tags = ["indoor"]}
+  topo-node shop_045_outside {tags = ["indoor"]}
+
+  topo-node south_elevator_hall_link_end {tags = ["indoor", "junction"]}
+  topo-node south_elevator_hall_link_intersact {tags = ["indoor"]}
+  topo-node shop_042A_042B_outside {tags = ["indoor"]}
+  topo-node shop_029A_outside {tags = ["indoor"]}
+  topo-node shop_028_outside {tags = ["indoor"]}
+  topo-node shop_038_outside {tags = ["indoor"]}
+  topo-node office_entry {tags = ["indoor"]}
+  topo-node north_dropoff_gate_inside {tags = ["indoor", "manual_door"]}
+  topo-node south_dropoff_service_lift_gate {tags = ["indoor", "manual_door"]}
+  topo-node south_dropoff_gate_outside {tags = ["indoor", "manual_door"]}
+  topo-node north_dropoff_gate_outside {tags = ["indoor", "manual_door"]}
+  topo-node north_dropoff_service_lift_gate {tags = ["indoor", "manual_door"]}
+  topo-node subway_station_link {tags = ["indoor", "automatic_door", "escalator"], description = "Link to the subway station, with an escalator leading down to the subway concourse"}
+  topo-node shop_007_011_outside {tags = ["indoor"]}
+  topo-node shop_010_013_outside {tags = ["indoor"]}
+  topo-node shop_009_012A {tags = ["indoor"]}
+  topo-node shop_008_012B_outside {tags = ["indoor"]}
+  topo-node shop_001_entry {tags = ["indoor"]}
 
   atomic-path [shop_001 <-> shop_001_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
   atomic-path [shop_008 <-> shop_008_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
@@ -152,5 +177,93 @@ topo-map LowerGround(){
   atomic-path [shop_063 <-> shop_063_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
   atomic-path [shop_065 <-> shop_065_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
   atomic-path [shop_100 <-> shop_100_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+
+  atomic-path [office_entry <-> shop_100_outside] {cost = 6}
+  atomic-path [shop_100_outside <-> shop_029A_outside] {cost = 8}
+  atomic-path [south_dropoff_gate_outside <-> south_dropoff_service_lift_gate] {cost = 10}
+  atomic-path [south_dropoff_gate_outside <-> shop_029A_outside] {cost = 5}
+  atomic-path [south_dropoff_service_lift_gate <-> north_dropoff_gate_outside] {cost = 30}
+  atomic-path [north_dropoff_gate_outside <-> north_dropoff_gate_inside] {cost = 5}
+  atomic-path [north_dropoff_gate_outside <-> north_dropoff_service_lift_gate] {cost = 22}
+  atomic-path [north_dropoff_gate_inside <-> dropoff_atrium_junction] {cost = 15}
+  atomic-path [toilet_south <-> south_elevator_hall_link_intersact] {cost = 7}
+  atomic-path [south_elevator_hall_link_intersact <-> south_elevator_hall] {cost = 4}
+  atomic-path [south_elevator_hall <-> south_elevator_hall_link_end] {cost = 8}
+  atomic-path [shop_060_outside <-> shop_062_outside] {cost = 5}
+  atomic-path [shop_062_outside <-> shop_063_outside] {cost = 5}
+  atomic-path [shop_063_outside <-> shop_065_outside] {cost = 9}
+  atomic-path [shop_065_outside <-> parking_elevator_hall] {cost = 5}
+  atomic-path [shop_065_outside <-> toilet_north] {cost = 8}
+  atomic-path [shop_062_outside <-> shop_001_exit] {cost = 6}
+  atomic-path [shop_058_outside <-> shop_060_outside] {cost = 8}
+  atomic-path [north_escalator_to_L1 <-> shop_058_outside] {cost = 7}
+  atomic-path [shop_060_outside <-> shop_001_entry] {cost = 10}
+  atomic-path [north_escalator_to_L1 <-> shop_010_013_outside] {cost = 9}
+  atomic-path [shop_010_013_outside <-> shop_009_012A] {cost = 6}
+  atomic-path [shop_009_012A <-> shop_008_012B_outside] {cost = 5}
+  atomic-path [shop_008_012B_outside <-> shop_007_011_outside] {cost = 5}
+  atomic-path [shop_007_011_outside <-> subway_station_link] {cost = 6}
+  atomic-path [shop_017_outside <-> shop_058_outside] {cost = 11}
+  atomic-path [north_escalator_to_L1 <-> shop_001_entry] {cost = 6}
+  atomic-path [shop_001_entry <-> shop_001_exit] {cost = 14}
+  atomic-path [shop_055_outside <-> shop_058_outside] {cost = 12}
+  atomic-path [shop_055_outside <-> shop_017_outside] {cost = 6}
+  atomic-path [shop_063_outside <-> shop_001_exit] {cost = 8}
+  atomic-path [shop_001_exit <-> shop_065_outside] {cost = 14}
+  atomic-path [shop_062_outside <-> shop_001_entry] {cost = 13}
+  atomic-path [shop_051_outside <-> shop_055_outside] {cost = 8}
+  atomic-path [shop_051_outside <-> shop_017_outside] {cost = 10}
+  atomic-path [shop_017_outside <-> shop_018_outside] {cost = 5}
+  atomic-path [shop_018_outside <-> shop_019_outside] {cost = 7}
+  atomic-path [shop_019_outside <-> dropoff_atrium_junction] {cost = 6}
+  atomic-path [shop_050_outside_A <-> shop_051_outside] {cost = 5}
+  atomic-path [shop_050_outside_A <-> shop_019_outside] {cost = 6}
+  atomic-path [shop_050_outside_B <-> shop_050_outside_A] {cost = 5}
+  atomic-path [shop_049_outside <-> shop_050_outside_B] {cost = 5}
+  atomic-path [shop_047_outside <-> shop_049_outside] {cost = 8}
+  atomic-path [shop_049_outside <-> dropoff_atrium_junction] {cost = 8}
+  atomic-path [dropoff_atrium_junction <-> shop_050_outside_B] {cost = 5}
+  atomic-path [shop_046_outside <-> shop_047_outside] {cost = 7}
+  atomic-path [shop_045_outside <-> shop_046_outside] {cost = 6}
+  atomic-path [south_elevator_hall_link_end <-> shop_039_outside] {cost = 3}
+  atomic-path [shop_039_outside <-> shop_040_outside] {cost = 3}
+  atomic-path [shop_040_outside <-> shop_041_outside] {cost = 3}
+  atomic-path [shop_041_outside <-> shop_042A_042B_outside] {cost = 4}
+  atomic-path [shop_042A_042B_outside <-> shop_043_outside] {cost = 6}
+  atomic-path [shop_043_outside <-> shop_045_outside] {cost = 7}
+  atomic-path [shop_035_outside <-> shop_036_outside] {cost = 4}
+  atomic-path [shop_036_outside <-> shop_038_outside] {cost = 4}
+  atomic-path [shop_038_outside <-> south_elevator_hall_link_end] {cost = 4}
+  atomic-path [shop_035_outside <-> shop_033_outside] {cost = 4}
+  atomic-path [shop_028_outside <-> shop_029A_outside] {cost = 4}
+  atomic-path [shop_028_outside <-> shop_031_outside] {cost = 7}
+  atomic-path [shop_031_outside <-> south_escalator_to_L1] {cost = 11}
+  atomic-path [shop_033_outside <-> south_escalator_to_L1] {cost = 4}
+  atomic-path [south_escalator_to_L1 <-> shop_045_outside] {cost = 6}
+  atomic-path [south_escalator_to_L1 <-> shop_043_outside] {cost = 5}
+  atomic-path [dropoff_atrium_junction <-> shop_021_outside] {cost = 10}
+  atomic-path [shop_021_outside <-> shop_023_outside] {cost = 8}
+  atomic-path [shop_023_outside <-> shop_025_outside] {cost = 6}
+  atomic-path [shop_025_outside <-> shop_046_outside] {cost = 5}
+  atomic-path [shop_047_outside <-> shop_025_outside] {cost = 8}
+  atomic-path [shop_021_outside <-> shop_047_outside] {cost = 9}
+  atomic-path [shop_021_outside <-> shop_049_outside] {cost = 5}
+  atomic-path [shop_026_outside <-> shop_025_outside] {cost = 6}
+  atomic-path [shop_026_outside <-> south_escalator_to_L1] {cost = 5}
+  atomic-path [shop_026_outside <-> shop_045_outside] {cost = 6}
+  atomic-path [shop_026_outside <-> shop_046_outside] {cost = 8}
+  atomic-path [shop_045_outside <-> shop_025_outside] {cost = 7}
+  atomic-path [shop_021_outside <-> shop_050_outside_B] {cost = 7}
+  atomic-path [shop_050_outside_B <-> shop_019_outside] {cost = 8}
+  atomic-path [dropoff_atrium_junction <-> shop_050_outside_A] {cost = 8}
+  atomic-path [shop_050_outside_A <-> shop_018_outside] {cost = 10}
+  atomic-path [shop_018_outside <-> shop_055_outside] {cost = 8}
+  atomic-path [shop_060_outside <-> shop_001_exit] {cost = 9}
+  atomic-path [north_escalator_to_L1 <-> shop_060_outside] {cost = 11}
+  atomic-path [shop_017_outside <-> shop_013_outside] {cost = 7}
+  atomic-path [shop_013_outside <-> north_escalator_to_L1] {cost = 10}
+  atomic-path [shop_055_outside <-> shop_013_outside] {cost = 9}
+  atomic-path [shop_013_outside <-> shop_058_outside] {cost = 6}
+  atomic-path [shop_023_outside <-> shop_049_outside] {cost = 10}
 
 }

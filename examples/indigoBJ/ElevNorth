@@ -1,16 +1,19 @@
 transport ElevNorth is Elevator{
-    let params: {maxSpeed: Float, maxVelocity: Float, acceleration: Float, cars: Int, carAmount: Int} = {
+    let params: {maxSpeed: Float, maxVelocity: Float, acceleration: Float, cars: Int, carAmount: Int, brand: String, primaryModel: String} = {
         maxSpeed = 1.6,
         maxVelocity = 1.6,
         acceleration = 0.8,
         cars = 4,
-        carAmount = 4
+        carAmount = 4,
+        brand = "Schindler",
+        primaryModel = "Schindler 5400 MRL"
     }
+
+    let displayName: String = "North Elevator"
 
     station L3 at Level3::north_elevator_hall {location = 3.0, departureRate = 0.167}
     station L2 at Level2::north_elevator_hall {location = 2.0, departureRate = 0.167}
     station L1 at Level1::north_elevator_hall {location = 1.0, departureRate = 0.167}
-    station LG at LowerGround::north_elevator_hall {location = 0.0, departureRate = 0.167}
     station P1 at ParkingLot1::north_elevator_hall {location = -1.0, departureRate = 0.166}
     station P2 at ParkingLot2::north_elevator_hall {location = -2.0, departureRate = 0.166}
 }
