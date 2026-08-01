@@ -169,6 +169,7 @@ case class SubTopoMapExpr(
 }
 
 case class StationDef(
+  label: String,
   node: TopoNodeRef,
   data: Data,
   constraints: List[Expr] = List.empty
@@ -222,6 +223,7 @@ case class TransportExpr(
                            else Value.RecordVal(stationDataVal.fields + ("_permission" -> Value.StringVal("NoAccess")))
         (nodeValue, finalDataVal)
       },
+      stationLabels = stations.map(station => station.node.elaborate -> station.label).toMap,
       // Use envWithConstraints to allow transport data to reference local variables
       data = Interpreter.eval(data.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
         case rv: Value.RecordVal => rv

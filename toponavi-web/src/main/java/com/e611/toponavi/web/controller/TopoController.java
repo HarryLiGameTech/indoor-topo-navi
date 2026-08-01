@@ -4,9 +4,11 @@ import api.TopoNaviService; // The Scala Facade
 import api.NavigationRequestException;
 import compiler.CompilationResult;
 import data.AtomicPath;
+import data.ElevatorBank;
 import data.NavigationGraph;
 import data.NavigationOutputPath;
 import data.RouteTraversalMetadata;
+import data.StationNode;
 import enums.VisitingMode;
 import com.e611.toponavi.web.contract.RouteResponseDeprecationSpec;
 import com.e611.toponavi.web.dto.NavigationRequest;
@@ -372,6 +374,100 @@ public class TopoController {
             return ResponseEntity.status(500).body(formatError(e));
         }
     }
+
+    @GetMapping("/quick-demo-elevators")
+    public ResponseEntity<?> getElevatorsGet(
+            @RequestParam String buildingName,
+            @RequestParam boolean simple) {
+        return getElevators(buildingName, simple, Collections.emptyMap());
+    }
+
+    @PostMapping("/quick-demo-elevators")
+    public ResponseEntity<?> getElevatorsPost(
+            @RequestParam String buildingName,
+            @RequestParam boolean simple,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return getElevators(buildingName, simple, extractUserParams(body));
+    }
+
+    private ResponseEntity<?> getElevators(
+            String buildingName,
+            boolean simple,
+            Map<String, Object> userParams) {
+        try {
+            Map<String, String> exampleFiles = loadExampleFiles(buildingName);
+            if (exampleFiles.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No example files found"));
+            }
+
+            CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
+            Map<String, ElevatorBank> elevatorsById = new LinkedHashMap<>();
+            for (StationNode station : CollectionConverters.asJava(outcome.result().transportGraph().nodes())) {
+                if (station.ownerLine() instanceof ElevatorBank elevator) {
+                    elevatorsById.putIfAbsent(elevator.identifier(), elevator);
+                }
+            }
+
+            List<ElevatorBank> elevators = elevatorsById.values().stream()
+                    .sorted(java.util.Comparator.comparing(ElevatorBank::identifier))
+                    .toList();
+            List<?> transports = simple
+                    ? elevators.stream().map(TopoController::simpleElevatorView).toList()
+                    : elevators.stream().map(TopoController::completeElevatorView).toList();
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("status", "success");
+            response.put("message", outcome.message());
+            response.put("simple", simple);
+            response.put("transports", transports);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(formatError(e));
+        }
+    }
+
+    private static SimpleElevatorView simpleElevatorView(ElevatorBank elevator) {
+        return new SimpleElevatorView(
+                elevator.identifier(),
+                elevatorStops(elevator).stream().map(ElevatorStopView::label).toList()
+        );
+    }
+
+    private static CompleteElevatorView completeElevatorView(ElevatorBank elevator) {
+        String displayName = elevator.displayName().isDefined()
+                ? elevator.displayName().get()
+                : null;
+        return new CompleteElevatorView(
+                elevator.identifier(),
+                displayName,
+                elevatorStops(elevator)
+        );
+    }
+
+    private static List<ElevatorStopView> elevatorStops(ElevatorBank elevator) {
+        Map<NavigationGraph, data.TopoNode> stationNodes = CollectionConverters.asJava(elevator.stationNodes());
+        Map<NavigationGraph, String> stationLabels = CollectionConverters.asJava(elevator.stationLabels());
+        return stationNodes.entrySet().stream()
+                .map(entry -> new ElevatorStopView(
+                        stationLabels.get(entry.getKey()),
+                        entry.getKey().identifier() + "::" + entry.getValue().identifier(),
+                        elevator.stationLocation(entry.getKey())
+                ))
+                .sorted(java.util.Comparator
+                        .comparingDouble(ElevatorStopView::location)
+                        .reversed()
+                        .thenComparing(ElevatorStopView::label))
+                .toList();
+    }
+
+    record SimpleElevatorView(String transportId, List<String> servedStops) {}
+
+    record CompleteElevatorView(
+            String transportId,
+            String displayName,
+            List<ElevatorStopView> servedStops) {}
+
+    record ElevatorStopView(String label, String nodeId, double location) {}
 
     @GetMapping("/quick-demo-proximity-nodes")
     public ResponseEntity<?> getProximityNodesGet(

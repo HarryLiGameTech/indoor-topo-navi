@@ -8,6 +8,8 @@ trait LinearTransport extends Serializable {
   def identifier: String
   def stationNodes: Map[NavigationGraph, TopoNode]
   def stationLocations: Map[NavigationGraph, Double]
+  def stationLabels: Map[NavigationGraph, String]
+  def displayName: Option[String]
   def maxVelocity: Double
   def acceleration: Double
 
@@ -30,7 +32,9 @@ case class StairCase(
   stationNodes: Map[NavigationGraph, TopoNode],
   stationLocations: Map[NavigationGraph, Double],
   stationRunIndices: Map[NavigationGraph, Int], // For turn-around loss calculation, indicating which flight of stairs the station is on. Usually starts from 0 at the bottom.
-  turnAroundLoss: Double // Additional time loss for "turning-around" between different flights in the staircase
+  turnAroundLoss: Double, // Additional time loss for "turning-around" between different flights in the staircase
+  stationLabels: Map[NavigationGraph, String] = Map.empty,
+  displayName: Option[String] = None
 ) extends LinearTransport {
 
   override def maxVelocity: Double = 0.0
@@ -80,7 +84,9 @@ case class ElevatorBank(
   carAmount: Int = 1,
   capacity: Int = 21,
   duty: Int = 1600,
-  dwellTime: Double = 15.0
+  dwellTime: Double = 15.0,
+  stationLabels: Map[NavigationGraph, String] = Map.empty,
+  displayName: Option[String] = None
 ) extends LinearTransport {
 
   override def canArriveAt(target: NavigationGraph): Boolean = {

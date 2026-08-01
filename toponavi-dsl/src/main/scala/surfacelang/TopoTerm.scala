@@ -18,6 +18,7 @@ case class TransportValue(
   name: String,
   surfaceType: String,
   stations: List[(TopoNodeRefValue, Value.RecordVal)],
+  stationLabels: Map[TopoNodeRefValue, String],
   data: Value.RecordVal,
   context: Context,
 )

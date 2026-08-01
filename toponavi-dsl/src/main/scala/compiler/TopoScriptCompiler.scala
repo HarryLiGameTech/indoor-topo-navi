@@ -542,6 +542,7 @@ class TopoScriptCompiler() {
     val duty = d.get("duty").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("duty must be Int") }.getOrElse(1000)
     val cap = d.get("capacity").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("capacity must be Int") }.getOrElse(13)
     val carAmount = d.get("carAmount").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("carAmount must be Int") }.getOrElse(1)
+    val displayName = transportDisplayName(transVal)
 
     val stations = transVal.stations.map { case (nodeRef, stationData) =>
       val loopGraph = graphs(nodeRef.fromMapName)
@@ -559,6 +560,10 @@ class TopoScriptCompiler() {
       }
       (loopGraph, loc)
     }.toMap
+
+    val stationLabels = transVal.stationLabels.map { case (nodeRef, label) =>
+      graphs(nodeRef.fromMapName) -> label
+    }
 
 
     val depRates = transVal.stations.map { case (nodeRef, stationData) =>
@@ -606,7 +611,9 @@ class TopoScriptCompiler() {
       acceleration = acc,
       carAmount = carAmount,
       capacity = cap,
-      duty = duty
+      duty = duty,
+      stationLabels = stationLabels,
+      displayName = displayName
     )
   }
 
@@ -620,6 +627,7 @@ class TopoScriptCompiler() {
     }
 
     val turnBackCost = d.get("turnBackCost").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("turnBackCost must be Int") }.getOrElse(3)
+    val displayName = transportDisplayName(transVal)
 
     val stations = transVal.stations.map { case (nodeRef, stationData) =>
       val loopGraph = graphs(nodeRef.fromMapName)
@@ -638,6 +646,10 @@ class TopoScriptCompiler() {
       (loopGraph, loc)
     }.toMap
 
+    val stationLabels = transVal.stationLabels.map { case (nodeRef, label) =>
+      graphs(nodeRef.fromMapName) -> label
+    }
+
     val runIndices = transVal.stations.map { case (nodeRef, stationData) =>
       val loopGraph = graphs(nodeRef.fromMapName)
       val loc = stationData.fields.get("directSegmentIndex") match {
@@ -652,10 +664,19 @@ class TopoScriptCompiler() {
       identifier = transVal.name,
       stationNodes = stations,
       stationLocations = locations,
-      stationRunIndices = runIndices, 
-      turnAroundLoss = turnBackCost
+      stationRunIndices = runIndices,
+      turnAroundLoss = turnBackCost,
+      stationLabels = stationLabels,
+      displayName = displayName
     )
   }
+
+  private def transportDisplayName(transVal: TransportValue): Option[String] =
+    transVal.context.values.get(corelang.Identifier.Symbol("displayName")) match {
+      case Some(Value.StringVal(value)) => Some(value)
+      case Some(_) => throw RuntimeException(s"displayName must be a String in transport ${transVal.name}")
+      case None => None
+    }
 
 
   private def convertAttributes(record: Value.RecordVal): Map[String, enums.AttributeValue] = {

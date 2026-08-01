@@ -249,7 +249,7 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       }.toList
     }.getOrElse(List.empty)
 
-    StationDef(nodeRef, Expr.Record(recordFields), constraintExprs)
+    StationDef(stationName, nodeRef, Expr.Record(recordFields), constraintExprs)
   }
   
   override def visitSurfaceElementConstraint(ctx: SurfaceElementConstraintContext): ConstraintExpr = {
