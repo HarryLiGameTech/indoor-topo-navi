@@ -1,0 +1,35 @@
+name: indoor-topo-navi
+
+services:
+  toponavi-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: indoor-topo-navi/toponavi-web:${TOPONAVI_IMAGE_TAG:-local}
+    container_name: toponavi-web
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      SERVER_PORT: 8080
+      PLATFORM_EXAMPLES_PATH: /maps
+      JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError}"
+    volumes:
+      - type: bind
+        source: ./examples
+        target: /maps
+        read_only: true
+    ports:
+      - "127.0.0.1:${TOPONAVI_HOST_PORT:-8080}:8080"
+    networks:
+      - toponavi-agent-net
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/api/v1/health"]
+      interval: 15s
+      timeout: 3s
+      start_period: 45s
+      retries: 5
+
+networks:
+  toponavi-agent-net:
+    name: ${TOPONAVI_NETWORK:-toponavi-agent-net}
+    external: true

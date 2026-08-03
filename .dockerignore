@@ -1,0 +1,15 @@
+.git
+.github
+.gradle
+**/build
+.idea
+.vscode
+.DS_Store
+*.iml
+*.hprof
+*.log
+.env
+.env.*
+*.pem
+docs
+examples

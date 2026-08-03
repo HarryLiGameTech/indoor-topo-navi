@@ -48,6 +48,14 @@ public class TopoController {
     @Value("${platform.examples-path:examples}")
     private String examplesPathConfig;
 
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> health() {
+        return ResponseEntity.ok(Map.of(
+                "status", "ok",
+                "service", "toponavi-web"
+        ));
+    }
+
     @GetMapping(value = "test-constraints")
     public ResponseEntity<?> testConstraints() {
         try {
@@ -833,16 +841,25 @@ public class TopoController {
 
     private Map<String, String> loadExampleFiles(String buildingName) {
         Map<String, String> files = new HashMap<>();
-        java.nio.file.Path examplesPath = java.nio.file.Paths.get(examplesPathConfig, buildingName.toLowerCase());
+        java.nio.file.Path examplesRoot = java.nio.file.Paths.get(examplesPathConfig);
+        java.nio.file.Path examplesPath;
 
-        if (!java.nio.file.Files.exists(examplesPath)) {
-            System.err.println("Examples directory not found: " + examplesPath.toAbsolutePath());
+        try {
+            examplesPath = resolveExampleDirectory(examplesRoot, buildingName);
+        } catch (IOException e) {
+            System.err.println("Failed to inspect examples directory: " + e.getMessage());
             return files;
         }
 
-        try {
+        if (examplesPath == null) {
+            System.err.println("Examples directory not found for building '" + buildingName
+                    + "' under " + examplesRoot.toAbsolutePath());
+            return files;
+        }
+
+        try (java.util.stream.Stream<java.nio.file.Path> paths = java.nio.file.Files.walk(examplesPath)) {
             // Walk through examples directory and load all files
-            java.nio.file.Files.walk(examplesPath)
+            paths
                 .filter(java.nio.file.Files::isRegularFile)
                 .forEach(file -> {
                     try {
@@ -860,5 +877,23 @@ public class TopoController {
         }
 
         return files;
+    }
+
+    static java.nio.file.Path resolveExampleDirectory(
+            java.nio.file.Path examplesRoot,
+            String buildingName) throws IOException {
+        if (buildingName == null || buildingName.isBlank() || !java.nio.file.Files.isDirectory(examplesRoot)) {
+            return null;
+        }
+
+        String requestedName = buildingName.trim();
+        try (java.util.stream.Stream<java.nio.file.Path> children = java.nio.file.Files.list(examplesRoot)) {
+            return children
+                    .filter(java.nio.file.Files::isDirectory)
+                    .filter(path -> path.getFileName().toString().equalsIgnoreCase(requestedName))
+                    .sorted()
+                    .findFirst()
+                    .orElse(null);
+        }
     }
 }
