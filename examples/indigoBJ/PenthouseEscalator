@@ -1,0 +1,10 @@
+transport PenthouseEscalator is Escaltor{
+    let params: {time: Int} = {
+        time = 35
+    }
+
+    let displayName: String = "The only escalator to connecting L3 and L4"
+
+    station L4 at Penthouse::escalator_3_4 {}
+    station L3 at Level3::shop_383_outside {}
+}

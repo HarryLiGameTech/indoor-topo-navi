@@ -10,4 +10,8 @@ building-includes{
     vehicle ElevNorth
     vehicle ElevSouth
     vehicle ElevParking
+
+    vehicle PenthouseEscalator
+    vehicle CentralEscalator
+    vehicle Escalator_18
 }

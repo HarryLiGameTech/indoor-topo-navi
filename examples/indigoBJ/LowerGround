@@ -8,53 +8,53 @@ topo-map LowerGround(){
   topo-node toilet_north {tags = ["indoor", "toilet", "odor_prone"], positions = 8, observedThroughput = 4}
   topo-node toilet_south {tags = ["indoor", "toilet"], positions = 8, observedThroughput = 4}
   topo-node shop_001 {tags = ["indoor", "shop"], shop_name = "BHG", shop_category = "Supermarket"}
-  topo-node shop_002 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
-  topo-node shop_003 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
-  topo-node shop_004 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
-  topo-node shop_005 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
-  topo-node shop_006 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_002 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_003 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_004 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_005 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_006 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_007 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_008 {tags = ["indoor", "shop"], shop_name = "62°Lapêche 上海水产", shop_category = "Fast-food restaurant"}
   topo-node shop_009 {tags = ["indoor", "shop"], shop_name = "NineART 九制", shop_category = "Full-service restaurant"}
   topo-node shop_010 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_011 {tags = ["indoor", "shop"], shop_name = "7-ELEVEN", shop_category = "Supermarket"}
-  topo-node shop_012 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_012 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_013 {tags = ["indoor", "shop"], shop_name = "顺电", shop_category = "Electronics"}
-  topo-node shop_014 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
-  topo-node shop_015 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
-  topo-node shop_016 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_014 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_015 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_016 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_017 {tags = ["indoor", "shop"], shop_name = "Tabio", shop_category = "Footwear"}
   topo-node shop_018 {tags = ["indoor", "shop"], shop_name = "正本原 Le Grenier à Pain", shop_category = "Snack shop"}
   topo-node shop_019 {tags = ["indoor", "shop"], shop_name = "Beast Home 野兽派家居", shop_category = "Furniture"}
-  topo-node shop_020 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_020 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_021 {tags = ["indoor", "shop"], shop_name = "泡泡玛特", shop_category = "Fashion"}
-  topo-node shop_022 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_022 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_023 {tags = ["indoor", "shop"], shop_name = "乐高旗舰店", shop_category = "Toy Shop"}
-  topo-node shop_024 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_024 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_025 {tags = ["indoor", "shop"], shop_name = "J!NS 睛姿", shop_category = "Optician"}
   topo-node shop_026 {tags = ["indoor", "shop"], shop_name = "周生生", shop_category = "Jewelry"}
   topo-node shop_027 {tags = ["indoor", "shop"], shop_name = "SHESHOUHUI 奢收者名表维修", shop_category = "Recycling"}
   topo-node shop_028 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
-  topo-node shop_029 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
-  topo-node shop_030 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_029 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_030 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_031 {tags = ["indoor", "shop"], shop_name = "LAURENT FALCON 巴黎劳伦", shop_category = "Hair salon"}
-  topo-node shop_032 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_032 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_033 {tags = ["indoor", "shop"], shop_name = "Venchi", shop_category = "Snack shop"}
-  topo-node shop_034 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_034 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_035 {tags = ["indoor", "shop"], shop_name = "BAKER & SPICE", shop_category = "Snack shop"}
   topo-node shop_036 {tags = ["indoor", "shop"], shop_name = "STARBUCKS 星巴克", shop_category = "Full-service cafe"}
-  topo-node shop_037 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_037 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_038 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_039 {tags = ["indoor", "shop"], shop_name = "TOUS les JOURS 多乐之日", shop_category = "Snack shop"}
   topo-node shop_040 {tags = ["indoor", "shop"], shop_name = "SUSHI OKO 北岛里板前寿司", shop_category = "Full-service restaurant"}
   topo-node shop_041 {tags = ["indoor", "shop"], shop_name = "PAIN EN L'AIR 野谷飞鸟", shop_category = "Snack shop"}
-  topo-node shop_042 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_042 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_043 {tags = ["indoor", "shop"], shop_name = "LADERACH", shop_category = "Snack shop"}
-  topo-node shop_044 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_044 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_045 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_046 {tags = ["indoor", "shop"], shop_name = "THE SHOES BAR", shop_category = "Footwear"}
   topo-node shop_047 {tags = ["indoor", "shop"], shop_name = "WEY 魏牌", shop_category = "Vehicle"}
-  topo-node shop_048 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
+  // topo-node shop_048 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_049 {tags = ["indoor", "shop"], shop_name = "CHOW TAI FOOK 周大福", shop_category = "Jewelry"}
   topo-node shop_050 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   topo-node shop_051 {tags = ["indoor", "shop"], shop_name = "Shokz韶音", shop_category = "Electronics"}
@@ -72,7 +72,6 @@ topo-map LowerGround(){
   topo-node shop_063 {tags = ["indoor", "shop"], shop_name = "XI JIA DE 喜家德虾仁水饺", shop_category = "Full-service restaurant", in_construction = true}
   topo-node shop_065 {tags = ["indoor", "shop"], shop_name = "TONI&GUY 汤尼英盖", shop_category = "Hair salon"}
   topo-node shop_100 {tags = ["indoor", "shop"], shop_name = "BRANEW 布瑞琳", shop_category = "Laundry service"}
-  topo-node shop_001_outside {tags = ["indoor"]}
   topo-node shop_008_outside {tags = ["indoor"]}
   topo-node shop_009_outside {tags = ["indoor"]}
   topo-node shop_011_outside {tags = ["indoor"]}
@@ -131,14 +130,15 @@ topo-map LowerGround(){
   topo-node south_dropoff_gate_outside {tags = ["indoor", "manual_door"]}
   topo-node north_dropoff_gate_outside {tags = ["indoor", "manual_door"]}
   topo-node north_dropoff_service_lift_gate {tags = ["indoor", "manual_door"]}
-  topo-node subway_station_link {tags = ["indoor", "automatic_door", "escalator"], description = "Link to the subway station, with an escalator leading down to the subway concourse"}
+  topo-node subway_station {tags = ["indoor", "automatic_door", "escalator"], displayName = "地铁站", description = "Link to the subway station, with an escalator leading down to the subway concourse"}
   topo-node shop_007_011_outside {tags = ["indoor"]}
   topo-node shop_010_013_outside {tags = ["indoor"]}
   topo-node shop_009_012A_outside {tags = ["indoor"]}
   topo-node shop_008_012B_outside {tags = ["indoor"]}
   topo-node shop_001_entry {tags = ["indoor"]}
 
-  atomic-path [shop_001 <-> shop_001_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
+  atomic-path [shop_001_entry -> shop_001] { tags = ["indoor"], cost = 3 }
+  atomic-path [shop_001 -> shop_001_exit] { tags = ["indoor"], action_required = ["self_service_check_out"], cost = 15 }
   atomic-path [shop_008 <-> shop_008_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
   atomic-path [shop_009 <-> shop_009_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
   atomic-path [shop_011 <-> shop_011_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
@@ -217,7 +217,7 @@ topo-map LowerGround(){
   atomic-path [shop_010_013_outside <-> shop_009_012A_outside] {cost = 6}
   atomic-path [shop_009_012A_outside <-> shop_008_012B_outside] {cost = 5}
   atomic-path [shop_008_012B_outside <-> shop_007_011_outside] {cost = 5}
-  atomic-path [shop_007_011_outside <-> subway_station_link] {cost = 6}
+  atomic-path [shop_007_011_outside <-> subway_station] {cost = 6}
   atomic-path [shop_017_outside <-> shop_058_outside] {cost = 11}
   atomic-path [north_escalator_to_L1 <-> shop_001_entry] {cost = 6}
   atomic-path [shop_001_entry <-> shop_001_exit] {cost = 14}
