@@ -45,7 +45,8 @@ class RoutePlanner private(
               findRouteForHighRiseBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, tagPolicy)
             }
             else{
-              findRouteForStandardBuilding(sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, tagPolicy)
+              findRouteForFullyInformedLowRiseBuilding(
+                sourceGraph, sourceNode, goalGraph, goalNode, visitingMode, preference, tagPolicy)
             }
           case (None, _) => Left(InvalidData(s"sourceGraphName and sourceNodeName: ${sourceGraphName}, ${sourceNodeName} not found"))
           case (_, None) => Left(InvalidData(s"goalGraphName and goalNodeName: ${goalGraphName}, ${goalNodeName} not found"))
@@ -54,6 +55,181 @@ class RoutePlanner private(
       case (_, None) => Left(InvalidData(s"goalGraphName: ${goalGraphName} not found"))
     }
 
+  }
+
+  /**
+   * Low-rise hierarchical routing with exact, end-to-end costs.
+   *
+   * The hierarchy consists of all transport stations plus the exact source and
+   * destination. In particular, the source is treated just like an interchange:
+   * it has an exact intra-floor shortest-path edge to every reachable station on
+   * its floor. This means the selected route includes the cost of getting to the
+   * first ride (and from the last ride to the destination), unlike fuzzy
+   * transport-only routing.
+   */
+  private def findRouteForFullyInformedLowRiseBuilding(
+    sourceGraph: NavigationGraph,
+    sourceNode: TopoNode,
+    goalGraph: NavigationGraph,
+    goalNode: TopoNode,
+    visitingMode: enums.VisitingMode,
+    preference: RoutePlanningPreferences,
+    tagPolicy: TraversalTagPolicy
+  ): Either[NavigationError, NavigationOutputPath] = {
+    if sourceGraph.identifier == goalGraph.identifier then {
+      return sourceGraph.findPath(
+        sourceNode, goalNode, visitingMode, tagPolicy, allowBannedStart = true
+      ) match {
+        case Some(path) =>
+          Right(NavigationOutputPath(
+            path.routeNodes.map(GlobalNode.fromTopoNode(sourceGraph, _)),
+            path.routeEdges.map(RouteEdge.fromAtomicPath(sourceGraph, _, visitingMode))
+          ))
+        case None => Left(NoRouteFound(
+          s"No intra-map route found within low-rise building ${sourceGraph.identifier} " +
+            s"from ${sourceNode.identifier} to ${goalNode.identifier}"))
+      }
+    }
+
+    type HierarchyNode = (NavigationGraph, TopoNode)
+
+    sealed trait HierarchyHop {
+      def parent: HierarchyNode
+      def cost: Double
+    }
+    case class IntraFloorHop(
+      parent: HierarchyNode,
+      graph: NavigationGraph,
+      path: data.IntraMapPath
+    ) extends HierarchyHop {
+      override val cost: Double = path.totalCost(visitingMode)
+    }
+    case class TransportHop(
+      parent: HierarchyNode,
+      cost: Double,
+      category: RouteEdgeCategory,
+      description: String
+    ) extends HierarchyHop
+
+    def resolveStation(station: data.StationNode): Option[HierarchyNode] =
+      graphs.get(station.ownerGraph.identifier).flatMap { graph =>
+        graph.nodes.find(_.identifier == station.localNode.identifier).map(graph -> _)
+      }
+
+    val start: HierarchyNode = sourceGraph -> sourceNode
+    val goal: HierarchyNode = goalGraph -> goalNode
+    val stationNodes = transportGraph.nodes.flatMap(resolveStation)
+    val hierarchyNodes = (start :: goal :: stationNodes).distinct
+    val nodesByGraph = hierarchyNodes.groupBy(_._1.identifier)
+
+    // The search is deliberately Dijkstra rather than heuristic A*: every
+    // intra-floor hierarchy edge already has its exact shortest-path cost.
+    implicit val ordering: Ordering[(HierarchyNode, Double)] =
+      Ordering.by[(HierarchyNode, Double), Double](_._2).reverse
+    val openSet = mutable.PriorityQueue.empty[(HierarchyNode, Double)]
+    val distance = mutable.Map[HierarchyNode, Double]().withDefaultValue(Double.PositiveInfinity)
+    val cameFrom = mutable.Map[HierarchyNode, HierarchyHop]()
+    val visited = mutable.Set[HierarchyNode]()
+    val intraFloorPathCache = mutable.Map[(HierarchyNode, HierarchyNode), Option[data.IntraMapPath]]()
+
+    distance(start) = 0.0
+    openSet.enqueue(start -> 0.0)
+
+    while openSet.nonEmpty && !visited.contains(goal) do {
+      val (current, currentDistance) = openSet.dequeue()
+      if currentDistance <= distance(current) && !visited.contains(current) then {
+        visited.add(current)
+        val (currentGraph, currentNode) = current
+
+        // Fully-informed walking edges to every hierarchy node on this floor.
+        for target <- nodesByGraph.getOrElse(currentGraph.identifier, List.empty)
+            if target != current && !visited.contains(target) && tagPolicy.allowsEntry(target._2)
+        do {
+          val path = intraFloorPathCache.getOrElseUpdate(
+            current -> target,
+            currentGraph.findPath(
+              currentNode,
+              target._2,
+              visitingMode,
+              tagPolicy,
+              allowBannedStart = current == start
+            )
+          )
+          path.foreach { intraPath =>
+            val candidateDistance = currentDistance + intraPath.totalCost(visitingMode)
+            if candidateDistance < distance(target) then {
+              distance(target) = candidateDistance
+              cameFrom(target) = IntraFloorHop(current, currentGraph, intraPath)
+              openSet.enqueue(target -> candidateDistance)
+            }
+          }
+        }
+
+        // A physical station can belong to multiple transport lines. Explore
+        // every matching line, but leave same-floor transfers to the exact
+        // intra-floor search above.
+        for station <- transportGraph.nodes
+            if station.ownerGraph.identifier == currentGraph.identifier &&
+              station.localNode.identifier == currentNode.identifier
+            (neighborStation, edgeCost) <- transportGraph.adjacencyList.getOrElse(station, Map.empty)
+            if neighborStation.ownerGraph.identifier != currentGraph.identifier
+            neighbor <- resolveStation(neighborStation)
+            if !visited.contains(neighbor) && tagPolicy.allowsEntry(neighbor._2)
+        do {
+          val candidateDistance = currentDistance + edgeCost
+          if candidateDistance < distance(neighbor) then {
+            distance(neighbor) = candidateDistance
+            val category = station.ownerLine match {
+              case _: StairCase => RouteEdgeCategory.Climbing
+              case _ => RouteEdgeCategory.Transport
+            }
+            cameFrom(neighbor) = TransportHop(
+              current,
+              edgeCost,
+              category,
+              s"Take ${station.ownerLine.identifier} from ${currentGraph.identifier} " +
+                s"to ${neighborStation.ownerGraph.identifier}"
+            )
+            openSet.enqueue(neighbor -> candidateDistance)
+          }
+        }
+      }
+    }
+
+    if !visited.contains(goal) then {
+      return Left(NoRouteFound(
+        s"No fully-informed low-rise route found from " +
+          s"${sourceGraph.identifier}::${sourceNode.identifier} to " +
+          s"${goalGraph.identifier}::${goalNode.identifier}"))
+    }
+
+    val hops = mutable.ListBuffer[(HierarchyNode, HierarchyHop)]()
+    var cursor = goal
+    while cameFrom.contains(cursor) do {
+      val hop = cameFrom(cursor)
+      hops.prepend(cursor -> hop)
+      cursor = hop.parent
+    }
+
+    val routeNodes = mutable.ListBuffer(GlobalNode(sourceGraph, sourceNode))
+    val routeEdges = mutable.ListBuffer[RouteEdge]()
+    hops.foreach {
+      case (_, hop: IntraFloorHop) =>
+        appendIntraPath(
+          hop.path, hop.graph, visitingMode, routeNodes, routeEdges, skipFirstNode = true)
+      case (target, hop: TransportHop) =>
+        val targetGlobalNode = GlobalNode(target._1, target._2)
+        routeEdges += RouteEdge(
+          source = GlobalNode(hop.parent._1, hop.parent._2),
+          target = targetGlobalNode,
+          cost = hop.cost,
+          category = hop.category,
+          movementDescription = hop.description
+        )
+        routeNodes += targetGlobalNode
+    }
+
+    Right(NavigationOutputPath(routeNodes.toList, routeEdges.toList))
   }
 
   private def findRouteForHighRiseBuilding(

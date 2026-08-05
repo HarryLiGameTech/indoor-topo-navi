@@ -4,7 +4,7 @@ import util.catchError
 import syntax.TopoMapVisitor
 import surfacelang.{GlobalConfigExpr, RootExpr, TopoEnvironment}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
-import data.{ElevatorBank, LinearTransport, NavigationGraph, StairCase, TransportGraph}
+import data.{ElevatorBank, Escalator, LinearTransport, NavigationGraph, StairCase, TransportGraph}
 import corelang.{Environment, Identifier, Value}
 import enums.AttributeValue
 import enums.ElevatorStationCategory.{Entrance, Occupant}
@@ -522,10 +522,71 @@ class TopoScriptCompiler() {
   private def buildLinearTransport(transVal: TransportValue, graphs: Map[String, NavigationGraph]): LinearTransport = {
      transVal.surfaceType match {
          case "Elevator"  => buildElevatorBank(transVal, graphs) // Continue with ElevatorBank construction
-         case "Escalator" => throw RuntimeException("Escalator building logic not yet implemented") // TODO: Implement buildEscalator similar to buildElevatorBank
+         case "Escalator" => buildEscalator(transVal, graphs)
          case "Stairs"    => buildStairCase(transVal, graphs) // TODO: Implement buildStairs similar to buildElevatorBank
          case _ => throw new RuntimeException(s"Unsupported transport type '${transVal.surfaceType}'.")
      }
+  }
+
+  private def buildEscalator(transVal: TransportValue, graphs: Map[String, NavigationGraph]): Escalator = {
+    val invalidNumericTime =
+      new RuntimeException(s"Escalator '${transVal.name}' must contain numeric 'params.time'")
+
+    val travelTime = transVal.context.values.get(corelang.Identifier.Symbol("params")) match {
+      case Some(Value.RecordVal(fields)) =>
+        fields.get("time") match {
+          case Some(Value.FloatVal(value)) => value
+          case Some(Value.IntVal(value)) => value.toDouble
+          case _ => throw invalidNumericTime
+        }
+      case _ => throw invalidNumericTime
+    }
+
+    if (!travelTime.isFinite || travelTime <= 0.0) {
+      throw new RuntimeException(s"Escalator '${transVal.name}' params.time must be finite and greater than 0")
+    }
+
+    if (transVal.stations.size != 2) {
+      throw new RuntimeException(s"Escalator '${transVal.name}' must have exactly 2 stations")
+    }
+
+    val resolvedStations = transVal.stations.map { case (nodeRef, stationData) =>
+      val graph = graphs(nodeRef.fromMapName)
+      val node = graph.nodes.find(_.identifier == nodeRef.nodeName)
+        .getOrElse(throw new RuntimeException(s"Node not found in Core Graph: ${nodeRef.nodeName}"))
+      (nodeRef, stationData, graph, node)
+    }
+
+    if (resolvedStations.map(_._3).distinct.size != 2) {
+      throw new RuntimeException(s"Escalator '${transVal.name}' stations must belong to two distinct submaps")
+    }
+
+    val stations = resolvedStations.map { case (_, _, graph, node) => graph -> node }.toMap
+    val locations = resolvedStations.zipWithIndex.map { case ((_, _, graph, _), index) =>
+      graph -> index.toDouble
+    }.toMap
+    val stationLabels = transVal.stationLabels.map { case (nodeRef, label) =>
+      graphs(nodeRef.fromMapName) -> label
+    }
+    val stationPermissions = resolvedStations.map { case (_, stationData, graph, _) =>
+      val permission = stationData.fields.get("_permission") match {
+        case Some(Value.StringVal("NoAccess"))   => enums.TransportServicePermission.NoAccess
+        case Some(Value.StringVal("ArriveOnly")) => enums.TransportServicePermission.ArriveOnly
+        case Some(Value.StringVal("DepartOnly")) => enums.TransportServicePermission.DepartOnly
+        case _                                    => enums.TransportServicePermission.FullyGranted
+      }
+      graph -> permission
+    }.toMap
+
+    Escalator(
+      identifier = transVal.name,
+      stationNodes = stations,
+      stationLocations = locations,
+      stationPermissions = stationPermissions,
+      travelTimeSeconds = travelTime,
+      stationLabels = stationLabels,
+      displayName = transportDisplayName(transVal)
+    )
   }
 
   private def buildElevatorBank(transVal: TransportValue, graphs: Map[String, NavigationGraph]): ElevatorBank = {

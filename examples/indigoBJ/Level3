@@ -294,5 +294,5 @@ topo-map Level3(){
   atomic-path [shop_365 <-> shop_353_365_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
   atomic-path [shop_355 <-> shop_355_361_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
   atomic-path [shop_361 <-> shop_355_361_outside] { tags = ["indoor"], action_required = ["cross_door"], cost = 3 }
-
+  
 } 

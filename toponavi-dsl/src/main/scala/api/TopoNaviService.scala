@@ -59,6 +59,17 @@ object TopoNaviService {
       case Some(enums.AttributeValue.BoolValue(true)) => false // If coordinates were estimated, we assume it's a standard building.
       case _ => true
     }
+    findRoutePlan(result, startNodeName, endNodeName, preference, banTags, isHighRise)
+  }
+
+  def findRoutePlan(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: RoutePlanningPreferences,
+    banTags: Set[String],
+    isHighRise: Boolean
+  ): NavigationOutputPath = {
     // TODO (production): Consider refactoring to hold a Map[BuildingKey, RoutePlanner] and only rebuild on cache miss.
     val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, isHighRise)
     val (startGraphName, startNode) = resolveNode(startNodeName, result)
@@ -172,6 +183,18 @@ object TopoNaviService {
   ): NavigationOutputPath = {
     val tags = if banTags == null then Set.empty else banTags.asScala.toSet
     findRoutePlan(result, startNodeName, endNodeName, parsePreference(preference), tags)
+  }
+
+  def findRoutePlan(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: String,
+    banTags: JList[String],
+    isHighRise: Boolean
+  ): NavigationOutputPath = {
+    val tags = if banTags == null then Set.empty else banTags.asScala.toSet
+    findRoutePlan(result, startNodeName, endNodeName, parsePreference(preference), tags, isHighRise)
   }
 
   private def parsePreference(s: String): RoutePlanningPreferences = s match {

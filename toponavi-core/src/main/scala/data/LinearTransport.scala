@@ -70,6 +70,46 @@ case class StairCase(
 
 
 
+case class Escalator(
+  identifier: String,
+  stationNodes: Map[NavigationGraph, TopoNode],
+  stationLocations: Map[NavigationGraph, Double],
+  stationPermissions: Map[NavigationGraph, TransportServicePermission],
+  travelTimeSeconds: Double,
+  stationLabels: Map[NavigationGraph, String] = Map.empty,
+  displayName: Option[String] = None
+) extends LinearTransport {
+
+  override def maxVelocity: Double = 0.0
+  override def acceleration: Double = 0.0
+
+  override def canArriveAt(target: NavigationGraph): Boolean =
+    stationNodes.contains(target) && (stationPermissions.getOrElse(target, TransportServicePermission.FullyGranted) match {
+      case TransportServicePermission.FullyGranted | TransportServicePermission.ArriveOnly => true
+      case _ => false
+    })
+
+  override def canDepartFrom(source: NavigationGraph): Boolean =
+    stationNodes.contains(source) && (stationPermissions.getOrElse(source, TransportServicePermission.FullyGranted) match {
+      case TransportServicePermission.FullyGranted | TransportServicePermission.DepartOnly => true
+      case _ => false
+    })
+
+  override def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
+    stationLocations(src)
+    stationLocations(dst)
+    if (src == dst) 0.0 else travelTimeSeconds
+  }
+
+  override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern): Double =
+    netTimeBetweenStations(src, dst)
+
+  override def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double =
+    Math.abs(stationLocations(a) - stationLocations(b))
+}
+
+
+
 
 case class ElevatorBank(
   identifier: String,
