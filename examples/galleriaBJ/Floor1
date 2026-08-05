@@ -1,0 +1,158 @@
+topo-map Floor1(){
+   let params: {permResident: Int} = {
+       permResident = 120
+    }
+  topo-node shop_101 {displayName = "", shopName = "", description = ""}
+  topo-node shop_101_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_102 {displayName = "", shopName = "", description = ""}
+  topo-node shop_102_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_103 {displayName = "", shopName = "", description = ""}
+  topo-node shop_103_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_104_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_105 {displayName = "", shopName = "", description = ""}
+  topo-node shop_105_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_106 {displayName = "", shopName = "", description = ""}
+  topo-node shop_106_outside {displayName = "", shopName = "", description = ""}
+  topo-node sjop_107 {displayName = "", shopName = "", description = ""}
+  topo-node shop_107_outside {displayName = "", shopName = "", description = ""}
+  topo-node gate_5_outside {displayName = "", shopName = "", description = ""}
+  topo-node gate_5_inside {displayName = "", shopName = "", description = ""}
+  topo-node shop_104 {displayName = "", shopName = "", description = ""}
+  topo-node n_b87a5c662a51452390e7da5707ecf44e {displayName = "", shopName = "", description = ""}
+  topo-node shop_108 {displayName = "", shopName = "", description = ""}
+  topo-node shop_108_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_109 {displayName = "", shopName = "", description = ""}
+  topo-node shop_109_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_110 {displayName = "", shopName = "", description = ""}
+  topo-node shop_110_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_111 {displayName = "", shopName = "", description = ""}
+  topo-node shop_111_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_112 {displayName = "", shopName = "", description = ""}
+  topo-node shop_112_outside {displayName = "", shopName = "", description = ""}
+  topo-node gate_1_outside {displayName = "", shopName = "", description = ""}
+  topo-node gate_1_inside {displayName = "", shopName = "", description = ""}
+  topo-node shop_113 {displayName = "", shopName = "", description = ""}
+  topo-node shop_113_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_114 {displayName = "", shopName = "", description = ""}
+  topo-node shop_114_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_115 {displayName = "", shopName = "", description = ""}
+  topo-node shop_115_ {displayName = "", shopName = "", description = ""}
+  topo-node shop_116_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_116 {displayName = "", shopName = "", description = ""}
+  topo-node escalator_11_12 {displayName = "", shopName = "", description = ""}
+  topo-node shop_117 {displayName = "", shopName = "", description = ""}
+  topo-node shop_117_outside {displayName = "", shopName = "", description = ""}
+  topo-node escalator_7_8 {displayName = "", shopName = "", description = ""}
+  topo-node shop_118 {displayName = "", shopName = "", description = ""}
+  topo-node shop_118_outside {displayName = "", shopName = "", description = ""}
+  topo-node main_gate_inside {displayName = "", shopName = "", description = ""}
+  topo-node main_gate_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_119 {displayName = "", shopName = "", description = ""}
+  topo-node shop_119_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_120 {displayName = "", shopName = "", description = ""}
+  topo-node shop_120_outside {displayName = "", shopName = "", description = ""}
+  topo-node elevator_1_hall {displayName = "", shopName = "", description = ""}
+  topo-node elevator_1_hall_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_121 {displayName = "", shopName = "", description = ""}
+  topo-node shop_121_outside {displayName = "", shopName = "", description = ""}
+  topo-node gate_2_inside {displayName = "", shopName = "", description = ""}
+  topo-node gate_2_outside {displayName = "", shopName = "", description = ""}
+  topo-node n_68f4330aca5b47119323860aa7107541 {displayName = "", shopName = "", description = ""}
+  topo-node shop_122 {displayName = "", shopName = "", description = ""}
+  topo-node shop_122_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_123 {displayName = "", shopName = "", description = ""}
+  topo-node shop_123_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_124 {displayName = "", shopName = "", description = ""}
+  topo-node escalator_13_14 {displayName = "", shopName = "", description = ""}
+  topo-node shop_124_outside {displayName = "", shopName = "", description = ""}
+  topo-node escalator_9_10 {displayName = "", shopName = "", description = ""}
+  topo-node shop_125 {displayName = "", shopName = "", description = ""}
+  topo-node shop_115_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_126_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_126 {displayName = "", shopName = "", description = ""}
+  topo-node shop_127 {displayName = "", shopName = "", description = ""}
+  topo-node shop_127_outside {displayName = "", shopName = "", description = ""}
+  topo-node shop_128 {displayName = "", shopName = "", description = ""}
+  topo-node shop_128_outside {displayName = "", shopName = "", description = ""}
+  topo-node elevator_5_6_hall {displayName = "", shopName = "", description = ""}
+  topo-node elevator_5_6_hall_outside {displayName = "", shopName = "", description = ""}
+  atomic-path [shop_101_outside <-> shop_101] {cost = 3}
+  atomic-path [shop_102_outside <-> shop_102] {cost = 3}
+  atomic-path [shop_102_outside <-> shop_101_outside] {cost = 5}
+  atomic-path [shop_102_outside <-> shop_103_outside] {cost = 5}
+  atomic-path [shop_103_outside <-> shop_104_outside] {cost = 5}
+  atomic-path [shop_105_outside <-> shop_105] {cost = 3}
+  atomic-path [shop_105_outside <-> shop_104_outside] {cost = 5}
+  atomic-path [shop_103_outside <-> shop_103] {cost = 3}
+  atomic-path [shop_106 <-> shop_106_outside] {cost = 3}
+  atomic-path [shop_106_outside <-> shop_105_outside] {cost = 5}
+  atomic-path [shop_107_outside <-> sjop_107] {cost = 3}
+  atomic-path [shop_107_outside <-> shop_106_outside] {cost = 5}
+  atomic-path [shop_104 <-> shop_104_outside] {cost = 3}
+  atomic-path [gate_5_inside <-> gate_5_outside] {cost = 6}
+  atomic-path [gate_5_inside <-> n_b87a5c662a51452390e7da5707ecf44e] {cost = 5}
+  atomic-path [n_b87a5c662a51452390e7da5707ecf44e <-> shop_107_outside] {cost = 5}
+  atomic-path [shop_108 <-> shop_108_outside] {cost = 3}
+  atomic-path [shop_108_outside <-> n_b87a5c662a51452390e7da5707ecf44e] {cost = 5}
+  atomic-path [shop_109 <-> shop_109_outside] {cost = 3}
+  atomic-path [shop_109_outside <-> shop_108_outside] {cost = 5}
+  atomic-path [shop_110_outside <-> shop_110] {cost = 3}
+  atomic-path [shop_110_outside <-> shop_109_outside] {cost = 5}
+  atomic-path [shop_111_outside <-> shop_111] {cost = 3}
+  atomic-path [shop_111_outside <-> shop_110_outside] {cost = 5}
+  atomic-path [shop_112_outside <-> shop_112] {cost = 3}
+  atomic-path [shop_112_outside <-> shop_111_outside] {cost = 5}
+  atomic-path [gate_1_inside <-> gate_1_outside] {cost = 6}
+  atomic-path [gate_1_inside <-> shop_112_outside] {cost = 5}
+  atomic-path [shop_113 <-> shop_113_outside] {cost = 3}
+  atomic-path [shop_113_outside <-> gate_1_inside] {cost = 5}
+  atomic-path [shop_114_outside <-> shop_114] {cost = 3}
+  atomic-path [shop_113_outside <-> shop_114_outside] {cost = 5}
+  atomic-path [shop_115_ <-> shop_115] {cost = 3}
+  atomic-path [shop_115_ <-> shop_114_outside] {cost = 5}
+  atomic-path [shop_116 <-> shop_116_outside] {cost = 3}
+  atomic-path [shop_115_ <-> shop_116_outside] {cost = 5}
+  atomic-path [escalator_11_12 <-> shop_111_outside] {cost = 5}
+  atomic-path [escalator_11_12 <-> shop_115_] {cost = 5}
+  atomic-path [shop_117_outside <-> shop_117] {cost = 3}
+  atomic-path [shop_117_outside <-> shop_116_outside] {cost = 5}
+  atomic-path [escalator_7_8 <-> shop_109_outside] {cost = 5}
+  atomic-path [escalator_7_8 <-> shop_117_outside] {cost = 5}
+  atomic-path [shop_118_outside <-> shop_118] {cost = 3}
+  atomic-path [shop_118_outside <-> shop_117_outside] {cost = 5}
+  atomic-path [main_gate_outside <-> main_gate_inside] {cost = 6}
+  atomic-path [shop_119_outside <-> shop_119] {cost = 3}
+  atomic-path [shop_119_outside <-> main_gate_inside] {cost = 5}
+  atomic-path [shop_116_outside <-> main_gate_inside] {cost = 10}
+  atomic-path [shop_120_outside <-> shop_120] {cost = 3}
+  atomic-path [shop_120_outside <-> shop_118_outside] {cost = 5}
+  atomic-path [elevator_1_hall_outside <-> elevator_1_hall] {cost = 5}
+  atomic-path [elevator_1_hall_outside <-> shop_112_outside] {cost = 5}
+  atomic-path [shop_121_outside <-> shop_121] {cost = 3}
+  atomic-path [shop_121_outside <-> shop_120_outside] {cost = 5}
+  atomic-path [gate_2_inside <-> gate_2_outside] {cost = 0}
+  atomic-path [shop_121_outside <-> n_68f4330aca5b47119323860aa7107541] {cost = 5}
+  atomic-path [n_68f4330aca5b47119323860aa7107541 <-> gate_2_inside] {cost = 5}
+  atomic-path [shop_122_outside <-> shop_122] {cost = 3}
+  atomic-path [shop_122_outside <-> n_68f4330aca5b47119323860aa7107541] {cost = 5}
+  atomic-path [n_68f4330aca5b47119323860aa7107541 <-> shop_106_outside] {cost = 10}
+  atomic-path [shop_123_outside <-> shop_123] {cost = 3}
+  atomic-path [shop_123_outside <-> shop_122_outside] {cost = 5}
+  atomic-path [shop_124_outside <-> shop_123_outside] {cost = 3}
+  atomic-path [shop_124_outside <-> shop_124] {cost = 3}
+  atomic-path [escalator_13_14 <-> shop_105_outside] {cost = 5}
+  atomic-path [escalator_13_14 <-> shop_124_outside] {cost = 5}
+  atomic-path [escalator_9_10 <-> shop_103_outside] {cost = 5}
+  atomic-path [shop_125 <-> shop_115_outside] {cost = 3}
+  atomic-path [shop_124_outside <-> shop_115_outside] {cost = 5}
+  atomic-path [shop_126 <-> shop_126_outside] {cost = 3}
+  atomic-path [shop_115_outside <-> shop_126_outside] {cost = 5}
+  atomic-path [shop_126_outside <-> escalator_9_10] {cost = 5}
+  atomic-path [shop_127_outside <-> shop_127] {cost = 3}
+  atomic-path [shop_127_outside <-> shop_126_outside] {cost = 5}
+  atomic-path [shop_128 <-> shop_128_outside] {cost = 3}
+  atomic-path [shop_128_outside <-> shop_101_outside] {cost = 5}
+  atomic-path [shop_128_outside <-> shop_127_outside] {cost = 5}
+  atomic-path [elevator_5_6_hall_outside <-> elevator_5_6_hall] {cost = 6}
+  atomic-path [elevator_5_6_hall_outside <-> shop_128_outside] {cost = 5}
+}

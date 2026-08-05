@@ -1,0 +1,14 @@
+root GalleriaBJ(haveStaffCard: Bool, timeOfDay: Int, weight: Int){
+
+    // Define what means "TenantsOnly"
+    constraint IsStaff{
+        require haveStaffCard
+    }
+
+    // 10:00 to 22:00
+    constraint InBusinessHours{
+        require timeOfDay > 35999
+        require timeOfDat < 79201
+    }
+
+}

@@ -1,0 +1,98 @@
+topo-map Floor3(){
+  let params: {permResident: Int} = {
+    permResident = 100
+  }
+  
+  // Node (shops, junction, elevator, any kinds of point-of-interest)
+  topo-node shop_301 {shop_name = "对症推拿", shop_category = ""}
+  topo-node shop_302 {shop_name = "万象影城", shop_category = "theater", tags = ["indoor", "staffed"]}
+  topo-node shop_303 {shop_name = "千灼牛", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_304 {shop_name = "胜博殿", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_305 {shop_name = "同仁四季", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_306 {shop_name = "绿茶", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_307 {shop_name = "潇湘阁", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_308 {shop_name = "阳坊涮肉", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_309 {shop_name = "小徽舟", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_310 {shop_name = "潮粥人", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_311 {shop_name = "滨寿司", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_312 {shop_name = "夏至有面", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_313 {shop_name = "越南小馆", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_314 {shop_name = "小大董", shop_category = "", tags = ["indoor", "staffed"]}
+  topo-node shop_315 {shop_name = "一点点", shop_category = "", tags = ["indoor", "staffed"]}
+
+
+  topo-node shop_301_outside {tags = ["indoor"]}
+  topo-node shop_302_outside {tags = ["indoor"]}
+  topo-node shop_303_outside {tags = ["indoor"]}
+  topo-node shop_304_outside {tags = ["indoor"]}
+  topo-node shop_305_outside {tags = ["indoor"]}
+  topo-node shop_306_outside {tags = ["indoor"]}
+  topo-node shop_307_outside {tags = ["indoor"]}
+  topo-node shop_308_outside {tags = ["indoor"]}
+  topo-node shop_309_outside {tags = ["indoor"]}
+  topo-node shop_310_outside {tags = ["indoor"]}
+  topo-node shop_311_outside {tags = ["indoor"]}
+  topo-node shop_312_outside {tags = ["indoor"]}
+  topo-node shop_313_outside {tags = ["indoor"]}
+  topo-node shop_314_outside {tags = ["indoor"]}
+  topo-node shop_315_outside {tags = ["indoor"]}
+  
+  topo-node between_312_313 {tags = ["indoor","junction"]}
+
+
+
+  topo-node toilet {tags = {"indoor", "toilet"}, positions = 8, observed_throughput = 4}
+  topo-node escalator_15_16 {tags = {"indoor", "escalator"}}
+  topo-node escalator_17_18 {tags = {"indoor", "escalator"}}
+  topo-node elevator_5_6_hall {tags = {"indoor", "elevator"}}
+  topo-node elevator_3_4_hall {tags = {"indoor", "elevator"}}
+  topo-node elevator_1_hall {tags = {"indoor", "elevator"}}
+  topo-node elevator_10_hall {tags = {"indoor", "elevator"}}
+  
+
+  // topo-node somewhere_outside {tags = ["outdoor", "rain_exposed", "direct_sunlight"]}
+
+  // topo-node garbage_room {tags = ["odor_prone"]}
+
+
+  // Edge (connection between nodes)
+  atomic-path [shop_301 <-> shop_301_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_302 <-> shop_302_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_303 <-> shop_303_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_304 <-> shop_304_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_305 <-> shop_305_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_306 <-> shop_306_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_307 <-> shop_307_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_308 <-> shop_308_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_309 <-> shop_309_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_310 <-> shop_310_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_311 <-> shop_311_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_312 <-> shop_312_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_313 <-> shop_313_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_314 <-> shop_314_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_315 <-> shop_315_outside] {cost = 3, actions_requried = ["cross_door"]}
+  atomic-path [shop_301_outside <-> shop_302_outside] {cost = 5}
+  atomic-path [shop_302_outside <-> shop_303_outside] {cost = 5}
+  atomic-path [shop_303_outside <-> shop_304_outside] {cost = 5}
+  atomic-path [shop_304_outside <-> shop_305_outside] {cost = 5}
+  atomic-path [shop_305_outside <-> shop_306_outside] {cost = 5}
+  atomic-path [shop_306_outside <-> shop_307_outside] {cost = 5}
+  atomic-path [shop_307_outside <-> shop_308_outside] {cost = 5}
+  atomic-path [shop_308_outside <-> shop_309_outside] {cost = 5}
+  atomic-path [shop_309_outside <-> shop_310_outside] {cost = 5}
+  atomic-path [shop_310_outside <-> shop_311_outside] {cost = 5}
+  atomic-path [shop_311_outside <-> shop_312_outside] {cost = 5}
+  atomic-path [shop_312_outside <-> between_312_313] {cost = 3}
+  atomic-path [between_312_313 <-> shop_313_outside] {cost = 3}
+  atomic-path [shop_313_outside <-> shop_314_outside] {cost = 3}
+  atomic-path [shop_314_outside <-> shop_315_outside] {cost = 5}
+  atomic-path [shop_315_outside <-> shop_301_outside] {cost = 5}
+  atomic-path [shop_304_outside <-> shop_312_outside] {cost = 7}
+  atomic-path [shop_307_outside <-> escalator_15_16] {cost = 5}
+  atomic-path [shop_311_outside <-> escalator_15_16] {cost = 5}
+  atomic-path [shop_304_outside <-> between_312_313] {cost = 5}
+
+  // 这种情况通常不对！
+  // atomic-path [shop_301 <-> shop_302] {}
+
+}

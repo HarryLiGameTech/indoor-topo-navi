@@ -1,0 +1,15 @@
+transport Elevator5_6 is Elevator{
+    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
+        maxSpeed = 1.5,
+        acceleration = 0.5,
+        cars = 1
+    }
+
+    station F4 at Floor4::elevator_5_6_hall {location = 30, departureRate = 0}
+    station F3 at Floor3::elevator_5_6_hall {location = 24.5, departureRate = 0.1}
+    station F2 at Floor2::elevator_5_6_hall {location = 19, departureRate = 0.1}
+    station F1 at Floor1::elevator_5_6_hall {location = 13.5, departureRate = 0.2}
+    station B1 at FloorB1::elevator_5_6_hall {location = 8, departureRate = 0.2}
+    station B2 at FloorB2::elevator_5_6_hall {location = 4, departureRate = 0.2}
+    station B3 at FloorB3::elevator_5_6_hall {location = 0.0, departureRate = 0.2}
+}
