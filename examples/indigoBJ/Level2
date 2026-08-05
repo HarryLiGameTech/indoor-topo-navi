@@ -8,7 +8,7 @@ topo-map Level2(){
   topo-node toilet_north {tags = ["indoor", "toilet"], positions = 8, observedThroughput = 4}
   topo-node toilet_south {tags = ["indoor", "toilet"], positions = 8, observedThroughput = 4}
   topo-node shop_201 {tags = ["indoor", "shop"], shop_name = "优衣库", shop_category = "Costume"}
-  topo-node shop_202 {tags = ["indoor", "shop"], shop_name = "优衣库", shop_category = "Costume"}
+  topo-node shop_202 {tags = ["indoor", "shop"], shop_name = "", shop_category = "Costume"}
   // topo-node shop_203 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   // topo-node shop_204 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}
   // topo-node shop_205 {tags = ["indoor", "shop"], shop_name = "", shop_category = ""}

@@ -1,4 +1,4 @@
-transport CentralEscalator is Escaltor{
+transport CentralEscalator is Escalator{
     let params: {time: Int} = {
         time = 30
     }
