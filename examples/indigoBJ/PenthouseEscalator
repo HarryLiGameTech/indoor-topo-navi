@@ -1,4 +1,4 @@
-transport PenthouseEscalator is Escaltor{
+transport PenthouseEscalator is Escalator{
     let params: {time: Int} = {
         time = 35
     }

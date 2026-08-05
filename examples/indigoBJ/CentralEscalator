@@ -8,5 +8,3 @@ transport CentralEscalator is Escalator{
     station L2 at Level2::shop_248_outside {}
     station L1 at Level1::mid_bridge_inner_end {}
 }
-
-
