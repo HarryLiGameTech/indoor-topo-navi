@@ -1,0 +1,12 @@
+transport Escalator_18 is Escalator{
+    let params: {time: Int} = {
+        time = 30
+    }
+
+    let displayName: String = "The escalator in the central part of the mall"
+
+    station L3 at Level3::shop_341_outside {}
+    station L2 at Level2::escalator_18 {}
+}
+
+
