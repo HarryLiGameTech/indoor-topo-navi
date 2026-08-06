@@ -170,7 +170,7 @@ topo-map Level1(){
   topo-node north_gate_outside {tags = ["outdoor", "rain_exposed", "manual_door", "airlock"]}
   topo-node mid_gate_outside {tags = ["outdoor", "rain_exposed", "manual_door", "airlock"]}
   topo-node south_gate_outside {tags = ["outdoor", "rain_exposed", "manual_door", "airlock"]}
-  topo-node mid_gate_inside {tags = ["indoor", "manual_door", "airlock"]}
+  topo-node mid_gate_inside {tags = ["indoor", "manual_door", "airlock"], displayName = "中门"}
   topo-node north_garden_atrium_link_inner {tags = ["indoor"]}
   topo-node garden_mid_gate {tags = ["indoor", "automatic_door"]}
   topo-node garden_south_gate {tags = ["indoor", "automatic_door"]}
