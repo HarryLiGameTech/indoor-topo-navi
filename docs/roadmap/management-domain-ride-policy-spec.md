@@ -197,9 +197,8 @@ Transport files may define ride-origin/destination policy using `ride-from`.
 Syntax:
 
 ```toposcript
-ride-from SOURCE to TARGET
 ride-from SOURCE to TARGET requires ConstraintName
-ride-from SOURCE to TARGET requires <ConstraintA && ConstraintB>
+ride-from SOURCE to TARGET requires <ConstraintA && ConstraintB && ...>
 ```
 
 `SOURCE` and `TARGET` may be:
@@ -217,10 +216,8 @@ transport AllFloorElevator is Elevator {
   station F88 at Floor88::main_elevator_hall { location = 390.0, departureRate = 0.02 }
   station FM2 at FloorM2::main_elevator_hall { location = -10.0, departureRate = 0.01 }
 
-  ride-from OfficeMain to PublicLobby
   ride-from OfficeMain to Hotel requires HotelAccess
   ride-from OfficeMain to Facilities requires ManagementOnly
-  ride-from Facilities to any
   ride-from Floor32 to Hotel requires SpecialEscort
 }
 ```

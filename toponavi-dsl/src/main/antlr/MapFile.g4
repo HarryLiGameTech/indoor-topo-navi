@@ -7,7 +7,7 @@ grammar MapFile;
 // Entry point
 surfaceDef
     : 'root' ID '(' paramList? ')' surfaceBody                        # SurfaceDefRootExpr
-    | 'topo-map' ID '(' paramList? ')' surfaceBody                    # SurfaceDefTopoMapExpr
+    | 'topo-map' ID '(' paramList? ')' ('override-managed-by' ID)? surfaceBody  # SurfaceDefTopoMapExpr
     | 'transport' ID 'is' expr surfaceBody                            # SurfaceDefTransportExpr
     | 'building-includes' globalConfigBody                            # SurfaceDefGlobalConfigExpr
     ;
@@ -22,7 +22,7 @@ surfaceBody
 
 globalConfigElement
     : 'vehicle' ID                                         # GlobalConfigElementVehicleRef
-    | 'submap' ID ('using' ID)?                            # GlobalConfigElementSubmapRef
+    | 'submap' ID ('using' ID)? ('managed-by' ID)?          # GlobalConfigElementSubmapRef
     ;
 
 surfaceBodyElement
@@ -30,6 +30,7 @@ surfaceBodyElement
     | 'topo-node' ID recordAssign?                          # SurfaceElementTopoNode
     | 'atomic-path' pathSpec recordAssign requirements?     # SurfaceElementAtomicPath
     | 'station' ID 'at' identifier ('at' expr)* recordAssign (requirements ('on' expr)?)?  # SurfaceElementStation
+    | 'ride-from' ridePolicyOperand 'to' ridePolicyOperand requirements  # SurfaceElementRidePolicy
     | 'directional-arrow' arrowSpec ID ID                   # SurfaceElementArrow
     | 'linear-path' linearPathSpec                          # SurfaceElementLinearPath
     | 'constraint' ID constraintBody                        # SurfaceElementConstraint
@@ -144,6 +145,11 @@ linearPathSpec
 requirements
     : 'requires' ID
     | 'requires' '<' (ID ('&&' ID)*)? '>'
+    ;
+
+ridePolicyOperand
+    : ID
+    | 'any'
     ;
 
 // constraint <Name> { require <expr>; require <expr>; ... }

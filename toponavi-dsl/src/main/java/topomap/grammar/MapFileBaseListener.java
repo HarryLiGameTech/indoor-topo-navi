@@ -161,6 +161,18 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSurfaceElementRidePolicy(MapFileParser.SurfaceElementRidePolicyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSurfaceElementRidePolicy(MapFileParser.SurfaceElementRidePolicyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterSurfaceElementArrow(MapFileParser.SurfaceElementArrowContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -576,6 +588,18 @@ public class MapFileBaseListener implements MapFileListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitRequirements(MapFileParser.RequirementsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterRidePolicyOperand(MapFileParser.RidePolicyOperandContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRidePolicyOperand(MapFileParser.RidePolicyOperandContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

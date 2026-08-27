@@ -21,6 +21,7 @@ trait LinearTransport extends Serializable {
   def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern = Flat): Double // Includes waiting time // TODO: Refactor with better type constraint
   def canArriveAt(target: NavigationGraph): Boolean // eg. An elevator canServe the floor input iff hasStation && hasPermission
   def canDepartFrom(source: NavigationGraph): Boolean
+  def canRideFromTo(source: NavigationGraph, target: NavigationGraph): Boolean = true
   def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double
 }
 
@@ -34,7 +35,8 @@ case class StairCase(
   stationRunIndices: Map[NavigationGraph, Int], // For turn-around loss calculation, indicating which flight of stairs the station is on. Usually starts from 0 at the bottom.
   turnAroundLoss: Double, // Additional time loss for "turning-around" between different flights in the staircase
   stationLabels: Map[NavigationGraph, String] = Map.empty,
-  displayName: Option[String] = None
+  displayName: Option[String] = None,
+  allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None
 ) extends LinearTransport {
 
   override def maxVelocity: Double = 0.0
@@ -48,6 +50,9 @@ case class StairCase(
   override def canDepartFrom(source: NavigationGraph): Boolean = {
     true // Stairs always allow you to depart. Constraints are managed by relevant atomic-paths
   }
+
+  override def canRideFromTo(source: NavigationGraph, target: NavigationGraph): Boolean =
+    allowedRidePairs.forall(_.contains(source -> target))
 
   override def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
     val distance = distanceBetweenStations(src, dst)
@@ -77,7 +82,8 @@ case class Escalator(
   stationPermissions: Map[NavigationGraph, TransportServicePermission],
   travelTimeSeconds: Double,
   stationLabels: Map[NavigationGraph, String] = Map.empty,
-  displayName: Option[String] = None
+  displayName: Option[String] = None,
+  allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None
 ) extends LinearTransport {
 
   override def maxVelocity: Double = 0.0
@@ -94,6 +100,9 @@ case class Escalator(
       case TransportServicePermission.FullyGranted | TransportServicePermission.DepartOnly => true
       case _ => false
     })
+
+  override def canRideFromTo(source: NavigationGraph, target: NavigationGraph): Boolean =
+    allowedRidePairs.forall(_.contains(source -> target))
 
   override def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
     stationLocations(src)
@@ -126,7 +135,8 @@ case class ElevatorBank(
   duty: Int = 1600,
   dwellTime: Double = 15.0,
   stationLabels: Map[NavigationGraph, String] = Map.empty,
-  displayName: Option[String] = None
+  displayName: Option[String] = None,
+  allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None
 ) extends LinearTransport {
 
   override def canArriveAt(target: NavigationGraph): Boolean = {
@@ -146,6 +156,9 @@ case class ElevatorBank(
       false
     }
   }
+
+  override def canRideFromTo(source: NavigationGraph, target: NavigationGraph): Boolean =
+    allowedRidePairs.forall(_.contains(source -> target))
 
   override def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
     // Get the vertical distance between stations

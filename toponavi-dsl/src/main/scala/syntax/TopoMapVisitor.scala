@@ -3,7 +3,7 @@ package syntax
 import corelang.{Environment, Expr, Identifier, OpKind, Type}
 import enums.TPCCRelationship
 import org.antlr.v4.runtime.tree.ParseTree
-import surfacelang.{AtomicPathExpr, ConstraintExpr, DirectionalArrowExpr, GlobalConfigExpr, LinearPathExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, VehicleRef}
+import surfacelang.{AtomicPathExpr, ConstraintExpr, DirectionalArrowExpr, GlobalConfigExpr, LinearPathExpr, RidePolicyExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, VehicleRef}
 import topomap.grammar.MapFileParser.*
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser, MapFileVisitor}
 
@@ -38,7 +38,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
   }
 
   override def visitSurfaceDefTopoMapExpr(ctx: SurfaceDefTopoMapExprContext): SubTopoMapExpr = {
-    val name = ctx.ID().getText
+    val name = ctx.ID(0).getText
+    val managementDomainOverride = if (ctx.ID().size() > 1) Some(ctx.ID(1).getText) else None
 
     val params = if (ctx.paramList() == null) List.empty
     else ctx.paramList().param().asScala.map { paramAssign =>
@@ -48,7 +49,7 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
     }.toList
 
     ctx.surfaceBody().surfaceBodyElement().asScala.foldLeft(
-      SubTopoMapExpr(name, params)
+      SubTopoMapExpr(name, params, managementDomainOverride = managementDomainOverride)
     ) { (acc, element) => element match
       case coreDefCtx: SurfaceElementCoreDefContext =>
         val envUpdate = visitSurfaceElementCoreDef(coreDefCtx)
@@ -99,6 +100,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       case constraintCtx: SurfaceElementConstraintContext =>
         val constraint = visitSurfaceElementConstraint(constraintCtx)
         acc.copy(constraints = acc.constraints :+ constraint)
+      case ridePolicyCtx: SurfaceElementRidePolicyContext =>
+        acc.copy(ridePolicies = acc.ridePolicies :+ visitSurfaceElementRidePolicy(ridePolicyCtx))
       case _ => acc // Ignore other elements for now
     }
   }
@@ -111,22 +114,39 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       .foldLeft(GlobalConfigExpr(List.empty, List.empty)) { (acc, elementCtx) =>
         elementCtx match {
           case submapCtx: GlobalConfigElementSubmapRefContext =>
-            if (submapCtx.ID().size() == 2) {
-              // 'submap X using Y': X has no own .tmap — it reuses Y's compiled graph.
-              val userName = submapCtx.ID(0).getText
-              val baseName = submapCtx.ID(1).getText
-              val baseRef  = TopoMapRef(baseName)
-              val existing = acc.submapUsages.getOrElse(baseRef, List.empty)
-              acc.copy(
-                submapUsages = acc.submapUsages + (baseRef -> (existing :+ userName)),
-                orderedSubmapNames = acc.orderedSubmapNames :+ userName
+            val childTexts = (0 until submapCtx.getChildCount).map(submapCtx.getChild(_).getText)
+            val ids = submapCtx.ID().asScala.map(_.getText).toList
+            val userName = ids.head
+            val usingBase = childTexts.indexOf("using") match {
+              case -1 => None
+              case index => Some(childTexts(index + 1))
+            }
+            val configuredDomain = childTexts.indexOf("managed-by") match {
+              case -1 => None
+              case index => Some(childTexts(index + 1))
+            }
+            val withDomain = configuredDomain match {
+              case Some(domain) => acc.copy(
+                configuredManagementDomains = acc.configuredManagementDomains + (userName -> domain)
               )
-            } else {
+              case None => acc
+            }
+
+            usingBase match {
+              case Some(baseName) =>
+              // 'submap X using Y': X has no own .tmap — it reuses Y's compiled graph.
+              val baseRef  = TopoMapRef(baseName)
+              val existing = withDomain.submapUsages.getOrElse(baseRef, List.empty)
+              withDomain.copy(
+                submapUsages = withDomain.submapUsages + (baseRef -> (existing :+ userName)),
+                orderedSubmapNames = withDomain.orderedSubmapNames :+ userName
+              )
+              case None =>
               // Plain 'submap X': has its own .tmap file, add to submaps for parsing
               val ref = visitGlobalConfigElementSubmapRef(submapCtx)
-              acc.copy(
-                submaps = acc.submaps :+ ref,
-                orderedSubmapNames = acc.orderedSubmapNames :+ ref.name
+              withDomain.copy(
+                submaps = withDomain.submaps :+ ref,
+                orderedSubmapNames = withDomain.orderedSubmapNames :+ ref.name
               )
             }
           case vehicleCtx: GlobalConfigElementVehicleRefContext =>
@@ -143,7 +163,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
   }
 
   override def visitGlobalConfigElementSubmapRef(ctx: GlobalConfigElementSubmapRefContext): TopoMapRef = {
-    if (ctx.ID().size() == 2) {
+    val hasUsingClause = (0 until ctx.getChildCount).exists(ctx.getChild(_).getText == "using")
+    if (hasUsingClause) {
       // register in SubmapRefRegistry as kv (TopoMapRef created using ID(1) -> ID(0))
       TopoMapRef(
         name = ctx.ID(1).getText
@@ -249,7 +270,30 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       }.toList
     }.getOrElse(List.empty)
 
-    StationDef(stationName, nodeRef, Expr.Record(recordFields), constraintExprs)
+    val permissionScope = (0 until ctx.getChildCount)
+      .find(index => ctx.getChild(index).getText == "on")
+      .flatMap(index => Option(ctx.getChild(index + 1)))
+      .map(_.getText)
+
+    permissionScope match {
+      case None | Some("") =>
+        StationDef(stationName, nodeRef, Expr.Record(recordFields), constraints = constraintExprs)
+      case Some("Depart") =>
+        StationDef(stationName, nodeRef, Expr.Record(recordFields), departConstraints = constraintExprs)
+      case Some("Arrive") =>
+        StationDef(stationName, nodeRef, Expr.Record(recordFields), arriveConstraints = constraintExprs)
+      case Some(other) =>
+        throw new RuntimeException(s"Unknown station permission scope '$other'. Expected Depart or Arrive")
+    }
+  }
+
+  override def visitSurfaceElementRidePolicy(ctx: SurfaceElementRidePolicyContext): RidePolicyExpr = {
+    val constraints = ctx.requirements().ID().asScala.map(id => Expr.Var(id.getText)).toList
+    RidePolicyExpr(
+      source = ctx.ridePolicyOperand(0).getText,
+      target = ctx.ridePolicyOperand(1).getText,
+      constraints = constraints
+    )
   }
   
   override def visitSurfaceElementConstraint(ctx: SurfaceElementConstraintContext): ConstraintExpr = {

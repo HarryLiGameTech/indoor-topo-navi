@@ -148,6 +148,18 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitSurfaceElementStation(MapFileParser.SurfaceElementStationContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code SurfaceElementRidePolicy}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterSurfaceElementRidePolicy(MapFileParser.SurfaceElementRidePolicyContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SurfaceElementRidePolicy}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitSurfaceElementRidePolicy(MapFileParser.SurfaceElementRidePolicyContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code SurfaceElementArrow}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
@@ -541,6 +553,16 @@ public interface MapFileListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitRequirements(MapFileParser.RequirementsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#ridePolicyOperand}.
+	 * @param ctx the parse tree
+	 */
+	void enterRidePolicyOperand(MapFileParser.RidePolicyOperandContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#ridePolicyOperand}.
+	 * @param ctx the parse tree
+	 */
+	void exitRidePolicyOperand(MapFileParser.RidePolicyOperandContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MapFileParser#constraintBody}.
 	 * @param ctx the parse tree

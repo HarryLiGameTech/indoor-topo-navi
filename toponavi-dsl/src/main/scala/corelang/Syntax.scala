@@ -37,6 +37,9 @@ enum Type extends Identified[Identifier] {
 }
 
 enum OpKind {
+  // TODO: Add first-class boolean operators (And, Or, Not) and wire them through
+  // MapFile.g4, CoreLangVisitor, Interpreter, and TypeChecker so constraints can
+  // express alternatives such as `require conditionA || conditionB`.
   case Add, Sub, Mul, Eq, Lt, Gt, Concat, Neg
 
   override def toString: String = this match {
