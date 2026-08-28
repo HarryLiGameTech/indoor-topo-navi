@@ -348,4 +348,67 @@ class ConstraintTest extends AnyFunSuite with Matchers {
     unrestricted should not be empty
     restricted.get._2.fields.get("_permission") shouldBe Some(Value.StringVal("NoAccess"))
   }
+
+  test("failing station constraint scoped to Depart preserves arrival access") {
+    val submapCode =
+      """
+      topo-map TestMap() {
+        topo-node hall
+      }
+      """
+    val transportCode =
+      """
+      transport OP1 is Elevator {
+        constraint StaffOnly { require haveStaffCard }
+        station Floor1 at TestMap::hall {} requires StaffOnly on Depart
+      }
+      """
+    val submap = parseTopoMap(submapCode).elaborate(using envWithParams())
+    val topoEnv = envWithParams("haveStaffCard" -> Value.BoolVal(false)).copy(submaps = Map("TestMap" -> submap))
+
+    val stationData = parseTransport(transportCode).elaborate(using topoEnv).stations.head._2
+    stationData.fields.get("_permission") shouldBe Some(Value.StringVal("ArriveOnly"))
+  }
+
+  test("failing station constraint scoped to Arrive preserves departure access") {
+    val submapCode =
+      """
+      topo-map TestMap() {
+        topo-node hall
+      }
+      """
+    val transportCode =
+      """
+      transport OP1 is Elevator {
+        constraint StaffOnly { require haveStaffCard }
+        station Floor1 at TestMap::hall {} requires StaffOnly on Arrive
+      }
+      """
+    val submap = parseTopoMap(submapCode).elaborate(using envWithParams())
+    val topoEnv = envWithParams("haveStaffCard" -> Value.BoolVal(false)).copy(submaps = Map("TestMap" -> submap))
+
+    val stationData = parseTransport(transportCode).elaborate(using topoEnv).stations.head._2
+    stationData.fields.get("_permission") shouldBe Some(Value.StringVal("DepartOnly"))
+  }
+
+  test("passing scoped station constraints preserve full access") {
+    val submapCode =
+      """
+      topo-map TestMap() {
+        topo-node hall
+      }
+      """
+    val transportCode =
+      """
+      transport OP1 is Elevator {
+        constraint StaffOnly { require haveStaffCard }
+        station Floor1 at TestMap::hall {} requires StaffOnly on Depart
+      }
+      """
+    val submap = parseTopoMap(submapCode).elaborate(using envWithParams())
+    val topoEnv = envWithParams("haveStaffCard" -> Value.BoolVal(true)).copy(submaps = Map("TestMap" -> submap))
+
+    val stationData = parseTransport(transportCode).elaborate(using topoEnv).stations.head._2
+    stationData.fields should not contain "_permission"
+  }
 }

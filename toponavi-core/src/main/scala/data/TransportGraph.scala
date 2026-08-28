@@ -1,7 +1,6 @@
 package data
 
 import cats.effect.IO
-import enums.TransportServicePermission.{ArriveOnly, DepartOnly}
 import enums.VisitingMode.Normal
 import enums.{PathType, RoutePlanningPreferences, TransportServicePermission, VisitingMode}
 import enums.ElevatorTrafficPattern.UpRush
@@ -244,7 +243,10 @@ object TransportGraph {
         for {
           from <- stationNodes
           to <- stationNodes
-          if ((from != to && from.permission != ArriveOnly) && to.permission != DepartOnly) // Avoid self-loops and takes permission into account
+          if (from != to &&
+            line.canDepartFrom(from.ownerGraph) &&
+            line.canArriveAt(to.ownerGraph) &&
+            line.canRideFromTo(from.ownerGraph, to.ownerGraph)) // Avoid self-loops and apply station/ride permissions
         } {
           val cost = line.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph, UpRush)
           edges += TransportEdge(from, to, cost)

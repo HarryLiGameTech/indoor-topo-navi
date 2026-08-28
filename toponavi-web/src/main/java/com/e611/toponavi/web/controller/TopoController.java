@@ -128,12 +128,13 @@ public class TopoController {
             @RequestParam String startNode,
             @RequestParam String endNode,
             @RequestParam(required = false) String routePlanningPreference,
+            @RequestParam(defaultValue = "true") boolean isHighRise,
             @RequestParam(required = false) String forceRecompile) {
         try {
             String resolvedPreference = resolveRoutePlanningPreference(routePlanningPreference, null);
             return quickDemoNavigation(
                     buildingName, startNode, endNode, resolvedPreference, forceRecompile,
-                    Collections.emptyMap(), Collections.emptyList());
+                    Collections.emptyMap(), Collections.emptyList(), isHighRise);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
         }
@@ -145,6 +146,7 @@ public class TopoController {
             @RequestParam String startNode,
             @RequestParam String endNode,
             @RequestParam(required = false) String routePlanningPreference,
+            @RequestParam(defaultValue = "true") boolean isHighRise,
             @RequestParam(required = false) String forceRecompile,
             @RequestBody(required = false) QuickDemoNavigationRequest body) {
         try {
@@ -161,7 +163,7 @@ public class TopoController {
             String resolvedPreference = resolveRoutePlanningPreference(routePlanningPreference, body);
             List<String> banTags = resolveBanTags(body);
             return quickDemoNavigation(buildingName, startNode, endNode, resolvedPreference, forceRecompile,
-                    extractUserParams(body), banTags);
+                    extractUserParams(body), banTags, isHighRise);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
         }
@@ -170,7 +172,7 @@ public class TopoController {
     private ResponseEntity<?> quickDemoNavigation(
             String buildingName, String startNode, String endNode,
             String routePlanningPreference, String forceRecompile,
-            Map<String, Object> userParams, List<String> banTags) {
+            Map<String, Object> userParams, List<String> banTags, boolean isHighRise) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
             if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found in examples directory"));
@@ -180,7 +182,7 @@ public class TopoController {
 
             CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
             NavigationOutputPath plan = TopoNaviService.findRoutePlan(
-                    outcome.result(), startNode, endNode, routePlanningPreference, banTags);
+                    outcome.result(), startNode, endNode, routePlanningPreference, banTags, isHighRise);
 
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("status", "success");

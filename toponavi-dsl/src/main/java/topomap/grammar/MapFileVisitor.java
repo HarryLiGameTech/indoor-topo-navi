@@ -93,6 +93,13 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSurfaceElementStation(MapFileParser.SurfaceElementStationContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code SurfaceElementRidePolicy}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSurfaceElementRidePolicy(MapFileParser.SurfaceElementRidePolicyContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code SurfaceElementArrow}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree
@@ -324,6 +331,12 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitRequirements(MapFileParser.RequirementsContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#ridePolicyOperand}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRidePolicyOperand(MapFileParser.RidePolicyOperandContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MapFileParser#constraintBody}.
 	 * @param ctx the parse tree

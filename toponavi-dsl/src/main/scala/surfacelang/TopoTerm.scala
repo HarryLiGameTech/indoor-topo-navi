@@ -21,6 +21,13 @@ case class TransportValue(
   stationLabels: Map[TopoNodeRefValue, String],
   data: Value.RecordVal,
   context: Context,
+  ridePolicies: List[RidePolicyValue] = List.empty
+)
+
+case class RidePolicyValue(
+  source: String,
+  target: String,
+  allowed: Boolean
 )
 
 case class TopoMapValue(
@@ -29,7 +36,8 @@ case class TopoMapValue(
   paths: Set[AtomicPathValue],
   lines: Set[LinearPathValue],
   arrows: Set[DirectionalArrowValue],
-  context: Context
+  context: Context,
+  managementDomainOverride: Option[String] = None
 )
 
 case class TopoNodeValue(

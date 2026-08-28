@@ -134,7 +134,8 @@ case class SubTopoMapExpr(
   paths: List[AtomicPathExpr] = List.empty,
   arrows: List[DirectionalArrowExpr] = List.empty,
   linearPaths: List[LinearPathExpr] = List.empty,
-  constraints: List[ConstraintExpr] = List.empty
+  constraints: List[ConstraintExpr] = List.empty,
+  managementDomainOverride: Option[String] = None
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[TopoMapValue] {
 
   override def elaborate(using topoEnv: TopoEnvironment): TopoMapValue = {
@@ -164,6 +165,7 @@ case class SubTopoMapExpr(
       arrows = arrows.map(_.elaborate(using envWithNodes)).toSet,
       lines = linearPaths.map(_.elaborate(using envWithNodes)).toSet,
       context = newEnvValues,
+      managementDomainOverride = managementDomainOverride
     )
   }
 }
@@ -172,8 +174,16 @@ case class StationDef(
   label: String,
   node: TopoNodeRef,
   data: Data,
-  constraints: List[Expr] = List.empty
+  constraints: List[Expr] = List.empty,
+  departConstraints: List[Expr] = List.empty,
+  arriveConstraints: List[Expr] = List.empty
 )
+
+case class RidePolicyExpr(
+  source: String,
+  target: String,
+  constraints: List[Expr]
+) extends SurfaceSyntax
 
 case class TransportExpr(
   name: String,
@@ -181,7 +191,8 @@ case class TransportExpr(
   stations: List[StationDef],
   env: Environment[Identifier, Type, Expr] = Environment.empty,
   data: Data,
-  constraints: List[ConstraintExpr] = List.empty
+  constraints: List[ConstraintExpr] = List.empty,
+  ridePolicies: List[RidePolicyExpr] = List.empty
 ) extends SyntaxNameSpace with SurfaceSyntax with Elaborateable[TransportValue] {
   override def elaborate(using topoEnv: TopoEnvironment): TransportValue = {
     // Evaluate local definitions (e.g., let bindings inside the transport block)
@@ -195,17 +206,19 @@ case class TransportExpr(
       acc.copy(env = acc.env.addValueVar(Identifier.Symbol(c.name), c.elaborate(using acc)))
     }
 
+    def constraintsPass(constraints: List[Expr]): Boolean = constraints.forall { expr =>
+      Interpreter.eval(expr.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
+        case Value.BoolVal(b) => b
+        case other => throw new RuntimeException(s"Transport constraint must evaluate to Bool, got: $other")
+      }
+    }
+
     TransportValue(
       name = name,
       surfaceType = this.surfaceType,
       stations = stations.map { station =>
-        // Evaluate the station's requires-clause; if any constraint fails, mark with NoAccess.
-        val passes = station.constraints.forall { expr =>
-          Interpreter.eval(expr.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
-            case Value.BoolVal(b) => b
-            case other => throw new RuntimeException(s"Station constraint must evaluate to Bool, got: $other")
-          }
-        }
+        val departAllowed = constraintsPass(station.constraints ++ station.departConstraints)
+        val arriveAllowed = constraintsPass(station.constraints ++ station.arriveConstraints)
 
         // Strict Validation: Ensure the referenced node exists
         if (topoEnv.resolveNode(station.node.fromMapName, station.node.nodeName).isEmpty) {
@@ -218,9 +231,16 @@ case class TransportExpr(
           case other => throw new RuntimeException(s"Station data must evaluate to RecordVal, got: $other")
         }
 
-        // If constraint failed, inject "_permission" -> "NoAccess" into the station RecordVal
-        val finalDataVal: Value.RecordVal = if passes then stationDataVal
-                           else Value.RecordVal(stationDataVal.fields + ("_permission" -> Value.StringVal("NoAccess")))
+        val permission = (arriveAllowed, departAllowed) match {
+          case (true, true)   => None
+          case (true, false)  => Some("ArriveOnly")
+          case (false, true)  => Some("DepartOnly")
+          case (false, false) => Some("NoAccess")
+        }
+        val finalDataVal: Value.RecordVal = permission match {
+          case Some(value) => Value.RecordVal(stationDataVal.fields + ("_permission" -> Value.StringVal(value)))
+          case None        => stationDataVal
+        }
         (nodeValue, finalDataVal)
       },
       stationLabels = stations.map(station => station.node.elaborate -> station.label).toMap,
@@ -229,7 +249,14 @@ case class TransportExpr(
         case rv: Value.RecordVal => rv
         case other => throw new RuntimeException(s"Transport data must evaluate to RecordVal, got: $other")
       },
-      context = localCtx
+      context = localCtx,
+      ridePolicies = ridePolicies.map { policy =>
+        RidePolicyValue(
+          source = policy.source,
+          target = policy.target,
+          allowed = constraintsPass(policy.constraints)
+        )
+      }
     )
   }
 }
@@ -331,7 +358,8 @@ case class GlobalConfigExpr(
   submaps: List[TopoMapRef],
   vehicles: List[VehicleRef],
   submapUsages: Map[TopoMapRef, List[String]] = Map.empty,
-  orderedSubmapNames: List[String] = List.empty
+  orderedSubmapNames: List[String] = List.empty,
+  configuredManagementDomains: Map[String, String] = Map.empty
 ) extends SurfaceSyntax
 
 // Named compile-time constraint: a set of boolean predicates evaluated against invocation params.

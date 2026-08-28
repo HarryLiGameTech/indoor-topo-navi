@@ -54,7 +54,7 @@ Then start the service with:
 
 The REST API will be available at `http://localhost:8080/api/v1`. Key endpoints:
 
-- `GET /api/v1/quick-demo-navigation?startNode=<A>&endNode=<B>&routePlanningPreference=<pref>` — navigate between two nodes
+- `GET /api/v1/quick-demo-navigation?buildingName=<name>&startNode=<A>&endNode=<B>&routePlanningPreference=<pref>&isHighRise=<true|false>` — navigate between two nodes; `isHighRise` defaults to `true`, while `false` compares fully informed end-to-end costs
 - `GET /api/v1/quick-demo-available-submaps` — list all compiled submaps
 - `GET /api/v1/quick-demo-all-available-nodes` — list all nodes (optionally with attributes)
 - `GET /api/v1/quick-demo-all-available-edges` — list compiled directed edges with costs, tags, required actions, and attributes

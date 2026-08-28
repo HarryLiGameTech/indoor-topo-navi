@@ -4,7 +4,7 @@ import util.catchError
 import syntax.TopoMapVisitor
 import surfacelang.{GlobalConfigExpr, RootExpr, TopoEnvironment}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
-import data.{ElevatorBank, LinearTransport, NavigationGraph, StairCase, TransportGraph}
+import data.{ElevatorBank, Escalator, LinearTransport, NavigationGraph, StairCase, TransportGraph}
 import corelang.{Environment, Identifier, Value}
 import enums.AttributeValue
 import enums.ElevatorStationCategory.{Entrance, Occupant}
@@ -36,6 +36,7 @@ class TopoScriptCompiler() {
       case config: GlobalConfigExpr => config
       case _ => throw new RuntimeException("Global config parsing did not return a GlobalConfigExpr")
     }
+    validateConfiguredManagementDomains(globalConfig)
 
     // Populate the global SubmapRefRegistry from the parsed config
     metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
@@ -103,7 +104,9 @@ class TopoScriptCompiler() {
         }
     }.toMap
 
-    val topoEnvForTransport = TopoEnvironment(rootEnv, Map.empty, Map.empty, elaboratedMaps.toMap ++ derivedMaps)
+    val allElaboratedMaps = elaboratedMaps.toMap ++ derivedMaps
+    val topoEnvForTransport = TopoEnvironment(rootEnv, Map.empty, Map.empty, allElaboratedMaps)
+    val effectiveManagementDomains = resolveEffectiveManagementDomains(globalConfig, allElaboratedMaps)
 
     for (transName <- transFiles) {
       val transFile = new File(targetDirectory, transName + ".ttr")
@@ -148,7 +151,7 @@ class TopoScriptCompiler() {
     }
 
     val linearTransports = elaboratedTransports.map { transVal =>
-      buildLinearTransport(transVal, navigationGraphs)
+      buildLinearTransport(transVal, navigationGraphs, effectiveManagementDomains)
     }.toList
 
     // TODO: TransportGraph is built here from the original navigationGraphs, BEFORE CoordEstimator
@@ -168,6 +171,9 @@ class TopoScriptCompiler() {
     pprintln(transportGraph)
 
     val compilationResultMetadata = mutable.Map[String, AttributeValue]()
+    effectiveManagementDomains.foreach { case (submapName, domain) =>
+      compilationResultMetadata.put(s"managementDomain.$submapName", AttributeValue.StringValue(domain))
+    }
 
     val (finalGraphs, finalLinearPaths, finalArrows) =
       SpatialMetadataExtractor.extract(
@@ -226,6 +232,7 @@ class TopoScriptCompiler() {
       case config: GlobalConfigExpr => config
       case _ => throw new RuntimeException("Global config parsing failed")
     }
+    validateConfiguredManagementDomains(globalConfig)
 
     metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
 
@@ -284,7 +291,9 @@ class TopoScriptCompiler() {
         }
     }.toMap
 
-    val topoEnvForTransport = TopoEnvironment(rootEnv, Map.empty, Map.empty, elaboratedMaps.toMap ++ derivedMaps)
+    val allElaboratedMaps = elaboratedMaps.toMap ++ derivedMaps
+    val topoEnvForTransport = TopoEnvironment(rootEnv, Map.empty, Map.empty, allElaboratedMaps)
+    val effectiveManagementDomains = resolveEffectiveManagementDomains(globalConfig, allElaboratedMaps)
 
     for (transName <- transFiles) {
       val transCodeOption = scalaFiles.get(transName + ".ttr").orElse(scalaFiles.get(transName))
@@ -327,7 +336,7 @@ class TopoScriptCompiler() {
     }
 
     val linearTransports = elaboratedTransports.map { transVal =>
-      buildLinearTransport(transVal, navigationGraphs)
+      buildLinearTransport(transVal, navigationGraphs, effectiveManagementDomains)
     }.toList
 
     // TODO: Same stale-reference issue as above — TransportGraph must be built after CoordEstimator.
@@ -339,6 +348,9 @@ class TopoScriptCompiler() {
 
 
     val compilationResultMetadata = mutable.Map[String, AttributeValue]()
+    effectiveManagementDomains.foreach { case (submapName, domain) =>
+      compilationResultMetadata.put(s"managementDomain.$submapName", AttributeValue.StringValue(domain))
+    }
 
     val (finalGraphs, finalLinearPaths, finalArrows) =
       compiler.SpatialMetadataExtractor.extract(
@@ -519,16 +531,224 @@ class TopoScriptCompiler() {
     graph
   }
 
-  private def buildLinearTransport(transVal: TransportValue, graphs: Map[String, NavigationGraph]): LinearTransport = {
-     transVal.surfaceType match {
-         case "Elevator"  => buildElevatorBank(transVal, graphs) // Continue with ElevatorBank construction
-         case "Escalator" => throw RuntimeException("Escalator building logic not yet implemented") // TODO: Implement buildEscalator similar to buildElevatorBank
-         case "Stairs"    => buildStairCase(transVal, graphs) // TODO: Implement buildStairs similar to buildElevatorBank
-         case _ => throw new RuntimeException(s"Unsupported transport type '${transVal.surfaceType}'.")
-     }
+  private sealed trait ResolvedRideOperand
+  private case class RideSubmap(name: String) extends ResolvedRideOperand
+  private case class RideDomain(name: String) extends ResolvedRideOperand
+  private case object RideAny extends ResolvedRideOperand
+
+  private case class ResolvedRidePolicy(
+    source: ResolvedRideOperand,
+    target: ResolvedRideOperand,
+    allowed: Boolean
+  )
+
+  private def validateConfiguredManagementDomains(globalConfig: GlobalConfigExpr): Unit = {
+    val submapNames = globalConfig.orderedSubmapNames.toSet
+    val collisions = globalConfig.configuredManagementDomains.values.toSet.intersect(submapNames)
+    if (collisions.nonEmpty) {
+      throw new RuntimeException(
+        s"Management domain names must not equal submap names: ${collisions.toList.sorted.mkString(", ")}"
+      )
+    }
   }
 
-  private def buildElevatorBank(transVal: TransportValue, graphs: Map[String, NavigationGraph]): ElevatorBank = {
+  private def resolveEffectiveManagementDomains(
+    globalConfig: GlobalConfigExpr,
+    maps: Map[String, TopoMapValue]
+  ): Map[String, String] = {
+    val effectiveDomains = globalConfig.orderedSubmapNames.distinct.map { submapName =>
+      val configured = globalConfig.configuredManagementDomains.get(submapName)
+      val overrideDomain = maps.get(submapName).flatMap(_.managementDomainOverride)
+
+      overrideDomain.foreach { domain =>
+        configured match {
+          case Some(configuredDomain) if configuredDomain == domain =>
+            println(s"${Console.YELLOW}Warning: Redundant override for submap $submapName${Console.RESET}")
+          case None =>
+            println(s"${Console.YELLOW}Warning: Submap domain not specified in config file${Console.RESET}")
+          case _ => ()
+        }
+      }
+
+      submapName -> overrideDomain.orElse(configured).getOrElse("Misc")
+    }.toMap
+
+    val submapNames = globalConfig.orderedSubmapNames.toSet
+    val collisions = effectiveDomains.values.toSet.intersect(submapNames)
+    if (collisions.nonEmpty) {
+      throw new RuntimeException(
+        s"Management domain names must not equal submap names: ${collisions.toList.sorted.mkString(", ")}"
+      )
+    }
+
+    effectiveDomains
+  }
+
+  private def resolveRideOperand(
+    rawOperand: String,
+    submapNames: Set[String],
+    domainNames: Set[String]
+  ): ResolvedRideOperand = {
+    if (rawOperand == "any") RideAny
+    else if (submapNames.contains(rawOperand)) RideSubmap(rawOperand)
+    else if (domainNames.contains(rawOperand)) RideDomain(rawOperand)
+    else throw new RuntimeException(s"Unknown ride-from operand '$rawOperand'")
+  }
+
+  private def rideOperandMatches(
+    operand: ResolvedRideOperand,
+    submapName: String,
+    domainName: String
+  ): Boolean = operand match {
+    case RideSubmap(name) => name == submapName
+    case RideDomain(name) => name == domainName
+    case RideAny          => true
+  }
+
+  private def ridePolicySpecificity(policy: ResolvedRidePolicy): Int =
+    (policy.source, policy.target) match {
+      case (_: RideSubmap, _: RideSubmap) => 1
+      case (_: RideSubmap, _: RideDomain) => 2
+      case (_: RideDomain, _: RideSubmap) => 3
+      case (_: RideDomain, _: RideDomain) => 4
+      case (RideAny, _: RideSubmap)       => 5
+      case (_: RideSubmap, RideAny)       => 6
+      case (RideAny, _: RideDomain)       => 7
+      case (_: RideDomain, RideAny)       => 8
+      case (RideAny, RideAny)             => 9
+    }
+
+  private def buildAllowedRidePairs(
+    transVal: TransportValue,
+    graphs: Map[String, NavigationGraph],
+    effectiveManagementDomains: Map[String, String]
+  ): Option[Set[(NavigationGraph, NavigationGraph)]] = {
+    if (transVal.ridePolicies.isEmpty) return None
+
+    val submapNames = effectiveManagementDomains.keySet
+    val domainNames = effectiveManagementDomains.values.toSet
+    val policies = transVal.ridePolicies.map { policy =>
+      ResolvedRidePolicy(
+        source = resolveRideOperand(policy.source, submapNames, domainNames),
+        target = resolveRideOperand(policy.target, submapNames, domainNames),
+        allowed = policy.allowed
+      )
+    }
+
+    policies.groupBy(policy => policy.source -> policy.target).foreach { case ((source, target), sameScope) =>
+      if (sameScope.map(_.allowed).distinct.size > 1) {
+        throw new RuntimeException(
+          s"Conflicting ride-from rules with equal specificity for $source to $target"
+        )
+      }
+    }
+
+    val stationGraphs = transVal.stations.map { case (nodeRef, _) => graphs(nodeRef.fromMapName) }.distinct
+    val allowedPairs = for {
+      sourceGraph <- stationGraphs
+      targetGraph <- stationGraphs
+      if sourceGraph != targetGraph
+      sourceDomain = effectiveManagementDomains.getOrElse(sourceGraph.identifier, "Misc")
+      targetDomain = effectiveManagementDomains.getOrElse(targetGraph.identifier, "Misc")
+      matching = policies.filter { policy =>
+        rideOperandMatches(policy.source, sourceGraph.identifier, sourceDomain) &&
+          rideOperandMatches(policy.target, targetGraph.identifier, targetDomain)
+      }
+      best = if (matching.isEmpty) List.empty else {
+        val bestSpecificity = matching.map(ridePolicySpecificity).min
+        matching.filter(ridePolicySpecificity(_) == bestSpecificity)
+      }
+      if best.isEmpty || best.forall(_.allowed)
+    } yield sourceGraph -> targetGraph
+
+    Some(allowedPairs.toSet)
+  }
+
+  private def buildLinearTransport(
+    transVal: TransportValue,
+    graphs: Map[String, NavigationGraph],
+    effectiveManagementDomains: Map[String, String]
+  ): LinearTransport = {
+    val allowedRidePairs = buildAllowedRidePairs(transVal, graphs, effectiveManagementDomains)
+    transVal.surfaceType match {
+      case "Elevator"  => buildElevatorBank(transVal, graphs, allowedRidePairs)
+      case "Escalator" => buildEscalator(transVal, graphs, allowedRidePairs)
+      case "Stairs"    => buildStairCase(transVal, graphs, allowedRidePairs)
+      case _ => throw new RuntimeException(s"Unsupported transport type '${transVal.surfaceType}'.")
+    }
+  }
+
+  private def buildEscalator(
+    transVal: TransportValue,
+    graphs: Map[String, NavigationGraph],
+    allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]]
+  ): Escalator = {
+    val invalidNumericTime =
+      new RuntimeException(s"Escalator '${transVal.name}' must contain numeric 'params.time'")
+
+    val travelTime = transVal.context.values.get(corelang.Identifier.Symbol("params")) match {
+      case Some(Value.RecordVal(fields)) =>
+        fields.get("time") match {
+          case Some(Value.FloatVal(value)) => value
+          case Some(Value.IntVal(value)) => value.toDouble
+          case _ => throw invalidNumericTime
+        }
+      case _ => throw invalidNumericTime
+    }
+
+    if (!travelTime.isFinite || travelTime <= 0.0) {
+      throw new RuntimeException(s"Escalator '${transVal.name}' params.time must be finite and greater than 0")
+    }
+
+    if (transVal.stations.size != 2) {
+      throw new RuntimeException(s"Escalator '${transVal.name}' must have exactly 2 stations")
+    }
+
+    val resolvedStations = transVal.stations.map { case (nodeRef, stationData) =>
+      val graph = graphs(nodeRef.fromMapName)
+      val node = graph.nodes.find(_.identifier == nodeRef.nodeName)
+        .getOrElse(throw new RuntimeException(s"Node not found in Core Graph: ${nodeRef.nodeName}"))
+      (nodeRef, stationData, graph, node)
+    }
+
+    if (resolvedStations.map(_._3).distinct.size != 2) {
+      throw new RuntimeException(s"Escalator '${transVal.name}' stations must belong to two distinct submaps")
+    }
+
+    val stations = resolvedStations.map { case (_, _, graph, node) => graph -> node }.toMap
+    val locations = resolvedStations.zipWithIndex.map { case ((_, _, graph, _), index) =>
+      graph -> index.toDouble
+    }.toMap
+    val stationLabels = transVal.stationLabels.map { case (nodeRef, label) =>
+      graphs(nodeRef.fromMapName) -> label
+    }
+    val stationPermissions = resolvedStations.map { case (_, stationData, graph, _) =>
+      val permission = stationData.fields.get("_permission") match {
+        case Some(Value.StringVal("NoAccess"))   => enums.TransportServicePermission.NoAccess
+        case Some(Value.StringVal("ArriveOnly")) => enums.TransportServicePermission.ArriveOnly
+        case Some(Value.StringVal("DepartOnly")) => enums.TransportServicePermission.DepartOnly
+        case _                                    => enums.TransportServicePermission.FullyGranted
+      }
+      graph -> permission
+    }.toMap
+
+    Escalator(
+      identifier = transVal.name,
+      stationNodes = stations,
+      stationLocations = locations,
+      stationPermissions = stationPermissions,
+      travelTimeSeconds = travelTime,
+      stationLabels = stationLabels,
+      displayName = transportDisplayName(transVal),
+      allowedRidePairs = allowedRidePairs
+    )
+  }
+
+  private def buildElevatorBank(
+    transVal: TransportValue,
+    graphs: Map[String, NavigationGraph],
+    allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]]
+  ): ElevatorBank = {
     // Retrieve 'params' from the context, which is expected to be a RecordVal
     val paramsOption = transVal.context.values.get(corelang.Identifier.Symbol("params"))
     val d = paramsOption match {
@@ -613,11 +833,16 @@ class TopoScriptCompiler() {
       capacity = cap,
       duty = duty,
       stationLabels = stationLabels,
-      displayName = displayName
+      displayName = displayName,
+      allowedRidePairs = allowedRidePairs
     )
   }
 
-  private def buildStairCase(transVal: TransportValue, graphs: Map[String, NavigationGraph]): StairCase = {
+  private def buildStairCase(
+    transVal: TransportValue,
+    graphs: Map[String, NavigationGraph],
+    allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]]
+  ): StairCase = {
     // Retrieve 'params' from the context, which is expected to be a RecordVal
     val paramsOption = transVal.context.values.get(corelang.Identifier.Symbol("params"))
     val d = paramsOption match {
@@ -667,7 +892,8 @@ class TopoScriptCompiler() {
       stationRunIndices = runIndices,
       turnAroundLoss = turnBackCost,
       stationLabels = stationLabels,
-      displayName = displayName
+      displayName = displayName,
+      allowedRidePairs = allowedRidePairs
     )
   }
 

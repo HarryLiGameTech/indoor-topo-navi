@@ -3,7 +3,7 @@ transport PenthouseEscalator is Escalator{
         time = 35
     }
 
-    let displayName: String = "The only escalator to connecting L3 and L4"
+    let displayName: String = "唯一可前往顶层的扶梯"
 
     station L4 at Penthouse::escalator_3_4 {}
     station L3 at Level3::shop_383_outside {}

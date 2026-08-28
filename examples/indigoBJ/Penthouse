@@ -26,7 +26,7 @@ topo-map Penthouse(){
   topo-node theater7_exit_gate {tags = ["indoor"]}
 
   // Near the check-in
-  topo-node check_in_gate_outside {tags = ["indoor", "staffed"]}
+  topo-node check_in_gate_outside {tags = ["indoor", "staffed"], displayName = "检票口"}
   topo-node check_in_gate_inside {tags = ["indoor", "staffed"]}
   topo-node toilets_outside {tags = ["indoor", "odor_prone"]}
   topo-node toilet_male {tags = ["indoor", "odor_prone"]}
@@ -46,7 +46,7 @@ topo-map Penthouse(){
   topo-node after_movie_passage {tags = ["indoor"], description = "The passage after the movie, connecting theater exits and the lobby"}
 
   // Access to this floor
-  topo-node escalator_3_4 {tags = ["indoor", "escalator"], displayName = "扶梯", description = "The only escalator that goes to this floor"}
+  topo-node escalator_3_4 {tags = ["indoor", "escalator"], displayName = "扶梯", description = "唯一可前往顶层的扶梯"}
   topo-node north_elevator_hall {tags = ["indoor", "elevator"], displayName = "北电梯", description = "The only guest elevator that goes to this floor, only for guests with accessibility needs"}
 
 
