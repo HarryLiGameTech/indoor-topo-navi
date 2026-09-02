@@ -176,7 +176,8 @@ case class StationDef(
   data: Data,
   constraints: List[Expr] = List.empty,
   departConstraints: List[Expr] = List.empty,
-  arriveConstraints: List[Expr] = List.empty
+  arriveConstraints: List[Expr] = List.empty,
+  outOfOrder: Boolean = false
 )
 
 case class RidePolicyExpr(
@@ -231,11 +232,15 @@ case class TransportExpr(
           case other => throw new RuntimeException(s"Station data must evaluate to RecordVal, got: $other")
         }
 
-        val permission = (arriveAllowed, departAllowed) match {
-          case (true, true)   => None
-          case (true, false)  => Some("ArriveOnly")
-          case (false, true)  => Some("DepartOnly")
-          case (false, false) => Some("NoAccess")
+        val permission = if (station.outOfOrder) {
+          Some("NoAccess")
+        } else {
+          (arriveAllowed, departAllowed) match {
+            case (true, true)   => None
+            case (true, false)  => Some("ArriveOnly")
+            case (false, true)  => Some("DepartOnly")
+            case (false, false) => Some("NoAccess")
+          }
         }
         val finalDataVal: Value.RecordVal = permission match {
           case Some(value) => Value.RecordVal(stationDataVal.fields + ("_permission" -> Value.StringVal(value)))

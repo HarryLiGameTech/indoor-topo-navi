@@ -29,7 +29,7 @@ surfaceBodyElement
     : coreDef                                               # SurfaceElementCoreDef
     | 'topo-node' ID recordAssign?                          # SurfaceElementTopoNode
     | 'atomic-path' pathSpec recordAssign requirements?     # SurfaceElementAtomicPath
-    | 'station' ID 'at' identifier ('at' expr)* recordAssign (requirements ('on' expr)?)?  # SurfaceElementStation
+    | 'station' ID 'at' identifier ('at' expr)* recordAssign (requirements ('on' expr)?)? OUT_OF_ORDER?  # SurfaceElementStation
     | 'ride-from' ridePolicyOperand 'to' ridePolicyOperand requirements  # SurfaceElementRidePolicy
     | 'directional-arrow' arrowSpec ID ID                   # SurfaceElementArrow
     | 'linear-path' linearPathSpec                          # SurfaceElementLinearPath
@@ -46,6 +46,7 @@ coreDef
 
 paramList
     : param (',' param)*
+    | NL+ param (NL* ',' NL* param)* NL*
     ;
 
 param
@@ -213,5 +214,9 @@ COMMENT
 
 BLOCK_COMMENT
     : '/*' .*? '*/' -> skip
+    ;
+
+OUT_OF_ORDER
+    : 'out-of-order'
     ;
 

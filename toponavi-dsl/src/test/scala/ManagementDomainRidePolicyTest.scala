@@ -79,6 +79,22 @@ class ManagementDomainRidePolicyTest extends AnyFunSuite with Matchers {
       |}
       |""".stripMargin
 
+  test("root parameter lists may span multiple lines") {
+    val compiler = new TopoScriptCompiler()
+    val multilineRoot = compiler.parseRootFile(
+      """
+        |root MultilineRoot(
+        |  first: Bool,
+        |  second: Int
+        |) {}
+        |""".stripMargin
+    )
+    val singleLineRoot = compiler.parseRootFile("root SingleLineRoot(first: Bool, second: Int) {}")
+
+    multilineRoot.params.map(_._1) shouldBe List("first", "second")
+    singleLineRoot.params.map(_._1) shouldBe List("first", "second")
+  }
+
   test("configuration, topo-map override, and ride-from syntax are retained by the surface AST") {
     val compiler = new TopoScriptCompiler()
     val config = compiler.parseConfigFile(
@@ -162,6 +178,35 @@ class ManagementDomainRidePolicyTest extends AnyFunSuite with Matchers {
 
     hasRide(result, "OfficeFloor", "Lobby") shouldBe false
     hasRide(result, "Lobby", "OfficeFloor") shouldBe false
+  }
+
+  test("an out-of-order station allows neither departure nor arrival") {
+    val outOfOrderElevator =
+      """
+        |transport Lift is Elevator {
+        |  let params: {maxVelocity: Float, acceleration: Float, carAmount: Int} = {
+        |    maxVelocity = 2.0,
+        |    acceleration = 0.8,
+        |    carAmount = 2
+        |  }
+        |  station Lobby at Lobby::hall {location = 0.0, departureRate = 0.1}
+        |  station Office at OfficeFloor::hall {location = 4.0, departureRate = 0.1} out-of-order
+        |  station Hotel at HotelFloor::hall {location = 8.0, departureRate = 0.1}
+        |}
+        |""".stripMargin
+    val result = compile(
+      configuration,
+      outOfOrderElevator,
+      root,
+      params = Map(
+        "allowed" -> java.lang.Boolean.TRUE,
+        "special" -> java.lang.Boolean.TRUE
+      )
+    )
+
+    hasRide(result, "OfficeFloor", "Lobby") shouldBe false
+    hasRide(result, "Lobby", "OfficeFloor") shouldBe false
+    hasRide(result, "Lobby", "HotelFloor") shouldBe true
   }
 
   test("a failing domain ride policy removes only matching directed rides") {

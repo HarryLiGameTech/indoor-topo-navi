@@ -275,13 +275,15 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       .flatMap(index => Option(ctx.getChild(index + 1)))
       .map(_.getText)
 
+    val outOfOrder = ctx.OUT_OF_ORDER() != null
+
     permissionScope match {
       case None | Some("") =>
-        StationDef(stationName, nodeRef, Expr.Record(recordFields), constraints = constraintExprs)
+        StationDef(stationName, nodeRef, Expr.Record(recordFields), constraints = constraintExprs, outOfOrder = outOfOrder)
       case Some("Depart") =>
-        StationDef(stationName, nodeRef, Expr.Record(recordFields), departConstraints = constraintExprs)
+        StationDef(stationName, nodeRef, Expr.Record(recordFields), departConstraints = constraintExprs, outOfOrder = outOfOrder)
       case Some("Arrive") =>
-        StationDef(stationName, nodeRef, Expr.Record(recordFields), arriveConstraints = constraintExprs)
+        StationDef(stationName, nodeRef, Expr.Record(recordFields), arriveConstraints = constraintExprs, outOfOrder = outOfOrder)
       case Some(other) =>
         throw new RuntimeException(s"Unknown station permission scope '$other'. Expected Depart or Arrive")
     }
