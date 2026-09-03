@@ -8,7 +8,7 @@ import data.{ElevatorBank, Escalator, LinearTransport, NavigationGraph, StairCas
 import corelang.{Environment, Identifier, Value}
 import enums.AttributeValue
 import enums.ElevatorStationCategory.{Entrance, Occupant}
-import surfacelang.{TopoMapValue, TransportValue}
+import surfacelang.{TopoMapValue, TopoNodeRefValue, TransportValue}
 import pprint.pprintln
 import reasoner.CoordEstimator
 import topomap.grammar.{MapFileLexer, MapFileParser}
@@ -36,7 +36,6 @@ class TopoScriptCompiler() {
       case config: GlobalConfigExpr => config
       case _ => throw new RuntimeException("Global config parsing did not return a GlobalConfigExpr")
     }
-    validateConfiguredManagementDomains(globalConfig)
 
     // Populate the global SubmapRefRegistry from the parsed config
     metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
@@ -232,7 +231,6 @@ class TopoScriptCompiler() {
       case config: GlobalConfigExpr => config
       case _ => throw new RuntimeException("Global config parsing failed")
     }
-    validateConfiguredManagementDomains(globalConfig)
 
     metadata.submapRefRegistry = SubmapRefRegistry(globalConfig.submapUsages)
 
@@ -532,7 +530,7 @@ class TopoScriptCompiler() {
   }
 
   private sealed trait ResolvedRideOperand
-  private case class RideSubmap(name: String) extends ResolvedRideOperand
+  private case class RideStation(nodeRef: TopoNodeRefValue) extends ResolvedRideOperand
   private case class RideDomain(name: String) extends ResolvedRideOperand
   private case object RideAny extends ResolvedRideOperand
 
@@ -541,16 +539,6 @@ class TopoScriptCompiler() {
     target: ResolvedRideOperand,
     allowed: Boolean
   )
-
-  private def validateConfiguredManagementDomains(globalConfig: GlobalConfigExpr): Unit = {
-    val submapNames = globalConfig.orderedSubmapNames.toSet
-    val collisions = globalConfig.configuredManagementDomains.values.toSet.intersect(submapNames)
-    if (collisions.nonEmpty) {
-      throw new RuntimeException(
-        s"Management domain names must not equal submap names: ${collisions.toList.sorted.mkString(", ")}"
-      )
-    }
-  }
 
   private def resolveEffectiveManagementDomains(
     globalConfig: GlobalConfigExpr,
@@ -573,49 +561,41 @@ class TopoScriptCompiler() {
       submapName -> overrideDomain.orElse(configured).getOrElse("Misc")
     }.toMap
 
-    val submapNames = globalConfig.orderedSubmapNames.toSet
-    val collisions = effectiveDomains.values.toSet.intersect(submapNames)
-    if (collisions.nonEmpty) {
-      throw new RuntimeException(
-        s"Management domain names must not equal submap names: ${collisions.toList.sorted.mkString(", ")}"
-      )
-    }
-
     effectiveDomains
   }
 
   private def resolveRideOperand(
     rawOperand: String,
-    submapNames: Set[String],
+    stationRefsByLabel: Map[String, TopoNodeRefValue],
     domainNames: Set[String]
   ): ResolvedRideOperand = {
     if (rawOperand == "any") RideAny
-    else if (submapNames.contains(rawOperand)) RideSubmap(rawOperand)
+    else if (stationRefsByLabel.contains(rawOperand)) RideStation(stationRefsByLabel(rawOperand))
     else if (domainNames.contains(rawOperand)) RideDomain(rawOperand)
     else throw new RuntimeException(s"Unknown ride-from operand '$rawOperand'")
   }
 
   private def rideOperandMatches(
     operand: ResolvedRideOperand,
-    submapName: String,
+    stationRef: TopoNodeRefValue,
     domainName: String
   ): Boolean = operand match {
-    case RideSubmap(name) => name == submapName
-    case RideDomain(name) => name == domainName
-    case RideAny          => true
+    case RideStation(nodeRef) => nodeRef == stationRef
+    case RideDomain(name)     => name == domainName
+    case RideAny              => true
   }
 
   private def ridePolicySpecificity(policy: ResolvedRidePolicy): Int =
     (policy.source, policy.target) match {
-      case (_: RideSubmap, _: RideSubmap) => 1
-      case (_: RideSubmap, _: RideDomain) => 2
-      case (_: RideDomain, _: RideSubmap) => 3
-      case (_: RideDomain, _: RideDomain) => 4
-      case (RideAny, _: RideSubmap)       => 5
-      case (_: RideSubmap, RideAny)       => 6
-      case (RideAny, _: RideDomain)       => 7
-      case (_: RideDomain, RideAny)       => 8
-      case (RideAny, RideAny)             => 9
+      case (_: RideStation, _: RideStation) => 1
+      case (_: RideStation, _: RideDomain)  => 2
+      case (_: RideDomain, _: RideStation)  => 3
+      case (_: RideDomain, _: RideDomain)   => 4
+      case (RideAny, _: RideStation)        => 5
+      case (_: RideStation, RideAny)        => 6
+      case (RideAny, _: RideDomain)         => 7
+      case (_: RideDomain, RideAny)         => 8
+      case (RideAny, RideAny)               => 9
     }
 
   private def buildAllowedRidePairs(
@@ -625,12 +605,19 @@ class TopoScriptCompiler() {
   ): Option[Set[(NavigationGraph, NavigationGraph)]] = {
     if (transVal.ridePolicies.isEmpty) return None
 
-    val submapNames = effectiveManagementDomains.keySet
+    val stationRefsByLabel = transVal.stationLabels.toList
+      .groupMap(_._2)(_._1)
+      .map { case (label, nodeRefs) =>
+        if (nodeRefs.size > 1) {
+          throw new RuntimeException(s"Duplicate station label '$label' in transport '${transVal.name}'")
+        }
+        label -> nodeRefs.head
+      }
     val domainNames = effectiveManagementDomains.values.toSet
     val policies = transVal.ridePolicies.map { policy =>
       ResolvedRidePolicy(
-        source = resolveRideOperand(policy.source, submapNames, domainNames),
-        target = resolveRideOperand(policy.target, submapNames, domainNames),
+        source = resolveRideOperand(policy.source, stationRefsByLabel, domainNames),
+        target = resolveRideOperand(policy.target, stationRefsByLabel, domainNames),
         allowed = policy.allowed
       )
     }
@@ -643,16 +630,16 @@ class TopoScriptCompiler() {
       }
     }
 
-    val stationGraphs = transVal.stations.map { case (nodeRef, _) => graphs(nodeRef.fromMapName) }.distinct
+    val stations = transVal.stations.map { case (nodeRef, _) => nodeRef -> graphs(nodeRef.fromMapName) }.distinct
     val allowedPairs = for {
-      sourceGraph <- stationGraphs
-      targetGraph <- stationGraphs
+      (sourceRef, sourceGraph) <- stations
+      (targetRef, targetGraph) <- stations
       if sourceGraph != targetGraph
       sourceDomain = effectiveManagementDomains.getOrElse(sourceGraph.identifier, "Misc")
       targetDomain = effectiveManagementDomains.getOrElse(targetGraph.identifier, "Misc")
       matching = policies.filter { policy =>
-        rideOperandMatches(policy.source, sourceGraph.identifier, sourceDomain) &&
-          rideOperandMatches(policy.target, targetGraph.identifier, targetDomain)
+        rideOperandMatches(policy.source, sourceRef, sourceDomain) &&
+          rideOperandMatches(policy.target, targetRef, targetDomain)
       }
       best = if (matching.isEmpty) List.empty else {
         val bestSpecificity = matching.map(ridePolicySpecificity).min

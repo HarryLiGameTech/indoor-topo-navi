@@ -171,24 +171,15 @@ effective domain = Misc
 
 No warning is required in the initial design, because `Misc` is the intended fallback for unspecified floors.
 
-### Name Collision
+### Station Label Collision
 
-Management domain names must not equal submap names.
+Station labels used by `ride-from` must uniquely identify a station within that transport.
 
-This is required because ride policy operands resolve specific submaps before management domains.
+If a transport with ride policies declares the same station label more than once, emit a compiler error.
 
-If a domain name equals any submap name, emit a compiler error.
+A station label may equal a management domain name. In that case, the exact station label takes precedence.
 
-Example invalid setup:
-
-```toposcript
-building-includes {
-  submap Hotel managed-by PublicLobby
-  submap Floor88 managed-by Hotel
-}
-```
-
-Here `Hotel` is both a submap name and a management domain. This must be rejected.
+Management domain names may equal submap names because submap names are not ride-policy operands.
 
 ## Transport Ride Policy
 
@@ -203,7 +194,7 @@ ride-from SOURCE to TARGET requires <ConstraintA && ConstraintB && ...>
 
 `SOURCE` and `TARGET` may be:
 
-- a specific submap name
+- a station label declared by that transport
 - a management domain
 - `any`
 
@@ -218,22 +209,22 @@ transport AllFloorElevator is Elevator {
 
   ride-from OfficeMain to Hotel requires HotelAccess
   ride-from OfficeMain to Facilities requires ManagementOnly
-  ride-from Floor32 to Hotel requires SpecialEscort
+  ride-from F32 to Hotel requires SpecialEscort
 }
 ```
 
-This authoring model expresses policy over floor categories instead of forcing authors to list every possible floor-to-floor pair.
+This authoring model supports both exact station policies and policies over floor categories without forcing authors to list every possible floor-to-floor pair.
 
 ## Operand Resolution
 
 For each `ride-from SOURCE to TARGET` operand:
 
-1. Match an exact submap name first.
-2. If no submap matches, match a management domain.
-3. If the operand is `any`, match all stations on the transport line.
+1. If the operand is `any`, match all stations on the transport line.
+2. Match an exact station label declared by that transport.
+3. If no station label matches, match a management domain.
 4. If none match, emit a compiler error.
 
-Because submap names are resolved before domains, management domain names must not collide with submap names.
+Station labels are transport-local and resolve to their declared `Submap::node` references. Submap names themselves are not operands.
 
 ## Relationship to Station Permissions
 
@@ -286,12 +277,12 @@ The initial design should define deterministic matching order.
 
 Recommended specificity:
 
-1. exact submap to exact submap
-2. exact submap to domain
-3. domain to exact submap
+1. exact station to exact station
+2. exact station to domain
+3. domain to exact station
 4. domain to domain
-5. any to exact submap
-6. exact submap to any
+5. any to exact station
+6. exact station to any
 7. any to domain
 8. domain to any
 9. any to any

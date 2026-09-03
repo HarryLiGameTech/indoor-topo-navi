@@ -25,9 +25,9 @@ class ManagementDomainRidePolicyTest extends AnyFunSuite with Matchers {
        |    acceleration = 0.8,
        |    carAmount = 2
        |  }
-       |  station Lobby at Lobby::hall {location = 0.0, departureRate = 0.1}
-       |  station Office at OfficeFloor::hall {location = 4.0, departureRate = 0.1}
-       |  station Hotel at HotelFloor::hall {location = 8.0, departureRate = 0.1}
+       |  station LobbyStation at Lobby::hall {location = 0.0, departureRate = 0.1}
+       |  station OfficeStation at OfficeFloor::hall {location = 4.0, departureRate = 0.1}
+       |  station HotelStation at HotelFloor::hall {location = 8.0, departureRate = 0.1}
        |  $extraLines
        |}
        |""".stripMargin
@@ -241,12 +241,12 @@ class ManagementDomainRidePolicyTest extends AnyFunSuite with Matchers {
     hasRide(result, "HotelFloor", "Lobby") shouldBe true
   }
 
-  test("an exact-submap ride policy overrides a broader domain policy") {
+  test("an exact-station ride policy overrides a broader domain policy") {
     val result = compile(
       configuration,
       elevator(
         """ride-from Office to Hotel requires Allowed
-          |  ride-from OfficeFloor to Hotel requires Special""".stripMargin
+          |  ride-from OfficeStation to Hotel requires Special""".stripMargin
       ),
       root,
       params = Map(
@@ -256,6 +256,56 @@ class ManagementDomainRidePolicyTest extends AnyFunSuite with Matchers {
     )
 
     hasRide(result, "OfficeFloor", "HotelFloor") shouldBe true
+  }
+
+  test("station labels select the exact source and target stations") {
+    val result = compile(
+      configuration,
+      elevator("ride-from LobbyStation to HotelStation requires Allowed"),
+      root,
+      params = Map(
+        "allowed" -> java.lang.Boolean.FALSE,
+        "special" -> java.lang.Boolean.FALSE
+      )
+    )
+
+    hasRide(result, "Lobby", "HotelFloor") shouldBe false
+    hasRide(result, "OfficeFloor", "HotelFloor") shouldBe true
+    hasRide(result, "HotelFloor", "Lobby") shouldBe true
+  }
+
+  test("submap IDs are not ride-from operands") {
+    val error = intercept[RuntimeException] {
+      compile(
+        configuration,
+        elevator("ride-from OfficeFloor to Hotel requires Allowed"),
+        root,
+        params = Map(
+          "allowed" -> java.lang.Boolean.TRUE,
+          "special" -> java.lang.Boolean.TRUE
+        )
+      )
+    }
+
+    error.getMessage should include("Unknown ride-from operand 'OfficeFloor'")
+  }
+
+  test("duplicate station labels fail compilation") {
+    val duplicateLabels = elevator("ride-from OfficeStation to HotelStation requires Allowed")
+      .replace("station HotelStation", "station OfficeStation")
+    val error = intercept[RuntimeException] {
+      compile(
+        configuration,
+        duplicateLabels,
+        root,
+        params = Map(
+          "allowed" -> java.lang.Boolean.TRUE,
+          "special" -> java.lang.Boolean.TRUE
+        )
+      )
+    }
+
+    error.getMessage should include("Duplicate station label 'OfficeStation' in transport 'Lift'")
   }
 
   test("topo-map overrides determine effective domains and unspecified domains default to Misc") {
@@ -284,8 +334,32 @@ class ManagementDomainRidePolicyTest extends AnyFunSuite with Matchers {
     result.metadata("managementDomain.HotelFloor") shouldBe AttributeValue.StringValue("Misc")
   }
 
-  test("management domain names may not collide with submap names") {
-    val invalidConfiguration =
+  test("station labels take precedence over same-named management domains") {
+    val collidingConfiguration =
+      """
+        |building-includes {
+        |  submap Lobby managed-by Public
+        |  submap OfficeFloor managed-by LobbyStation
+        |  submap HotelFloor managed-by Hotel
+        |  vehicle Lift
+        |}
+        |""".stripMargin
+    val result = compile(
+      collidingConfiguration,
+      elevator("ride-from LobbyStation to Hotel requires Allowed"),
+      root,
+      params = Map(
+        "allowed" -> java.lang.Boolean.FALSE,
+        "special" -> java.lang.Boolean.FALSE
+      )
+    )
+
+    hasRide(result, "Lobby", "HotelFloor") shouldBe false
+    hasRide(result, "OfficeFloor", "HotelFloor") shouldBe true
+  }
+
+  test("management domain names may equal submap IDs") {
+    val collidingConfiguration =
       """
         |building-includes {
         |  submap Lobby managed-by Public
@@ -294,19 +368,18 @@ class ManagementDomainRidePolicyTest extends AnyFunSuite with Matchers {
         |  vehicle Lift
         |}
         |""".stripMargin
-
-    val error = intercept[RuntimeException] {
-      compile(
-        invalidConfiguration,
-        elevator(""),
-        root,
-        params = Map(
-          "allowed" -> java.lang.Boolean.TRUE,
-          "special" -> java.lang.Boolean.TRUE
-        )
+    val result = compile(
+      collidingConfiguration,
+      elevator("ride-from Lobby to Hotel requires Allowed"),
+      root,
+      params = Map(
+        "allowed" -> java.lang.Boolean.FALSE,
+        "special" -> java.lang.Boolean.FALSE
       )
-    }
-    error.getMessage should include("Management domain names must not equal submap names: Lobby")
+    )
+
+    hasRide(result, "OfficeFloor", "HotelFloor") shouldBe false
+    hasRide(result, "Lobby", "HotelFloor") shouldBe true
   }
 
   test("unknown ride-from operands fail compilation") {
