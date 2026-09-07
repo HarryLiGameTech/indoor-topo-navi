@@ -12,9 +12,17 @@ class NavigationGraph private(
   val adjacencyList: List[AtomicPath] = List.empty, // Single direction!
   val reverseAdjacency: Map[TopoNode, List[AtomicPath]] = Map.empty
 ) extends Serializable {
-  
+
+  private val outgoingEdgesByOrigin: Map[TopoNode, List[AtomicPath]] = {
+    val groupedEdges = mutable.LinkedHashMap.empty[TopoNode, mutable.ListBuffer[AtomicPath]]
+    adjacencyList.foreach { edge =>
+      groupedEdges.getOrElseUpdate(edge.source, mutable.ListBuffer.empty) += edge
+    }
+    groupedEdges.iterator.map { case (source, edges) => source -> edges.toList }.toMap
+  }
+
   private def getOutgoingEdges(originNode: TopoNode): List[AtomicPath] = {
-    adjacencyList.filter(_.source == originNode)
+    outgoingEdgesByOrigin.getOrElse(originNode, List.empty)
   }
 
   private def reconstructPath(cameFrom: mutable.Map[TopoNode, AtomicPath], current: TopoNode): IntraMapPath = {
