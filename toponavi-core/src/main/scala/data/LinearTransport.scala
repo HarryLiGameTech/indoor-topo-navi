@@ -139,6 +139,27 @@ case class ElevatorBank(
   allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None
 ) extends LinearTransport {
 
+  private lazy val cachedOrderedStations: List[NavigationGraph] =
+    stationLocations.toList.sortBy(_._2).map(_._1)
+
+  private lazy val cachedOrderedEntranceStations: List[NavigationGraph] =
+    stationLocations.toList
+      .filter(station => stationCategories.getOrElse(station._1, throw new RuntimeException("Missing stationCategories data for RTT estimation")) == Entrance)
+      .sortBy(_._2)
+      .reverse
+      .map(_._1)
+
+  private lazy val cachedOrderedOccupantStations: List[NavigationGraph] =
+    stationLocations.toList
+      .filter(station => stationCategories.getOrElse(station._1, throw new RuntimeException("Missing stationCategories data for RTT estimation")) == Occupant)
+      .sortBy(_._2)
+      .map(_._1)
+
+  private lazy val cachedPopulationSum: Int = stationPopulations.values.sum
+
+  private lazy val cachedUpRushRoundTripTime: Double =
+    upTime() + downTime() + stops() * dwellTime
+
   override def canArriveAt(target: NavigationGraph): Boolean = {
     if (stationNodes.contains(target) && (stationPermissions(target) == TransportServicePermission.FullyGranted || (stationPermissions(target) == TransportServicePermission.ArriveOnly))){
       true
@@ -290,7 +311,7 @@ case class ElevatorBank(
 
     trafficPattern match {
       case UpRush => {
-        upTime() + downTime() + stops() * dwellTime
+        cachedUpRushRoundTripTime
       }
       case DownRush => {
         999
@@ -390,22 +411,22 @@ case class ElevatorBank(
   }
 
   private def populationSum(): Int = {
-    stationPopulations.values.sum
+    cachedPopulationSum
   }
 
   // Stations in ascending order of relativeLocation
   def orderedStations(): List[NavigationGraph] = {
-    stationLocations.toList.sortBy(_._2).map(_._1)
+    cachedOrderedStations
   }
 
   // Entrance stations in ascending order of relativeLocation
   def orderedEntranceStations(): List[NavigationGraph] = {
-    stationLocations.toList.filter(s => stationCategories.getOrElse(s._1, throw new RuntimeException("Missing stationCategories data for RTT estimation")) == Entrance).sortBy(_._2).reverse.map(_._1)
+    cachedOrderedEntranceStations
   }
 
   // Occupant stations in ascending order of relativeLocation
   def orderedOccupantStations(): List[NavigationGraph] = {
-    stationLocations.toList.filter(s => stationCategories.getOrElse(s._1, throw new RuntimeException("Missing stationCategories data for RTT estimation")) == Occupant).sortBy(_._2).map(_._1)
+    cachedOrderedOccupantStations
   }
 
   override def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double = {

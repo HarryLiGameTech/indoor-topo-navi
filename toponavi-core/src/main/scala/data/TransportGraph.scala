@@ -26,7 +26,7 @@ class TransportGraph private(
     val openSet = mutable.PriorityQueue.empty[(StationNode, Double)]
     val gScore = mutable.Map[StationNode, Double]().withDefaultValue(Double.PositiveInfinity)
     val fScore = mutable.Map[StationNode, Double]().withDefaultValue(Double.PositiveInfinity)
-    val cameFrom = mutable.Map[StationNode, StationNode]()
+    val cameFrom = mutable.Map[StationNode, (StationNode, Double)]()
 
     var bestPath: Option[TransportationPath] = None
     var bestCost = Double.PositiveInfinity
@@ -66,7 +66,7 @@ class TransportGraph private(
             val tentativeGScore = gScore(current) + edgeCost
 
             if (tentativeGScore < gScore(neighbor)) {
-              cameFrom(neighbor) = current
+              cameFrom(neighbor) = current -> edgeCost
               gScore(neighbor) = tentativeGScore
               fScore(neighbor) = tentativeGScore + heuristic(neighbor, goal, floorNameList)
 
@@ -178,27 +178,19 @@ class TransportGraph private(
   }
 
   // TODO: Option[TransportationPath]
-  private def reconstructPath(cameFrom: mutable.Map[StationNode, StationNode], current: StationNode): TransportationPath = {
+  private def reconstructPath(
+    cameFrom: mutable.Map[StationNode, (StationNode, Double)],
+    current: StationNode
+  ): TransportationPath = {
     val totalPath = mutable.ListBuffer[StationNode]()
     val pathEdges = mutable.ListBuffer[TransportEdge]()
     var node = current
 
     while (cameFrom.contains(node)) {
-      val parent = cameFrom(node)
+      val (parent, edgeCost) = cameFrom(node)
 
       totalPath.prepend(node)
-
-      if (parent.ownerLine == node.ownerLine){
-        pathEdges.prepend(TransportEdge(parent, node, parent.ownerLine.travelTimeBetweenStations(parent.ownerGraph, node.ownerGraph, UpRush)))
-      }
-      else{
-        val transferCost: Double = parent.ownerGraph.findPath(
-          parent.ownerLine.stationNodes(parent.ownerGraph),
-          node.ownerLine.stationNodes(node.ownerGraph),
-          VisitingMode.Normal
-        ).getOrElse(throw RuntimeException("Interchange: Path not found")).totalCost(VisitingMode.Normal)
-        pathEdges.prepend(TransportEdge(parent, node, transferCost))
-      }
+      pathEdges.prepend(TransportEdge(parent, node, edgeCost))
 
       node = parent  // Move to the next node
     }
@@ -227,61 +219,47 @@ object TransportGraph {
 
   private def generateTransGraphEdges(lines: List[LinearTransport]): (List[StationNode], Set[TransportEdge]) = {
     val edges = mutable.ListBuffer[TransportEdge]()
-    val allNodes = mutable.ListBuffer[StationNode]()
+    val allNodes = lines.flatMap(createStationNodesForLine)
+    val nodesByLine = allNodes.groupBy(_.ownerLine)
 
-    // Iterate over each line
-    for (line: LinearTransport <- lines: List[LinearTransport]) {
-      // Get all station nodes for this line
-      val stationNodes = createStationNodesForLine(line)
-      allNodes ++= stationNodes
-
-      // Create TWO types of edges:
-      // 1. Internal edges: Within each elevator line (complete graph)
-      for (line <- lines) {
-        val stationNodes = allNodes.filter(_.ownerLine == line) // Get nodes for this specific line
-
-        for {
-          from <- stationNodes
-          to <- stationNodes
-          if (from != to &&
-            line.canDepartFrom(from.ownerGraph) &&
-            line.canArriveAt(to.ownerGraph) &&
-            line.canRideFromTo(from.ownerGraph, to.ownerGraph)) // Avoid self-loops and apply station/ride permissions
-        } {
-          val cost = line.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph, UpRush)
-          edges += TransportEdge(from, to, cost)
-        }
-      }
-
-      // 2. Transfer edges: Between different elevator lines serving the same floor
-      // Group nodes by the NavigationGraph they serve (same physical floor)
-      val nodesByFloor = allNodes.groupBy(_.ownerGraph)
-
+    // 1. Internal edges: build the complete directed graph for each line exactly once.
+    for (line <- lines) {
+      val stationNodes = nodesByLine.getOrElse(line, List.empty)
       for {
-        (navigationGraph, nodesOnSameFloor) <- nodesByFloor
-        if nodesOnSameFloor.size > 1 // Only floors with multiple elevators
+        from <- stationNodes
+        to <- stationNodes
+        if (from != to &&
+          line.canDepartFrom(from.ownerGraph) &&
+          line.canArriveAt(to.ownerGraph) &&
+          line.canRideFromTo(from.ownerGraph, to.ownerGraph))
       } {
-        // Create edges between every pair of different elevator lines on this floor
-        for {
-          from <- nodesOnSameFloor
-          to <- nodesOnSameFloor
-          if from != to && from.ownerLine != to.ownerLine // Different elevator lines
-        } {
-          // Calculate the transfer-time according to the intra-map navigation
-          from.ownerGraph.findPath(
-            from.ownerLine.stationNodes(from.ownerGraph),
-            to.ownerLine.stationNodes(to.ownerGraph),
-            VisitingMode.Normal
-          ) match{
-            case Some(path) =>
-              val transferCost = path.totalCost(VisitingMode.Normal)
-              edges += TransportEdge(from, to, transferCost)
-            case None => () // Just skip this non-existent edge when path-not-found on NavigationGraph
-          }
-        }
+        val cost = line.travelTimeBetweenStations(from.ownerGraph, to.ownerGraph, UpRush)
+        edges += TransportEdge(from, to, cost)
       }
     }
-    (allNodes.toList, edges.toSet)
+
+    // 2. Transfer edges: build each ordered transfer between lines on a floor once.
+    val nodesByFloor = allNodes.groupBy(_.ownerGraph)
+
+    for {
+      (_, nodesOnSameFloor) <- nodesByFloor
+      if nodesOnSameFloor.size > 1
+      from <- nodesOnSameFloor
+      to <- nodesOnSameFloor
+      if from != to && from.ownerLine != to.ownerLine
+    } {
+      from.ownerGraph.findPath(
+        from.ownerLine.stationNodes(from.ownerGraph),
+        to.ownerLine.stationNodes(to.ownerGraph),
+        VisitingMode.Normal
+      ) match {
+        case Some(path) =>
+          val transferCost = path.totalCost(VisitingMode.Normal)
+          edges += TransportEdge(from, to, transferCost)
+        case None => ()
+      }
+    }
+    (allNodes, edges.toSet)
   }
 
   private def createStationNodesForLine(line: LinearTransport): List[StationNode] = {
