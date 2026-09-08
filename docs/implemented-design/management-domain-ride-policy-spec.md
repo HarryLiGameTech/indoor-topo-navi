@@ -1,6 +1,6 @@
 # Management Domain Ride Policy Spec
 
-Status: Draft
+Status: Implemented
 
 ## Context
 
