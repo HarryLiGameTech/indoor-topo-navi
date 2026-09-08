@@ -2,6 +2,7 @@ package com.e611.toponavi.web.controller;
 
 import api.TopoNaviService; // The Scala Facade
 import api.NavigationRequestException;
+import api.RiskAwareNavigationResult;
 import compiler.CompilationResult;
 import data.AtomicPath;
 import data.ElevatorBank;
@@ -41,6 +42,11 @@ public class TopoController {
 
     private static final Set<String> ROUTE_PLANNING_PREFERENCES = Set.of(
             "MinimizeTime", "MinimizeTransfers", "MinimizePhysicalDemands");
+    private static final Set<String> RISK_PREFERENCES = Set.of(
+            "conservative", "permissive", "aggressive");
+    private static final String UNCERTAIN_ACCESS_DISCLAIMER =
+            "These uncertainty notes are provided by the map creator. They may be inaccurate or outdated; " +
+                    "follow on-site rules and ask local staff if access does not work.";
 
     @Autowired
     private CompilationCacheService cacheService;
@@ -134,7 +140,7 @@ public class TopoController {
             String resolvedPreference = resolveRoutePlanningPreference(routePlanningPreference, null);
             return quickDemoNavigation(
                     buildingName, startNode, endNode, resolvedPreference, forceRecompile,
-                    Collections.emptyMap(), Collections.emptyList(), isHighRise);
+                    Collections.emptyMap(), Collections.emptyList(), isHighRise, "conservative");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
         }
@@ -161,9 +167,10 @@ public class TopoController {
             }
 
             String resolvedPreference = resolveRoutePlanningPreference(routePlanningPreference, body);
+            String riskPreference = resolveRiskPreference(body);
             List<String> banTags = resolveBanTags(body);
             return quickDemoNavigation(buildingName, startNode, endNode, resolvedPreference, forceRecompile,
-                    extractUserParams(body), banTags, isHighRise);
+                    extractUserParams(body), banTags, isHighRise, riskPreference);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
         }
@@ -172,7 +179,8 @@ public class TopoController {
     private ResponseEntity<?> quickDemoNavigation(
             String buildingName, String startNode, String endNode,
             String routePlanningPreference, String forceRecompile,
-            Map<String, Object> userParams, List<String> banTags, boolean isHighRise) {
+            Map<String, Object> userParams, List<String> banTags, boolean isHighRise,
+            String riskPreference) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
             if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found in examples directory"));
@@ -181,8 +189,10 @@ public class TopoController {
             if ("true".equals(forceRecompile)) cacheService.invalidate(cacheKey);
 
             CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
-            NavigationOutputPath plan = TopoNaviService.findRoutePlan(
-                    outcome.result(), startNode, endNode, routePlanningPreference, banTags, isHighRise);
+            RiskAwareNavigationResult planned = TopoNaviService.findRoutePlanWithRiskPreference(
+                    outcome.result(), startNode, endNode, routePlanningPreference,
+                    banTags, isHighRise, riskPreference);
+            NavigationOutputPath plan = planned.plan();
 
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("status", "success");
@@ -191,8 +201,11 @@ public class TopoController {
             response.put("deprecations", RouteResponseDeprecationSpec.activeDeprecations());
             response.put("appliedTraversalPreference", Map.of(
                     "routePlanningPreference", routePlanningPreference,
-                    "banTags", banTags
+                    "banTags", banTags,
+                    "riskPreference", planned.appliedRiskPreference()
             ));
+            riskSummary(plan, planned.appliedRiskPreference()).ifPresent(summary ->
+                    response.put("riskSummary", summary));
             response.put("filesLoaded", exampleFiles.size());
             response.put("cacheKey", cacheKey.substring(0, 8));
             response.put("fromCache", outcome.fromCache());
@@ -757,6 +770,17 @@ public class TopoController {
         return resolved;
     }
 
+    static String resolveRiskPreference(QuickDemoNavigationRequest body) {
+        String requested = body == null || body.traversalPreference == null
+                ? null
+                : body.traversalPreference.riskPreference;
+        String resolved = hasText(requested) ? requested : "conservative";
+        if (!RISK_PREFERENCES.contains(resolved)) {
+            throw new IllegalArgumentException("Unknown riskPreference: " + resolved);
+        }
+        return resolved;
+    }
+
     static List<String> unsupportedTraversalFields(QuickDemoNavigationRequest body) {
         if (body == null || body.traversalPreference == null) return Collections.emptyList();
 
@@ -764,8 +788,30 @@ public class TopoController {
         List<String> unsupported = new ArrayList<>();
         if (hasText(preference.minimizeTag)) unsupported.add("minimizeTag");
         if (hasText(preference.maximizeTag)) unsupported.add("maximizeTag");
-        if (hasText(preference.riskPreference)) unsupported.add("riskPreference");
         return unsupported;
+    }
+
+    private static java.util.Optional<Map<String, Object>> riskSummary(
+            NavigationOutputPath plan,
+            String appliedRiskPreference) {
+        if (plan.uncertainAccess().isEmpty()) return java.util.Optional.empty();
+
+        List<Map<String, Object>> reasons = CollectionConverters
+                .asJava(plan.uncertainAccess().get().uncertaintyReasons())
+                .stream()
+                .map(entry -> {
+                    Map<String, Object> reason = new LinkedHashMap<>();
+                    reason.put("type", entry.conditionType());
+                    reason.put("reason", entry.reason().isDefined() ? entry.reason().get() : null);
+                    return reason;
+                })
+                .toList();
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("routeNotNecessarilyAvailable", true);
+        summary.put("appliedRiskPreference", appliedRiskPreference);
+        summary.put("uncertaintyReasons", reasons);
+        summary.put("disclaimer", UNCERTAIN_ACCESS_DISCLAIMER);
+        return java.util.Optional.of(summary);
     }
 
     static List<String> resolveBanTags(QuickDemoNavigationRequest body) {

@@ -96,6 +96,24 @@ trait ConstrainedElaborateable[T] extends Elaborateable[Option[T]] {
   }
 }
 
+case class UncertainAccessExpr(
+  conditionNames: List[String],
+  reason: Option[String]
+) extends SurfaceSyntax with Elaborateable[Option[UncertainAccessValue]] {
+  override def elaborate(using topoEnv: TopoEnvironment): Option[UncertainAccessValue] = {
+    val evaluated = conditionNames.map { name =>
+      val satisfied = Interpreter.eval(Expr.Var(name).toTerm(topoEnv.env))(using topoEnv.env) match {
+        case BoolVal(value) => value
+        case other => throw new RuntimeException(
+          s"Subject-to condition must evaluate to Bool, got: $other"
+        )
+      }
+      UncertaintyReasonValue(name, reason, satisfied)
+    }
+    Option.when(evaluated.nonEmpty)(UncertainAccessValue(evaluated))
+  }
+}
+
 // Root TopoMap definition
 case class RootExpr(
   name: String,
@@ -177,6 +195,9 @@ case class StationDef(
   constraints: List[Expr] = List.empty,
   departConstraints: List[Expr] = List.empty,
   arriveConstraints: List[Expr] = List.empty,
+  uncertainAccess: Option[UncertainAccessExpr] = None,
+  departUncertainAccess: Option[UncertainAccessExpr] = None,
+  arriveUncertainAccess: Option[UncertainAccessExpr] = None,
   outOfOrder: Boolean = false
 )
 
@@ -261,7 +282,17 @@ case class TransportExpr(
           target = policy.target,
           allowed = constraintsPass(policy.constraints)
         )
-      }
+      },
+      stationUncertainAccess = stations.flatMap { station =>
+        val common = station.uncertainAccess.flatMap(_.elaborate(using envWithConstraints))
+        val departure = common.orElse(
+          station.departUncertainAccess.flatMap(_.elaborate(using envWithConstraints)))
+        val arrival = common.orElse(
+          station.arriveUncertainAccess.flatMap(_.elaborate(using envWithConstraints)))
+        Option.when(departure.nonEmpty || arrival.nonEmpty)(
+          station.node.elaborate -> StationUncertainAccessValue(departure, arrival)
+        )
+      }.toMap
     )
   }
 }
@@ -290,7 +321,8 @@ case class AtomicPathExpr(
   to: String,
   bidirectional: Boolean,
   data: Data,
-  override val constraints: List[Expr]
+  override val constraints: List[Expr],
+  uncertainAccess: Option[UncertainAccessExpr] = None
 ) extends SurfaceSyntax with ConstrainedElaborateable[AtomicPathValue] {
   override def constrainedElaborate(using topoEnv: TopoEnvironment): AtomicPathValue = {
     Interpreter.eval(data.toTerm(topoEnv.env))(using topoEnv.env) match {
@@ -300,6 +332,7 @@ case class AtomicPathExpr(
         bidirectional = bidirectional,
         data = rv,
         context = topoEnv.env,
+        uncertainAccess = uncertainAccess.flatMap(_.elaborate)
       )
       case other => throw new RuntimeException(s"Path data must evaluate to RecordVal, got: $other")
     }

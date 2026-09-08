@@ -593,6 +593,30 @@ public class MapFileBaseListener implements MapFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterAccessAnnotation(MapFileParser.AccessAnnotationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAccessAnnotation(MapFileParser.AccessAnnotationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterUncertainRequirements(MapFileParser.UncertainRequirementsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitUncertainRequirements(MapFileParser.UncertainRequirementsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterRidePolicyOperand(MapFileParser.RidePolicyOperandContext ctx) { }
 	/**
 	 * {@inheritDoc}

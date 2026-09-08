@@ -17,7 +17,8 @@ class TransportGraph private(
   def findPath(
     start: StationNode,
     goal: StationNode,
-    floorNameList: List[String]
+    floorNameList: List[String],
+    allowUncertainAccess: Boolean = true
   ): Option[TransportationPath] = {
     // Priority queue for open set (min-heap based on fScore)
     implicit val nodeOrdering: Ordering[(StationNode, Double)] =
@@ -26,7 +27,7 @@ class TransportGraph private(
     val openSet = mutable.PriorityQueue.empty[(StationNode, Double)]
     val gScore = mutable.Map[StationNode, Double]().withDefaultValue(Double.PositiveInfinity)
     val fScore = mutable.Map[StationNode, Double]().withDefaultValue(Double.PositiveInfinity)
-    val cameFrom = mutable.Map[StationNode, (StationNode, Double)]()
+    val cameFrom = mutable.Map[StationNode, (StationNode, Double, Option[UncertainAccess])]()
 
     var bestPath: Option[TransportationPath] = None
     var bestCost = Double.PositiveInfinity
@@ -62,11 +63,14 @@ class TransportGraph private(
 
         // Only explore neighbors if current path might lead to a better solution
         if (gScore(current) < bestCost) {
-          for ((neighbor, edgeCost) <- adjacencyList.getOrElse(current, Map.empty)) {
+          // Transport edges are retained in the compiled graph and filtered per request.
+          for ((neighbor, compiledCost) <- adjacencyList.getOrElse(current, Map.empty);
+               (edgeCost, uncertainAccess) <- edgeTraversal(
+                 current, neighbor, compiledCost, allowUncertainAccess)) {
             val tentativeGScore = gScore(current) + edgeCost
 
             if (tentativeGScore < gScore(neighbor)) {
-              cameFrom(neighbor) = current -> edgeCost
+              cameFrom(neighbor) = (current, edgeCost, uncertainAccess)
               gScore(neighbor) = tentativeGScore
               fScore(neighbor) = tentativeGScore + heuristic(neighbor, goal, floorNameList)
 
@@ -92,7 +96,8 @@ class TransportGraph private(
     goalGraph: NavigationGraph,
     floorNameList: List[String],
     preference: RoutePlanningPreferences,
-    returnIndex: Int
+    returnIndex: Int,
+    allowUncertainAccess: Boolean = true
   ): Option[TransportationPath] = {
     val startNodes = nodes.filter(_.ownerGraph == startGraph)
     val goalNodes = nodes.filter(_.ownerGraph == goalGraph)
@@ -100,7 +105,7 @@ class TransportGraph private(
     val allPaths = mutable.ListBuffer[TransportationPath]()
     for (startNode <- startNodes) {
       for (goalNode <- goalNodes) {
-        val pathOption = findPath(startNode, goalNode, floorNameList)
+        val pathOption = findPath(startNode, goalNode, floorNameList, allowUncertainAccess)
         pathOption match {
           case Some(path) => allPaths += path
           case None => ()
@@ -179,7 +184,7 @@ class TransportGraph private(
 
   // TODO: Option[TransportationPath]
   private def reconstructPath(
-    cameFrom: mutable.Map[StationNode, (StationNode, Double)],
+    cameFrom: mutable.Map[StationNode, (StationNode, Double, Option[UncertainAccess])],
     current: StationNode
   ): TransportationPath = {
     val totalPath = mutable.ListBuffer[StationNode]()
@@ -187,16 +192,38 @@ class TransportGraph private(
     var node = current
 
     while (cameFrom.contains(node)) {
-      val (parent, edgeCost) = cameFrom(node)
+      val (parent, edgeCost, uncertainAccess) = cameFrom(node)
 
       totalPath.prepend(node)
-      pathEdges.prepend(TransportEdge(parent, node, edgeCost))
+      pathEdges.prepend(TransportEdge(parent, node, edgeCost, uncertainAccess))
 
       node = parent  // Move to the next node
     }
     totalPath.prepend(node)
 
     TransportationPath(totalPath.toList, pathEdges.toList)
+  }
+
+  def edgeTraversal(
+    source: StationNode,
+    target: StationNode,
+    compiledCost: Double,
+    allowUncertainAccess: Boolean
+  ): Option[(Double, Option[UncertainAccess])] = {
+    if (source.ownerLine == target.ownerLine) {
+      val uncertainty = source.ownerLine.uncertainAccessBetween(source.ownerGraph, target.ownerGraph)
+      Option.when(allowUncertainAccess || uncertainty.isEmpty)(compiledCost -> uncertainty)
+    } else {
+      source.ownerGraph.findPath(
+        source.localNode,
+        target.localNode,
+        VisitingMode.Normal,
+        allowUncertainAccess = allowUncertainAccess
+      ).map { path =>
+        val uncertainty = UncertainAccess.combine(path.routeEdges.map(_.uncertainAccess))
+        path.totalCost(VisitingMode.Normal) -> uncertainty
+      }
+    }
   }
   
 }
@@ -315,7 +342,8 @@ case class StationNode(
 case class TransportEdge(
   source: StationNode,
   target: StationNode,
-  cost: Double
+  cost: Double,
+  uncertainAccess: Option[UncertainAccess] = None
 )
 
 

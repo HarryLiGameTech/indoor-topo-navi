@@ -10,6 +10,7 @@ trait LinearTransport extends Serializable {
   def stationLocations: Map[NavigationGraph, Double]
   def stationLabels: Map[NavigationGraph, String]
   def displayName: Option[String]
+  def stationUncertainAccess: Map[NavigationGraph, StationUncertainAccess] = Map.empty
   def maxVelocity: Double
   def acceleration: Double
 
@@ -23,6 +24,20 @@ trait LinearTransport extends Serializable {
   def canDepartFrom(source: NavigationGraph): Boolean
   def canRideFromTo(source: NavigationGraph, target: NavigationGraph): Boolean = true
   def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double
+
+  def uncertainAccessBetween(
+    source: NavigationGraph,
+    target: NavigationGraph
+  ): Option[UncertainAccess] = {
+    def stationAccess(graph: NavigationGraph): Option[StationUncertainAccess] =
+      stationUncertainAccess.collectFirst { case (candidate, access)
+          if candidate.identifier == graph.identifier => access }
+
+    UncertainAccess.combine(List(
+      stationAccess(source).flatMap(_.departure),
+      stationAccess(target).flatMap(_.arrival)
+    ))
+  }
 }
 
 
@@ -36,7 +51,8 @@ case class StairCase(
   turnAroundLoss: Double, // Additional time loss for "turning-around" between different flights in the staircase
   stationLabels: Map[NavigationGraph, String] = Map.empty,
   displayName: Option[String] = None,
-  allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None
+  allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None,
+  override val stationUncertainAccess: Map[NavigationGraph, StationUncertainAccess] = Map.empty
 ) extends LinearTransport {
 
   override def maxVelocity: Double = 0.0
@@ -83,7 +99,8 @@ case class Escalator(
   travelTimeSeconds: Double,
   stationLabels: Map[NavigationGraph, String] = Map.empty,
   displayName: Option[String] = None,
-  allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None
+  allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None,
+  override val stationUncertainAccess: Map[NavigationGraph, StationUncertainAccess] = Map.empty
 ) extends LinearTransport {
 
   override def maxVelocity: Double = 0.0
@@ -136,7 +153,8 @@ case class ElevatorBank(
   dwellTime: Double = 15.0,
   stationLabels: Map[NavigationGraph, String] = Map.empty,
   displayName: Option[String] = None,
-  allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None
+  allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None,
+  override val stationUncertainAccess: Map[NavigationGraph, StationUncertainAccess] = Map.empty
 ) extends LinearTransport {
 
   private lazy val cachedOrderedStations: List[NavigationGraph] =

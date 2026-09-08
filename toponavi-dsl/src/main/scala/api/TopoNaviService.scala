@@ -13,6 +13,10 @@ import java.util.List as JList
 import java.util.Map as JMap
 import scala.jdk.CollectionConverters.*
 
+case class RiskAwareNavigationResult(
+  plan: NavigationOutputPath,
+  appliedRiskPreference: String
+)
 
 object TopoNaviService {
   private val compiler = new TopoScriptCompiler()
@@ -70,12 +74,35 @@ object TopoNaviService {
     banTags: Set[String],
     isHighRise: Boolean
   ): NavigationOutputPath = {
+    try findRoutePlan(
+      result, startNodeName, endNodeName, preference,
+      banTags, isHighRise, allowUncertainAccess = false)
+    catch {
+      case e: NavigationRequestException if isNoRoute(e) =>
+        findRoutePlan(
+          result, startNodeName, endNodeName, preference,
+          banTags, isHighRise, allowUncertainAccess = true)
+    }
+  }
+
+  def findRoutePlan(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: RoutePlanningPreferences,
+    banTags: Set[String],
+    isHighRise: Boolean,
+    allowUncertainAccess: Boolean
+  ): NavigationOutputPath = {
     // TODO (production): Consider refactoring to hold a Map[BuildingKey, RoutePlanner] and only rebuild on cache miss.
     val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, isHighRise)
     val (startGraphName, startNode) = resolveNode(startNodeName, result)
     val (endGraphName, endNode) = resolveNode(endNodeName, result)
     val tagPolicy = TraversalTagPolicy(banTags)
-    routePlanner.navigate(startGraphName, endGraphName, startNode, endNode, Normal, preference, tagPolicy) match {
+    routePlanner.navigate(
+      startGraphName, endGraphName, startNode, endNode,
+      Normal, preference, tagPolicy, allowUncertainAccess
+    ) match {
       case Left(DestinationHasBannedTags(nodeIdentifier, conflicts)) =>
         throw NavigationRequestException(
           "DESTINATION_HAS_BANNED_TAG",
@@ -196,6 +223,87 @@ object TopoNaviService {
     val tags = if banTags == null then Set.empty else banTags.asScala.toSet
     findRoutePlan(result, startNodeName, endNodeName, parsePreference(preference), tags, isHighRise)
   }
+
+  def findRoutePlan(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: String,
+    banTags: JList[String],
+    isHighRise: Boolean,
+    allowUncertainAccess: Boolean
+  ): NavigationOutputPath = {
+    val tags = if banTags == null then Set.empty else banTags.asScala.toSet
+    findRoutePlan(
+      result, startNodeName, endNodeName, parsePreference(preference),
+      tags, isHighRise, allowUncertainAccess)
+  }
+
+  def findRoutePlanWithRiskPreference(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: String,
+    banTags: JList[String],
+    isHighRise: Boolean,
+    riskPreference: String
+  ): RiskAwareNavigationResult = {
+    val parsedPreference = parsePreference(preference)
+    val tags = if banTags == null then Set.empty else banTags.asScala.toSet
+
+    def route(allowUncertainAccess: Boolean): NavigationOutputPath =
+      findRoutePlan(
+        result, startNodeName, endNodeName, parsedPreference,
+        tags, isHighRise, allowUncertainAccess)
+
+    def deterministicRoute(): Option[NavigationOutputPath] =
+      try Some(route(allowUncertainAccess = false))
+      catch {
+        case e: NavigationRequestException if isNoRoute(e) => None
+      }
+
+    riskPreference match {
+      case "conservative" =>
+        deterministicRoute() match {
+          case Some(plan) => RiskAwareNavigationResult(plan, "conservative")
+          case None => RiskAwareNavigationResult(route(allowUncertainAccess = true), "permissive")
+        }
+      case "permissive" =>
+        // Permissive mode compares independent deterministic and all-access searches.
+        val deterministic = deterministicRoute()
+        val allAccess = route(allowUncertainAccess = true)
+        val selected = deterministic match {
+          case None => allAccess
+          case Some(safe) if meaningfullyImproves(allAccess, safe, parsedPreference) => allAccess
+          case Some(safe) => safe
+        }
+        RiskAwareNavigationResult(selected, "permissive")
+      case "aggressive" =>
+        RiskAwareNavigationResult(route(allowUncertainAccess = true), "aggressive")
+      case other => throw new IllegalArgumentException(s"Unknown riskPreference: $other")
+    }
+  }
+
+  private def meaningfullyImproves(
+    candidate: NavigationOutputPath,
+    deterministic: NavigationOutputPath,
+    preference: RoutePlanningPreferences
+  ): Boolean = {
+    if (candidate.uncertainAccess.isEmpty) return false
+
+    preference match {
+      case RoutePlanningPreferences.MinimizeTime =>
+        deterministic.totalCost - candidate.totalCost >= 15.0
+      case RoutePlanningPreferences.MinimizeTransfers =>
+        deterministic.transportSegmentCount - candidate.transportSegmentCount >= 1
+      case RoutePlanningPreferences.MinimizePhysicalDemands =>
+        deterministic.physicalDemandScore > 0.0 &&
+          candidate.physicalDemandScore <= deterministic.physicalDemandScore * 0.9
+    }
+  }
+
+  private def isNoRoute(error: NavigationRequestException): Boolean =
+    error.getCode == "NO_ROUTE_FOUND" || error.getCode == "NO_ROUTE_WITH_BAN_TAGS"
 
   private def parsePreference(s: String): RoutePlanningPreferences = s match {
     case "MinimizeTransfers"       => RoutePlanningPreferences.MinimizeTransfers
