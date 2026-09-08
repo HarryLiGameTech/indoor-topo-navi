@@ -36,10 +36,50 @@ case class AtomicPath(
   target: TopoNode,
   attributes: Map[String, AttributeValue],
   costs: Map[VisitingMode, Double],
-  pathType: PathType // TODO: modify to "modifiers"
+  pathType: PathType, // TODO: modify to "modifiers"
+  uncertainAccess: Option[UncertainAccess] = None
 ) {
+  def hasFailedUncertainAccess: Boolean =
+    uncertainAccess.exists(_.constraintFailed)
+
   override def toString: String = s"${source} -> ${target}"
 }
+
+case class UncertaintyReason(
+  conditionType: String,
+  reason: Option[String] = None,
+  conditionSatisfied: Boolean = false
+)
+
+case class UncertainAccess(
+  uncertaintyReasons: List[UncertaintyReason]
+) {
+  def constraintFailed: Boolean =
+    uncertaintyReasons.exists(!_.conditionSatisfied)
+
+  def failedOnly: Option[UncertainAccess] = {
+    val failed = uncertaintyReasons.filterNot(_.conditionSatisfied)
+    Option.when(failed.nonEmpty)(UncertainAccess(failed))
+  }
+}
+
+object UncertainAccess {
+  def combine(accesses: Iterable[Option[UncertainAccess]]): Option[UncertainAccess] = {
+    val byType = mutable.LinkedHashMap.empty[String, Option[String]]
+    accesses.flatten.flatMap(_.failedOnly).flatMap(_.uncertaintyReasons).foreach { entry =>
+      val bestReason = byType.get(entry.conditionType).flatten.orElse(entry.reason)
+      byType.update(entry.conditionType, bestReason)
+    }
+    Option.when(byType.nonEmpty)(UncertainAccess(
+      byType.map { case (conditionType, reason) => UncertaintyReason(conditionType, reason) }.toList
+    ))
+  }
+}
+
+case class StationUncertainAccess(
+  departure: Option[UncertainAccess] = None,
+  arrival: Option[UncertainAccess] = None
+)
 
 case class RouteEdge(
   source: GlobalNode,
@@ -47,8 +87,12 @@ case class RouteEdge(
   cost: Double,
   category: RouteEdgeCategory,
   movementDescription: String,
-  attributes: Map[String, AttributeValue] = Map.empty
+  attributes: Map[String, AttributeValue] = Map.empty,
+  uncertainAccess: Option[UncertainAccess] = None
 ) {
+  def hasFailedUncertainAccess: Boolean =
+    uncertainAccess.exists(_.constraintFailed)
+
   def traversalMetadata: RouteTraversalMetadata =
     RouteTraversalMetadata.from(attributes)
 }
@@ -99,7 +143,8 @@ object RouteEdge {
       cost = atomicPath.costs(visitingMode),
       category = RouteEdgeCategory.Walking,
       movementDescription = s"Move from ${atomicPath.source.identifier} to ${atomicPath.target.identifier} via ${atomicPath.pathType}",
-      attributes = atomicPath.attributes
+      attributes = atomicPath.attributes,
+      uncertainAccess = atomicPath.uncertainAccess
     )
   }
 }
@@ -158,6 +203,23 @@ case class NavigationOutputPath(
 ) extends NavigatablePath {
 
   def totalCost: Double = routeEdges.map(_.cost).sum
+
+  def uncertainAccess: Option[UncertainAccess] =
+    UncertainAccess.combine(routeEdges.map(_.uncertainAccess))
+
+  def uncertainAccessSegmentCount: Int = routeEdges.count(_.hasFailedUncertainAccess)
+
+  def transportSegmentCount: Int =
+    routeEdges.count(_.category != RouteEdgeCategory.Walking)
+
+  def physicalDemandScore: Double = routeEdges.map { edge =>
+    edge.category match {
+      case RouteEdgeCategory.Walking   => edge.cost
+      case RouteEdgeCategory.Climbing  => edge.cost * 10.0
+      case RouteEdgeCategory.Transport => edge.cost * 0.1
+      case RouteEdgeCategory.Portal    => edge.cost
+    }
+  }.sum
 
   def prettyPrint: String = {
     val legs = buildLegs
@@ -302,6 +364,26 @@ case class NavigationOutputPath(
     target.put("tags", tags.asJava)
     target.put("requiredActions", requiredActions.asJava)
     target.put("requiredActionEvents", requiredActionEvents.asJava)
+    putUncertainAccess(target, edges)
+  }
+
+  private def putUncertainAccess(
+    target: java.util.Map[String, Object],
+    edges: List[RouteEdge]
+  ): Unit = {
+    import scala.jdk.CollectionConverters.*
+    UncertainAccess.combine(edges.map(_.uncertainAccess)).foreach { access =>
+      val reasons = access.uncertaintyReasons.map { entry =>
+        val item = new java.util.LinkedHashMap[String, Object]()
+        item.put("type", entry.conditionType)
+        item.put("reason", entry.reason.orNull)
+        item
+      }
+      val disclosure = new java.util.LinkedHashMap[String, Object]()
+      disclosure.put("uncertaintyReasons", reasons.asJava)
+      disclosure.put("message", "This segment may require additional access and may not always be available.")
+      target.put("uncertainAccess", disclosure)
+    }
   }
 
   private def buildLegs: List[Leg] = {

@@ -332,6 +332,18 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitRequirements(MapFileParser.RequirementsContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link MapFileParser#accessAnnotation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAccessAnnotation(MapFileParser.AccessAnnotationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MapFileParser#uncertainRequirements}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUncertainRequirements(MapFileParser.UncertainRequirementsContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link MapFileParser#ridePolicyOperand}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

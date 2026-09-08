@@ -55,9 +55,28 @@ class TopoControllerPreferenceTest {
         body.traversalPreference.riskPreference = "conservative";
 
         assertEquals(
-                List.of("minimizeTag", "maximizeTag", "riskPreference"),
+                List.of("minimizeTag", "maximizeTag"),
                 TopoController.unsupportedTraversalFields(body)
         );
+    }
+
+    @Test
+    void riskPreferenceDefaultsToConservativeAndAcceptsAllModes() {
+        assertEquals("conservative", TopoController.resolveRiskPreference(null));
+
+        for (String riskPreference : List.of("conservative", "permissive", "aggressive")) {
+            QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
+            body.traversalPreference.riskPreference = riskPreference;
+            assertEquals(riskPreference, TopoController.resolveRiskPreference(body));
+        }
+    }
+
+    @Test
+    void invalidRiskPreferenceIsRejected() {
+        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
+        body.traversalPreference.riskPreference = "reckless";
+
+        assertThrows(IllegalArgumentException.class, () -> TopoController.resolveRiskPreference(body));
     }
 
     @Test

@@ -48,7 +48,8 @@ class NavigationGraph private(
     goal: TopoNode,
     visitingMode: VisitingMode,
     tagPolicy: TraversalTagPolicy = TraversalTagPolicy.AllowAll,
-    allowBannedStart: Boolean = false
+    allowBannedStart: Boolean = false,
+    allowUncertainAccess: Boolean = true
   ): Option[IntraMapPath] = {
     if (!allowBannedStart && !tagPolicy.allowsEntry(start)) return None
     if (!tagPolicy.allowsEntry(goal)) return None
@@ -82,7 +83,9 @@ class NavigationGraph private(
         }
 
         // Explore neighbors using the new adjacency list structure
-        for (edge <- getOutgoingEdges(current) if tagPolicy.allows(edge)) {
+        // Failed subject-to edges stay compiled; conservative searches omit them here.
+        for (edge <- getOutgoingEdges(current)
+             if tagPolicy.allows(edge) && (allowUncertainAccess || !edge.hasFailedUncertainAccess)) {
           val neighbor = edge.target
           if (!visited.contains(neighbor) && tagPolicy.allowsEntry(neighbor)) {
             val newDist = dist(current) + edge.costs(visitingMode)

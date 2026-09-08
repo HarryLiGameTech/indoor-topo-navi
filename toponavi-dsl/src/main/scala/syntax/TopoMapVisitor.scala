@@ -3,7 +3,7 @@ package syntax
 import corelang.{Environment, Expr, Identifier, OpKind, Type}
 import enums.TPCCRelationship
 import org.antlr.v4.runtime.tree.ParseTree
-import surfacelang.{AtomicPathExpr, ConstraintExpr, DirectionalArrowExpr, GlobalConfigExpr, LinearPathExpr, RidePolicyExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, VehicleRef}
+import surfacelang.{AtomicPathExpr, ConstraintExpr, DirectionalArrowExpr, GlobalConfigExpr, LinearPathExpr, RidePolicyExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, UncertainAccessExpr, VehicleRef}
 import topomap.grammar.MapFileParser.*
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser, MapFileVisitor}
 
@@ -13,6 +13,41 @@ import scala.jdk.CollectionConverters.*
 
 
 class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
+
+  private case class ParsedAccess(
+    constraints: List[Expr],
+    uncertainAccess: Option[UncertainAccessExpr]
+  )
+
+  private def parseAccessAnnotations(
+    annotations: Seq[AccessAnnotationContext],
+    elementName: String
+  ): ParsedAccess = {
+    val requirements = annotations.flatMap(annotation => Option(annotation.requirements()))
+    val uncertain = annotations.flatMap(annotation => Option(annotation.uncertainRequirements()))
+
+    if (requirements.nonEmpty && uncertain.nonEmpty) {
+      throw new RuntimeException(s"$elementName cannot use both requires and subject-to")
+    }
+    if (annotations.size > 1) {
+      throw new RuntimeException(s"$elementName may declare only one access annotation")
+    }
+
+    val constraints = requirements.headOption
+      .map(_.ID().asScala.map(id => Expr.Var(id.getText)).toList)
+      .getOrElse(List.empty)
+    val uncertainAccess = uncertain.headOption.map { subjectTo =>
+      val reason = Option(subjectTo.STRING()).map { token =>
+        val raw = token.getText
+        raw.substring(1, raw.length - 1)
+      }
+      UncertainAccessExpr(
+        conditionNames = subjectTo.ID().asScala.map(_.getText).toList,
+        reason = reason
+      )
+    }
+    ParsedAccess(constraints, uncertainAccess)
+  }
 
   override def visitSurfaceDefRootExpr(ctx: SurfaceDefRootExprContext): RootExpr = {
     val name = ctx.ID().getText
@@ -226,24 +261,18 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       (fieldAssignment.ID().getText, fieldAssignment.expr.visit)
     }.toMap
 
-    // 3. Parse Requirements, TODO: Verify correctness
-    val reqCtx = ctx.requirements()
-    // The requirements rule contains IDs in both alternatives:
-    // 'requires' ID
-    // 'requires' '<' (ID ('&&' ID)*)? '>'
-    // ANTLR collects all matching IDs into a list automatically.
-    val constraintExprs = Option(reqCtx).map { rCtx =>
-      rCtx.ID().asScala.map { idNode =>
-        Expr.Var(idNode.getText)
-      }.toList
-    }.getOrElse(List.empty)
+    val access = parseAccessAnnotations(
+      ctx.accessAnnotation().asScala.toSeq,
+      s"Atomic path '$from -> $to'"
+    )
 
     AtomicPathExpr(
       from = from,
       to = to,
       bidirectional = isBidirectional,
       data = Expr.Record(fields),
-      constraints = constraintExprs
+      constraints = access.constraints,
+      uncertainAccess = access.uncertainAccess
     )
   }
 
@@ -264,11 +293,10 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       .map(_.asScala.map(f => (f.ID().getText, f.expr().visit)).toMap)
       .getOrElse(Map.empty)
 
-    val constraintExprs = Option(ctx.requirements()).map { rCtx =>
-      rCtx.ID().asScala.map { idNode =>
-        Expr.Var(idNode.getText)
-      }.toList
-    }.getOrElse(List.empty)
+    val access = parseAccessAnnotations(
+      ctx.accessAnnotation().asScala.toSeq,
+      s"Station '$stationName'"
+    )
 
     val permissionScope = (0 until ctx.getChildCount)
       .find(index => ctx.getChild(index).getText == "on")
@@ -279,11 +307,32 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
 
     permissionScope match {
       case None | Some("") =>
-        StationDef(stationName, nodeRef, Expr.Record(recordFields), constraints = constraintExprs, outOfOrder = outOfOrder)
+        StationDef(
+          stationName,
+          nodeRef,
+          Expr.Record(recordFields),
+          constraints = access.constraints,
+          uncertainAccess = access.uncertainAccess,
+          outOfOrder = outOfOrder
+        )
       case Some("Depart") =>
-        StationDef(stationName, nodeRef, Expr.Record(recordFields), departConstraints = constraintExprs, outOfOrder = outOfOrder)
+        StationDef(
+          stationName,
+          nodeRef,
+          Expr.Record(recordFields),
+          departConstraints = access.constraints,
+          departUncertainAccess = access.uncertainAccess,
+          outOfOrder = outOfOrder
+        )
       case Some("Arrive") =>
-        StationDef(stationName, nodeRef, Expr.Record(recordFields), arriveConstraints = constraintExprs, outOfOrder = outOfOrder)
+        StationDef(
+          stationName,
+          nodeRef,
+          Expr.Record(recordFields),
+          arriveConstraints = access.constraints,
+          arriveUncertainAccess = access.uncertainAccess,
+          outOfOrder = outOfOrder
+        )
       case Some(other) =>
         throw new RuntimeException(s"Unknown station permission scope '$other'. Expected Depart or Arrive")
     }

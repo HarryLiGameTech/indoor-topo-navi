@@ -21,7 +21,23 @@ case class TransportValue(
   stationLabels: Map[TopoNodeRefValue, String],
   data: Value.RecordVal,
   context: Context,
-  ridePolicies: List[RidePolicyValue] = List.empty
+  ridePolicies: List[RidePolicyValue] = List.empty,
+  stationUncertainAccess: Map[TopoNodeRefValue, StationUncertainAccessValue] = Map.empty
+)
+
+case class UncertaintyReasonValue(
+  conditionType: String,
+  reason: Option[String],
+  conditionSatisfied: Boolean
+)
+
+case class UncertainAccessValue(
+  uncertaintyReasons: List[UncertaintyReasonValue]
+)
+
+case class StationUncertainAccessValue(
+  departure: Option[UncertainAccessValue] = None,
+  arrival: Option[UncertainAccessValue] = None
 )
 
 case class RidePolicyValue(
@@ -53,7 +69,8 @@ case class AtomicPathValue(
   to: TopoNodeValue,
   bidirectional: Boolean,
   data: Value.RecordVal,
-  context: Context
+  context: Context,
+  uncertainAccess: Option[UncertainAccessValue] = None
 ) {
   
 }

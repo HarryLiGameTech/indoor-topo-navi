@@ -554,6 +554,26 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitRequirements(MapFileParser.RequirementsContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MapFileParser#accessAnnotation}.
+	 * @param ctx the parse tree
+	 */
+	void enterAccessAnnotation(MapFileParser.AccessAnnotationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#accessAnnotation}.
+	 * @param ctx the parse tree
+	 */
+	void exitAccessAnnotation(MapFileParser.AccessAnnotationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MapFileParser#uncertainRequirements}.
+	 * @param ctx the parse tree
+	 */
+	void enterUncertainRequirements(MapFileParser.UncertainRequirementsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MapFileParser#uncertainRequirements}.
+	 * @param ctx the parse tree
+	 */
+	void exitUncertainRequirements(MapFileParser.UncertainRequirementsContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link MapFileParser#ridePolicyOperand}.
 	 * @param ctx the parse tree
 	 */

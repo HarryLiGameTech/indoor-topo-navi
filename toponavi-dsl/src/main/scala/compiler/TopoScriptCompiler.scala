@@ -4,7 +4,7 @@ import util.catchError
 import syntax.TopoMapVisitor
 import surfacelang.{GlobalConfigExpr, RootExpr, TopoEnvironment}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
-import data.{ElevatorBank, Escalator, LinearTransport, NavigationGraph, StairCase, TransportGraph}
+import data.{ElevatorBank, Escalator, LinearTransport, NavigationGraph, StairCase, StationUncertainAccess, TransportGraph, UncertainAccess, UncertaintyReason}
 import corelang.{Environment, Identifier, Value}
 import enums.AttributeValue
 import enums.ElevatorStationCategory.{Entrance, Occupant}
@@ -501,10 +501,17 @@ class TopoScriptCompiler() {
          enums.VisitingMode.Wheeled -> cost * 2.0
        )
        
-       val forward = data.AtomicPath(source, target, attrs, costs, enums.PathType.General)
+       val uncertainAccess = pathVal.uncertainAccess.map { access =>
+         UncertainAccess(access.uncertaintyReasons.map { entry =>
+           UncertaintyReason(entry.conditionType, entry.reason, entry.conditionSatisfied)
+         })
+       }
+       val forward = data.AtomicPath(
+         source, target, attrs, costs, enums.PathType.General, uncertainAccess)
        
        if (pathVal.bidirectional) {
-          val backward = data.AtomicPath(target, source, attrs, costs, enums.PathType.General)
+          val backward = data.AtomicPath(
+            target, source, attrs, costs, enums.PathType.General, uncertainAccess)
           List(forward, backward)
        } else {
           List(forward)
@@ -727,7 +734,8 @@ class TopoScriptCompiler() {
       travelTimeSeconds = travelTime,
       stationLabels = stationLabels,
       displayName = transportDisplayName(transVal),
-      allowedRidePairs = allowedRidePairs
+      allowedRidePairs = allowedRidePairs,
+      stationUncertainAccess = buildStationUncertainAccess(transVal, graphs)
     )
   }
 
@@ -821,7 +829,8 @@ class TopoScriptCompiler() {
       duty = duty,
       stationLabels = stationLabels,
       displayName = displayName,
-      allowedRidePairs = allowedRidePairs
+      allowedRidePairs = allowedRidePairs,
+      stationUncertainAccess = buildStationUncertainAccess(transVal, graphs)
     )
   }
 
@@ -880,8 +889,26 @@ class TopoScriptCompiler() {
       turnAroundLoss = turnBackCost,
       stationLabels = stationLabels,
       displayName = displayName,
-      allowedRidePairs = allowedRidePairs
+      allowedRidePairs = allowedRidePairs,
+      stationUncertainAccess = buildStationUncertainAccess(transVal, graphs)
     )
+  }
+
+  private def buildStationUncertainAccess(
+    transVal: TransportValue,
+    graphs: Map[String, NavigationGraph]
+  ): Map[NavigationGraph, StationUncertainAccess] = {
+    def convert(access: surfacelang.UncertainAccessValue): UncertainAccess =
+      UncertainAccess(access.uncertaintyReasons.map { entry =>
+        UncertaintyReason(entry.conditionType, entry.reason, entry.conditionSatisfied)
+      })
+
+    transVal.stationUncertainAccess.map { case (nodeRef, access) =>
+      graphs(nodeRef.fromMapName) -> StationUncertainAccess(
+        departure = access.departure.map(convert),
+        arrival = access.arrival.map(convert)
+      )
+    }
   }
 
   private def transportDisplayName(transVal: TransportValue): Option[String] =

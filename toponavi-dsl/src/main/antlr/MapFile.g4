@@ -28,8 +28,8 @@ globalConfigElement
 surfaceBodyElement
     : coreDef                                               # SurfaceElementCoreDef
     | 'topo-node' ID recordAssign?                          # SurfaceElementTopoNode
-    | 'atomic-path' pathSpec recordAssign requirements?     # SurfaceElementAtomicPath
-    | 'station' ID 'at' identifier ('at' expr)* recordAssign (requirements ('on' expr)?)? OUT_OF_ORDER?  # SurfaceElementStation
+    | 'atomic-path' pathSpec recordAssign (NL* accessAnnotation)*     # SurfaceElementAtomicPath
+    | 'station' ID 'at' identifier ('at' expr)* recordAssign (NL* accessAnnotation)* ('on' expr)? OUT_OF_ORDER?  # SurfaceElementStation
     | 'ride-from' ridePolicyOperand 'to' ridePolicyOperand requirements  # SurfaceElementRidePolicy
     | 'directional-arrow' arrowSpec ID ID                   # SurfaceElementArrow
     | 'linear-path' linearPathSpec                          # SurfaceElementLinearPath
@@ -146,6 +146,16 @@ linearPathSpec
 requirements
     : 'requires' ID
     | 'requires' '<' (ID ('&&' ID)*)? '>'
+    ;
+
+accessAnnotation
+    : requirements
+    | uncertainRequirements
+    ;
+
+uncertainRequirements
+    : 'subject-to' ID ('because' STRING)?
+    | 'subject-to' '<' (ID ('&&' ID)*)? '>' ('because' STRING)?
     ;
 
 ridePolicyOperand
