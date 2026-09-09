@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Lexical Structure and Identifiers</title>
+</head>
+<body>
+  <main>
+    <article id="lexical-structure">
+      <header>
+        <h1>Lexical Structure</h1>
+        <p><strong>Status:</strong> Draft</p>
+      </header>
+
+      <section id="case-sensitivity">
+        <h2>Case Sensitivity</h2>
+        <p>TopoScript is case-sensitive. Keywords, identifiers, and literal names must use their declared capitalization.</p>
+      </section>
+
+      <section id="whitespace-and-line-breaks">
+        <h2>Whitespace and Line Breaks</h2>
+        <p>Spaces and horizontal tabs separate tokens and are otherwise ignored. Line breaks are significant where the grammar uses them to separate declarations or elements; they are optional only where the applicable grammar rule permits them.</p>
+      </section>
+
+      <section id="comments">
+        <h2>Comments</h2>
+        <p>A line comment begins with <code>//</code> and continues to the end of the line. A block comment begins with <code>/*</code> and ends at the next <code>*/</code>. Block comments may span lines and do not nest. Comments are ignored during parsing.</p>
+      </section>
+
+      <section id="literals">
+        <h2>Literals</h2>
+        <ul>
+          <li>An integer literal contains one or more decimal digits.</li>
+          <li>A floating-point literal contains decimal digits, a decimal point, and further decimal digits. Exponent notation and omitted digits on either side of the point are not supported.</li>
+          <li>A negative number is parsed as unary negation applied to a numeric literal.</li>
+          <li>A Boolean literal is <code>true</code> or <code>false</code>.</li>
+          <li>A string literal is enclosed in double quotation marks and cannot contain a physical line break. TopoScript does not currently define general-purpose escape-sequence interpretation.</li>
+        </ul>
+      </section>
+
+      <section id="identifiers-and-qualified-names">
+        <h2>Identifiers and Qualified Names</h2>
+
+        <p>An identifier begins with an ASCII letter or underscore and continues with zero or more ASCII letters, decimal digits, or underscores. In grammar notation:</p>
+
+        <pre><code>[A-Za-z_][A-Za-z0-9_]*</code></pre>
+
+        <p>Identifiers are case-sensitive. Hyphens, spaces, punctuation, and non-ASCII letters are not permitted. Reserved TopoScript keywords cannot be used where the grammar expects an identifier.</p>
+
+        <p>A simple identifier consists of one identifier segment, such as <code>Lobby</code> or <code>elevator_hall</code>. A qualified name joins identifier segments with <code>::</code>, such as <code>Floor1::elevator_hall</code>.</p>
+
+        <p>A transport station reference to a map node must contain exactly two segments: the map identifier followed by the node identifier. The period in an expression such as <code>value.field</code> denotes record-field projection and is not a qualified-name separator.</p>
+
+        <p>The meaning and visibility of an identifier depend on the declaration and scope in which it appears. Qualification identifies a path through named entities; it does not import names from another TopoScript project.</p>
+      </section>
+
+      <section id="name-scopes-and-visibility">
+        <h2>Name Scopes and Visibility</h2>
+
+        <p>Visibility flows from the project root into its topo maps and transports. Parameters, constraints, types, values, and functions defined by the root are available while each child map and transport is compiled. Declarations made by a child are not visible to the root.</p>
+
+        <p>Declarations inside a topo-map or transport body are local to that body. They may use visible root declarations, and a local declaration with the same name shadows the outer declaration. Map-local declarations are not automatically visible to sibling maps or transports, and transport-local declarations are not exported.</p>
+
+        <p>Node identifiers belong to their containing map. Local topology declarations, including atomic paths and spatial annotations, may refer to nodes in that map by simple name. A transport refers to a map node by its qualified name. Station labels are local to their containing transport.</p>
+
+        <p>A braced root, topo-map, or transport body establishes its declaration scope. A braced expression block establishes a nested lexical scope for its local <code>let</code> bindings. Function parameters, lambda parameters, <code>let</code> expressions, recursive bindings, and fixed-point bindings are visible only in their respective bodies.</p>
+
+        <p>Not every pair of braces creates a name scope. Braces used for records, constraints, or building configuration group their contents but do not by themselves introduce general-purpose local bindings.</p>
+
+        <p>Definitions in the same declaration body may refer to one another without relying on source order, provided their dependency graph is acyclic. Cyclic definition dependencies are rejected.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

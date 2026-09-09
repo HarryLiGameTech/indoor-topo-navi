@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Language and Execution Model</title>
+</head>
+<body>
+  <main>
+    <article id="language-and-execution-model">
+      <header>
+        <h1>Language and Execution Model</h1>
+        <p><strong>Status:</strong> Draft</p>
+      </header>
+
+      <section id="intended-audience">
+        <h2>Intended Audience</h2>
+
+        <p>The primary audience consists of venue owners, operators, facility managers, and other specifically authorized parties responsible for creating or maintaining an indoor navigation model. It also includes authorized surveyors and contributors who can observe and record the venue’s traversable topology without requiring a metric survey.</p>
+
+        <p>A map author should possess sufficient authoritative knowledge or approved observations for the portion of the venue being mapped. The author or publishing organization is responsible for validating the accuracy, access conditions, and operational information it publishes.</p>
+
+        <p>A secondary audience consists of software developers, tool builders, and engine contributors who integrate with TopoScript projects or implement authoring, validation, and navigation tools.</p>
+
+        <section id="prerequisite-knowledge">
+          <h3>Prerequisite Knowledge</h3>
+
+          <p>Basic map authors should understand locations, directed connections, access restrictions, and traversal costs. They should also be familiar with the part of the venue they are describing or have access to an authoritative source for it.</p>
+
+          <p>Authors who use the advanced parts of TopoScript should additionally be familiar with typed values, expressions, functions, and parameters. Developers integrating the compiler or consuming its results should be familiar with structured data and graph-based route planning.</p>
+
+          <p>Knowledge of GIS, CAD, metric surveying, Scala, or the internal implementation of the TopoNavi engine is not required to author a basic TopoScript project.</p>
+        </section>
+      </section>
+
+      <section id="system-category">
+        <h2>Category of System Described by TopoScript</h2>
+
+        <p>TopoScript is a domain-specific language for describing the routable topology of an indoor venue. It models named node areas, directed or bidirectional connections between those areas, traversal costs, reusable area maps, and transportation connections between maps or floors.</p>
+
+        <p>TopoScript can associate typed metadata with topological entities and express access conditions using parameters and constraints. Such metadata may describe matters such as a location’s purpose, operational information, tags, or required actions. Metadata has routing behavior only where TopoNavi defines that behavior or where the author connects it to an evaluated constraint.</p>
+
+        <p>For example, business hours may be stored as descriptive metadata. TopoNavi does not currently provide a built-in date, time, calendar, or business-hours model and does not automatically enforce descriptive business-hours metadata. Time-dependent access must be modeled explicitly through supported parameters and constraints.</p>
+
+        <p>TopoScript describes logical reachability and route-planning relationships rather than a geometrically exact representation of the physical venue. Two node areas may be physically close without being connected by a traversable path, and a declared connection represents permitted topological movement rather than measured geometric adjacency.</p>
+      </section>
+
+      <section id="language-lifecycle">
+        <h2>Language Lifecycle</h2>
+
+        <p>A TopoScript project passes through four stages:</p>
+
+        <ol>
+          <li><strong>Source declaration:</strong> authors describe the building configuration, shared parameters and constraints, maps, nodes, paths, and transports.</li>
+          <li><strong>Compilation:</strong> the engine parses and checks the sources, resolves declarations and supplied parameter values, evaluates TopoScript expressions and constraints, and produces a compiled building model containing navigation and transport graphs.</li>
+          <li><strong>Route planning:</strong> a caller queries the compiled model with an origin, a destination, and routing options such as route preference, banned tags, and uncertain-access handling. TopoScript expressions and constraints are not re-evaluated during this stage; a different compilation-parameter context requires a new compiled model.</li>
+          <li><strong>Navigation result:</strong> the engine returns either a route-planning error or an ordered route containing the selected nodes and traversals, together with applicable navigation hints, required actions, and access-uncertainty information.</li>
+        </ol>
+
+        <p>The source project defines what may be traversed, compilation creates the model for one parameter context, and route planning selects a route through that model for one request.</p>
+      </section>
+
+      <section id="major-language-entities">
+        <h2>Major Language Entities and Their Relationships</h2>
+
+        <section id="building-entity">
+          <h3>Building</h3>
+
+          <p>A building is the complete venue model produced by compiling one TopoScript project. It consists of a configured set of maps, transports connecting those maps, management-domain assignments, shared declarations, and compilation metadata.</p>
+
+          <p>TopoScript does not currently contain a separate named <code>building</code> declaration. The <code>building-includes</code> source determines which maps and transports participate in the compiled building.</p>
+        </section>
+
+        <section id="map-entity">
+          <h3>Map</h3>
+
+          <p>A map is a named local topology containing nodes and atomic paths. It normally represents one floor, area, or other logical subdivision of a venue.</p>
+
+          <p>Nodes inside a map share a local namespace. Atomic paths connect nodes within that map. Connections between maps are described separately by transport stations and transport declarations.</p>
+
+          <p>A map is graph-like but is not required to contain one fully connected component.</p>
+        </section>
+
+        <section id="node-entity">
+          <h3>Node</h3>
+
+          <p>A node is a named topological entity representing one unambiguous, physically bounded area of a venue.</p>
+
+          <p>A node may represent a destination area, entrance area, doorway area, junction area, corridor-corner area, transport-landing area, decision area, or another navigation-relevant region.</p>
+
+          <p>The physical areas represented by any two distinct nodes must not overlap. Their spatial relationship must be one of:</p>
+
+          <ul>
+            <li><strong>Disconnected (<code>DC</code>)</strong>: the two areas do not share any physical point.</li>
+            <li><strong>Externally connected (<code>EC</code>)</strong>: the boundaries of the two areas touch, but their interiors do not intersect.</li>
+          </ul>
+
+          <p>Distinct nodes must therefore not partially overlap, represent equal physical areas, or contain one another. If a physical region would otherwise be represented by overlapping nodes, the author must partition it into non-overlapping node areas.</p>
+
+          <p>A node may participate in zero or more atomic paths and may be referenced by one or more transport stations. Its identifier is local to its containing map; outside that map, it is referenced using a qualified identifier such as <code>MapName::NodeName</code>.</p>
+        </section>
+
+        <section id="atomic-path-entity">
+          <h3>Atomic Path</h3>
+
+          <p>An atomic path is a directed or bidirectional local connection between exactly two nodes in the same map. It represents a single indivisible traversal segment for routing purposes and carries a traversal cost and optional metadata or access conditions.</p>
+
+          <p>An atomic path should not pass through another declared navigation-relevant node. If one physical passage connects <code>A</code>, <code>B</code>, and <code>C</code> in that order, the passage should normally be represented by <code>A-B</code> and <code>B-C</code>, not by one <code>A-C</code> atomic path.</p>
+
+          <p>An additional <code>A-C</code> atomic path is appropriate only when it represents a separate direct traversal that does not require passing through <code>B</code>.</p>
+
+          <p>TopoScript treats this as an authoring and data-quality responsibility; it does not geometrically detect intermediate or intersecting nodes.</p>
+        </section>
+
+        <section id="transport-entity">
+          <h3>Transport</h3>
+
+          <p>A transport describes a named mechanism for traveling between maps through a set of stations. Each station associates the transport with a node in a participating map.</p>
+
+          <p>TopoScript currently supports the transport types <code>Elevator</code>, <code>Escalator</code>, and <code>Stairs</code>. A transport may define traversal parameters, station access conditions, uncertainty information, and origin-to-destination ride policies.</p>
+
+          <p>A transport is distinct from an atomic path: an atomic path connects two nodes locally within one map, while a transport provides modeled traversal between station nodes belonging to different maps.</p>
+        </section>
+
+        <section id="station-entity">
+          <h3>Station</h3>
+
+          <p>A station is a transport-local stop associated with one qualified node in a map. It is the interface through which a route enters, leaves, or traverses a transport.</p>
+
+          <p>A station has a label local to its transport and references its map node using <code>MapName::NodeName</code>. It may carry transport-specific data and may independently restrict departure, arrival, or both.</p>
+
+          <p>A map node is a location in the venue topology; a station is a transport’s use of that location. Multiple transports may therefore refer to nodes on the same map without making those nodes themselves transports.</p>
+        </section>
+
+        <section id="management-domain-entity">
+          <h3>Management Domain</h3>
+
+          <p>A management domain is a named classification assigned to a map, usually representing the party, operational area, or access-policy authority responsible for that map.</p>
+
+          <p>Management domains allow transport ride policies to describe access between groups of maps without enumerating every map or station pair. Transport policies may refer to a management domain, an exact station label, or <code>any</code>.</p>
+
+          <p>A management domain is currently introduced by assigning its name to a map rather than through a separate domain declaration. Each compiled map has one effective management domain. A map-level override takes precedence over its configuration assignment, and an unassigned map uses the fallback domain <code>Misc</code>.</p>
+        </section>
+
+        <section id="parameter-and-constraint-entities">
+          <h3>Parameters and Constraints</h3>
+
+          <p>A parameter is an externally supplied typed value used while compiling a TopoScript project. Parameters allow the compiled topology and access permissions to depend on information about the intended routing context or user.</p>
+
+          <p>A constraint is a named collection of Boolean requirements evaluated against the available declarations and parameter values. Constraints can control whether atomic paths, transport stations, or transport rides are included or considered accessible.</p>
+
+          <p>In the current engine, parameters and constraints participate in compilation. They are not independently re-evaluated for every route request made against an existing compilation result. A different parameter context may therefore require a separately compiled result.</p>
+        </section>
+
+        <section id="route-entity">
+          <h3>Route</h3>
+
+          <p>A route is an ordered navigation result connecting an origin node to a destination node under a particular compiled parameter context and route-planning request.</p>
+
+          <p>Conceptually, a route alternates between visited nodes and traversals connecting those nodes. A traversal may correspond to an atomic walking path, a transport ride, a stair-climbing segment, or another engine-defined route-edge category.</p>
+
+          <p>The runtime representation contains an ordered sequence of globally qualified nodes and a corresponding ordered sequence of route edges. It may additionally contain navigation hints, required actions, and access-uncertainty information.</p>
+
+          <p>A returned route is expected to be traversable under the compiled hard constraints. When uncertain-access fallback is used, the route may contain explicitly disclosed segments whose availability could not be confirmed.</p>
+        </section>
+
+        <section id="entity-relationship-summary">
+          <h3>Relationship Summary</h3>
+
+          <ul>
+            <li>A building project supplies shared parameters, constraints, and definitions.</li>
+            <li>A building project contains maps and transports.</li>
+            <li>A map belongs to one effective management domain.</li>
+            <li>A map contains nodes and atomic paths between its local nodes.</li>
+            <li>A transport contains stations.</li>
+            <li>A station associates a transport with a qualified node in a map.</li>
+            <li>A transport may apply station-based or management-domain-based ride policies.</li>
+            <li>Compilation turns the project model into navigation and transport graphs.</li>
+            <li>Routing turns the compiled graphs into an ordered route result.</li>
+          </ul>
+        </section>
+      </section>
+
+      <section id="source-file-and-project-boundaries">
+        <h2>Source-File and Project Boundaries</h2>
+
+        <p>A TopoScript project is one independently compiled venue model composed of a building configuration, an optional root source, referenced topo-map sources, and referenced transport sources. The project may be supplied to the compiler as a filesystem directory or as an in-memory collection that maps filenames to source text.</p>
+
+        <dl>
+          <dt>Building configuration</dt>
+          <dd>The required <code>configuration.tcfg</code> or extensionless <code>configuration</code> source determines which maps and transports participate in the project.</dd>
+
+          <dt>Root source</dt>
+          <dd>The optional extensionless <code>root</code> source declares parameters, constraints, types, values, and functions shared with the project’s topo-map and transport sources.</dd>
+
+          <dt>Topo-map source</dt>
+          <dd>A referenced map named <code>Name</code> is loaded from <code>Name.tmap</code> or the extensionless source <code>Name</code>. A topo-map describes the locally connected topology of a floor, area, or other logical subdivision of the venue.</dd>
+
+          <dt>Transport source</dt>
+          <dd>A referenced vehicle named <code>Name</code> is loaded from <code>Name.ttr</code> or the extensionless source <code>Name</code>. A transport connects qualified nodes belonging to the project’s topo maps.</dd>
+        </dl>
+
+        <p>A source belongs to one of the top-level categories <code>building-includes</code>, <code>root</code>, <code>topo-map</code>, or <code>transport</code>. Authors should place one complete top-level definition in each source. Additional trailing top-level definitions are unsupported.</p>
+
+        <p>The building configuration may instantiate a reusable topo map with a <code>submap Instance using Base</code> declaration. The instance participates in the compiled project under the instance name while reusing the base topo-map definition.</p>
+
+        <p>Root declarations form the shared environment used when topo maps and transports are elaborated. Transport sources may resolve qualified map-node references such as <code>MapName::NodeName</code>. Topo-map sources describe their own local nodes and connections; cross-map traversal is described by transport sources.</p>
+
+        <p>The compilation project is the boundary of name resolution and graph construction. Sources from separate projects do not implicitly share declarations, maps, transports, or compiled graph state.</p>
+      </section>
+
+      <section id="lexical-structure">
+        <h2>Lexical Structure</h2>
+
+        <section id="case-sensitivity">
+          <h3>Case Sensitivity</h3>
+          <p>TopoScript is case-sensitive. Keywords, identifiers, and literal names must use their declared capitalization.</p>
+        </section>
+
+        <section id="whitespace-and-line-breaks">
+          <h3>Whitespace and Line Breaks</h3>
+          <p>Spaces and horizontal tabs separate tokens and are otherwise ignored. Line breaks are significant where the grammar uses them to separate declarations or elements; they are optional only where the applicable grammar rule permits them.</p>
+        </section>
+
+        <section id="comments">
+          <h3>Comments</h3>
+          <p>A line comment begins with <code>//</code> and continues to the end of the line. A block comment begins with <code>/*</code> and ends at the next <code>*/</code>. Block comments may span lines and do not nest. Comments are ignored during parsing.</p>
+        </section>
+
+        <section id="literals">
+          <h3>Literals</h3>
+          <ul>
+            <li>An integer literal contains one or more decimal digits.</li>
+            <li>A floating-point literal contains decimal digits, a decimal point, and further decimal digits. Exponent notation and omitted digits on either side of the point are not supported.</li>
+            <li>A negative number is parsed as unary negation applied to a numeric literal.</li>
+            <li>A Boolean literal is <code>true</code> or <code>false</code>.</li>
+            <li>A string literal is enclosed in double quotation marks and cannot contain a physical line break. TopoScript does not currently define general-purpose escape-sequence interpretation.</li>
+          </ul>
+        </section>
+      </section>
+
+      <section id="identifiers-and-qualified-names">
+        <h2>Identifiers and Qualified Names</h2>
+
+        <p>An identifier begins with an ASCII letter or underscore and continues with zero or more ASCII letters, decimal digits, or underscores. In grammar notation:</p>
+
+        <pre><code>[A-Za-z_][A-Za-z0-9_]*</code></pre>
+
+        <p>Identifiers are case-sensitive. Hyphens, spaces, punctuation, and non-ASCII letters are not permitted. Reserved TopoScript keywords cannot be used where the grammar expects an identifier.</p>
+
+        <p>A simple identifier consists of one identifier segment, such as <code>Lobby</code> or <code>elevator_hall</code>. A qualified name joins identifier segments with <code>::</code>, such as <code>Floor1::elevator_hall</code>.</p>
+
+        <p>A transport station reference to a map node must contain exactly two segments: the map identifier followed by the node identifier. The period in an expression such as <code>value.field</code> denotes record-field projection and is not a qualified-name separator.</p>
+
+        <p>The meaning and visibility of an identifier depend on the declaration and scope in which it appears. Qualification identifies a path through named entities; it does not import names from another TopoScript project.</p>
+      </section>
+
+      <section id="name-scopes-and-visibility">
+        <h2>Name Scopes and Visibility</h2>
+
+        <p>Visibility flows from the project root into its topo maps and transports. Parameters, constraints, types, values, and functions defined by the root are available while each child map and transport is compiled. Declarations made by a child are not visible to the root.</p>
+
+        <p>Declarations inside a topo-map or transport body are local to that body. They may use visible root declarations, and a local declaration with the same name shadows the outer declaration. Map-local declarations are not automatically visible to sibling maps or transports, and transport-local declarations are not exported.</p>
+
+        <p>Node identifiers belong to their containing map. Local topology declarations, including atomic paths and spatial annotations, may refer to nodes in that map by simple name. A transport refers to a map node by its qualified name. Station labels are local to their containing transport.</p>
+
+        <p>A braced root, topo-map, or transport body establishes its declaration scope. A braced expression block establishes a nested lexical scope for its local <code>let</code> bindings. Function parameters, lambda parameters, <code>let</code> expressions, recursive bindings, and fixed-point bindings are visible only in their respective bodies.</p>
+
+        <p>Not every pair of braces creates a name scope. Braces used for records, constraints, or building configuration group their contents but do not by themselves introduce general-purpose local bindings.</p>
+
+        <p>Definitions in the same declaration body may refer to one another without relying on source order, provided their dependency graph is acyclic. Cyclic definition dependencies are rejected.</p>
+      </section>
+
+      <section id="types">
+        <h2>Primitive and Domain-Specific Types</h2>
+
+        <h3>Primitive Types</h3>
+        <dl>
+          <dt><code>Int</code></dt>
+          <dd>A signed integer value.</dd>
+
+          <dt><code>Float</code></dt>
+          <dd>A floating-point value. TopoScript does not implicitly convert between <code>Int</code> and <code>Float</code> in general expressions.</dd>
+
+          <dt><code>Bool</code></dt>
+          <dd>One of the Boolean values <code>true</code> or <code>false</code>.</dd>
+
+          <dt><code>String</code></dt>
+          <dd>A sequence of characters represented by a string literal.</dd>
+        </dl>
+
+        <h3>Composite Types</h3>
+        <p>A record type associates named fields with types, as in <code>{name: String, level: Int}</code>. A record value must provide values compatible with its expected field types.</p>
+
+        <p>A list contains values of one element type. The element type is inferred from the elements. The current surface language provides no element-type annotation for an empty list, so an empty list cannot be evaluated successfully.</p>
+
+        <p>A function type is written <code>Input -&gt; Output</code>. Function arrows associate to the right, so <code>Int -&gt; Int -&gt; Bool</code> means <code>Int -&gt; (Int -&gt; Bool)</code>.</p>
+
+        <h3>Domain-Specific Entities</h3>
+        <p>Nodes, maps, transports, stations, management domains, constraints, buildings, and routes are domain-specific TopoScript entities, but they are not currently first-class value types that can be written in a type expression. <code>Elevator</code>, <code>Escalator</code>, and <code>Stairs</code> are transport kinds rather than general-purpose types.</p>
+
+        <p>Named type declarations and internal proposition or enumeration types are not yet consistently available through the surface language. They must not be treated as stable, user-defined domain types in the current reference version.</p>
+      </section>
+
+      <section id="expressions-and-evaluation">
+        <h2>Literals, Expressions, Operators, and Evaluation</h2>
+
+        <h3>Literals and Compound Values</h3>
+        <p>TopoScript provides integer, floating-point, Boolean, string, list, and record literals. List elements must have one common type. Record fields are evaluated as expressions and are accessed using field projection, such as <code>params.capacity</code>.</p>
+
+        <h3>Expressions</h3>
+        <ul>
+          <li>A name evaluates to the value bound to that name in the current scope.</li>
+          <li><code>if condition then a else b</code> evaluates the condition and then evaluates only the selected branch. The condition must be <code>Bool</code>, and both branches must produce the same type.</li>
+          <li><code>let name = value in body</code> evaluates the value and makes it available in the body.</li>
+          <li>A function may be applied as <code>f value</code> or <code>f(value)</code>. Multiple arguments are represented as curried applications.</li>
+          <li>Lambdas, recursive bindings, fixed-point expressions, and braced expression blocks are supported. Recursion must be introduced explicitly.</li>
+          <li>Functions use lexical scope and evaluate arguments before applying the function.</li>
+        </ul>
+
+        <h3>Operators</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Operator</th>
+              <th>Operands</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>-value</code></td>
+              <td><code>Int</code> or <code>Float</code></td>
+              <td>Numeric negation of the same type</td>
+            </tr>
+            <tr>
+              <td><code>+</code>, <code>-</code>, <code>*</code></td>
+              <td>Two <code>Int</code> values or two <code>Float</code> values</td>
+              <td>A value of the same numeric type</td>
+            </tr>
+            <tr>
+              <td><code>==</code></td>
+              <td>Two compatible <code>Int</code>, <code>Float</code>, <code>Bool</code>, or <code>String</code> values</td>
+              <td><code>Bool</code></td>
+            </tr>
+            <tr>
+              <td><code>&lt;</code>, <code>&gt;</code></td>
+              <td>Two <code>Int</code> values or two <code>Float</code> values</td>
+              <td><code>Bool</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Mixed <code>Int</code> and <code>Float</code> arithmetic is not implicitly converted. Division, <code>&lt;=</code>, and <code>&gt;=</code> appear in the current parser grammar but are not implemented by the surface-language evaluator and must not be used. General-purpose Boolean operators are not currently supported; <code>&amp;&amp;</code> inside a grouped <code>requires</code> annotation denotes a conjunction of named requirements rather than an ordinary expression operator.</p>
+
+        <h3>Precedence</h3>
+        <p>From highest to lowest, the principal precedence groups are atomic values and projection, function application, unary negation, multiplication, addition and subtraction, comparison, and control-flow expressions. Parentheses may be used to make grouping explicit.</p>
+
+        <h3>Evaluation Rules</h3>
+        <p>TopoScript expressions are deterministic and have no general-purpose side effects. Evaluation is strict except that an <code>if</code> expression evaluates only its selected branch. References must resolve, function arguments must match parameter types, record fields must exist when projected, and operators require compatible operand types.</p>
+
+        <p>Definitions in a root, map, or transport body are evaluated according to their dependencies rather than their textual order. Constraints are evaluated during compilation. Type annotations on <code>let</code> declarations and declared return types on <code>def</code> declarations are parsed but are not yet consistently enforced by the current implementation.</p>
+      </section>
+
+      <section id="stability-boundaries">
+        <h2>Stability Boundaries</h2>
+
+        <h3>Implementation-Defined Routing Behavior</h3>
+        <p>TopoScript defines the compiled topology and access state. Path selection, accessibility-route calculation, uncertain-access handling, routing preferences, heuristics, and tie-breaking are defined by the TopoNavi Engine implementation rather than by the core language.</p>
+
+        <h3>Application-Defined Annotation Semantics</h3>
+        <p>Custom node and path annotations are preserved as structured attributes and may be exposed as JSON-compatible values by an API. Except for reserved attributes recognized by TopoNavi Engine, their meaning and handling are determined by the consuming application.</p>
+
+        <h3>Experimental Coordinate Estimation</h3>
+        <p>Coordinate estimation derives approximate spatial coordinates from topological and spatial-relation declarations. This facility is experimental; its inputs, algorithm, output, and availability may change significantly, and the facility may be removed if the approach does not prove reliable.</p>
+      </section>
+
+      <section id="scope-non-goals-and-safety">
+        <h2>Intended Scope, Non-Goals, and Safety Assumptions</h2>
+
+        <p>TopoScript is intended for indoor route planning over modeled, pedestrian-scale paths and building transportation systems. It is not a road-navigation model, a surveying format, or a metric geometric source of truth.</p>
+
+        <p>TopoScript does not require GIS data or metric coordinates. Coordinates estimated or inferred by the engine are derived navigation metadata and must not be treated as surveyed physical coordinates.</p>
+
+        <p>TopoNavi has not been validated as an emergency-response, evacuation, or life-safety system. Its routes must not supersede official signage, emergency procedures, applicable accessibility requirements, or the judgment of first responders and responsible venue personnel.</p>
+
+        <p>Map authors and publishers are responsible for obtaining appropriate authorization, establishing data provenance, maintaining map accuracy, representing access controls correctly, and ensuring that venue information is collected, published, and used lawfully.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>
