@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title description">
+  <title id="title">Management-Domain Attachment Diagram Placeholder</title>
+  <desc id="description">A placeholder for a future diagram showing management domains attached to direct maps and reusable map instances.</desc>
+  <rect width="1200" height="675" fill="#f3f4f6"/>
+  <rect x="24" y="24" width="1152" height="627" fill="none" stroke="#6b7280" stroke-width="4" stroke-dasharray="16 12"/>
+  <text x="600" y="310" text-anchor="middle" font-family="sans-serif" font-size="42" fill="#111827">Management-Domain Attachment</text>
+  <text x="600" y="370" text-anchor="middle" font-family="sans-serif" font-size="28" fill="#4b5563">Diagram placeholder</text>
+</svg>

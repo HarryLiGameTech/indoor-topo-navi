@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Building-Global Declarations</title>
+</head>
+<body>
+  <main>
+    <article id="global-declarations">
+      <header>
+        <h1>Building-Global Declarations and Compilation Inputs</h1>
+        <p>The optional extensionless <code>root</code> source establishes declarations shared by every topo map and transport in one TopoScript project. It does not create a map, node, path, transport, or navigable building area.</p>
+        <p>Project membership remains the responsibility of <a href="building-includes.html"><code>building-includes</code></a>. For the general relationship among buildings, maps, transports, parameters, and constraints, see <a href="../language/language-and-execution-model.html#major-language-entities">Major Language Entities and Their Relationships</a>.</p>
+      </header>
+
+      <section id="root-source">
+        <h2>The Root Source</h2>
+        <p>The root source is named <code>root</code> and contains one root declaration:</p>
+        <pre><code>root SkyrimTower(
+  officeAccess: Bool,
+  tradingFloorAccess: Bool,
+  carryingWeight: Float,
+  timeOfDayInSeconds: Int
+) {
+  // Building-global declarations
+}</code></pre>
+        <p>The identifier after <code>root</code> names the compiled root declaration. If a project needs neither declared compilation inputs nor shared declarations, the root source may be omitted. Source discovery and project layout are defined in <a href="building-includes.html#project-sources">Project Sources</a>.</p>
+      </section>
+
+      <section id="declaration-inventory">
+        <h2>Documented Global Declarations</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Declaration</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Root parameter</td>
+              <td>Names an external value expected for compilation.</td>
+            </tr>
+            <tr>
+              <td><code>def</code></td>
+              <td>Defines a shared function or calculated value.</td>
+            </tr>
+            <tr>
+              <td><code>constraint</code></td>
+              <td>Gives one or more Boolean requirements a reusable name.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Root-level <code>let</code> and <code>type</code> declarations are present in the current parser, but their intended long-term global role is under design review. They are not part of the stable building-global surface documented here.</p>
+        <p>Although the shared body grammar can parse some topology or transport constructs inside a root, the root compiler does not elaborate them. Nodes, paths, stations, and <code>ride-from</code> declarations must be placed in their respective map or transport sources.</p>
+      </section>
+
+      <section id="compilation-inputs">
+        <h2>Compilation Inputs</h2>
+        <p>Root parameters declare values that the containing application is expected to supply when compiling the project:</p>
+        <pre><code>root SkyrimTower(
+  isInEmergency: Bool,
+  officeAccess: Bool,
+  carryingWeight: Float,
+  timeOfDayInSeconds: Int
+) {
+}</code></pre>
+        <p>The reliably supported external parameter types are <code>Bool</code>, <code>Int</code>, <code>Float</code>, and <code>String</code>. Their language meanings are defined in <a href="../language/language-and-execution-model.html#types">Primitive and Domain-Specific Types</a>.</p>
+        <p>The API compiler accepts host Boolean, integer, long-integer, single-precision floating-point, double-precision floating-point, and string values. Lists, records, functions, and arbitrary host objects are not currently accepted as external compilation inputs.</p>
+      </section>
+
+      <section id="required-values-and-defaults">
+        <h2>Required Values and Defaults</h2>
+        <p>TopoScript does not currently provide parameter-default syntax. Default values are planned for a near-term language update.</p>
+        <p>The following intended form is not yet valid:</p>
+        <pre><code>root Building(
+  officeAccess: Bool = false
+) {
+}</code></pre>
+        <p>Until defaults are implemented, an application should supply every declared parameter used by the project.</p>
+        <p>The current compiler does not yet validate the root parameter list as a strict invocation contract:</p>
+        <ul>
+          <li>a missing parameter is detected only if evaluation reads it;</li>
+          <li>an unused declared parameter may be omitted without an error;</li>
+          <li>an undeclared extra parameter is accepted and becomes visible to child sources;</li>
+          <li>a supplied value is not checked directly against the type written in the root parameter list.</li>
+        </ul>
+        <p>These behaviors are implementation limitations, not recommended authoring practices. Applications should supply exactly the declared parameters with values matching their declared types.</p>
+      </section>
+
+      <section id="global-functions">
+        <h2>Global Functions</h2>
+        <p>A root-level <code>def</code> defines reusable calculation logic visible to maps and transports:</p>
+        <pre><code>root RunningExample() {
+  def timeWhenRushing(stdCost: Float, timeToRun1KmInSeconds: Int): Float = {
+    stdCost * (timeToRun1KmInSeconds / 300) // Assume 1km=5mins is the standard pace
+  }
+}</code></pre>
+        <p>A map can use the function when calculating path data:</p>
+        <pre><code>topo-map Concourse() {
+  let params = {}
+
+  topo-node north_entrance
+  topo-node platform_lobby
+
+  atomic-path [north_entrance &lt;-&gt; platform_lobby] {
+    cost = timeWhenRushing(10.0, 240)
+  }
+}</code></pre>
+        <p>Function definitions are evaluated according to their dependency graph rather than their textual order. A cyclic dependency fails compilation. Parameter annotations participate in function construction, while declared return types are parsed but are not yet consistently enforced.</p>
+      </section>
+
+      <section id="global-constraints">
+        <h2>Global Constraints</h2>
+        <p>A constraint gives a Boolean compilation requirement a reusable name:</p>
+        <pre><code>root SkyrimTower(
+  officeAccess: Bool,
+  carryingWeight: Float
+) {
+  constraint OfficeAccess {
+    require officeAccess
+  }
+
+  constraint CarryingGoods {
+    require carryingWeight &gt; 0.0
+  }
+}</code></pre>
+        <p>Every <code>require</code> clause must evaluate to <code>Bool</code>. Multiple clauses form a conjunction:</p>
+        <pre><code>constraint AuthorizedOfficeDelivery {
+  require officeAccess
+  require carryingWeight &gt; 0.0
+}</code></pre>
+        <p><code>AuthorizedOfficeDelivery</code> is satisfied only when every clause is true. An empty constraint is currently accepted and evaluates to <code>true</code>, but should be avoided because it communicates no policy.</p>
+        <p>A complete applied example is available in <a href="../examples/skyrim-tower.html#root-access-policy">SkyrimTower’s Operational Access Inputs</a>.</p>
+      </section>
+
+      <section id="constraint-visibility">
+        <h2>Constraint Visibility</h2>
+        <p>A root constraint is visible to every compiled topo map and transport. A child-local declaration may shadow a global name. The general scope rules are defined in <a href="../language/language-and-execution-model.html#name-scopes-and-visibility">Name Scopes and Visibility</a>.</p>
+        <p>A constraint has no effect merely because it exists. It affects the compiled building only when referenced by an access annotation or ride policy.</p>
+        <pre><code>atomic-path [public_hall &lt;-&gt; staff_hall] {
+  cost = 4.0
+} requires OfficeAccess</code></pre>
+        <pre><code>station F50 at OfficeLevel50::passenger_lift {
+  location = 222.0,
+  departureRate = 0.055
+} requires TradingFloorAccess on Arrive</code></pre>
+        <pre><code>ride-from any to OfficeDomain requires OfficeAccess</code></pre>
+      </section>
+
+      <section id="constraint-evaluation-order">
+        <h2>Constraint Evaluation Order</h2>
+        <p>Root constraints are evaluated during compilation and in source order. They should depend directly on supplied compilation parameters and literals.</p>
+        <p>In the current implementation, root constraints are evaluated before root-level function definitions. A root constraint therefore cannot call a root <code>def</code>, even if the function appears earlier in the source. This differs from map-local and transport-local constraints, which are evaluated after their local definitions.</p>
+        <p>A constraint may refer to a previously evaluated constraint, but directly listing the required predicates is usually clearer. A reference to a later constraint is unresolved at the time of evaluation.</p>
+      </section>
+
+      <section id="hard-constraint-effects">
+        <h2>Effects of Hard Constraints</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Attachment</th>
+              <th>Effect when unsatisfied</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Atomic path</td>
+              <td>The path is omitted from the compiled topology.</td>
+            </tr>
+            <tr>
+              <td>Unscoped station requirement</td>
+              <td>Both arrival and departure are prohibited.</td>
+            </tr>
+            <tr>
+              <td>Station requirement <code>on Arrive</code></td>
+              <td>Arrival is prohibited; departure remains possible.</td>
+            </tr>
+            <tr>
+              <td>Station requirement <code>on Depart</code></td>
+              <td>Departure is prohibited; arrival remains possible.</td>
+            </tr>
+            <tr>
+              <td><code>ride-from</code> requirement</td>
+              <td>Matching directed transport rides are omitted.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>These are compile-time effects. Detailed attachment semantics belong to the topology, transport, and routing articles. A <code>subject-to</code> annotation is different: it records uncertain access rather than enforcing a hard prohibition. The tutorial examples compare the two models in <a href="../examples/feature-by-feature-tutorials.html#uncertain-access">Representing Uncertain Access</a>.</p>
+      </section>
+
+      <section id="management-domains">
+        <h2>Management Domains</h2>
+        <p>A management domain is a building-global map classification, but it is not declared as a root value. A domain name is introduced by assigning it to a submap:</p>
+        <pre><code>building-includes {
+  submap Lobby managed-by PublicDomain
+  submap OfficeLevel28 managed-by OfficeDomain
+}</code></pre>
+        <p>A topo map may replace its configured domain:</p>
+        <pre><code>topo-map OfficeLevel28() override-managed-by TradingDomain {
+  let params = {}
+  topo-node elevator_lobby
+}</code></pre>
+        <p>The effective domain is the topo-map override when present, otherwise the configuration assignment, otherwise the fallback domain <code>Misc</code>. Each compiled map has one effective domain.</p>
+        <p>Domain attachment is introduced in <a href="building-includes.html#management-domains">Management-Domain Attachment</a>. A realistic multi-domain example is provided by <a href="../examples/feature-by-feature-tutorials.html#management-domains">Management Domains and Ride Policies</a>.</p>
+      </section>
+
+      <section id="access-policy-model">
+        <h2>Access and Ride-Policy Model</h2>
+        <p>TopoScript has no standalone global access-policy declaration. The model combines:</p>
+        <ol>
+          <li>a global or local named constraint;</li>
+          <li>a <code>requires</code> attachment on a path or station; or</li>
+          <li>a <code>ride-from</code> declaration inside a transport.</li>
+        </ol>
+        <pre><code>root Building(hasHotelAccess: Bool) {
+  constraint HotelAccess {
+    require hasHotelAccess
+  }
+}</code></pre>
+        <pre><code>ride-from any to HotelDomain requires HotelAccess</code></pre>
+        <p>The root defines the reusable condition. The map or transport defines where that condition applies.</p>
+      </section>
+
+      <section id="building-metadata-and-tags">
+        <h2>Building Metadata and Global Tags</h2>
+        <p>TopoScript currently has no dedicated building-metadata declaration for an address, operator, display name, geographic location, publication version, or similar project-level information. Such information must be maintained by the containing application or project package.</p>
+        <p>There is likewise no global tag declaration or tag registry. Tags appearing in node or path records are application-facing annotation values rather than globally declared language entities. See <a href="../language/language-and-execution-model.html#stability-boundaries">Stability Boundaries</a>.</p>
+      </section>
+
+      <section id="global-names">
+        <h2>Global Names</h2>
+        <p>Parameter, function, and constraint names belong to the root’s project-global scope. Authors should keep each name unique and avoid collisions between declaration categories.</p>
+        <p>The current compiler may silently replace colliding global bindings. Name collision must not be used as a policy mechanism. Child-local shadowing is supported by the general lexical-scope model, but should be deliberate and clearly documented.</p>
+      </section>
+
+      <section id="compilation-versus-routing">
+        <h2>Compilation Time and Routing Time</h2>
+        <p>Root parameters and constraints are evaluated while compiling the building:</p>
+        <pre><code>TopoScript sources
+        +
+compilation-input values
+        |
+        v
+fixed compiled graph and access state
+        |
+        v
+one or more route requests</code></pre>
+        <p>A route request does not independently re-evaluate root constraints. Changing <code>officeAccess</code>, <code>timeOfDayInSeconds</code>, or another compilation input requires a separately compiled result for that input context.</p>
+        <p>Routing preferences and banned tags belong to the route request rather than the root. The full lifecycle is defined in <a href="../language/language-and-execution-model.html#language-lifecycle">Language Lifecycle</a>.</p>
+      </section>
+
+      <section id="compiled-effects">
+        <h2>Effects on the Compiled Building</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Global feature</th>
+              <th>Possible effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Parameter</td>
+              <td>Supplies data used by expressions and constraints.</td>
+            </tr>
+            <tr>
+              <td><code>def</code></td>
+              <td>Supplies reusable calculation logic used during map or transport construction.</td>
+            </tr>
+            <tr>
+              <td>Constraint attached to a path</td>
+              <td>Changes graph connectivity.</td>
+            </tr>
+            <tr>
+              <td>Constraint attached to a station</td>
+              <td>Changes arrival and departure permission.</td>
+            </tr>
+            <tr>
+              <td>Constraint attached to <code>ride-from</code></td>
+              <td>Changes available directed transport rides.</td>
+            </tr>
+            <tr>
+              <td>Management domain</td>
+              <td>Changes which maps match a domain-based ride policy.</td>
+            </tr>
+            <tr>
+              <td>Unused declaration</td>
+              <td>Has no direct effect.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Global declarations are not returned as navigable route steps. Their observable result is the building model produced from them.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

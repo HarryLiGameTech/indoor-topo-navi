@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — SkyrimTower Mock Building</title>
+</head>
+<body>
+  <main>
+    <article id="skyrim-tower">
+      <header>
+        <h1>SkyrimTower Mock Building</h1>
+        <p><strong>Status:</strong> Draft — transport specification; topo-map sources deferred</p>
+      </header>
+
+      <section id="scope">
+        <h2>Scope</h2>
+        <p>SkyrimTower is a synthetic mixed-use supertall building used to demonstrate stable TopoScript features in a realistic, integrated project. This article currently defines the building program, map-naming assumptions, compilation-time access inputs, station-level controls, and the complete elevator inventory.</p>
+        <p>Topo-map bodies are intentionally excluded from this draft. Every qualified station reference therefore establishes a node that the corresponding topo map must declare later.</p>
+      </section>
+
+      <section id="building-program">
+        <h2>Building Program</h2>
+        <dl>
+          <dt>Levels 72–75</dt><dd>Observatory</dd>
+          <dt>Level 71</dt><dd>Mechanical or refuge level</dd>
+          <dt>Levels 52–70</dt><dd>Hotel, with the hotel lobby on Level 55</dd>
+          <dt>Level 51</dt><dd>Mechanical, refuge, and hotel-service transfer level</dd>
+          <dt>Levels 31–50</dt><dd>Upper office floors</dd>
+          <dt>Level 30</dt><dd>Office sky lobby</dd>
+          <dt>Level 29</dt><dd>Mechanical or refuge level</dd>
+          <dt>Levels 8–28</dt><dd>Lower office floors</dd>
+          <dt>Level 7</dt><dd>Separate mall-only upper level</dd>
+          <dt>Levels 2–6</dt><dd>Mall, with the principal tower connection on Level 5</dd>
+          <dt>Level 1</dt><dd>Main lobby and lower mall connection</dd>
+          <dt>Level B1</dt><dd>Logistics</dd>
+          <dt>Levels B2–B3</dt><dd>Carpark</dd>
+        </dl>
+        <p>The highest modeled landing is approximately 329.9 metres above the Level 1 datum. Coordinates remain unnecessary; station <code>location</code> values supply the vertical positions required by elevator calculations.</p>
+      </section>
+
+      <section id="map-identifiers">
+        <h2>Map-Identifier Contract</h2>
+        <p>The later topo-map sources must use the identifiers referenced by the transport files. Important special cases are:</p>
+        <ul>
+          <li><code>MainLobby</code> represents the connected tower-and-mall area on Level 1.</li>
+          <li><code>SharedLevel5</code> represents the connected tower-and-mall area on Level 5.</li>
+          <li><code>MallLevel7</code> is separate from the main tower and is served only through mall circulation.</li>
+          <li><code>RefugeLevel29</code>, <code>ServiceRefugeLevel51</code>, and <code>RefugeLevel71</code> represent the omitted mechanical or refuge floors.</li>
+          <li>Every station reference of the form <code>MapName::landing_name</code> requires a matching node in <code>MapName</code>.</li>
+        </ul>
+
+        <p>The future submap declarations must assign these management domains:</p>
+        <ul>
+          <li><code>CarparkDomain</code>: Levels B3 and B2.</li>
+          <li><code>LogisticsDomain</code>: Level B1.</li>
+          <li><code>PublicDomain</code>: the main lobby and shared Level 5.</li>
+          <li><code>MallDomain</code>: Mall Levels 2–4 and 6–7. Shared Level 5 remains in <code>PublicDomain</code> because it is a single connected tower–mall map.</li>
+          <li><code>OfficeDomain</code>: occupied office floors and the Level 30 sky lobby.</li>
+          <li><code>RefugeDomain</code>: Levels 29, 51, and 71.</li>
+          <li><code>HotelDomain</code>: Levels 52–70.</li>
+          <li><code>ObservatoryDomain</code>: Levels 72–75.</li>
+        </ul>
+      </section>
+
+      <section id="root-access-policy">
+        <h2>Operational Access Inputs</h2>
+        <p>The elevator systems use destination-sensitive ride policies and station-specific access controls based on emergency state, destination access, carried goods, mall operation hours, and trading-floor authorization. Physical operator control remains part of the fire-service and office-service elevator descriptions, but is not represented as a routing parameter.</p>
+        <p><code>root</code></p>
+        <pre><code>root SkyrimTower(
+  isInEmergency: Bool,
+  officeAccess: Bool,
+  tradingFloorAccess: Bool,
+  hotelAccess: Bool,
+  observatoryAccess: Bool,
+  logisticsAccess: Bool,
+  carryingWeight: Float,
+  timeOfDayInSeconds: Int
+) {
+  constraint InEmergency {
+    require isInEmergency
+  }
+
+  constraint OfficeAccess {
+    require officeAccess
+  }
+
+  constraint TradingFloorAccess {
+    require tradingFloorAccess
+  }
+
+  constraint HotelAccess {
+    require hotelAccess
+  }
+
+  constraint ObservatoryAccess {
+    require observatoryAccess
+  }
+
+  constraint LogisticsAccess {
+    require logisticsAccess
+  }
+
+  constraint CarryingGoods {
+    require carryingWeight &gt; 0.0
+  }
+
+  constraint InMallOperationHours {
+    require timeOfDayInSeconds &gt; 35999
+    require timeOfDayInSeconds &lt; 82801
+  }
+}</code></pre>
+        <p><code>CarryingGoods</code> converts the numeric rule <code>carryingWeight &gt; 0.0</code> into a named constraint usable by <code>ride-from</code>. <code>timeOfDayInSeconds</code> is an integer number of seconds since midnight. Because the current language supports strict comparisons, the bounds above admit every integer from 36000 (10:00:00) through 82800 (23:00:00), inclusive. The hotel service elevators intentionally have no operator or card-reader policy.</p>
+      </section>
+
+      <section id="building-composition">
+        <h2>Building Composition Fragment</h2>
+        <p>The vehicle declarations below are ready for the eventual <code>configuration.tcfg</code>. Submap declarations are deliberately deferred, so this fragment is not yet a complete compilable building project.</p>
+        <pre><code>building-includes {
+  // Submap declarations will be added with the floor topology.
+  vehicle OfficeZone1
+  vehicle OfficeZone2
+  vehicle OfficeExpress
+  vehicle OfficeZone3
+  vehicle OfficeZone4
+  vehicle HotelExpress
+  vehicle HotelLocal
+  vehicle ObservatoryExpress
+  vehicle ObservatoryLocal
+  vehicle MainBuildingCarpark
+  vehicle MallMain
+  vehicle MallFreight
+  vehicle FireService
+  vehicle OfficeServ
+  vehicle HotelServExpress
+  vehicle HotelServLocal
+}</code></pre>
+      </section>
+
+      <section id="elevator-summary">
+        <h2>Elevator Summary</h2>
+        <table>
+          <thead>
+            <tr><th>System</th><th>Stops</th><th>Cars</th><th>Maximum velocity (m/s)</th><th>Ride access</th></tr>
+          </thead>
+          <tbody>
+          <tr><td><code>OfficeZone1</code></td><td>F1, F5, F8, F9, F10, F11, F12, F13, F14, F15</td><td>4</td><td>4.0</td><td>No ride policy</td></tr>
+          <tr><td><code>OfficeZone2</code></td><td>F1, F5, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, F25, F26, F27, F28</td><td>5</td><td>5.0</td><td>F18 locked; F28 requires trading-floor access on arrival</td></tr>
+          <tr><td><code>OfficeExpress</code></td><td>F1, F5, F30</td><td>4</td><td>7.0</td><td>No ride policy</td></tr>
+          <tr><td><code>OfficeZone3</code></td><td>F30, F31, F32, F33, F34, F35, F36, F37, F38, F39, F40</td><td>4</td><td>4.0</td><td>No ride policy</td></tr>
+          <tr><td><code>OfficeZone4</code></td><td>F30, F40, F41, F42, F43, F44, F45, F46, F47, F48, F49, F50</td><td>4</td><td>5.0</td><td>F50 requires trading-floor access on arrival</td></tr>
+          <tr><td><code>HotelExpress</code></td><td>F1, F55</td><td>4</td><td>10.0</td><td>No ride policy</td></tr>
+          <tr><td><code>HotelLocal</code></td><td>F52, F53, F54, F55, F56, F57, F58, F59, F60, F61, F62, F63, F64, F65, F66, F67, F68, F69, F70</td><td>6</td><td>5.0</td><td>No ride policy</td></tr>
+          <tr><td><code>ObservatoryExpress</code></td><td>F5, F72, F73</td><td>4</td><td>12.0</td><td>No ride policy</td></tr>
+          <tr><td><code>ObservatoryLocal</code></td><td>F72, F73, F74, F75</td><td>1</td><td>3.0</td><td>No ride policy</td></tr>
+          <tr><td><code>MainBuildingCarpark</code></td><td>B3, B2, F1, F5</td><td>3</td><td>3.0</td><td>No ride policy</td></tr>
+          <tr><td><code>MallMain</code></td><td>B3, B2, F1, F2, F3, F4, F5, F6, F7</td><td>4</td><td>2.5</td><td>Mall operation-hours policy</td></tr>
+          <tr><td><code>MallFreight</code></td><td>B3, B2, B1, F1, F2, F3, F4, F5, F6</td><td>1</td><td>0.8</td><td>Mall operation-hours policy</td></tr>
+          <tr><td><code>FireService</code></td><td>B3, B2, B1, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, F25, F26, F27, F28, F29, F30, F31, F32, F33, F34, F35, F36, F37, F38, F39, F40, F41, F42, F43, F44, F45, F46, F47, F48, F49, F50, F51, F52, F53, F54, F55, F56, F57, F58, F59, F60, F61, F62, F63, F64, F65, F66, F67, F68, F69, F70, F71, F72, F73, F74, F75</td><td>2</td><td>6.0</td><td>Refuge-emergency, mall-hours, and destination-access policies</td></tr>
+          <tr><td><code>OfficeServ</code></td><td>B1, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, F25, F26, F27, F28, F29, F30, F31, F32, F33, F34, F35, F36, F37, F38, F39, F40, F41, F42, F43, F44, F45, F46, F47, F48, F49, F50</td><td>2</td><td>3.0</td><td>Carried-goods and destination-domain policies</td></tr>
+          <tr><td><code>HotelServExpress</code></td><td>B2, B1, F51, F52, F53, F54, F55, F56, F57, F58, F59, F60, F61, F62, F63, F64, F65, F66, F67, F68, F69, F70</td><td>2</td><td>4.0</td><td>No ride policy</td></tr>
+          <tr><td><code>HotelServLocal</code></td><td>F51, F52, F53, F54, F55, F56, F57, F58, F59, F60, F61, F62, F63, F64, F65, F66, F67, F68, F69, F70</td><td>1</td><td>2.5</td><td>No ride policy</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="transport-source-conventions">
+        <h2>Transport Source Conventions</h2>
+        <p>All elevator stations use globally qualified node identifiers and explicit vertical locations. Each <code>departureRate</code> distribution is normalized approximately to one within its elevator system. Transfer floors receive greater rates than ordinary destination floors.</p>
+        <p>The unannotated car counts and motion parameters are realistic modeling choices for this synthetic example, not universal engineering requirements. They may be refined when representative route outputs are calibrated.</p>
+      </section>
+
+      <section id="ride-policy-model">
+        <h2>Ride-Policy Model</h2>
+        <p>A rule such as <code>ride-from any to OfficeDomain</code> applies to every origin station on the transport and every destination station whose map belongs to <code>OfficeDomain</code>. The rule does not use a floor identifier as its operand.</p>
+        <p>The mall elevators require <code>InMallOperationHours</code> for destinations in <code>MallDomain</code>. Their shared Level 5 station is covered by a separate station-specific rule because its map belongs to <code>PublicDomain</code>.</p>
+        <p>The fire-service elevator does not generally require an active emergency. Carpark and public destinations are unrestricted, mall destinations require normal mall operation hours, and controlled operational domains require their respective access permissions. Only destinations in <code>RefugeDomain</code> require <code>InEmergency</code>.</p>
+        <p>The office-service elevator distinguishes office, logistics, and refuge destinations. Every ride requires <code>CarryingGoods</code>; office and logistics destinations additionally require access to their respective domains.</p>
+        <p>The passenger stations on trading Floors 28 and 50 require <code>TradingFloorAccess</code> only on arrival; an unauthorized user may still depart from either floor. The passenger station on Office Level 18 is <code>out-of-order</code>, which prohibits both arrival and departure through that station.</p>
+      </section>
+
+      <section id="office-zone1">
+        <h2>1. OfficeZone1</h2>
+        <p>Serves the lobby, the Level 5 tower–mall connection, and Office Levels 8–15.</p>
+        <p>The selected parameters use 4 cars, a maximum velocity of 4.0 metres per second, acceleration of 1.0 metres per second squared, duty 1600, and capacity 21.</p>
+        <p><code>OfficeZone1.ttr</code></p>
+        <pre><code>transport OfficeZone1 is Elevator {
+  let params = {
+    maxVelocity = 4.0,
+    acceleration = 1.0,
+    duty = 1600,
+    capacity = 21,
+    carAmount = 4
+  }
+
+  let displayName = "Office Zone 1 elevators"
+
+  station F1 at MainLobby::office_zone_1_landing {location = 0.0, departureRate = 0.35000}
+  station F5 at SharedLevel5::office_zone_1_landing {location = 24.0, departureRate = 0.15000}
+  station F8 at OfficeLevel8::office_zone_1_landing {location = 42.0, departureRate = 0.06250}
+  station F9 at OfficeLevel9::office_zone_1_landing {location = 46.2, departureRate = 0.06250}
+  station F10 at OfficeLevel10::office_zone_1_landing {location = 50.4, departureRate = 0.06250}
+  station F11 at OfficeLevel11::office_zone_1_landing {location = 54.6, departureRate = 0.06250}
+  station F12 at OfficeLevel12::office_zone_1_landing {location = 58.8, departureRate = 0.06250}
+  station F13 at OfficeLevel13::office_zone_1_landing {location = 63.0, departureRate = 0.06250}
+  station F14 at OfficeLevel14::office_zone_1_landing {location = 67.2, departureRate = 0.06250}
+  station F15 at OfficeLevel15::office_zone_1_landing {location = 71.4, departureRate = 0.06250}
+}</code></pre>
+      </section>
+
+      <section id="office-zone2">
+        <h2>2. OfficeZone2</h2>
+        <p>Serves the lobby, Level 5, and Office Levels 15–28. Level 15 provides overlap with OfficeZone1.</p>
+        <p>The selected parameters use 5 cars, a maximum velocity of 5.0 metres per second, acceleration of 1.0 metres per second squared, duty 1600, and capacity 21.</p>
+        <p><code>OfficeZone2.ttr</code></p>
+        <pre><code>transport OfficeZone2 is Elevator {
+  let params = {
+    maxVelocity = 5.0,
+    acceleration = 1.0,
+    duty = 1600,
+    capacity = 21,
+    carAmount = 5
+  }
+
+  let displayName = "Office Zone 2 elevators"
+
+  station F1 at MainLobby::office_zone_2_landing {location = 0.0, departureRate = 0.30000}
+  station F5 at SharedLevel5::office_zone_2_landing {location = 24.0, departureRate = 0.14000}
+  station F15 at OfficeLevel15::office_zone_2_landing {location = 71.4, departureRate = 0.04000}
+  station F16 at OfficeLevel16::office_zone_2_landing {location = 75.6, departureRate = 0.04000}
+  station F17 at OfficeLevel17::office_zone_2_landing {location = 79.8, departureRate = 0.04000}
+  station F18 at OfficeLevel18::office_zone_2_landing {location = 84.0, departureRate = 0.04000} out-of-order
+  station F19 at OfficeLevel19::office_zone_2_landing {location = 88.2, departureRate = 0.04000}
+  station F20 at OfficeLevel20::office_zone_2_landing {location = 92.4, departureRate = 0.04000}
+  station F21 at OfficeLevel21::office_zone_2_landing {location = 96.6, departureRate = 0.04000}
+  station F22 at OfficeLevel22::office_zone_2_landing {location = 100.8, departureRate = 0.04000}
+  station F23 at OfficeLevel23::office_zone_2_landing {location = 105.0, departureRate = 0.04000}
+  station F24 at OfficeLevel24::office_zone_2_landing {location = 109.2, departureRate = 0.04000}
+  station F25 at OfficeLevel25::office_zone_2_landing {location = 113.4, departureRate = 0.04000}
+  station F26 at OfficeLevel26::office_zone_2_landing {location = 117.6, departureRate = 0.04000}
+  station F27 at OfficeLevel27::office_zone_2_landing {location = 121.8, departureRate = 0.04000}
+  station F28 at OfficeLevel28::office_zone_2_landing {location = 126.0, departureRate = 0.04000} requires TradingFloorAccess on Arrive
+}</code></pre>
+      </section>
+
+      <section id="office-express">
+        <h2>3. OfficeExpress</h2>
+        <p>Runs directly to the Office Level 30 sky lobby from the lobby and Level 5.</p>
+        <p>The selected parameters use 4 cars, a maximum velocity of 7.0 metres per second, acceleration of 1.2 metres per second squared, duty 1800, and capacity 24.</p>
+        <p><code>OfficeExpress.ttr</code></p>
+        <pre><code>transport OfficeExpress is Elevator {
+  let params = {
+    maxVelocity = 7.0,
+    acceleration = 1.2,
+    duty = 1800,
+    capacity = 24,
+    carAmount = 4
+  }
+
+  let displayName = "Office sky-lobby express elevators"
+
+  station F1 at MainLobby::office_express_landing {location = 0.0, departureRate = 0.45000}
+  station F5 at SharedLevel5::office_express_landing {location = 24.0, departureRate = 0.15000}
+  station F30 at OfficeSkyLobby30::office_express_landing {location = 138.0, departureRate = 0.40000}
+}</code></pre>
+      </section>
+
+      <section id="office-zone3">
+        <h2>4. OfficeZone3</h2>
+        <p>Distributes passengers from the Level 30 sky lobby to Office Levels 31–40.</p>
+        <p>The selected parameters use 4 cars, a maximum velocity of 4.0 metres per second, acceleration of 1.0 metres per second squared, duty 1600, and capacity 21.</p>
+        <p><code>OfficeZone3.ttr</code></p>
+        <pre><code>transport OfficeZone3 is Elevator {
+  let params = {
+    maxVelocity = 4.0,
+    acceleration = 1.0,
+    duty = 1600,
+    capacity = 21,
+    carAmount = 4
+  }
+
+  let displayName = "Office Zone 3 elevators"
+
+  station F30 at OfficeSkyLobby30::office_zone_3_landing {location = 138.0, departureRate = 0.40000}
+  station F31 at OfficeLevel31::office_zone_3_landing {location = 142.2, departureRate = 0.06000}
+  station F32 at OfficeLevel32::office_zone_3_landing {location = 146.4, departureRate = 0.06000}
+  station F33 at OfficeLevel33::office_zone_3_landing {location = 150.6, departureRate = 0.06000}
+  station F34 at OfficeLevel34::office_zone_3_landing {location = 154.8, departureRate = 0.06000}
+  station F35 at OfficeLevel35::office_zone_3_landing {location = 159.0, departureRate = 0.06000}
+  station F36 at OfficeLevel36::office_zone_3_landing {location = 163.2, departureRate = 0.06000}
+  station F37 at OfficeLevel37::office_zone_3_landing {location = 167.4, departureRate = 0.06000}
+  station F38 at OfficeLevel38::office_zone_3_landing {location = 171.6, departureRate = 0.06000}
+  station F39 at OfficeLevel39::office_zone_3_landing {location = 175.8, departureRate = 0.06000}
+  station F40 at OfficeLevel40::office_zone_3_landing {location = 180.0, departureRate = 0.06000}
+}</code></pre>
+      </section>
+
+      <section id="office-zone4">
+        <h2>5. OfficeZone4</h2>
+        <p>Distributes passengers from the Level 30 sky lobby to Office Levels 40–50. Level 40 overlaps OfficeZone3.</p>
+        <p>The selected parameters use 4 cars, a maximum velocity of 5.0 metres per second, acceleration of 1.0 metres per second squared, duty 1600, and capacity 21.</p>
+        <p><code>OfficeZone4.ttr</code></p>
+        <pre><code>transport OfficeZone4 is Elevator {
+  let params = {
+    maxVelocity = 5.0,
+    acceleration = 1.0,
+    duty = 1600,
+    capacity = 21,
+    carAmount = 4
+  }
+
+  let displayName = "Office Zone 4 elevators"
+
+  station F30 at OfficeSkyLobby30::office_zone_4_landing {location = 138.0, departureRate = 0.35000}
+  station F40 at OfficeLevel40::office_zone_4_landing {location = 180.0, departureRate = 0.10000}
+  station F41 at OfficeLevel41::office_zone_4_landing {location = 184.2, departureRate = 0.05500}
+  station F42 at OfficeLevel42::office_zone_4_landing {location = 188.4, departureRate = 0.05500}
+  station F43 at OfficeLevel43::office_zone_4_landing {location = 192.6, departureRate = 0.05500}
+  station F44 at OfficeLevel44::office_zone_4_landing {location = 196.8, departureRate = 0.05500}
+  station F45 at OfficeLevel45::office_zone_4_landing {location = 201.0, departureRate = 0.05500}
+  station F46 at OfficeLevel46::office_zone_4_landing {location = 205.2, departureRate = 0.05500}
+  station F47 at OfficeLevel47::office_zone_4_landing {location = 209.4, departureRate = 0.05500}
+  station F48 at OfficeLevel48::office_zone_4_landing {location = 213.6, departureRate = 0.05500}
+  station F49 at OfficeLevel49::office_zone_4_landing {location = 217.8, departureRate = 0.05500}
+  station F50 at OfficeLevel50::office_zone_4_landing {location = 222.0, departureRate = 0.05500} requires TradingFloorAccess on Arrive
+}</code></pre>
+      </section>
+
+      <section id="hotel-express">
+        <h2>6. HotelExpress</h2>
+        <p>A four-car, high-speed shuttle between the main lobby and Hotel Lobby 55.</p>
+        <p>The selected parameters use 4 cars, a maximum velocity of 10.0 metres per second, acceleration of 1.2 metres per second squared, duty 1800, and capacity 24.</p>
+        <p><code>HotelExpress.ttr</code></p>
+        <pre><code>transport HotelExpress is Elevator {
+  let params = {
+    maxVelocity = 10.0,
+    acceleration = 1.2,
+    duty = 1800,
+    capacity = 24,
+    carAmount = 4
+  }
+
+  let displayName = "Hotel express elevators"
+
+  station F1 at MainLobby::hotel_express_landing {location = 0.0, departureRate = 0.50000}
+  station F55 at HotelLobby55::hotel_express_landing {location = 244.4, departureRate = 0.50000}
+}</code></pre>
+      </section>
+
+      <section id="hotel-local">
+        <h2>7. HotelLocal</h2>
+        <p>Serves every hotel floor, including Hotel Lobby 55.</p>
+        <p>The selected parameters use 6 cars, a maximum velocity of 5.0 metres per second, acceleration of 1.0 metres per second squared, duty 1600, and capacity 18.</p>
+        <p><code>HotelLocal.ttr</code></p>
+        <pre><code>transport HotelLocal is Elevator {
+  let params = {
+    maxVelocity = 5.0,
+    acceleration = 1.0,
+    duty = 1600,
+    capacity = 18,
+    carAmount = 6
+  }
+
+  let displayName = "Hotel local elevators"
+
+  station F52 at HotelLevel52::hotel_local_landing {location = 233.0, departureRate = 0.04000}
+  station F53 at HotelLevel53::hotel_local_landing {location = 236.8, departureRate = 0.04000}
+  station F54 at HotelLevel54::hotel_local_landing {location = 240.6, departureRate = 0.04000}
+  station F55 at HotelLobby55::hotel_local_landing {location = 244.4, departureRate = 0.28000}
+  station F56 at HotelLevel56::hotel_local_landing {location = 248.2, departureRate = 0.04000}
+  station F57 at HotelLevel57::hotel_local_landing {location = 252.0, departureRate = 0.04000}
+  station F58 at HotelLevel58::hotel_local_landing {location = 255.8, departureRate = 0.04000}
+  station F59 at HotelLevel59::hotel_local_landing {location = 259.6, departureRate = 0.04000}
+  station F60 at HotelLevel60::hotel_local_landing {location = 263.4, departureRate = 0.04000}
+  station F61 at HotelLevel61::hotel_local_landing {location = 267.2, departureRate = 0.04000}
+  station F62 at HotelLevel62::hotel_local_landing {location = 271.0, departureRate = 0.04000}
+  station F63 at HotelLevel63::hotel_local_landing {location = 274.8, departureRate = 0.04000}
+  station F64 at HotelLevel64::hotel_local_landing {location = 278.6, departureRate = 0.04000}
+  station F65 at HotelLevel65::hotel_local_landing {location = 282.4, departureRate = 0.04000}
+  station F66 at HotelLevel66::hotel_local_landing {location = 286.2, departureRate = 0.04000}
+  station F67 at HotelLevel67::hotel_local_landing {location = 290.0, departureRate = 0.04000}
+  station F68 at HotelLevel68::hotel_local_landing {location = 293.8, departureRate = 0.04000}
+  station F69 at HotelLevel69::hotel_local_landing {location = 297.6, departureRate = 0.04000}
+  station F70 at HotelLevel70::hotel_local_landing {location = 301.4, departureRate = 0.04000}
+}</code></pre>
+      </section>
+
+      <section id="observatory-express">
+        <h2>8. ObservatoryExpress</h2>
+        <p>A four-car, very-high-speed service from Level 5 to Observatory Levels 72 and 73.</p>
+        <p>The selected parameters use 4 cars, a maximum velocity of 12.0 metres per second, acceleration of 1.3 metres per second squared, duty 2000, and capacity 24.</p>
+        <p><code>ObservatoryExpress.ttr</code></p>
+        <pre><code>transport ObservatoryExpress is Elevator {
+  let params = {
+    maxVelocity = 12.0,
+    acceleration = 1.3,
+    duty = 2000,
+    capacity = 24,
+    carAmount = 4
+  }
+
+  let displayName = "Observatory express elevators"
+
+  station F5 at SharedLevel5::observatory_express_landing {location = 24.0, departureRate = 0.45000}
+  station F72 at ObservatoryLevel72::observatory_express_landing {location = 313.4, departureRate = 0.30000}
+  station F73 at ObservatoryLevel73::observatory_express_landing {location = 318.9, departureRate = 0.25000}
+}</code></pre>
+      </section>
+
+      <section id="observatory-local">
+        <h2>9. ObservatoryLocal</h2>
+        <p>A single-car local service connecting all four observatory levels.</p>
+        <p>The selected parameters use 1 car, a maximum velocity of 3.0 metres per second, acceleration of 0.8 metres per second squared, duty 1400, and capacity 18.</p>
+        <p><code>ObservatoryLocal.ttr</code></p>
+        <pre><code>transport ObservatoryLocal is Elevator {
+  let params = {
+    maxVelocity = 3.0,
+    acceleration = 0.8,
+    duty = 1400,
+    capacity = 18,
+    carAmount = 1
+  }
+
+  let displayName = "Observatory local elevator"
+
+  station F72 at ObservatoryLevel72::observatory_local_landing {location = 313.4, departureRate = 0.25000}
+  station F73 at ObservatoryLevel73::observatory_local_landing {location = 318.9, departureRate = 0.25000}
+  station F74 at ObservatoryLevel74::observatory_local_landing {location = 324.4, departureRate = 0.25000}
+  station F75 at ObservatoryLevel75::observatory_local_landing {location = 329.9, departureRate = 0.25000}
+}</code></pre>
+      </section>
+
+      <section id="main-building-carpark">
+        <h2>10. MainBuildingCarpark</h2>
+        <p>Links both carpark levels with the main lobby and the Level 5 tower–mall connection.</p>
+        <p>The selected parameters use 3 cars, a maximum velocity of 3.0 metres per second, acceleration of 0.8 metres per second squared, duty 1600, and capacity 18.</p>
+        <p><code>MainBuildingCarpark.ttr</code></p>
+        <pre><code>transport MainBuildingCarpark is Elevator {
+  let params = {
+    maxVelocity = 3.0,
+    acceleration = 0.8,
+    duty = 1600,
+    capacity = 18,
+    carAmount = 3
+  }
+
+  let displayName = "Main-building carpark elevators"
+
+  station B3 at CarparkB3::main_carpark_landing {location = -12.0, departureRate = 0.20000}
+  station B2 at CarparkB2::main_carpark_landing {location = -8.0, departureRate = 0.20000}
+  station F1 at MainLobby::main_carpark_landing {location = 0.0, departureRate = 0.35000}
+  station F5 at SharedLevel5::main_carpark_landing {location = 24.0, departureRate = 0.25000}
+}</code></pre>
+      </section>
+
+      <section id="mall-main">
+        <h2>11. MallMain</h2>
+        <p>Serves the carparks and every mall level. Mall Level 7 remains a mall-only map.</p>
+        <p>The selected parameters use 4 cars, a maximum velocity of 2.5 metres per second, acceleration of 0.8 metres per second squared, duty 1600, and capacity 18.</p>
+        <p><code>MallMain.ttr</code></p>
+        <pre><code>transport MallMain is Elevator {
+  let params = {
+    maxVelocity = 2.5,
+    acceleration = 0.8,
+    duty = 1600,
+    capacity = 18,
+    carAmount = 4
+  }
+
+  let displayName = "Mall passenger elevators"
+
+  station B3 at CarparkB3::mall_main_landing {location = -12.0, departureRate = 0.08000}
+  station B2 at CarparkB2::mall_main_landing {location = -8.0, departureRate = 0.08000}
+  station F1 at MainLobby::mall_main_landing {location = 0.0, departureRate = 0.20000}
+  station F2 at MallLevel2::mall_main_landing {location = 6.0, departureRate = 0.12000}
+  station F3 at MallLevel3::mall_main_landing {location = 12.0, departureRate = 0.12000}
+  station F4 at MallLevel4::mall_main_landing {location = 18.0, departureRate = 0.12000}
+  station F5 at SharedLevel5::mall_main_landing {location = 24.0, departureRate = 0.14000}
+  station F6 at MallLevel6::mall_main_landing {location = 30.0, departureRate = 0.08000}
+  station F7 at MallLevel7::mall_main_landing {location = 36.0, departureRate = 0.06000}
+
+  ride-from any to MallDomain requires InMallOperationHours
+  ride-from any to F5 requires InMallOperationHours
+}</code></pre>
+      </section>
+
+      <section id="mall-freight">
+        <h2>12. MallFreight</h2>
+        <p>A single-car, deliberately slow, heavy-duty service from B3 through Mall Level 6.</p>
+        <p>The selected parameters use 1 car, a maximum velocity of 0.8 metres per second, acceleration of 0.4 metres per second squared, duty 5000, and capacity 40.</p>
+        <p><code>MallFreight.ttr</code></p>
+        <pre><code>transport MallFreight is Elevator {
+  let params = {
+    maxVelocity = 0.8,
+    acceleration = 0.4,
+    duty = 5000,
+    capacity = 40,
+    carAmount = 1
+  }
+
+  let displayName = "Mall freight elevator"
+
+  station B3 at CarparkB3::mall_freight_landing {location = -12.0, departureRate = 0.15000}
+  station B2 at CarparkB2::mall_freight_landing {location = -8.0, departureRate = 0.15000}
+  station B1 at LogisticsB1::mall_freight_landing {location = -4.0, departureRate = 0.15000}
+  station F1 at MainLobby::mall_freight_landing {location = 0.0, departureRate = 0.10000}
+  station F2 at MallLevel2::mall_freight_landing {location = 6.0, departureRate = 0.09000}
+  station F3 at MallLevel3::mall_freight_landing {location = 12.0, departureRate = 0.09000}
+  station F4 at MallLevel4::mall_freight_landing {location = 18.0, departureRate = 0.09000}
+  station F5 at SharedLevel5::mall_freight_landing {location = 24.0, departureRate = 0.09000}
+  station F6 at MallLevel6::mall_freight_landing {location = 30.0, departureRate = 0.09000}
+
+  ride-from any to MallDomain requires InMallOperationHours
+  ride-from any to F5 requires InMallOperationHours
+}</code></pre>
+      </section>
+
+      <section id="fire-service">
+        <h2>13. FireService</h2>
+        <p>Two operator-guarded cars serving every level from B3 through Level 75.</p>
+        <p>The selected parameters use 2 cars, a maximum velocity of 6.0 metres per second, acceleration of 1.0 metres per second squared, duty 2500, and capacity 24.</p>
+        <p><code>FireService.ttr</code></p>
+        <pre><code>transport FireService is Elevator {
+  let params = {
+    maxVelocity = 6.0,
+    acceleration = 1.0,
+    duty = 2500,
+    capacity = 24,
+    carAmount = 2
+  }
+
+  let displayName = "Fire-service elevators"
+
+  station B3 at CarparkB3::fire_service_landing {location = -12.0, departureRate = 0.01282}
+  station B2 at CarparkB2::fire_service_landing {location = -8.0, departureRate = 0.01282}
+  station B1 at LogisticsB1::fire_service_landing {location = -4.0, departureRate = 0.01282}
+  station F1 at MainLobby::fire_service_landing {location = 0.0, departureRate = 0.01282}
+  station F2 at MallLevel2::fire_service_landing {location = 6.0, departureRate = 0.01282}
+  station F3 at MallLevel3::fire_service_landing {location = 12.0, departureRate = 0.01282}
+  station F4 at MallLevel4::fire_service_landing {location = 18.0, departureRate = 0.01282}
+  station F5 at SharedLevel5::fire_service_landing {location = 24.0, departureRate = 0.01282}
+  station F6 at MallLevel6::fire_service_landing {location = 30.0, departureRate = 0.01282}
+  station F7 at MallLevel7::fire_service_landing {location = 36.0, departureRate = 0.01282}
+  station F8 at OfficeLevel8::fire_service_landing {location = 42.0, departureRate = 0.01282}
+  station F9 at OfficeLevel9::fire_service_landing {location = 46.2, departureRate = 0.01282}
+  station F10 at OfficeLevel10::fire_service_landing {location = 50.4, departureRate = 0.01282}
+  station F11 at OfficeLevel11::fire_service_landing {location = 54.6, departureRate = 0.01282}
+  station F12 at OfficeLevel12::fire_service_landing {location = 58.8, departureRate = 0.01282}
+  station F13 at OfficeLevel13::fire_service_landing {location = 63.0, departureRate = 0.01282}
+  station F14 at OfficeLevel14::fire_service_landing {location = 67.2, departureRate = 0.01282}
+  station F15 at OfficeLevel15::fire_service_landing {location = 71.4, departureRate = 0.01282}
+  station F16 at OfficeLevel16::fire_service_landing {location = 75.6, departureRate = 0.01282}
+  station F17 at OfficeLevel17::fire_service_landing {location = 79.8, departureRate = 0.01282}
+  station F18 at OfficeLevel18::fire_service_landing {location = 84.0, departureRate = 0.01282}
+  station F19 at OfficeLevel19::fire_service_landing {location = 88.2, departureRate = 0.01282}
+  station F20 at OfficeLevel20::fire_service_landing {location = 92.4, departureRate = 0.01282}
+  station F21 at OfficeLevel21::fire_service_landing {location = 96.6, departureRate = 0.01282}
+  station F22 at OfficeLevel22::fire_service_landing {location = 100.8, departureRate = 0.01282}
+  station F23 at OfficeLevel23::fire_service_landing {location = 105.0, departureRate = 0.01282}
+  station F24 at OfficeLevel24::fire_service_landing {location = 109.2, departureRate = 0.01282}
+  station F25 at OfficeLevel25::fire_service_landing {location = 113.4, departureRate = 0.01282}
+  station F26 at OfficeLevel26::fire_service_landing {location = 117.6, departureRate = 0.01282}
+  station F27 at OfficeLevel27::fire_service_landing {location = 121.8, departureRate = 0.01282}
+  station F28 at OfficeLevel28::fire_service_landing {location = 126.0, departureRate = 0.01282}
+  station F29 at RefugeLevel29::fire_service_landing {location = 132.0, departureRate = 0.01282}
+  station F30 at OfficeSkyLobby30::fire_service_landing {location = 138.0, departureRate = 0.01282}
+  station F31 at OfficeLevel31::fire_service_landing {location = 142.2, departureRate = 0.01282}
+  station F32 at OfficeLevel32::fire_service_landing {location = 146.4, departureRate = 0.01282}
+  station F33 at OfficeLevel33::fire_service_landing {location = 150.6, departureRate = 0.01282}
+  station F34 at OfficeLevel34::fire_service_landing {location = 154.8, departureRate = 0.01282}
+  station F35 at OfficeLevel35::fire_service_landing {location = 159.0, departureRate = 0.01282}
+  station F36 at OfficeLevel36::fire_service_landing {location = 163.2, departureRate = 0.01282}
+  station F37 at OfficeLevel37::fire_service_landing {location = 167.4, departureRate = 0.01282}
+  station F38 at OfficeLevel38::fire_service_landing {location = 171.6, departureRate = 0.01282}
+  station F39 at OfficeLevel39::fire_service_landing {location = 175.8, departureRate = 0.01282}
+  station F40 at OfficeLevel40::fire_service_landing {location = 180.0, departureRate = 0.01282}
+  station F41 at OfficeLevel41::fire_service_landing {location = 184.2, departureRate = 0.01282}
+  station F42 at OfficeLevel42::fire_service_landing {location = 188.4, departureRate = 0.01282}
+  station F43 at OfficeLevel43::fire_service_landing {location = 192.6, departureRate = 0.01282}
+  station F44 at OfficeLevel44::fire_service_landing {location = 196.8, departureRate = 0.01282}
+  station F45 at OfficeLevel45::fire_service_landing {location = 201.0, departureRate = 0.01282}
+  station F46 at OfficeLevel46::fire_service_landing {location = 205.2, departureRate = 0.01282}
+  station F47 at OfficeLevel47::fire_service_landing {location = 209.4, departureRate = 0.01282}
+  station F48 at OfficeLevel48::fire_service_landing {location = 213.6, departureRate = 0.01282}
+  station F49 at OfficeLevel49::fire_service_landing {location = 217.8, departureRate = 0.01282}
+  station F50 at OfficeLevel50::fire_service_landing {location = 222.0, departureRate = 0.01282}
+  station F51 at ServiceRefugeLevel51::fire_service_landing {location = 228.0, departureRate = 0.01282}
+  station F52 at HotelLevel52::fire_service_landing {location = 233.0, departureRate = 0.01282}
+  station F53 at HotelLevel53::fire_service_landing {location = 236.8, departureRate = 0.01282}
+  station F54 at HotelLevel54::fire_service_landing {location = 240.6, departureRate = 0.01282}
+  station F55 at HotelLobby55::fire_service_landing {location = 244.4, departureRate = 0.01282}
+  station F56 at HotelLevel56::fire_service_landing {location = 248.2, departureRate = 0.01282}
+  station F57 at HotelLevel57::fire_service_landing {location = 252.0, departureRate = 0.01282}
+  station F58 at HotelLevel58::fire_service_landing {location = 255.8, departureRate = 0.01282}
+  station F59 at HotelLevel59::fire_service_landing {location = 259.6, departureRate = 0.01282}
+  station F60 at HotelLevel60::fire_service_landing {location = 263.4, departureRate = 0.01282}
+  station F61 at HotelLevel61::fire_service_landing {location = 267.2, departureRate = 0.01282}
+  station F62 at HotelLevel62::fire_service_landing {location = 271.0, departureRate = 0.01282}
+  station F63 at HotelLevel63::fire_service_landing {location = 274.8, departureRate = 0.01282}
+  station F64 at HotelLevel64::fire_service_landing {location = 278.6, departureRate = 0.01282}
+  station F65 at HotelLevel65::fire_service_landing {location = 282.4, departureRate = 0.01282}
+  station F66 at HotelLevel66::fire_service_landing {location = 286.2, departureRate = 0.01282}
+  station F67 at HotelLevel67::fire_service_landing {location = 290.0, departureRate = 0.01282}
+  station F68 at HotelLevel68::fire_service_landing {location = 293.8, departureRate = 0.01282}
+  station F69 at HotelLevel69::fire_service_landing {location = 297.6, departureRate = 0.01282}
+  station F70 at HotelLevel70::fire_service_landing {location = 301.4, departureRate = 0.01282}
+  station F71 at RefugeLevel71::fire_service_landing {location = 307.4, departureRate = 0.01282}
+  station F72 at ObservatoryLevel72::fire_service_landing {location = 313.4, departureRate = 0.01282}
+  station F73 at ObservatoryLevel73::fire_service_landing {location = 318.9, departureRate = 0.01282}
+  station F74 at ObservatoryLevel74::fire_service_landing {location = 324.4, departureRate = 0.01282}
+  station F75 at ObservatoryLevel75::fire_service_landing {location = 329.9, departureRate = 0.01282}
+
+  ride-from any to MallDomain requires InMallOperationHours
+  ride-from any to RefugeDomain requires InEmergency
+  ride-from any to LogisticsDomain requires LogisticsAccess
+  ride-from any to OfficeDomain requires OfficeAccess
+  ride-from any to HotelDomain requires HotelAccess
+  ride-from any to ObservatoryDomain requires ObservatoryAccess
+}</code></pre>
+      </section>
+
+      <section id="office-serv">
+        <h2>14. OfficeServ</h2>
+        <p>Two operator-guarded service cars linking Logistics B1 with every office level.</p>
+        <p>The selected parameters use 2 cars, a maximum velocity of 3.0 metres per second, acceleration of 0.8 metres per second squared, duty 3000, and capacity 30.</p>
+        <p><code>OfficeServ.ttr</code></p>
+        <pre><code>transport OfficeServ is Elevator {
+  let params = {
+    maxVelocity = 3.0,
+    acceleration = 0.8,
+    duty = 3000,
+    capacity = 30,
+    carAmount = 2
+  }
+
+  let displayName = "Office service elevators"
+
+  station B1 at LogisticsB1::office_service_landing {location = -4.0, departureRate = 0.14000}
+  station F8 at OfficeLevel8::office_service_landing {location = 42.0, departureRate = 0.02000}
+  station F9 at OfficeLevel9::office_service_landing {location = 46.2, departureRate = 0.02000}
+  station F10 at OfficeLevel10::office_service_landing {location = 50.4, departureRate = 0.02000}
+  station F11 at OfficeLevel11::office_service_landing {location = 54.6, departureRate = 0.02000}
+  station F12 at OfficeLevel12::office_service_landing {location = 58.8, departureRate = 0.02000}
+  station F13 at OfficeLevel13::office_service_landing {location = 63.0, departureRate = 0.02000}
+  station F14 at OfficeLevel14::office_service_landing {location = 67.2, departureRate = 0.02000}
+  station F15 at OfficeLevel15::office_service_landing {location = 71.4, departureRate = 0.02000}
+  station F16 at OfficeLevel16::office_service_landing {location = 75.6, departureRate = 0.02000}
+  station F17 at OfficeLevel17::office_service_landing {location = 79.8, departureRate = 0.02000}
+  station F18 at OfficeLevel18::office_service_landing {location = 84.0, departureRate = 0.02000}
+  station F19 at OfficeLevel19::office_service_landing {location = 88.2, departureRate = 0.02000}
+  station F20 at OfficeLevel20::office_service_landing {location = 92.4, departureRate = 0.02000}
+  station F21 at OfficeLevel21::office_service_landing {location = 96.6, departureRate = 0.02000}
+  station F22 at OfficeLevel22::office_service_landing {location = 100.8, departureRate = 0.02000}
+  station F23 at OfficeLevel23::office_service_landing {location = 105.0, departureRate = 0.02000}
+  station F24 at OfficeLevel24::office_service_landing {location = 109.2, departureRate = 0.02000}
+  station F25 at OfficeLevel25::office_service_landing {location = 113.4, departureRate = 0.02000}
+  station F26 at OfficeLevel26::office_service_landing {location = 117.6, departureRate = 0.02000}
+  station F27 at OfficeLevel27::office_service_landing {location = 121.8, departureRate = 0.02000}
+  station F28 at OfficeLevel28::office_service_landing {location = 126.0, departureRate = 0.02000}
+  station F29 at RefugeLevel29::office_service_landing {location = 132.0, departureRate = 0.02000}
+  station F30 at OfficeSkyLobby30::office_service_landing {location = 138.0, departureRate = 0.02000}
+  station F31 at OfficeLevel31::office_service_landing {location = 142.2, departureRate = 0.02000}
+  station F32 at OfficeLevel32::office_service_landing {location = 146.4, departureRate = 0.02000}
+  station F33 at OfficeLevel33::office_service_landing {location = 150.6, departureRate = 0.02000}
+  station F34 at OfficeLevel34::office_service_landing {location = 154.8, departureRate = 0.02000}
+  station F35 at OfficeLevel35::office_service_landing {location = 159.0, departureRate = 0.02000}
+  station F36 at OfficeLevel36::office_service_landing {location = 163.2, departureRate = 0.02000}
+  station F37 at OfficeLevel37::office_service_landing {location = 167.4, departureRate = 0.02000}
+  station F38 at OfficeLevel38::office_service_landing {location = 171.6, departureRate = 0.02000}
+  station F39 at OfficeLevel39::office_service_landing {location = 175.8, departureRate = 0.02000}
+  station F40 at OfficeLevel40::office_service_landing {location = 180.0, departureRate = 0.02000}
+  station F41 at OfficeLevel41::office_service_landing {location = 184.2, departureRate = 0.02000}
+  station F42 at OfficeLevel42::office_service_landing {location = 188.4, departureRate = 0.02000}
+  station F43 at OfficeLevel43::office_service_landing {location = 192.6, departureRate = 0.02000}
+  station F44 at OfficeLevel44::office_service_landing {location = 196.8, departureRate = 0.02000}
+  station F45 at OfficeLevel45::office_service_landing {location = 201.0, departureRate = 0.02000}
+  station F46 at OfficeLevel46::office_service_landing {location = 205.2, departureRate = 0.02000}
+  station F47 at OfficeLevel47::office_service_landing {location = 209.4, departureRate = 0.02000}
+  station F48 at OfficeLevel48::office_service_landing {location = 213.6, departureRate = 0.02000}
+  station F49 at OfficeLevel49::office_service_landing {location = 217.8, departureRate = 0.02000}
+  station F50 at OfficeLevel50::office_service_landing {location = 222.0, departureRate = 0.02000}
+
+  ride-from any to OfficeDomain requires &lt;OfficeAccess &amp;&amp; CarryingGoods&gt;
+  ride-from any to LogisticsDomain requires &lt;LogisticsAccess &amp;&amp; CarryingGoods&gt;
+  ride-from any to RefugeDomain requires CarryingGoods
+}</code></pre>
+      </section>
+
+      <section id="hotel-serv-express">
+        <h2>15. HotelServExpress</h2>
+        <p>Two unrestricted service cars linking B2, B1, the Level 51 service/refuge floor, and every hotel floor.</p>
+        <p>The selected parameters use 2 cars, a maximum velocity of 4.0 metres per second, acceleration of 0.8 metres per second squared, duty 3000, and capacity 30.</p>
+        <p><code>HotelServExpress.ttr</code></p>
+        <pre><code>transport HotelServExpress is Elevator {
+  let params = {
+    maxVelocity = 4.0,
+    acceleration = 0.8,
+    duty = 3000,
+    capacity = 30,
+    carAmount = 2
+  }
+
+  let displayName = "Hotel service express elevators"
+
+  station B2 at CarparkB2::hotel_service_express_landing {location = -8.0, departureRate = 0.10000}
+  station B1 at LogisticsB1::hotel_service_express_landing {location = -4.0, departureRate = 0.10000}
+  station F51 at ServiceRefugeLevel51::hotel_service_express_landing {location = 228.0, departureRate = 0.04000}
+  station F52 at HotelLevel52::hotel_service_express_landing {location = 233.0, departureRate = 0.04000}
+  station F53 at HotelLevel53::hotel_service_express_landing {location = 236.8, departureRate = 0.04000}
+  station F54 at HotelLevel54::hotel_service_express_landing {location = 240.6, departureRate = 0.04000}
+  station F55 at HotelLobby55::hotel_service_express_landing {location = 244.4, departureRate = 0.04000}
+  station F56 at HotelLevel56::hotel_service_express_landing {location = 248.2, departureRate = 0.04000}
+  station F57 at HotelLevel57::hotel_service_express_landing {location = 252.0, departureRate = 0.04000}
+  station F58 at HotelLevel58::hotel_service_express_landing {location = 255.8, departureRate = 0.04000}
+  station F59 at HotelLevel59::hotel_service_express_landing {location = 259.6, departureRate = 0.04000}
+  station F60 at HotelLevel60::hotel_service_express_landing {location = 263.4, departureRate = 0.04000}
+  station F61 at HotelLevel61::hotel_service_express_landing {location = 267.2, departureRate = 0.04000}
+  station F62 at HotelLevel62::hotel_service_express_landing {location = 271.0, departureRate = 0.04000}
+  station F63 at HotelLevel63::hotel_service_express_landing {location = 274.8, departureRate = 0.04000}
+  station F64 at HotelLevel64::hotel_service_express_landing {location = 278.6, departureRate = 0.04000}
+  station F65 at HotelLevel65::hotel_service_express_landing {location = 282.4, departureRate = 0.04000}
+  station F66 at HotelLevel66::hotel_service_express_landing {location = 286.2, departureRate = 0.04000}
+  station F67 at HotelLevel67::hotel_service_express_landing {location = 290.0, departureRate = 0.04000}
+  station F68 at HotelLevel68::hotel_service_express_landing {location = 293.8, departureRate = 0.04000}
+  station F69 at HotelLevel69::hotel_service_express_landing {location = 297.6, departureRate = 0.04000}
+  station F70 at HotelLevel70::hotel_service_express_landing {location = 301.4, departureRate = 0.04000}
+}</code></pre>
+      </section>
+
+      <section id="hotel-serv-local">
+        <h2>16. HotelServLocal</h2>
+        <p>One unrestricted local service car covering Level 51 and every hotel floor.</p>
+        <p>The selected parameters use 1 car, a maximum velocity of 2.5 metres per second, acceleration of 0.7 metres per second squared, duty 2500, and capacity 24.</p>
+        <p><code>HotelServLocal.ttr</code></p>
+        <pre><code>transport HotelServLocal is Elevator {
+  let params = {
+    maxVelocity = 2.5,
+    acceleration = 0.7,
+    duty = 2500,
+    capacity = 24,
+    carAmount = 1
+  }
+
+  let displayName = "Hotel service local elevator"
+
+  station F51 at ServiceRefugeLevel51::hotel_service_local_landing {location = 228.0, departureRate = 0.05000}
+  station F52 at HotelLevel52::hotel_service_local_landing {location = 233.0, departureRate = 0.05000}
+  station F53 at HotelLevel53::hotel_service_local_landing {location = 236.8, departureRate = 0.05000}
+  station F54 at HotelLevel54::hotel_service_local_landing {location = 240.6, departureRate = 0.05000}
+  station F55 at HotelLobby55::hotel_service_local_landing {location = 244.4, departureRate = 0.05000}
+  station F56 at HotelLevel56::hotel_service_local_landing {location = 248.2, departureRate = 0.05000}
+  station F57 at HotelLevel57::hotel_service_local_landing {location = 252.0, departureRate = 0.05000}
+  station F58 at HotelLevel58::hotel_service_local_landing {location = 255.8, departureRate = 0.05000}
+  station F59 at HotelLevel59::hotel_service_local_landing {location = 259.6, departureRate = 0.05000}
+  station F60 at HotelLevel60::hotel_service_local_landing {location = 263.4, departureRate = 0.05000}
+  station F61 at HotelLevel61::hotel_service_local_landing {location = 267.2, departureRate = 0.05000}
+  station F62 at HotelLevel62::hotel_service_local_landing {location = 271.0, departureRate = 0.05000}
+  station F63 at HotelLevel63::hotel_service_local_landing {location = 274.8, departureRate = 0.05000}
+  station F64 at HotelLevel64::hotel_service_local_landing {location = 278.6, departureRate = 0.05000}
+  station F65 at HotelLevel65::hotel_service_local_landing {location = 282.4, departureRate = 0.05000}
+  station F66 at HotelLevel66::hotel_service_local_landing {location = 286.2, departureRate = 0.05000}
+  station F67 at HotelLevel67::hotel_service_local_landing {location = 290.0, departureRate = 0.05000}
+  station F68 at HotelLevel68::hotel_service_local_landing {location = 293.8, departureRate = 0.05000}
+  station F69 at HotelLevel69::hotel_service_local_landing {location = 297.6, departureRate = 0.05000}
+  station F70 at HotelLevel70::hotel_service_local_landing {location = 301.4, departureRate = 0.05000}
+}</code></pre>
+      </section>
+
+      <footer>
+        <p>Next work: define the topo-map sources, node areas, atomic paths, mall-to-tower connections, stairs, escalators, annotations, and representative route requests.</p>
+        <p>See also: <a href="feature-by-feature-tutorials.html">Feature-by-Feature Tutorials</a>.</p>
+      </footer>
+    </article>
+  </main>
+</body>
+</html>

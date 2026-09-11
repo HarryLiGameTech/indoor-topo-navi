@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Whole-Building Composition</title>
+</head>
+<body>
+  <main>
+    <article id="building-includes">
+      <header>
+        <h1>Whole-Building Composition (<code>building-includes</code>)</h1>
+        <p><code>building-includes</code> is the mandatory project manifest. It selects the topo maps and transports that participate in one compiled building and records the ordered names of its map instances.</p>
+        <p>It is a composition declaration, not textual inclusion. Source text is not pasted into another source, and a configuration cannot include another configuration.</p>
+      </header>
+
+      <section id="syntax">
+        <h2>Syntax</h2>
+        <pre><code>building-includes {
+  submap Lobby managed-by Public
+  submap OfficeLevel28 using StandardOfficeFloor managed-by Office
+  vehicle MainElevator
+}</code></pre>
+        <p>The body accepts only <code>submap</code> and <code>vehicle</code> entries. Multiple entries must be separated by line breaks. Line and block comments are permitted.</p>
+        <p>The supported forms are:</p>
+        <pre><code>submap MapName
+submap MapName managed-by DomainName
+submap InstanceName using BaseMapName
+submap InstanceName using BaseMapName managed-by DomainName
+vehicle TransportName</code></pre>
+        <p>When both clauses are present, <code>using</code> must precede <code>managed-by</code>. Each name must be a TopoScript identifier rather than a filename or path.</p>
+      </section>
+
+      <section id="project-sources">
+        <h2>Project Sources</h2>
+        <p>A project is composed from the following source categories:</p>
+        <dl>
+          <dt><code>configuration.tcfg</code> or <code>configuration</code></dt>
+          <dd>The required <code>building-includes</code> source. When both names exist, <code>configuration.tcfg</code> takes precedence.</dd>
+
+          <dt><code>root</code></dt>
+          <dd>An optional extensionless source containing project-global parameters, constraints, types, values, and functions. It is discovered automatically and is not listed in <code>building-includes</code>.</dd>
+
+          <dt>Topo-map sources</dt>
+          <dd>Sources selected by <code>submap</code> entries, including base sources required by <code>using</code>.</dd>
+
+          <dt>Transport sources</dt>
+          <dd>Sources selected by <code>vehicle</code> entries.</dd>
+        </dl>
+        <p>Map and transport sources present in the project but not referenced by the manifest do not participate in compilation. A base map named by <code>using</code> participates even when it has no separate plain <code>submap</code> entry.</p>
+      </section>
+
+      <section id="source-resolution">
+        <h2>Source Resolution</h2>
+        <p>For a plain declaration <code>submap Lobby</code>, the directory compiler first searches for <code>Lobby.tmap</code> and then for the extensionless source <code>Lobby</code>.</p>
+        <p>For <code>vehicle MainElevator</code>, it first searches for <code>MainElevator.ttr</code> and then for <code>MainElevator</code>.</p>
+        <p>The in-memory compiler performs the same lookup using exact keys in the supplied filename-to-source map:</p>
+        <pre><code>configuration.tcfg
+root
+Lobby.tmap
+StandardOfficeFloor.tmap
+MainElevator.ttr</code></pre>
+        <p>Names in <code>building-includes</code> cannot contain directories, path separators, extensions, glob patterns, or URLs. All resolved sources therefore belong to one logical project-root namespace.</p>
+      </section>
+
+      <section id="direct-submaps">
+        <h2>Direct Submaps</h2>
+        <p>A plain submap entry selects a topo-map source with the same name:</p>
+        <pre><code>building-includes {
+  submap Lobby
+}</code></pre>
+        <p><code>Lobby.tmap</code>:</p>
+        <pre><code>topo-map Lobby() {
+  let params = {}
+  topo-node entrance
+}</code></pre>
+        <p>For predictable cross-file behavior, the manifest name, source filename, and top-level topo-map name must agree exactly, including case.</p>
+      </section>
+
+      <section id="reusable-submaps">
+        <h2>Reusable Submap Instances</h2>
+        <p><code>using</code> constructs a named map instance from a reusable base topo map:</p>
+        <pre><code>building-includes {
+  submap OfficeLevel28 using StandardOfficeFloor managed-by Office
+}</code></pre>
+        <p>The compiler loads <code>StandardOfficeFloor.tmap</code> or <code>StandardOfficeFloor</code>. It does not search for <code>OfficeLevel28.tmap</code>. The compiled topology is exposed as an instance named <code>OfficeLevel28</code>.</p>
+        <p>Other sources refer to the instance name:</p>
+        <pre><code>station F28 at OfficeLevel28::elevator_lobby {
+  location = 126.0,
+  departureRate = 0.04
+}</code></pre>
+        <p><code>using</code> is shallow topology reuse. It does not import the base source into lexical scope, extend the base declaration, or recursively resolve another instance alias.</p>
+        <p>The current compilation result may also retain the loaded base map as an internal graph entry. Applications must treat the declared instance names as the building maps and must not depend on the base template being exposed as a navigable map.</p>
+      </section>
+
+      <section id="management-domains">
+        <h2>Management-Domain Attachment</h2>
+        <figure>
+          <img src="../assets/management-domain-attachment-placeholder.svg" alt="Placeholder for a diagram showing management domains attached to direct and reusable map instances">
+          <figcaption>Placeholder: management-domain attachment across direct maps and reusable map instances.</figcaption>
+        </figure>
+        <p><code>managed-by</code> associates a configured management domain with the resulting map or map instance:</p>
+        <pre><code>submap Lobby managed-by Public
+submap OfficeLevel28 using StandardOfficeFloor managed-by Office</code></pre>
+        <p>The second declaration assigns <code>Office</code> to <code>OfficeLevel28</code>; it does not assign that domain to every instance of <code>StandardOfficeFloor</code>. Domain overrides and their routing effects are defined in the building-global declarations and routing-semantics articles.</p>
+      </section>
+
+      <section id="composition-and-visibility">
+        <h2>Composition and Visibility</h2>
+        <p>The configuration determines project membership, while the optional <code>root</code> supplies the global compilation environment. Root declarations are available while every selected topo map and transport is compiled.</p>
+        <p>A configuration entry does not make declarations from one child source visible to another. Map-local declarations remain local to that map, and transport-local declarations remain local to that transport. Transports connect maps through qualified node names rather than lexical imports.</p>
+      </section>
+
+      <section id="compilation-order">
+        <h2>Compilation Order</h2>
+        <figure>
+          <img src="../assets/compilation-order-placeholder.svg" alt="Placeholder for a diagram showing the TopoScript whole-building compilation sequence">
+          <figcaption>Placeholder: whole-building compilation from the project manifest to navigation and transport graphs.</figcaption>
+        </figure>
+        <ol>
+          <li>Parse <code>configuration.tcfg</code> or <code>configuration</code>.</li>
+          <li>Load and elaborate the optional <code>root</code>.</li>
+          <li>Load and elaborate directly declared topo maps.</li>
+          <li>Load base topo maps required by <code>using</code>.</li>
+          <li>Construct the named reusable map instances.</li>
+          <li>Resolve effective management domains.</li>
+          <li>Load and elaborate transports against the complete map collection.</li>
+          <li>Construct the navigation graphs, transport graph, map sequence, and compilation metadata.</li>
+        </ol>
+        <p>A map or transport source may therefore use visible root declarations regardless of where its manifest entry appears. All selected and derived maps are available before transports are linked.</p>
+      </section>
+
+      <section id="source-order">
+        <h2>Source Order</h2>
+        <p>The order of <code>submap</code> entries is retained as the compiled <code>graphSequence</code>. Routing code may use this sequence, so authors must list map instances in the intended building order.</p>
+        <p>The order of entries does not control file discovery: a reusable base or transport-referenced map need not be declared earlier than the entry that uses it. Vehicle order is retained internally by the current compiler but has no specified route-selection meaning.</p>
+      </section>
+
+      <section id="cross-file-resolution">
+        <h2>Cross-File Name Resolution</h2>
+        <p>A transport station resolves its qualified node reference in two stages:</p>
+        <ol>
+          <li>The map component must identify a compiled direct map or reusable instance.</li>
+          <li>The node component must identify a node declared by that map’s topology.</li>
+        </ol>
+        <pre><code>station Lobby at Lobby::main_elevator_landing {
+  location = 0.0,
+  departureRate = 0.25
+}</code></pre>
+        <p>Identifiers are case-sensitive. <code>Lobby::main_elevator_landing</code>, <code>lobby::main_elevator_landing</code>, and <code>Lobby::Main_Elevator_Landing</code> are distinct names.</p>
+        <p>The current compiler does not consistently diagnose a mismatch between a manifest name, its filename, and the top-level name declared inside that source. Such mismatches are invalid project authoring and must not be used for aliasing.</p>
+      </section>
+
+      <section id="missing-references">
+        <h2>Missing References</h2>
+        <p>Current behavior depends on the missing element:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Condition</th>
+              <th>Current result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>No <code>configuration.tcfg</code> or <code>configuration</code></td>
+              <td>Compilation fails.</td>
+            </tr>
+            <tr>
+              <td>Invalid <code>building-includes</code> syntax</td>
+              <td>Parsing fails with a syntax error.</td>
+            </tr>
+            <tr>
+              <td>Missing directly declared topo-map source</td>
+              <td>The compiler reports a warning and omits the map.</td>
+            </tr>
+            <tr>
+              <td>Missing transport source</td>
+              <td>The compiler reports a warning and omits the transport.</td>
+            </tr>
+            <tr>
+              <td>Missing base source named by <code>using</code></td>
+              <td>The compiler reports a warning and cannot construct the corresponding instances.</td>
+            </tr>
+            <tr>
+              <td>Transport references a map that was not constructed</td>
+              <td>Transport linking fails.</td>
+            </tr>
+            <tr>
+              <td>Transport references a node absent from its map</td>
+              <td>Transport linking fails with a missing-node error.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>A successful compiler return does not currently prove that every manifest entry was loaded, because missing map and transport files are warnings rather than fatal diagnostics. Applications that require a complete building must treat these warnings as project validation failures.</p>
+      </section>
+
+      <section id="recursive-and-cyclic-composition">
+        <h2>Recursive and Cyclic Composition</h2>
+        <p>A <code>building-includes</code> source cannot include another configuration, so configuration recursion is not supported.</p>
+        <p><code>using</code> names a physical base topo-map source rather than another alias to resolve recursively. Alias chains, self-reference, and cycles such as the following are unsupported:</p>
+        <pre><code>building-includes {
+  submap A using B
+  submap B using A
+}</code></pre>
+        <p>The parser may accept these declarations, but the compiler does not provide recursive alias resolution or a dedicated cycle diagnostic. Authors must use an independent base topo-map source for reusable instances.</p>
+      </section>
+
+      <section id="compiled-building-model">
+        <h2>Relationship to the Compiled Building</h2>
+        <p>The configuration contributes the direct map graphs, reusable map instances, ordered map sequence, configured management-domain information, and selected transports. The compiler links transport stations to nodes in those maps and produces one transport graph connecting the otherwise independent map graphs.</p>
+        <p>The optional root contributes shared values used during compilation but does not create a navigable map. Files not selected by the manifest or by a <code>using</code> base reference do not contribute to the result.</p>
+      </section>
+
+      <section id="portability-and-packaging">
+        <h2>Portability and Packaging</h2>
+        <p>A portable TopoScript project should:</p>
+        <ul>
+          <li>keep all compiler-visible sources in one project-root namespace;</li>
+          <li>use exact, case-matching identifiers and filenames;</li>
+          <li>prefer <code>.tcfg</code>, <code>.tmap</code>, and <code>.ttr</code> for their corresponding source categories;</li>
+          <li>keep the optional <code>root</code> source extensionless;</li>
+          <li>package every directly referenced source and every base source named by <code>using</code>;</li>
+          <li>avoid relying on filesystem case folding, traversal order, or undeclared files;</li>
+          <li>store source text as UTF-8.</li>
+        </ul>
+        <p>The in-memory compiler receives source text directly. The directory compiler currently reads files using the runtime’s default character set rather than enforcing UTF-8, so non-ASCII source portability remains dependent on the host until decoding is standardized.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

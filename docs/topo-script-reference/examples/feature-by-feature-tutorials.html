@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Feature-by-Feature Tutorials</title>
+</head>
+<body>
+  <main>
+    <article id="feature-by-feature-tutorials">
+      <header>
+        <h1>Feature-by-Feature Tutorials</h1>
+        <p><strong>Status:</strong> Draft</p>
+      </header>
+
+      <section id="tutorial-purpose">
+        <h2>Purpose</h2>
+
+        <p>This tutorial series introduces TopoScript one feature at a time. Each tutorial uses a fictional but realistic indoor venue, presents valid source code, and contrasts it with code that is invalid or misleading.</p>
+
+        <p>Examples are classified as follows:</p>
+
+        <dl>
+          <dt>Compilation-invalid</dt>
+          <dd>The TopoNavi Engine rejects the source or supplied compilation parameters.</dd>
+
+          <dt>Modeling-invalid</dt>
+          <dd>The source may compile, but it does not truthfully represent the physical venue.</dd>
+
+          <dt>Unsupported assumption</dt>
+          <dd>The source compiles, but the author expects behavior that the TopoNavi Engine does not provide.</dd>
+        </dl>
+
+        <p>All venues and operational details in these tutorials are synthetic. File extensions are shown for clarity; the compiler also supports the documented extensionless source names.</p>
+      </section>
+
+      <nav aria-label="Tutorial contents">
+        <h2>Contents</h2>
+        <ol>
+          <li><a href="#minimal-building">Creating a Minimal Building Project</a></li>
+          <li><a href="#maps-and-nodes">Modeling Maps and Nodes</a></li>
+          <li><a href="#atomic-paths">Connecting Nodes with Atomic Paths</a></li>
+          <li><a href="#path-direction">Directed and Bidirectional Movement</a></li>
+          <li><a href="#custom-annotations">Adding Custom Node and Path Annotations</a></li>
+          <li><a href="#values-and-expressions">Using Values and Expressions</a></li>
+          <li><a href="#parameters-and-constraints">Parameters and Access Constraints</a></li>
+          <li><a href="#reusable-maps">Reusing a Standard Floor Map</a></li>
+          <li><a href="#elevators">Connecting Floors with an Elevator</a></li>
+          <li><a href="#stairs-and-escalators">Modeling Stairs and Escalators</a></li>
+          <li><a href="#management-domains">Management Domains and Ride Policies</a></li>
+          <li><a href="#uncertain-access">Representing Uncertain Access</a></li>
+        </ol>
+      </nav>
+
+      <section id="minimal-building">
+        <h2>1. Creating a Minimal Building Project</h2>
+
+        <p><strong>Scenario:</strong> A neighborhood library has one public floor, one street entrance, and one reception area.</p>
+
+        <p><strong>Real-place analogy:</strong> The building configuration resembles the directory at the entrance: it identifies the mapped areas that belong to this venue. The topo-map then describes movement within one of those areas.</p>
+
+        <h3>Valid example</h3>
+
+        <p><code>configuration.tcfg</code></p>
+        <pre><code>building-includes {
+  submap LibraryGroundFloor
+}</code></pre>
+
+        <p><code>LibraryGroundFloor.tmap</code></p>
+        <pre><code>topo-map LibraryGroundFloor() {
+  let params = { permResident = 0 }
+
+  topo-node street_entrance
+  topo-node reception
+
+  atomic-path [street_entrance &lt;-&gt; reception] {
+    cost = 12.0
+  }
+}</code></pre>
+
+        <p>The project compiles one map containing two nodes and one path in each direction. A route can be requested between <code>LibraryGroundFloor::street_entrance</code> and <code>LibraryGroundFloor::reception</code>.</p>
+
+        <h3>Invalid example: referenced source is absent</h3>
+
+        <p><code>configuration.tcfg</code></p>
+        <pre><code>building-includes {
+  submap LibraryGroundFloor
+}</code></pre>
+
+        <p>If neither <code>LibraryGroundFloor.tmap</code> nor an extensionless <code>LibraryGroundFloor</code> source is supplied, the project is incomplete. The current compiler reports a missing-map warning and cannot produce the intended library graph.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#source-file-and-project-boundaries">Source-File and Project Boundaries</a></p>
+      </section>
+
+      <section id="maps-and-nodes">
+        <h2>2. Modeling Maps and Nodes</h2>
+
+        <p><strong>Scenario:</strong> A clinic floor contains a reception area, a waiting area, a corridor corner, and the area immediately outside an examination room.</p>
+
+        <p><strong>Real-place analogy:</strong> Each node is a bounded area where a visitor can arrive, depart, enter another space, or make a navigation decision. It is not a pin placed somewhere inside a larger overlapping node.</p>
+
+        <h3>Valid example</h3>
+
+        <p><code>ClinicFloor.tmap</code></p>
+        <pre><code>topo-map ClinicFloor() {
+  let params = { permResident = 18 }
+
+  topo-node reception_area
+  topo-node waiting_area
+  topo-node corridor_corner_NE
+  topo-node exam_room_3_outside
+
+  atomic-path [reception_area &lt;-&gt; waiting_area] { cost = 6.0 }
+  atomic-path [waiting_area &lt;-&gt; corridor_corner_NE] { cost = 8.0 }
+  atomic-path [corridor_corner_NE &lt;-&gt; exam_room_3_outside] { cost = 5.0 }
+}</code></pre>
+
+        <p>Each name denotes a distinct, non-overlapping physical area. Neighboring areas may touch at their boundaries, but their interiors do not intersect.</p>
+
+        <h3>Invalid example: overlapping node meanings</h3>
+
+        <p><code>ClinicFloor.tmap</code></p>
+        <pre><code>topo-map ClinicFloor() {
+  let params = { permResident = 18 }
+
+  // Intended to represent the entire corridor, including its northeast corner.
+  topo-node entire_corridor
+
+  // Intended to represent an area contained inside entire_corridor.
+  topo-node corridor_corner_NE
+
+  atomic-path [entire_corridor &lt;-&gt; corridor_corner_NE] { cost = 1.0 }
+}</code></pre>
+
+        <p><strong>Classification:</strong> Modeling-invalid. The compiler has no venue geometry with which to detect the overlap. The author must partition the corridor into non-overlapping node areas instead.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#node-entity">Node</a></p>
+      </section>
+
+      <section id="atomic-paths">
+        <h2>3. Connecting Nodes with Atomic Paths</h2>
+
+        <p><strong>Scenario:</strong> A museum corridor leads from the public entrance past an information desk to an exhibition entrance.</p>
+
+        <p><strong>Real-place analogy:</strong> A visitor walking to the exhibition necessarily crosses the information-desk area. The corridor must therefore be split at that navigation-relevant area.</p>
+
+        <h3>Valid example</h3>
+
+        <pre><code>topo-node public_entrance
+topo-node information_desk
+topo-node exhibition_entrance
+
+atomic-path [public_entrance &lt;-&gt; information_desk] {
+  cost = 9.0
+}
+
+atomic-path [information_desk &lt;-&gt; exhibition_entrance] {
+  cost = 14.0
+}</code></pre>
+
+        <p>The route from the entrance to the exhibition passes through <code>information_desk</code>.</p>
+
+        <h3>Invalid example: skipping an intermediate node</h3>
+
+        <pre><code>atomic-path [public_entrance &lt;-&gt; exhibition_entrance] {
+  cost = 23.0
+}</code></pre>
+
+        <p><strong>Classification:</strong> Modeling-invalid if this physical passage necessarily crosses the information-desk node. The direct path is valid only if it represents a genuinely separate traversal that bypasses the desk.</p>
+
+        <h3>Invalid example: missing path cost</h3>
+
+        <pre><code>atomic-path [information_desk &lt;-&gt; exhibition_entrance] {
+  description = "Main exhibition corridor"
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid. Every atomic path must contain a numeric <code>cost</code>.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#atomic-path-entity">Atomic Path</a></p>
+      </section>
+
+      <section id="path-direction">
+        <h2>4. Directed and Bidirectional Movement</h2>
+
+        <p><strong>Scenario:</strong> A supermarket has a one-way entrance gate, a separate exit gate, and ordinary two-way aisles.</p>
+
+        <p><strong>Real-place analogy:</strong> Direction describes how people may actually move. The entrance gate admits customers but does not provide the return journey, while an aisle permits travel both ways.</p>
+
+        <h3>Valid example</h3>
+
+        <pre><code>topo-node street_entrance
+topo-node entrance_lobby
+topo-node aisle_junction
+topo-node checkout_hall
+
+atomic-path [street_entrance -&gt; entrance_lobby] { cost = 4.0 }
+atomic-path [entrance_lobby &lt;-&gt; aisle_junction] { cost = 10.0 }
+atomic-path [aisle_junction &lt;-&gt; checkout_hall] { cost = 12.0 }</code></pre>
+
+        <p>The first path permits entry only. Each bidirectional declaration produces traversal in both directions.</p>
+
+        <h3>Invalid example: false reverse access</h3>
+
+        <pre><code>// Incorrect if the physical gate permits entry only.
+atomic-path [street_entrance &lt;-&gt; entrance_lobby] { cost = 4.0 }</code></pre>
+
+        <p><strong>Classification:</strong> Modeling-invalid. This declaration creates a return traversal that the venue does not permit.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#atomic-path-entity">Atomic Path</a></p>
+      </section>
+
+      <section id="custom-annotations">
+        <h2>5. Adding Custom Node and Path Annotations</h2>
+
+        <p><strong>Scenario:</strong> A shopping center application displays tenant descriptions and distinguishes indoor and covered outdoor passages.</p>
+
+        <p><strong>Real-place analogy:</strong> An annotation resembles information attached to an entry in a venue directory. TopoScript can carry that information without deciding how every application must display or interpret it.</p>
+
+        <h3>Valid example</h3>
+
+        <pre><code>topo-node bakery_entrance {
+  description = "Entrance beside the central atrium",
+  tenantCategory = "food_and_drink",
+  directoryAliases = ["Bakery", "Cafe"]
+}
+
+topo-node atrium_walkway
+
+atomic-path [atrium_walkway &lt;-&gt; bakery_entrance] {
+  cost = 7.0,
+  passageType = "indoor"
+}</code></pre>
+
+        <p>The custom values are preserved as structured node and path attributes. A consuming application may expose them as JSON-compatible strings and lists.</p>
+
+        <h3>Invalid example: expecting automatic business-hours enforcement</h3>
+
+        <pre><code>topo-node pharmacy_entrance {
+  businessHours = "09:00-18:00",
+  openNow = false
+}
+
+topo-node mall_corridor
+
+atomic-path [mall_corridor &lt;-&gt; pharmacy_entrance] {
+  cost = 5.0
+}</code></pre>
+
+        <p><strong>Classification:</strong> Unsupported assumption. These custom annotations do not automatically remove the pharmacy path from the compiled topology. Business-hours behavior must be implemented by the application or expressed through supported compilation parameters and constraints.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#stability-boundaries">Stability Boundaries</a></p>
+      </section>
+
+      <section id="values-and-expressions">
+        <h2>6. Using Values and Expressions</h2>
+
+        <p><strong>Scenario:</strong> Several airport-concourse paths include the same expected delay for passing through a fire door.</p>
+
+        <p><strong>Real-place analogy:</strong> A shared value works like using one agreed door-delay estimate throughout a facilities plan instead of manually repeating the calculation.</p>
+
+        <h3>Valid example</h3>
+
+        <pre><code>let fireDoorDelay = 2.0
+let shortCorridorTime = 8.0
+
+topo-node gate_lounge
+topo-node fire_door_landing
+topo-node transfer_corridor
+
+atomic-path [gate_lounge &lt;-&gt; fire_door_landing] {
+  cost = shortCorridorTime + fireDoorDelay
+}
+
+atomic-path [fire_door_landing &lt;-&gt; transfer_corridor] {
+  cost = 12.0 + fireDoorDelay
+}</code></pre>
+
+        <p>The expressions are evaluated during compilation, producing numeric costs of <code>10.0</code> and <code>14.0</code>.</p>
+
+        <h3>Invalid example: mixing numeric types</h3>
+
+        <pre><code>let corridorSeconds = 8
+
+atomic-path [gate_lounge &lt;-&gt; fire_door_landing] {
+  cost = corridorSeconds + 2.0
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid. General expressions do not implicitly convert between <code>Int</code> and <code>Float</code>.</p>
+
+        <h3>Invalid example: parsed but unsupported operator</h3>
+
+        <pre><code>let halfTransferTime = 30.0 / 2.0</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid. Division appears in the current grammar but is not implemented by the surface-language evaluator.</p>
+
+        <h3>Invalid example: unknown value</h3>
+
+        <pre><code>atomic-path [gate_lounge &lt;-&gt; fire_door_landing] {
+  cost = measuredDoorDelay + 8.0
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid because <code>measuredDoorDelay</code> is not defined in a visible scope.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#expressions-and-evaluation">Literals, Expressions, Operators, and Evaluation</a></p>
+      </section>
+
+      <section id="parameters-and-constraints">
+        <h2>7. Parameters and Access Constraints</h2>
+
+        <p><strong>Scenario:</strong> An office has a public reception route and a shorter staff-only entrance to its records room.</p>
+
+        <p><strong>Real-place analogy:</strong> The physical corridor is unchanged, but the compiled accessible topology depends on whether the intended user has staff access.</p>
+
+        <h3>Valid example</h3>
+
+        <p><code>configuration.tcfg</code></p>
+        <pre><code>building-includes {
+  submap OfficeFloor
+}</code></pre>
+
+        <p><code>root</code></p>
+        <pre><code>root OfficeBuilding(hasStaffAccess: Bool) {
+  constraint StaffOnly {
+    require hasStaffAccess
+  }
+}</code></pre>
+
+        <p><code>OfficeFloor.tmap</code></p>
+        <pre><code>topo-map OfficeFloor() {
+  let params = { permResident = 45 }
+
+  topo-node reception
+  topo-node public_corridor
+  topo-node staff_door
+  topo-node records_room
+
+  atomic-path [reception &lt;-&gt; public_corridor] { cost = 8.0 }
+  atomic-path [public_corridor &lt;-&gt; records_room] { cost = 20.0 }
+  atomic-path [reception &lt;-&gt; staff_door] { cost = 5.0 }
+  atomic-path [staff_door &lt;-&gt; records_room] { cost = 4.0 }
+    requires StaffOnly
+}</code></pre>
+
+        <p>Compiling with the following parameter makes the staff path available:</p>
+
+        <pre><code>{
+  "userParams": {
+    "hasStaffAccess": true
+  }
+}</code></pre>
+
+        <p>Compiling with <code>false</code> excludes the constrained path. Changing the parameter requires another compilation.</p>
+
+        <h3>Invalid example: required parameter omitted</h3>
+
+        <pre><code>{
+  "userParams": {}
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid because <code>hasStaffAccess</code> has no supplied value.</p>
+
+        <h3>Invalid example: parameter has the wrong type</h3>
+
+        <pre><code>{
+  "userParams": {
+    "hasStaffAccess": "yes"
+  }
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid. The constraint requires a Boolean predicate, but this value evaluates as a <code>String</code>.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#parameter-and-constraint-entities">Parameters and Constraints</a></p>
+      </section>
+
+      <section id="reusable-maps">
+        <h2>8. Reusing a Standard Floor Map</h2>
+
+        <p><strong>Scenario:</strong> Hotel guest floors 8, 9, and 10 have the same corridor and room-layout topology.</p>
+
+        <p><strong>Real-place analogy:</strong> The floors were built from the same architectural plan, but each remains a separately named place that an elevator can serve.</p>
+
+        <h3>Valid example</h3>
+
+        <p><code>configuration.tcfg</code></p>
+        <pre><code>building-includes {
+  submap Floor8 using StandardGuestFloor
+  submap Floor9 using StandardGuestFloor
+  submap Floor10 using StandardGuestFloor
+}</code></pre>
+
+        <p><code>StandardGuestFloor.tmap</code></p>
+        <pre><code>topo-map StandardGuestFloor() {
+  let params = { permResident = 72 }
+
+  topo-node elevator_lobby
+  topo-node corridor_junction
+  topo-node room_01_outside
+
+  atomic-path [elevator_lobby &lt;-&gt; corridor_junction] { cost = 9.0 }
+  atomic-path [corridor_junction &lt;-&gt; room_01_outside] { cost = 11.0 }
+}</code></pre>
+
+        <p>The compiled building contains distinct maps named <code>Floor8</code>, <code>Floor9</code>, and <code>Floor10</code>, each reusing the standard topology.</p>
+
+        <h3>Invalid example: unknown base map</h3>
+
+        <p><code>configuration.tcfg</code></p>
+        <pre><code>building-includes {
+  submap Floor8 using StandardGuestFlorr
+}</code></pre>
+
+        <p><strong>Classification:</strong> Invalid project. If no source named <code>StandardGuestFlorr.tmap</code> or <code>StandardGuestFlorr</code> exists, the compiler reports that the base map is missing and cannot construct the intended floor instance.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#map-entity">Map</a></p>
+      </section>
+
+      <section id="elevators">
+        <h2>9. Connecting Floors with an Elevator</h2>
+
+        <p><strong>Scenario:</strong> A three-level office building has one two-car elevator bank serving the lobby and two office floors.</p>
+
+        <p><strong>Real-place analogy:</strong> A map node represents the landing area. An elevator station represents this elevator bank's use of that landing.</p>
+
+        <h3>Valid example</h3>
+
+        <p><code>configuration.tcfg</code></p>
+        <pre><code>building-includes {
+  submap Lobby
+  submap Office2
+  submap Office3
+  vehicle MainElevator
+}</code></pre>
+
+        <p>Each referenced map contains its own landing node.</p>
+
+        <p><code>Lobby.tmap</code></p>
+        <pre><code>topo-map Lobby() {
+  let params = { permResident = 6 }
+  topo-node main_elevator_landing
+}</code></pre>
+
+        <p><code>Office2.tmap</code></p>
+        <pre><code>topo-map Office2() {
+  let params = { permResident = 80 }
+  topo-node main_elevator_landing
+}</code></pre>
+
+        <p><code>Office3.tmap</code></p>
+        <pre><code>topo-map Office3() {
+  let params = { permResident = 75 }
+  topo-node main_elevator_landing
+}</code></pre>
+
+        <p><code>MainElevator.ttr</code></p>
+        <pre><code>transport MainElevator is Elevator {
+  let params = {
+    maxVelocity = 2.0,
+    acceleration = 0.8,
+    duty = 1000,
+    capacity = 13,
+    carAmount = 2
+  }
+
+  let displayName = "Main elevator bank"
+
+  station Lobby at Lobby::main_elevator_landing {
+    location = 0.0,
+    departureRate = 0.10
+  }
+
+  station Floor2 at Office2::main_elevator_landing {
+    location = 4.2,
+    departureRate = 0.10
+  }
+
+  station Floor3 at Office3::main_elevator_landing {
+    location = 8.4,
+    departureRate = 0.10
+  }
+}</code></pre>
+
+        <p>The stations connect three qualified map nodes through one elevator. The transport parameters are used by the TopoNavi Engine when estimating elevator travel.</p>
+
+        <h3>Invalid example: incomplete station data</h3>
+
+        <pre><code>station Floor2 at Office2::main_elevator_landing {
+  location = 4.2
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid. An elevator station requires a floating-point <code>departureRate</code>.</p>
+
+        <h3>Invalid example: unknown landing node</h3>
+
+        <pre><code>station Floor3 at Office3::service_elevator_landing {
+  location = 8.4,
+  departureRate = 0.10
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid if <code>service_elevator_landing</code> is not declared by <code>Office3</code>.</p>
+
+        <h3>Invalid example: no possible inter-map ride</h3>
+
+        <pre><code>transport MainElevator is Elevator {
+  let params = { maxVelocity = 2.0 }
+
+  station Lobby at Lobby::main_elevator_landing {
+    location = 0.0,
+    departureRate = 0.10
+  }
+}</code></pre>
+
+        <p><strong>Classification:</strong> Modeling-invalid. One station cannot provide travel between maps; an operational elevator model requires at least two station maps.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#transport-entity">Transport</a> and <a href="../language/language-and-execution-model.html#station-entity">Station</a></p>
+      </section>
+
+      <section id="stairs-and-escalators">
+        <h2>10. Modeling Stairs and Escalators</h2>
+
+        <p><strong>Scenario:</strong> A railway concourse has a staircase between three levels and an escalator between the lower concourse and platform level.</p>
+
+        <p><strong>Real-place analogy:</strong> Stair stations identify landings along a continuous stair run. An escalator is modeled as one timed connection between exactly two station maps.</p>
+
+        <p><code>configuration.tcfg</code></p>
+        <pre><code>building-includes {
+  submap StreetLevel
+  submap LowerConcourse
+  submap PlatformLevel
+  vehicle ConcourseStairs
+  vehicle PlatformEscalator
+}</code></pre>
+
+        <p>The three topo maps declare the corresponding landing nodes.</p>
+
+        <p><code>StreetLevel.tmap</code></p>
+        <pre><code>topo-map StreetLevel() {
+  let params = { permResident = 0 }
+  topo-node stair_landing
+  topo-node escalator_landing
+}</code></pre>
+
+        <p><code>LowerConcourse.tmap</code></p>
+        <pre><code>topo-map LowerConcourse() {
+  let params = { permResident = 30 }
+  topo-node stair_landing
+  topo-node escalator_landing
+}</code></pre>
+
+        <p><code>PlatformLevel.tmap</code></p>
+        <pre><code>topo-map PlatformLevel() {
+  let params = { permResident = 15 }
+  topo-node stair_landing
+  topo-node escalator_landing
+}</code></pre>
+
+        <h3>Valid stairs example</h3>
+
+        <p><code>ConcourseStairs.ttr</code></p>
+        <pre><code>transport ConcourseStairs is Stairs {
+  let params = { turnBackCost = 3 }
+
+  station Street at StreetLevel::stair_landing {
+    location = 0.0,
+    directSegmentIndex = 0
+  }
+
+  station Concourse at LowerConcourse::stair_landing {
+    location = -4.0,
+    directSegmentIndex = 1
+  }
+
+  station Platform at PlatformLevel::stair_landing {
+    location = -8.0,
+    directSegmentIndex = 2
+  }
+}</code></pre>
+
+        <h3>Invalid stairs example: missing segment index</h3>
+
+        <pre><code>station Platform at PlatformLevel::stair_landing {
+  location = -8.0
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid. A stair station requires an integer <code>directSegmentIndex</code>.</p>
+
+        <h3>Valid escalator example</h3>
+
+        <p><code>PlatformEscalator.ttr</code></p>
+        <pre><code>transport PlatformEscalator is Escalator {
+  let params = { time = 18.0 }
+  let displayName = "Platform escalator"
+
+  station Concourse at LowerConcourse::escalator_landing {}
+  station Platform at PlatformLevel::escalator_landing {}
+}</code></pre>
+
+        <p>The escalator has exactly two stations and a positive numeric traversal time.</p>
+
+        <h3>Invalid escalator example: missing traversal time</h3>
+
+        <pre><code>transport PlatformEscalator is Escalator {
+  let params = {}
+
+  station Concourse at LowerConcourse::escalator_landing {}
+  station Platform at PlatformLevel::escalator_landing {}
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid because <code>params.time</code> is required.</p>
+
+        <h3>Invalid escalator example: three stations</h3>
+
+        <pre><code>transport PlatformEscalator is Escalator {
+  let params = { time = 18.0 }
+
+  station Street at StreetLevel::escalator_landing {}
+  station Concourse at LowerConcourse::escalator_landing {}
+  station Platform at PlatformLevel::escalator_landing {}
+}</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid. An escalator currently connects exactly two distinct maps.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#transport-entity">Transport</a></p>
+      </section>
+
+      <section id="management-domains">
+        <h2>11. Management Domains and Ride Policies</h2>
+
+        <p><strong>Scenario:</strong> A mixed-use tower contains three public floors, three office floors, and three hotel floors. One elevator physically serves all nine floors.</p>
+
+        <p><strong>Real-place analogy:</strong> A management domain resembles the operational boundary between the retail podium, office landlord, and hotel operator. Each domain contains several separately named floors. A ride policy can describe movement between whole groups of floors without listing every floor pair.</p>
+
+        <h3>Valid example</h3>
+
+        <p><code>configuration.tcfg</code></p>
+        <pre><code>building-includes {
+  submap GroundLobby using StandardPublicFloor managed-by PublicDomain
+  submap RetailLevel1 using StandardPublicFloor managed-by PublicDomain
+  submap RetailLevel2 using StandardPublicFloor managed-by PublicDomain
+
+  submap OfficeLevel10 using StandardOfficeFloor managed-by OfficeDomain
+  submap OfficeLevel11 using StandardOfficeFloor managed-by OfficeDomain
+  submap OfficeLevel12 using StandardOfficeFloor managed-by OfficeDomain
+
+  submap HotelLevel20 using StandardHotelFloor managed-by HotelDomain
+  submap HotelLevel21 using StandardHotelFloor managed-by HotelDomain
+  submap HotelLevel22 using StandardHotelFloor managed-by HotelDomain
+
+  vehicle MixedUseLift
+}</code></pre>
+
+        <p><code>GroundLobby</code>, <code>OfficeLevel11</code>, and <code>HotelLevel22</code> are map identifiers. <code>PublicDomain</code>, <code>OfficeDomain</code>, and <code>HotelDomain</code> are management-domain identifiers shared by three maps each.</p>
+
+        <p><code>root</code></p>
+        <pre><code>root MixedUseTower(hasHotelAccess: Bool) {
+  constraint HotelAccess {
+    require hasHotelAccess
+  }
+}</code></pre>
+
+        <p>The three reusable topo maps describe the standard topology for the floors in their respective domains.</p>
+
+        <p><code>StandardPublicFloor.tmap</code></p>
+        <pre><code>topo-map StandardPublicFloor() {
+  let params = { permResident = 30 }
+  topo-node lift_landing
+  topo-node public_corridor
+  atomic-path [lift_landing &lt;-&gt; public_corridor] { cost = 8.0 }
+}</code></pre>
+
+        <p><code>StandardOfficeFloor.tmap</code></p>
+        <pre><code>topo-map StandardOfficeFloor() {
+  let params = { permResident = 120 }
+  topo-node lift_landing
+  topo-node office_corridor
+  atomic-path [lift_landing &lt;-&gt; office_corridor] { cost = 10.0 }
+}</code></pre>
+
+        <p><code>StandardHotelFloor.tmap</code></p>
+        <pre><code>topo-map StandardHotelFloor() {
+  let params = { permResident = 90 }
+  topo-node lift_landing
+  topo-node guest_corridor
+  atomic-path [lift_landing &lt;-&gt; guest_corridor] { cost = 12.0 }
+}</code></pre>
+
+        <p><code>MixedUseLift.ttr</code></p>
+        <pre><code>transport MixedUseLift is Elevator {
+  let params = {
+    maxVelocity = 2.5,
+    acceleration = 0.8,
+    carAmount = 2
+  }
+
+  station LobbyStation at GroundLobby::lift_landing {
+    location = 0.0,
+    departureRate = 0.10
+  }
+
+  station Retail1Station at RetailLevel1::lift_landing {
+    location = 4.0,
+    departureRate = 0.10
+  }
+
+  station Retail2Station at RetailLevel2::lift_landing {
+    location = 8.0,
+    departureRate = 0.10
+  }
+
+  station O10Station at OfficeLevel10::lift_landing {
+    location = 40.0,
+    departureRate = 0.10
+  }
+
+  station O11Station at OfficeLevel11::lift_landing {
+    location = 44.0,
+    departureRate = 0.10
+  }
+
+  station O12Station at OfficeLevel12::lift_landing {
+    location = 48.0,
+    departureRate = 0.10
+  }
+
+  station H20Station at HotelLevel20::lift_landing {
+    location = 80.0,
+    departureRate = 0.10
+  }
+
+  station H21Station at HotelLevel21::lift_landing {
+    location = 84.0,
+    departureRate = 0.10
+  }
+
+  station H22Station at HotelLevel22::lift_landing {
+    location = 88.0,
+    departureRate = 0.10
+  }
+
+  ride-from PublicDomain to HotelDomain requires HotelAccess
+  ride-from OfficeDomain to HotelDomain requires HotelAccess
+}</code></pre>
+
+        <p><code>OfficeDomain</code> is a domain operand and matches all three office-floor stations. <code>O11Station</code> would be a station operand and match only the station on <code>OfficeLevel11</code>. <code>OfficeLevel11</code> itself is a map identifier and is not a ride-policy operand.</p>
+
+        <h3>Invalid example: using a map name as a ride-policy operand</h3>
+
+        <pre><code>// OfficeLevel11 is a map name, not a domain or station label.
+ride-from OfficeLevel11 to HotelDomain requires HotelAccess</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid because <code>OfficeLevel11</code> is neither a management-domain identifier nor a station label in this transport. To cover all three office floors, use <code>OfficeDomain</code>. To cover only the eleventh-floor station, use <code>O11Station</code>. Ride-policy operands are management domains, station labels, or <code>any</code>.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#management-domain-entity">Management Domain</a></p>
+      </section>
+
+      <section id="uncertain-access">
+        <h2>12. Representing Uncertain Access</h2>
+
+        <p><strong>Scenario:</strong> A university skybridge has a card reader, but the map publisher cannot guarantee whether a particular visitor's card will be accepted.</p>
+
+        <p><strong>Real-place analogy:</strong> The bridge physically exists and might be usable. It should not be represented as certainly open or certainly inaccessible when the available information supports neither claim.</p>
+
+        <h3>Valid example</h3>
+
+        <p><code>configuration.tcfg</code></p>
+        <pre><code>building-includes {
+  submap AcademicBuilding
+}</code></pre>
+
+        <p><code>root</code></p>
+        <pre><code>root CampusNavigation(hasBridgeCard: Bool) {
+  constraint BridgeCardAccess {
+    require hasBridgeCard
+  }
+}</code></pre>
+
+        <p><code>AcademicBuilding.tmap</code></p>
+        <pre><code>topo-map AcademicBuilding() {
+  let params = { permResident = 350 }
+
+  topo-node atrium
+  topo-node indoor_detour
+  topo-node skybridge_door
+  topo-node library_link
+
+  atomic-path [atrium &lt;-&gt; indoor_detour] { cost = 20.0 }
+  atomic-path [indoor_detour &lt;-&gt; library_link] { cost = 20.0 }
+
+  atomic-path [atrium &lt;-&gt; skybridge_door] { cost = 8.0 }
+  atomic-path [skybridge_door &lt;-&gt; library_link] { cost = 8.0 }
+    subject-to BridgeCardAccess because "The skybridge door may require a compatible university card."
+}</code></pre>
+
+        <p>The uncertain path remains represented with its failed or satisfied access condition. The TopoNavi Engine can prefer the confirmed detour and disclose the skybridge uncertainty when an uncertain route is considered.</p>
+
+        <h3>Invalid example: combining hard and uncertain access</h3>
+
+        <pre><code>atomic-path [skybridge_door &lt;-&gt; library_link] { cost = 8.0 }
+  requires BridgeCardAccess
+  subject-to BridgeCardAccess because "The door may require a compatible university card."</code></pre>
+
+        <p><strong>Classification:</strong> Compilation-invalid. The same element cannot use both <code>requires</code> and <code>subject-to</code>. Use <code>requires</code> for hard exclusion or <code>subject-to</code> for explicitly uncertain availability.</p>
+
+        <p><strong>Related reference:</strong> <a href="../language/language-and-execution-model.html#parameter-and-constraint-entities">Parameters and Constraints</a></p>
+      </section>
+
+      <footer>
+        <p>The complete <a href="skyrim-tower.html">SkyrimTower</a> example is documented separately. It combines the stable features introduced here into one coherent mock building.</p>
+      </footer>
+    </article>
+  </main>
+</body>
+</html>

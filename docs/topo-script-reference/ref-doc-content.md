@@ -72,11 +72,8 @@ topo-script-reference/
   validation/
     diagnostics.html
   examples/
-    minimal-building.html
-    multi-floor-building.html
-    conditional-access.html
-    reusable-submaps.html
-    demo-tower.html
+    feature-by-feature-tutorials.html
+    skyrim-tower.html
   glossary.html
 ```
 
@@ -119,30 +116,29 @@ The exact file split may be adjusted while writing, but the nine content areas b
 
 ### Points to write
 
-- [ ] Describe the role of the whole-building entry point.
-- [ ] List which file or declaration categories may be included.
-- [ ] Document include syntax and path-resolution rules.
-- [ ] Document how included maps, transports, and global declarations form one project.
-- [ ] Document ordering rules and whether source order is significant.
-- [ ] Document cross-file name resolution.
-- [ ] Document duplicate-name handling.
-- [ ] Document missing-reference handling.
-- [ ] Document repeated, recursive, or cyclic include behavior.
-- [ ] Document project-root and filesystem assumptions.
-- [ ] Document the relationship between declared content and the compiled building model.
-- [ ] Identify portability and packaging constraints.
+- [x] Describe the role of the whole-building entry point.
+- [x] List which file or declaration categories may be included.
+- [x] Document include syntax and path-resolution rules.
+- [x] Document how included maps, transports, and global declarations form one project.
+- [x] Document ordering rules and whether source order is significant.
+- [x] Document cross-file name resolution.
+- [x] Document missing-reference handling.
+- [x] Document repeated, recursive, or cyclic include behavior.
+- [x] Document project-root and filesystem assumptions.
+- [x] Document the relationship between declared content and the compiled building model.
+- [x] Identify portability and packaging constraints.
 
 ### Verification tasks
 
-- [ ] Trace entry-point loading through parser and compiler code.
-- [ ] Add or identify tests for nested, duplicate, missing, and cyclic includes.
+- [x] Trace entry-point loading through parser and compiler code.
+- [ ] Add tests for missing sources and unsupported alias chains or cyclic reuse.
 - [ ] Verify all path examples on supported operating systems.
-- [ ] Record any unresolved behavior as an engine/documentation decision.
+- [x] Record unresolved source-loading and reusable-base behavior as engine or documentation decisions.
 
 ### Completion criteria
 
-- [ ] A reader can determine which files constitute a complete TopoScript building project.
-- [ ] Every include and cross-file resolution failure has a documented diagnostic category.
+- [x] A reader can determine which files constitute a complete TopoScript building project.
+- [x] Every current include and cross-file resolution failure has a documented diagnostic category.
 
 ## 6. Content Area 3 — Building-Global Declarations
 
@@ -150,32 +146,32 @@ The exact file split may be adjusted while writing, but the nine content areas b
 
 ### Points to write
 
-- [ ] Inventory every declaration valid at building-global scope.
-- [ ] Document configuration declarations.
-- [ ] Document building metadata declarations.
-- [ ] Document user and runtime parameters.
-- [ ] Document parameter types, defaults, required values, and validation.
-- [ ] Document constraint declarations.
-- [ ] Document where constraints may be referenced and evaluated.
-- [ ] Document management-domain declarations.
-- [ ] Document access and ride-policy declarations.
-- [ ] Document global tags, constants, or reusable values if supported.
-- [ ] Document naming, uniqueness, and scope rules for each declaration.
-- [ ] Document dependency and evaluation ordering between global declarations.
-- [ ] Separate compile-time validation from routing-time parameter evaluation.
-- [ ] Identify global declarations that affect graph construction versus route eligibility.
+- [x] Inventory the stable declarations valid at building-global scope.
+- [x] Link configuration composition to the Area 2 reference rather than duplicating it.
+- [x] State that dedicated building-metadata declarations are not currently supported.
+- [x] Document user-supplied compilation inputs.
+- [x] Document parameter types, planned defaults, required values, and current validation limitations.
+- [x] Document constraint declarations.
+- [x] Document where constraints may be referenced and evaluated.
+- [x] Document management-domain assignment at a general level and link its detailed composition semantics.
+- [x] Introduce the access and ride-policy model without duplicating attachment-specific semantics.
+- [!] Decide whether reusable root-level declarations should be limited to `def`; do not document global `let`, tag registries, or constants pending that decision.
+- [x] Document naming, uniqueness, and scope rules for each stable declaration.
+- [x] Document dependency and evaluation ordering between global declarations.
+- [x] Separate compile-time validation from routing-time evaluation.
+- [x] Identify global declarations that affect graph construction versus route eligibility.
 
 ### Verification tasks
 
-- [ ] Build an implementation inventory from grammar, AST, type checker, and compiler passes.
-- [ ] Confirm which parameters are mandatory for compilation, route requests, or both.
+- [x] Build an implementation inventory from grammar, AST, type checker, and compiler passes.
+- [x] Confirm which parameters are mandatory for compilation, route requests, or both.
 - [ ] Add or identify tests for missing, incorrectly typed, and unused declarations.
-- [ ] Confirm management-domain and ride-policy behavior against implemented tests.
+- [x] Confirm management-domain and ride-policy behavior against implemented tests.
 
 ### Completion criteria
 
-- [ ] Each global declaration has planned coverage for syntax, scope, type rules, evaluation phase, errors, and examples.
-- [ ] Cross-cutting declarations link to their routing-semantics sections rather than duplicating rules.
+- [x] Each documented stable global declaration covers syntax, scope, type rules, evaluation phase, errors, and examples.
+- [x] Cross-cutting declarations link to existing reference and example modules rather than duplicating their rules.
 
 ## 7. Content Area 4 — Per-Floor and Per-Area Topology (`topomap`)
 
@@ -368,23 +364,38 @@ The exact file split may be adjusted while writing, but the nine content areas b
 
 **Primary output:** articles under `examples/` and `glossary.html`
 
-### Points to write: examples
+### Part 1: Feature-by-feature tutorials
 
-- [ ] Create a minimal single-map building example.
-- [ ] Create a multi-floor building example.
-- [ ] Create an elevator example.
-- [ ] Create an escalator and stair example.
-- [ ] Create a required-user-parameter example.
-- [ ] Create a conditional-access example.
-- [ ] Create a management-domain and ride-policy example.
-- [ ] Create a banned-tag example.
-- [ ] Create a route-preference comparison example.
-- [ ] Create an uncertain-access example.
-- [ ] Create a required-action and navigation-hints example.
-- [ ] Create a reusable-submap example.
-- [ ] Create a complete Demo Tower example spanning all major language areas.
-- [ ] Create invalid examples for major diagnostic families.
-- [ ] Record expected compilation and routing results for every executable example.
+- [-] Create `examples/feature-by-feature-tutorials.html` using fictional but realistic venue scenarios.
+- [x] Cover minimal project composition.
+- [x] Cover maps and non-overlapping node areas.
+- [x] Cover atomic paths, costs, and intermediate nodes.
+- [x] Cover directed and bidirectional movement.
+- [x] Cover custom node and path annotations without assigning application-specific semantics.
+- [x] Cover values and expressions.
+- [x] Cover compilation parameters and access constraints.
+- [x] Cover reusable topo maps.
+- [x] Cover elevators.
+- [x] Cover stairs and escalators.
+- [x] Cover management domains and ride policies.
+- [x] Cover uncertain access.
+- [x] Give every valid and invalid example a code snippet unless no concrete coding guidance applies.
+- [x] Classify invalid examples as compilation-invalid, modeling-invalid, or unsupported assumptions.
+- [ ] Compile every complete valid example and record the expected result.
+- [ ] Verify every compilation-invalid example and record the expected diagnostic category.
+
+### Part 2: `SkyrimTower` mock building
+
+- [-] Create a complete synthetic `SkyrimTower` project spanning the stable language features covered by the tutorials.
+- [x] Document the 75-floor building program, special transfer floors, and map-identifier assumptions.
+- [x] Document the complete 16-system elevator inventory with realistic selected parameters and explicit station declarations.
+- [x] Define destination-sensitive ride policies for emergency state, access permissions, carried goods, and mall operation hours.
+- [x] Demonstrate arrival-only station access and complete station lockout on individual floors.
+- [x] Parse-check every current root, building-composition, and transport code block.
+- [ ] Deferred: define the SkyrimTower topo-map and submap sources after the formal reference areas are complete.
+- [ ] Explain how each completed source corresponds to the fictional physical building.
+- [ ] Provide the complete project sources as code snippets and downloadable example files.
+- [ ] Record representative compilation and routing results.
 
 ### Points to write: glossary
 
