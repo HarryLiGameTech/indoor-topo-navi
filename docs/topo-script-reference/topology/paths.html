@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Paths and Local Movement</title>
+</head>
+<body>
+  <main>
+    <article id="paths">
+      <header>
+        <h1>Paths and Local Movement</h1>
+        <p>An atomic path declares direct, traversable connectivity between two nodes in the same topo map. Atomic paths are the weighted edges used for intra-floor route calculation.</p>
+      </header>
+
+      <section id="atomicity">
+        <h2>Atomicity</h2>
+        <p>An atomic path must connect exactly two nodes without physically crossing another intermediate node. If traveling from one represented place to another necessarily makes a person pass through a third node, the connection must be split.</p>
+        <p>For nodes <code>A</code>, <code>B</code>, and <code>C</code> encountered in that order, declare:</p>
+        <pre><code>atomic-path [A &lt;-&gt; B] {
+  cost = 8.0
+}
+
+atomic-path [B &lt;-&gt; C] {
+  cost = 6.0
+}</code></pre>
+        <p>Do not also declare <code>A &lt;-&gt; C</code> when every physical traversal from <code>A</code> to <code>C</code> necessarily passes through <code>B</code>. Such an edge would hide a real decision or passage point from the topology.</p>
+      </section>
+
+      <section id="syntax-and-direction">
+        <h2>Syntax and Direction</h2>
+        <p>A directed path permits traversal only from the left node to the right node:</p>
+        <pre><code>atomic-path [entry_gate -> paid_concourse] {
+  cost = 4.0
+}</code></pre>
+        <p>A bidirectional path creates traversal in both directions with the same cost and attributes:</p>
+        <pre><code>atomic-path [north_corridor &lt;-&gt; central_junction] {
+  cost = 9.0
+}</code></pre>
+        <p>If the directions have different costs or annotations, declare two directed atomic paths:</p>
+        <pre><code>atomic-path [lower_ramp -> upper_ramp] {
+  cost = 15.0,
+  tags = ["up_slope"]
+}
+
+atomic-path [upper_ramp -> lower_ramp] {
+  cost = 10.0,
+  tags = ["down_slope"]
+}</code></pre>
+      </section>
+
+      <section id="cost">
+        <h2>Path Cost</h2>
+        <p>Every atomic path must contain a numeric <code>cost</code> field:</p>
+        <pre><code>atomic-path [atrium -> information_desk] {
+  cost = 7.5
+}</code></pre>
+        <p>The value may be an <code>Int</code> or <code>Float</code> and must be non-negative. The routing algorithm combines path costs to compare candidate routes.</p>
+        <p><code>cost</code> is the only atomic-path weight required by the TopoNavi Engine. TopoScript does not require separate <code>distance</code> or <code>time</code> fields. Applications may add such annotations, but their meaning and use are application-defined.</p>
+        <p>The current compiler verifies that <code>cost</code> is numeric but does not yet reject a negative number. A negative cost remains invalid source and must not be used.</p>
+      </section>
+
+      <section id="path-properties">
+        <h2>Path Properties</h2>
+        <p>Fields other than <code>cost</code> are annotations. Primitive values and lists are preserved in the compiled path and may be exposed verbatim through application responses.</p>
+        <pre><code>atomic-path [shopfront -> outdoor_terrace] {
+  cost = 5.0,
+  tags = ["door", "outdoor", "rain_exposed"],
+  doorLabel = "Terrace Door T5"
+}</code></pre>
+        <p>The TopoNavi Engine recognizes <code>tags</code> for traversal filtering and route metadata. The meaning of custom fields such as <code>doorLabel</code> belongs to the consuming application.</p>
+      </section>
+
+      <section id="path-tags">
+        <h2>Tags</h2>
+        <p>Store path tags as a list of canonical strings in <code>tags</code>. For placement rules and the supported vocabulary, read the <a href="../../manuals/tagging_guide.md">TopoScript Tagging Guide</a>.</p>
+      </section>
+
+      <section id="uncertain-access">
+        <h2>Uncertain Access</h2>
+        <p><code>subject-to</code> records that a path remains physically present but may be unavailable. It may name one constraint or a conjunction of constraint names, with an optional human-readable reason:</p>
+        <pre><code>atomic-path [public_gallery &lt;-&gt; roof_terrace] {
+  cost = 8.0
+}
+subject-to InGoodWeather because "The terrace may close in severe weather."</code></pre>
+        <pre><code>atomic-path [loading_lobby -> service_corridor] {
+  cost = 6.0
+}
+subject-to &lt;DeliveryBooked &amp;&amp; StaffAvailable&gt; because "Staff confirmation may be required."</code></pre>
+        <p>The path remains compiled. Route-request policy decides whether a route may use an uncertain segment, and a selected route discloses failed uncertainty reasons. One atomic path may contain only one access annotation and cannot combine <code>subject-to</code> with <code>requires</code>.</p>
+      </section>
+
+      <section id="conditional-topology">
+        <h2>Conditional Topology and Constraint Attachment Points</h2>
+        <p><strong>Placeholder:</strong> this section is deferred until the intended scope of hard, compile-time topology conditions and their permitted attachment points is confirmed.</p>
+      </section>
+
+      <section id="linear-paths">
+        <h2>Straight-Line Hints</h2>
+        <p>A <code>linear-path</code> lists at least three local nodes in their physical order along one straight corridor or other straight walking line:</p>
+        <pre><code>linear-path [west_lift_lobby, atrium_junction, east_lift_lobby]</code></pre>
+        <p>This declaration does not create connectivity. The required atomic paths must still be declared separately. The hint allows route output to group matching walking edges into straight-line legs.</p>
+      </section>
+
+      <section id="directional-arrows">
+        <h2>Turn Hints</h2>
+        <p>A <code>directional-arrow</code> states where a target lies relative to an orientation at an anchor node:</p>
+        <pre><code>directional-arrow [atrium_junction -> west_lift_lobby] food_court_entrance LEFT</code></pre>
+        <p>With <code>-></code>, a traveler at the anchor is considered to face toward the reference node. With <code>&lt;-</code>, the traveler faces away from the reference node.</p>
+        <p>The supported relative directions are <code>FRONT</code>, <code>FRONT_RIGHT</code>, <code>RIGHT</code>, <code>REAR_RIGHT</code>, <code>REAR</code>, <code>REAR_LEFT</code>, <code>LEFT</code>, and <code>FRONT_LEFT</code>.</p>
+        <p>A directional arrow neither creates a path nor changes route cost. When it matches a boundary between straight-line legs, structured route output may expose the resolved turn direction and the node at which the turn occurs.</p>
+      </section>
+
+      <section id="path-validation">
+        <h2>Validation</h2>
+        <ul>
+          <li>Both endpoints must resolve to nodes in the containing topo map.</li>
+          <li><code>cost</code> must be an <code>Int</code> or <code>Float</code> and must not be negative.</li>
+          <li>A <code>linear-path</code> must contain at least three declared nodes.</li>
+          <li>Every node named by a directional arrow must exist in the containing topo map.</li>
+          <li>A direction name in a directional arrow must be one of the eight supported values.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

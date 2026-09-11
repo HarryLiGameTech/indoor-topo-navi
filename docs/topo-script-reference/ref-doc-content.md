@@ -179,38 +179,35 @@ The exact file split may be adjusted while writing, but the nine content areas b
 
 ### Points to write
 
-- [ ] Define the responsibilities and boundaries of a topo map.
-- [ ] Document topo-map declaration and naming rules.
-- [ ] Document nodes and their supported properties.
-- [ ] Document paths and their supported properties.
-- [ ] Document directed and bidirectional connectivity.
-- [ ] Document path cost, time, distance, or other weight fields.
-- [ ] Document coordinates and spatial metadata.
-- [ ] Document tags on maps, nodes, and paths.
-- [ ] Document required actions.
-- [ ] Document spatial hints.
-- [ ] Document turn hints.
-- [ ] Document uncertain-access markers and their placement.
-- [ ] Document conditional topology and constraint attachment points.
-- [ ] Document submap declarations.
-- [ ] Document reusable-submap instantiation.
-- [ ] Document name qualification for instantiated content.
-- [ ] Document connections between parent maps and submaps.
-- [ ] Document disconnected, duplicate, and otherwise invalid topology.
-- [ ] State which concepts represent intra-map movement.
+- [x] Define the responsibilities and boundaries of a topo map.
+- [x] Document topo-map declaration and naming rules.
+- [x] Document nodes and their supported properties.
+- [x] Document paths and their supported properties.
+- [x] Document directed and bidirectional connectivity.
+- [x] Document path cost and distinguish it from application-defined weight annotations.
+- [x] Document tags concisely and link to the tagging manual for the complete vocabulary and placement rules.
+- [x] Document straight-line hints.
+- [x] Document turn hints.
+- [x] Document uncertain-access markers and their placement.
+- [!] Clarify the intended scope of conditional topology and constraint attachment points; retain a placeholder until then.
+- [x] Cross-reference submap declaration and reusable-instance semantics already documented in Area 2.
+- [!] Document name qualification for instantiated content after the engine contract is confirmed.
+- [x] Clarify that the current language has no parent-map hierarchy: `root` is a shared environment and `building-includes` composes sibling maps.
+- [x] Document disconnected, duplicate, and otherwise invalid topology.
+- [x] State which concepts represent intra-map movement.
 
 ### Verification tasks
 
-- [ ] Inventory all map, node, path, and submap fields from the AST and compiler model.
-- [ ] Trace each source property to its compiled representation and route output, if any.
+- [x] Inventory all map, node, path, and submap fields from the AST and compiler model.
+- [x] Trace each documented source property to its compiled representation and route output, if any.
 - [ ] Verify directionality and cost behavior with focused route tests.
 - [ ] Verify reusable-submap naming and collision behavior.
-- [ ] Identify map properties currently parsed but unused by routing.
+- [x] Identify map properties currently parsed but unused by routing.
 
 ### Completion criteria
 
 - [ ] Every topology construct has planned syntax, static-semantics, runtime-semantics, diagnostic, and example coverage.
-- [ ] The reference clearly separates topology connectivity from cross-map transportation.
+- [x] The reference clearly separates topology connectivity from cross-map transportation.
 
 ## 8. Content Area 5 — Cross-Map Transportation (`transport`)
 

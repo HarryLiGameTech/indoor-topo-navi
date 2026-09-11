@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Nodes</title>
+</head>
+<body>
+  <main>
+    <article id="nodes">
+      <header>
+        <h1>Nodes</h1>
+        <p>A node is a named topological entity representing one unambiguous, physically bounded area of a venue.</p>
+        <p>Nodes belong to one <a href="topomap.html">topo map</a> and therefore to one certain floor.</p>
+      </header>
+
+      <section id="physical-semantics">
+        <h2>Physical Semantics</h2>
+        <p>A node may represent a destination area, entrance area, doorway area, junction area, corridor-corner area, transport-landing area, decision area, or another navigation-relevant region.</p>
+        <p>The physical areas represented by any two distinct nodes must not overlap. Under Region Connection Calculus topology, their relationship must be one of:</p>
+        <ul>
+          <li><strong>Disconnected (<code>DC</code>)</strong>: the two areas do not share any physical point.</li>
+          <li><strong>Externally connected (<code>EC</code>)</strong>: the boundaries of the two areas touch, but their interiors do not intersect.</li>
+        </ul>
+        <p>Distinct nodes must therefore not partially overlap, represent equal physical areas, or contain one another. If a physical region would otherwise be represented by overlapping nodes, the author must partition it into non-overlapping node areas.</p>
+      </section>
+
+      <section id="recommended-granularity">
+        <h2>Recommended Granularity</h2>
+        <p>As a mapping guideline, a node should be small enough that the longest reasonable walking line across its area takes no more than five seconds. This is the node's longest “diagonal” in walking-time terms; it does not require metric coordinates or a geometrically rectangular area.</p>
+        <p>If crossing the represented area can take longer than five seconds, consider partitioning it into finer, non-overlapping nodes connected by atomic paths. This threshold is an authoring recommendation and is not enforced by the compiler.</p>
+      </section>
+
+      <section id="syntax">
+        <h2>Syntax</h2>
+        <pre><code>topo-node east_lift_lobby</code></pre>
+        <p>A node may carry an annotation record:</p>
+        <pre><code>topo-node visitor_reception {
+  description = "Visitor reception desk",
+  facilityName = "Reception",
+  tags = ["staffed"],
+  narration = "explicit"
+}</code></pre>
+        <p>The node identifier is local to its containing topo map. Local paths and navigation-hint declarations use the simple name. A transport refers to the node with a qualified name such as <code>MallLevel5::east_lift_lobby</code>.</p>
+      </section>
+
+      <section id="properties">
+        <h2>Supported Properties</h2>
+        <p>The annotation record is optional. Integer, floating-point, Boolean, string, and list values are preserved as compiled node attributes and may be exposed to applications.</p>
+        <p>The TopoNavi Engine's structured route output recognizes and exposes these node fields when present:</p>
+        <ul>
+          <li><code>description</code></li>
+          <li><code>shopName</code> or <code>shop_name</code></li>
+          <li><code>facilityName</code> or <code>facility_name</code></li>
+          <li><code>shopCategory</code> or <code>shop_category</code></li>
+          <li><code>facilityCategory</code> or <code>facility_category</code></li>
+          <li><code>positions</code></li>
+          <li><code>observedThroughput</code> or <code>observed_throughput</code></li>
+          <li><code>maxThroughput</code> or <code>max_throughput</code></li>
+          <li><code>tags</code></li>
+          <li><code>narration</code></li>
+          <li><code>refVisualUrl</code> or <code>ref_visual_url</code></li>
+          <li><code>beaconId</code> or <code>beacon_id</code></li>
+          <li><code>isTrivial</code> or <code>is_trivial</code></li>
+        </ul>
+        <p>Other attributes are application-defined. They are retained in the compiled node data, but TopoScript does not prescribe how every application must interpret them.</p>
+      </section>
+
+      <section id="node-tags">
+        <h2>Tags</h2>
+        <p>Store node tags as a list of canonical strings in <code>tags</code>. For placement rules and the supported vocabulary, read the <a href="../../manuals/tagging_guide.md">TopoScript Tagging Guide</a>.</p>
+      </section>
+
+      <section id="connectivity">
+        <h2>Connectivity</h2>
+        <p>A node may participate in zero or more atomic paths and may be referenced by one or more transport stations. Declaring a node alone does not make it reachable.</p>
+      </section>
+
+      <section id="valid-partition">
+        <h2>Valid Partition Example</h2>
+        <p>A long concourse containing a junction and two lift lobbies should be partitioned into distinct regions:</p>
+        <pre><code>topo-node west_lift_lobby
+topo-node central_junction
+topo-node east_lift_lobby
+
+atomic-path [west_lift_lobby &lt;-&gt; central_junction] {
+  cost = 18.0
+}
+
+atomic-path [central_junction &lt;-&gt; east_lift_lobby] {
+  cost = 16.0
+}</code></pre>
+      </section>
+
+      <section id="invalid-overlap">
+        <h2>Invalid Overlap Example</h2>
+        <p>Do not model the same physical junction once as part of a corridor node and again as a separate junction node. The two represented areas would overlap. Partition the corridor at the junction and connect the resulting nodes instead.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Topo Maps</title>
+</head>
+<body>
+  <main>
+    <article id="topomap">
+      <header>
+        <h1>Topo Maps</h1>
+        <p>A topo-map instance describes the local navigation topology of one certain floor. It contains the floor's <a href="nodes.html">nodes</a>, <a href="paths.html">atomic paths</a>, and optional declarations used to explain local movement.</p>
+        <p>A topo map describes connectivity rather than a metric floor plan. Movement between topo maps belongs to a transport declaration, not to an atomic path.</p>
+      </header>
+
+      <nav aria-label="Area 4 articles">
+        <ul>
+          <li><a href="topomap.html">Topo maps</a></li>
+          <li><a href="nodes.html">Nodes</a></li>
+          <li><a href="paths.html">Paths and local movement</a></li>
+          <li><a href="submaps.html">Map selection and reuse</a></li>
+        </ul>
+      </nav>
+
+      <section id="responsibilities-and-boundaries">
+        <h2>Responsibilities and Boundaries</h2>
+        <p>One topo-map instance must model one certain floor. A topo map must not combine nodes from different floors merely because those nodes can be connected in one graph. A reusable topo-map source may define a standard-floor template, but every resulting instance still represents one particular floor.</p>
+        <p>It is algorithmically possible to place every node of a building into one super-map, but doing so is extremely discouraged. A super-map:</p>
+        <ul>
+          <li>erases the semantic boundary between movement on a floor and movement between floors;</li>
+          <li>bypasses the transport model used for elevators, escalators, and stairs;</li>
+          <li>makes floor-specific management domains, access rules, route explanations, and updates harder to express and audit;</li>
+          <li>prevents effective reuse of standard-floor topology; and</li>
+          <li>increases the impact of a local mapping mistake by placing unrelated floors in the same graph.</li>
+        </ul>
+        <p>These are modeling and maintainability boundaries, not graph-theory limitations.</p>
+      </section>
+
+      <section id="declaration">
+        <h2>Declaration</h2>
+        <pre><code>topo-map MallLevel5() {
+  let params = {}
+
+  topo-node atrium
+  topo-node east_lift_lobby
+
+  atomic-path [atrium &lt;-&gt; east_lift_lobby] {
+    cost = 12.0
+  }
+}</code></pre>
+        <p>The map name is an identifier. For a directly included map, the name in the declaration, the source filename, and the <code>submap</code> name in <a href="../building/building-includes.html#direct-submaps"><code>building-includes</code></a> should agree exactly, including case.</p>
+        <p>The header may syntactically contain a parameter list, but map-instance argument passing is not currently defined. Authors should use an empty header parameter list and place local calculated values in the map body.</p>
+      </section>
+
+      <section id="map-parameters">
+        <h2>The <code>params</code> Record</h2>
+        <p>Every compiled topo map must define a local <code>params</code> record. Use an empty record when the map has no recognized parameters:</p>
+        <pre><code>let params = {}</code></pre>
+        <p>The optional recognized field <code>permResident</code> is an <code>Int</code> describing the floor's permanent resident population:</p>
+        <pre><code>let params: {permResident: Int} = {
+  permResident = 180
+}</code></pre>
+        <p>When elevator-demand modeling needs this value and it is omitted, the TopoNavi Engine uses <code>1</code>. Additional fields may be used by local expressions, but the engine does not assign them standard map-level routing semantics.</p>
+      </section>
+
+      <section id="management-domain-override">
+        <h2>Management-Domain Override</h2>
+        <p>A topo map may override the management domain assigned by <code>building-includes</code>:</p>
+        <pre><code>topo-map TradingFloor() override-managed-by TradingDomain {
+  let params = {}
+}</code></pre>
+        <p>The effective-domain precedence is documented in <a href="../building/building-includes.html#management-domains">Management-Domain Attachment</a>.</p>
+      </section>
+
+      <section id="intra-map-movement">
+        <h2>Intra-Map Movement</h2>
+        <p>Nodes and atomic paths describe movement within the map. An atomic path must therefore reference two nodes declared in the same topo map.</p>
+        <p>An elevator landing, stair landing, or escalator landing is still an ordinary node in its floor map. A transport station later refers to that node and provides the cross-map connection.</p>
+      </section>
+
+      <section id="map-tags">
+        <h2>Map Tags</h2>
+        <p>The current topo-map declaration has no map-level annotation record and therefore no map-level <code>tags</code> field. Tags may be attached to nodes and atomic paths. See <a href="../../manuals/tagging_guide.md">TopoScript Tagging Guide</a> for the canonical vocabulary and placement rules.</p>
+      </section>
+
+      <section id="disconnected-and-invalid-topology">
+        <h2>Disconnected and Invalid Topology</h2>
+        <p>A disconnected node or disconnected component is permitted, but no intra-map route can cross the gap. This can intentionally represent an unmapped or currently unreachable area; otherwise it usually indicates a missing atomic path.</p>
+        <p>Node identifiers must be unique within a topo map. Duplicate declarations make references ambiguous and are invalid authoring practice, although the current compiler does not consistently diagnose every duplicate.</p>
+        <p>A path that names an undeclared node fails during elaboration. Negative path costs are invalid because routing requires non-negative weights, but the current compiler checks only that <code>cost</code> is numeric; explicit non-negative validation is not yet implemented.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

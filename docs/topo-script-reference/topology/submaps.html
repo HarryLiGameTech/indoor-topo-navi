@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Map Selection and Reuse</title>
+</head>
+<body>
+  <main>
+    <article id="submaps">
+      <header>
+        <h1>Map Selection and Reuse</h1>
+        <p>A topo-map source defines local floor topology. It becomes part of a building only when selected as a <code>submap</code> by <code>building-includes</code>. A reusable source may produce multiple named instances, but each instance represents one particular floor.</p>
+      </header>
+
+      <section id="where-submaps-are-declared">
+        <h2>Where Submaps Are Declared</h2>
+        <p><code>submap</code> is a whole-building composition entry, not a declaration nested inside a topo map. Direct selection, source resolution, reusable <code>using</code> instances, ordering, and management-domain attachment are documented in <a href="../building/building-includes.html">Whole-Building Composition</a>.</p>
+      </section>
+
+      <section id="no-parent-map">
+        <h2>No Parent-Map Hierarchy</h2>
+        <p>Current TopoScript does not define parent and child topo maps. Included map instances are sibling navigation graphs in the compiled building.</p>
+        <p>The <code>root</code> source is a shared declaration environment, not a parent map. <code>building-includes</code> is the project manifest, not a navigable map. Neither contains the physical topology of its included floors.</p>
+      </section>
+
+      <section id="cross-map-connections">
+        <h2>Cross-Map Connections</h2>
+        <p>An atomic path cannot connect nodes from different topo maps. Cross-map movement is declared by a transport whose stations refer to nodes in the participating floor maps.</p>
+      </section>
+
+      <section id="deferred-instance-qualification">
+        <h2>Instantiated-Content Names</h2>
+        <p><strong>Deferred:</strong> the precise reference rules and collision behavior for content instantiated through <code>submap InstanceName using BaseMapName</code> will be documented after the engine contract is confirmed.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>
