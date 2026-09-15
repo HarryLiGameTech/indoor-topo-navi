@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Escalators</title>
+</head>
+<body>
+  <main>
+    <article id="escalators">
+      <header>
+        <h1>Escalators</h1>
+        <p>An <code>Escalator</code> transport is a fixed-time connection between exactly two topo-map instances.</p>
+        <p>Common station, access, ride-policy, transfer, and output rules are defined in <a href="transport.html">Cross-Map Transportation</a>.</p>
+      </header>
+
+      <section id="declaration">
+        <h2>Declaration</h2>
+        <pre><code>transport AtriumEscalator is Escalator {
+  let params = {
+    time = 18.0
+  }
+
+  let displayName = "Atrium escalator"
+
+  station Lower at MallLevel2::atrium_escalator_landing {}
+  station Upper at MallLevel3::atrium_escalator_landing {}
+}</code></pre>
+      </section>
+
+      <section id="travel-time">
+        <h2>Fixed Travel Time</h2>
+        <p><code>params.time</code> is the complete travel time in seconds between the two stations.</p>
+        <ul>
+          <li><code>time</code> is required.</li>
+          <li>It may be an <code>Int</code> or <code>Float</code>.</li>
+          <li>It must be finite and greater than zero.</li>
+          <li>No additional waiting, velocity, acceleration, or dwell-time calculation is applied.</li>
+        </ul>
+      </section>
+
+      <section id="stations">
+        <h2>Stations</h2>
+        <p>An escalator must declare exactly two stations, and the stations must belong to two distinct topo-map instances. Station records may be empty because escalators do not require <code>location</code>, <code>departureRate</code>, or <code>directSegmentIndex</code>.</p>
+        <p>The declaration order is not a physical elevation or direction declaration.</p>
+      </section>
+
+      <section id="direction">
+        <h2>Operating Direction</h2>
+        <p>An escalator is currently modeled as a fixed-time connection that can be traversed in either direction. This model is suitable for a bidirectional escalator service, such as a paired up-and-down installation represented as one transport.</p>
+        <p>A map author cannot currently declare that a particular escalator operates only upward, only downward, or reverses direction according to an operating schedule.</p>
+        <p>Station access requirements and <code>out-of-order</code> describe authorization or availability. They do not describe the escalator's ordinary operating direction.</p>
+      </section>
+
+      <section id="station-availability">
+        <h2>Station Availability</h2>
+        <p>Escalators support unscoped, arrival-only, and departure-only station requirements, uncertain access, and <code>out-of-order</code> in the same way as elevators:</p>
+        <pre><code>station Upper at MallLevel3::atrium_escalator_landing {}
+  requires MallOpen on Arrive</code></pre>
+        <p>See <a href="transport.html#station-access">Station Access</a>.</p>
+      </section>
+
+      <section id="route-output">
+        <h2>Route Output</h2>
+        <p>An escalator ride is returned as a <code>Transport</code> segment with the configured fixed travel time.</p>
+      </section>
+
+      <section id="invalid-escalators">
+        <h2>Invalid Escalator Declarations</h2>
+        <ul>
+          <li>A missing or non-numeric <code>params.time</code> fails compilation.</li>
+          <li>A non-finite, zero, or negative <code>time</code> fails compilation.</li>
+          <li>Fewer or more than two stations fail compilation.</li>
+          <li>Two stations belonging to the same topo-map instance fail compilation.</li>
+          <li>An unknown station map or node fails compilation.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

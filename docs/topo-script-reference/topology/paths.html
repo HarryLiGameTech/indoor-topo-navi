@@ -57,7 +57,6 @@ atomic-path [upper_ramp -> lower_ramp] {
 }</code></pre>
         <p>The value may be an <code>Int</code> or <code>Float</code> and must be non-negative. The routing algorithm combines path costs to compare candidate routes.</p>
         <p><code>cost</code> is the only atomic-path weight required by the TopoNavi Engine. TopoScript does not require separate <code>distance</code> or <code>time</code> fields. Applications may add such annotations, but their meaning and use are application-defined.</p>
-        <p>The current compiler verifies that <code>cost</code> is numeric but does not yet reject a negative number. A negative cost remains invalid source and must not be used.</p>
       </section>
 
       <section id="path-properties">
@@ -78,16 +77,12 @@ atomic-path [upper_ramp -> lower_ramp] {
 
       <section id="uncertain-access">
         <h2>Uncertain Access</h2>
-        <p><code>subject-to</code> records that a path remains physically present but may be unavailable. It may name one constraint or a conjunction of constraint names, with an optional human-readable reason:</p>
+        <p><code>subject-to</code> records that a path remains physically present but may be unavailable:</p>
         <pre><code>atomic-path [public_gallery &lt;-&gt; roof_terrace] {
   cost = 8.0
 }
 subject-to InGoodWeather because "The terrace may close in severe weather."</code></pre>
-        <pre><code>atomic-path [loading_lobby -> service_corridor] {
-  cost = 6.0
-}
-subject-to &lt;DeliveryBooked &amp;&amp; StaffAvailable&gt; because "Staff confirmation may be required."</code></pre>
-        <p>The path remains compiled. Route-request policy decides whether a route may use an uncertain segment, and a selected route discloses failed uncertainty reasons. One atomic path may contain only one access annotation and cannot combine <code>subject-to</code> with <code>requires</code>.</p>
+        <p>The path remains in the compiled topology. Full syntax and examples are provided in <a href="../examples/feature-by-feature-tutorials.html#uncertain-access">Representing Uncertain Access</a>. Routing-time selection, propagation, and disclosure belong to <a href="../routing/constraints-and-parameters.html#uncertain-access">Uncertain Access and Risk Handling</a>.</p>
       </section>
 
       <section id="conditional-topology">
@@ -104,9 +99,22 @@ subject-to &lt;DeliveryBooked &amp;&amp; StaffAvailable&gt; because "Staff confi
 
       <section id="directional-arrows">
         <h2>Turn Hints</h2>
-        <p>A <code>directional-arrow</code> states where a target lies relative to an orientation at an anchor node:</p>
+        <p>A <code>directional-arrow</code> states where a target node lies relative to a facing direction established at an anchor node:</p>
+        <pre><code>directional-arrow [ANCHOR -> REFERENCE] TARGET DIRECTION</code></pre>
+        <dl>
+          <dt><code>ANCHOR</code></dt>
+          <dd>The node where the turn or directional instruction applies.</dd>
+
+          <dt><code>REFERENCE</code></dt>
+          <dd>The node used to establish which way the traveler is facing while at the anchor.</dd>
+
+          <dt><code>TARGET</code></dt>
+          <dd>The node whose position is being described relative to that facing direction.</dd>
+        </dl>
         <pre><code>directional-arrow [atrium_junction -> west_lift_lobby] food_court_entrance LEFT</code></pre>
-        <p>With <code>-></code>, a traveler at the anchor is considered to face toward the reference node. With <code>&lt;-</code>, the traveler faces away from the reference node.</p>
+        <p>In this example, the anchor is <code>atrium_junction</code>. While standing there and facing toward the reference node <code>west_lift_lobby</code>, the target <code>food_court_entrance</code> is on the traveler's left.</p>
+        <p>With <code>-></code>, a traveler at the anchor faces toward the reference node. With <code>&lt;-</code>, the traveler at the anchor faces away from the reference node:</p>
+        <pre><code>directional-arrow [atrium_junction &lt;- west_lift_lobby] east_exit FRONT_RIGHT</code></pre>
         <p>The supported relative directions are <code>FRONT</code>, <code>FRONT_RIGHT</code>, <code>RIGHT</code>, <code>REAR_RIGHT</code>, <code>REAR</code>, <code>REAR_LEFT</code>, <code>LEFT</code>, and <code>FRONT_LEFT</code>.</p>
         <p>A directional arrow neither creates a path nor changes route cost. When it matches a boundary between straight-line legs, structured route output may expose the resolved turn direction and the node at which the turn occurs.</p>
       </section>

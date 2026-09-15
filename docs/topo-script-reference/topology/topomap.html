@@ -79,16 +79,11 @@
         <p>An elevator landing, stair landing, or escalator landing is still an ordinary node in its floor map. A transport station later refers to that node and provides the cross-map connection.</p>
       </section>
 
-      <section id="map-tags">
-        <h2>Map Tags</h2>
-        <p>The current topo-map declaration has no map-level annotation record and therefore no map-level <code>tags</code> field. Tags may be attached to nodes and atomic paths. See <a href="../../manuals/tagging_guide.md">TopoScript Tagging Guide</a> for the canonical vocabulary and placement rules.</p>
-      </section>
-
       <section id="disconnected-and-invalid-topology">
         <h2>Disconnected and Invalid Topology</h2>
         <p>A disconnected node or disconnected component is permitted, but no intra-map route can cross the gap. This can intentionally represent an unmapped or currently unreachable area; otherwise it usually indicates a missing atomic path.</p>
-        <p>Node identifiers must be unique within a topo map. Duplicate declarations make references ambiguous and are invalid authoring practice, although the current compiler does not consistently diagnose every duplicate.</p>
-        <p>A path that names an undeclared node fails during elaboration. Negative path costs are invalid because routing requires non-negative weights, but the current compiler checks only that <code>cost</code> is numeric; explicit non-negative validation is not yet implemented.</p>
+        <p>Node identifiers must be unique within a topo map. Duplicate declarations make references ambiguous and are invalid authoring practice.</p>
+        <p>A path that names an undeclared node fails during elaboration. Negative path costs are invalid because routing requires non-negative weights.</p>
       </section>
     </article>
   </main>

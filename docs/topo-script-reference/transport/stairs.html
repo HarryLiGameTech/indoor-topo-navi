@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Stairs</title>
+</head>
+<body>
+  <main>
+    <article id="stairs">
+      <header>
+        <h1>Stairs</h1>
+        <p>A <code>Stairs</code> transport represents a continuous staircase connecting landing nodes on two or more topo-map instances.</p>
+        <p>Common station, ride-policy, transfer, and output rules are defined in <a href="transport.html">Cross-Map Transportation</a>.</p>
+      </header>
+
+      <section id="declaration">
+        <h2>Declaration</h2>
+        <pre><code>transport WestStair is Stairs {
+  let params = {
+    turnBackCost = 3
+  }
+
+  let displayName = "West staircase"
+
+  station Ground at Lobby::west_stair_landing {
+    location = 0.0,
+    directSegmentIndex = 0
+  }
+
+  station Level2 at OfficeLevel2::west_stair_landing {
+    location = 4.2,
+    directSegmentIndex = 1
+  }
+
+  station Level3 at OfficeLevel3::west_stair_landing {
+    location = 8.4,
+    directSegmentIndex = 2
+  }
+}</code></pre>
+      </section>
+
+      <section id="parameters">
+        <h2>Stair Parameters</h2>
+        <p>A staircase must define a local <code>params</code> record. <code>turnBackCost</code> is an optional <code>Int</code> and defaults to <code>3</code>.</p>
+        <p><code>turnBackCost</code> represents additional traversal time, in seconds, for a change between direct stair segments. It is a time cost rather than a stamina or physical-demand value.</p>
+      </section>
+
+      <section id="station-fields">
+        <h2>Stair Station Fields</h2>
+        <p>Every stair station requires:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>location</code></td>
+              <td><code>Int</code> or <code>Float</code></td>
+              <td>Vertical elevation in metres relative to a consistent building datum.</td>
+            </tr>
+            <tr>
+              <td><code>directSegmentIndex</code></td>
+              <td><code>Int</code></td>
+              <td>The ordered direct stair segment containing this landing.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Indices normally begin at <code>0</code> at one end of the staircase and increase as the staircase progresses. Crossing non-adjacent segment indices incurs <code>turnBackCost</code> for the intermediate changes of direction.</p>
+      </section>
+
+      <section id="traversal-time">
+        <h2>Traversal Time</h2>
+        <p>Base stair traversal time is estimated from the absolute vertical difference between station <code>location</code> values using an average vertical walking speed of <code>0.167</code> metres per second. Applicable <code>turnBackCost</code> values represent additional traversal time.</p>
+        <p>Stair traversal is returned as <code>Climbing</code>. Physical-demand routing may therefore penalize stair traversal more heavily than elevator or escalator use without interpreting <code>turnBackCost</code> as a stamina score.</p>
+      </section>
+
+      <section id="service-range">
+        <h2>Service Range</h2>
+        <p>Every declared landing is part of the same continuous staircase. The compiled transport connects every permitted ordered pair of distinct station maps; station declarations do not need to be limited to adjacent floors.</p>
+      </section>
+
+      <section id="stair-access-control">
+        <h2>Stair Access Control</h2>
+        <p>Stair stations deliberately ignore station-level <code>requires</code> and <code>out-of-order</code>. A person's ability to step onto a stair landing is determined by the surrounding floor topology rather than by the staircase transport itself.</p>
+        <p>When a staircase is protected by a locked door, staff-only entrance, emergency gate, or similar boundary, attach <code>requires</code> to the atomic path that crosses that boundary:</p>
+        <pre><code>atomic-path [public_corridor -> protected_stair_landing] {
+  cost = 4.0
+} requires StaffAccess</code></pre>
+        <p>This controls the actual doorway or boundary while leaving the physical staircase represented. Where access differs by floor or travel direction, place the requirement on each applicable directed doorway path.</p>
+      </section>
+
+      <section id="invalid-stairs">
+        <h2>Invalid Stair Declarations</h2>
+        <ul>
+          <li>The transport must contain a record-valued <code>params</code> binding.</li>
+          <li><code>turnBackCost</code>, when present, must be an <code>Int</code>.</li>
+          <li>Every station must provide a numeric <code>location</code>.</li>
+          <li>Every station must provide an integer <code>directSegmentIndex</code>.</li>
+          <li>Every qualified station node must resolve to an included topo map and a declared node.</li>
+          <li>A staircase intended for cross-map navigation must serve at least two maps.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

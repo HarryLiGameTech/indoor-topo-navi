@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Elevators</title>
+</head>
+<body>
+  <main>
+    <article id="elevators">
+      <header>
+        <h1>Elevators</h1>
+        <p>An <code>Elevator</code> transport represents one elevator bank serving two or more topo-map instances. Its parameters describe the bank, while each station identifies a served landing and its vertical location.</p>
+        <p>Common station, access, ride-policy, transfer, and output rules are defined in <a href="transport.html">Cross-Map Transportation</a>.</p>
+      </header>
+
+      <section id="declaration">
+        <h2>Declaration</h2>
+        <pre><code>transport MainElevator is Elevator {
+  let params = {
+    maxVelocity = 3.0,
+    acceleration = 0.8,
+    duty = 1600,
+    capacity = 18,
+    carAmount = 4
+  }
+
+  let displayName = "Main passenger elevators"
+
+  station Lobby at Lobby::main_elevator_landing {
+    location = 0.0,
+    departureRate = 0.40
+  }
+
+  station Office2 at OfficeLevel2::main_elevator_landing {
+    location = 4.2,
+    departureRate = 0.10
+  }
+}</code></pre>
+      </section>
+
+      <section id="parameters">
+        <h2>Elevator Parameters</h2>
+        <p>An elevator must define a local <code>params</code> record. The recognized fields are:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>maxVelocity</code></td>
+              <td><code>Int</code> or <code>Float</code></td>
+              <td><code>2.5</code></td>
+              <td>Maximum car velocity in metres per second.</td>
+            </tr>
+            <tr>
+              <td><code>acceleration</code></td>
+              <td><code>Int</code> or <code>Float</code></td>
+              <td><code>0.8</code></td>
+              <td>Acceleration in metres per second squared.</td>
+            </tr>
+            <tr>
+              <td><code>carAmount</code></td>
+              <td><code>Int</code></td>
+              <td><code>1</code></td>
+              <td>Number of cars in the elevator bank.</td>
+            </tr>
+            <tr>
+              <td><code>capacity</code></td>
+              <td><code>Int</code></td>
+              <td><code>13</code></td>
+              <td>Modeled passenger capacity of each car.</td>
+            </tr>
+            <tr>
+              <td><code>duty</code></td>
+              <td><code>Int</code></td>
+              <td><code>1000</code></td>
+              <td>Rated carrying load of the elevator.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><code>maxSpeed</code> and <code>cars</code> are not aliases for <code>maxVelocity</code> and <code>carAmount</code>.</p>
+      </section>
+
+      <section id="duty">
+        <h2>Duty and Carrying Load</h2>
+        <p><code>duty</code> is currently retained in the compiled elevator model for application-side inspection but does not affect route eligibility or route cost. It is intended to participate in a native implicit constraint in a future language version, allowing the engine to compare an elevator's duty with the requested carrying load.</p>
+      </section>
+
+      <section id="station-fields">
+        <h2>Elevator Station Fields</h2>
+        <p>Every elevator station requires:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>location</code></td>
+              <td><code>Int</code> or <code>Float</code></td>
+              <td>Vertical elevation in metres relative to a consistent building datum.</td>
+            </tr>
+            <tr>
+              <td><code>departureRate</code></td>
+              <td><code>Float</code></td>
+              <td>Probability-like departure share used by elevator waiting-time estimation.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>An integer <code>departureRate</code>, such as <code>departureRate = 1</code>, is not accepted; write <code>1.0</code>.</p>
+        <p>It is strongly recommended that every <code>departureRate</code> remain within the inclusive range <code>0.0</code> to <code>1.0</code>, and that the values across one elevator bank total approximately <code>1.0</code>. These invariants are not currently enforced by the compiler.</p>
+      </section>
+
+      <section id="served-floors">
+        <h2>Served Floors</h2>
+        <p>Every declared station is a stop. Every permitted ordered pair of distinct stops is connected directly in the compiled transport graph. Stations need not be written in height order because <code>location</code> establishes their vertical ordering.</p>
+        <p>An express elevator is modeled by omitting floors at which it does not stop:</p>
+        <pre><code>station Lobby at Lobby::express_landing {
+  location = 0.0,
+  departureRate = 0.50
+}
+
+station SkyLobby at SkyLobby30::express_landing {
+  location = 138.0,
+  departureRate = 0.50
+}</code></pre>
+      </section>
+
+      <section id="cost-model">
+        <h2>Elevator Cost Model</h2>
+        <p>Movement time is estimated from the vertical distance between station <code>location</code> values, <code>maxVelocity</code>, and <code>acceleration</code>.</p>
+        <p>Waiting-time estimation additionally uses <code>carAmount</code>, <code>capacity</code>, station <code>departureRate</code> values, and each served map's <code>permResident</code>. The current model uses an internal fifteen-second dwell-time assumption.</p>
+        <p>The compiled transport graph currently calculates elevator ride costs using the TopoNavi Engine's up-rush traffic model. Traffic-pattern selection and exact route-cost behavior are implementation-defined routing concerns and are documented in the routing reference.</p>
+        <p>The station with the lowest <code>location</code> is treated as the entrance station for waiting-time estimation; all other stations are treated as occupant stations.</p>
+      </section>
+
+      <section id="access-example">
+        <h2>Station and Ride Access</h2>
+        <pre><code>station F50 at OfficeLevel50::passenger_landing {
+  location = 222.0,
+  departureRate = 0.04
+} requires TradingFloorAccess on Arrive
+
+ride-from any to HotelDomain requires HotelAccess</code></pre>
+        <p>The station rule controls arrival at this particular stop. The ride policy controls matching directed rides across the management domain. See <a href="transport.html#station-access">Station Access</a> and <a href="transport.html#ride-policies">Ride Policies</a>.</p>
+      </section>
+
+      <section id="invalid-elevators">
+        <h2>Invalid Elevator Declarations</h2>
+        <ul>
+          <li>The transport must contain a record-valued <code>params</code> binding.</li>
+          <li>Recognized numeric parameters must have the types shown above.</li>
+          <li>Every station must provide a numeric <code>location</code>.</li>
+          <li>Every station must provide a floating-point <code>departureRate</code>.</li>
+          <li>Every qualified station node must resolve to an included topo map and a declared node.</li>
+          <li>An elevator intended for cross-map navigation must serve at least two maps.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Routing Semantics</title>
+</head>
+<body>
+  <main>
+    <article id="routing-semantics">
+      <header>
+        <h1>Routing Semantics</h1>
+        <p>Route planning searches a compiled building model for a complete traversable route between two nodes. The result may combine walking within topo maps, transfers between transport landings, and cross-map travel by elevators, escalators, or stairs.</p>
+      </header>
+
+      <nav aria-label="Routing reference articles">
+        <ul>
+          <li><a href="routing-semantics.html">Routing semantics</a></li>
+          <li><a href="constraints-and-parameters.html">Constraints, parameters, and traversal filters</a></li>
+          <li><a href="preferences-and-modes.html">Routing modes and preferences</a></li>
+        </ul>
+      </nav>
+
+      <section id="compiled-routing-model">
+        <h2>Compiled Routing Model</h2>
+        <figure>
+          <img src="../assets/routing-graph-placeholder.svg" alt="Placeholder for a diagram showing per-map navigation graphs connected by a transport graph">
+          <figcaption>Placeholder: per-map navigation graphs connected through transport stations and cross-map transport edges.</figcaption>
+        </figure>
+        <p>The compiled building contains one directed navigation graph for each topo map and one transport graph connecting their landing nodes.</p>
+        <ul>
+          <li>Each directed <a href="../topology/paths.html#syntax-and-direction">atomic path</a> becomes one walking edge.</li>
+          <li>Each bidirectional atomic path becomes two directed walking edges.</li>
+          <li>Each permitted transport ride becomes a directed cross-map edge.</li>
+          <li>A transfer between transports exists only when the two landing nodes are connected by a traversable route on their shared map.</li>
+        </ul>
+        <p>Hard constraints and ride policies have already shaped this model before route planning begins. See <a href="constraints-and-parameters.html#hard-access-constraints">Hard Access Constraints</a>.</p>
+      </section>
+
+      <section id="route-request">
+        <h2>Route Request</h2>
+        <p>A route request identifies a compiled building, an origin node, a destination node, a building-routing mode, and the requested traversal preferences.</p>
+        <p>Risk preference, banned tags, route-planning preference, and user parameters are supplied in the request body. The current quick-demo endpoint receives the building name, origin, destination, and <code>isHighRise</code> selector as query parameters.</p>
+        <pre><code>POST /api/v1/quick-demo-navigation
+  ?buildingName=SkyrimTower
+  &amp;startNode=Lobby::main_entrance
+  &amp;endNode=OfficeLevel30::reception
+  &amp;isHighRise=true</code></pre>
+        <pre><code>{
+  "userParams": {
+    "officeAccess": true,
+    "timeOfDayInSeconds": 50400
+  },
+  "traversalPreference": {
+    "routePlanningPreference": "MinimizeTime",
+    "banTags": ["outdoor"],
+    "riskPreference": "conservative"
+  }
+}</code></pre>
+        <p>For request construction and endpoint-specific behavior, see the <a href="../../manuals/navigation_request_guide.md">Navigation Request Guide</a>.</p>
+      </section>
+
+      <section id="endpoint-resolution">
+        <h2>Origin and Destination Resolution</h2>
+        <p>A qualified node identifier has the form <code>MapName::NodeName</code>. Qualified identifiers are strongly recommended because node identifiers are local to their containing maps.</p>
+        <p>An unqualified node identifier is accepted only when exactly one compiled map contains a node with that identifier.</p>
+        <p>The request is invalid when the named map does not exist, the named node does not exist in that map, an unqualified name matches no node, or an unqualified name matches nodes in multiple maps.</p>
+        <p>When the origin and destination are the same node, the result contains no movement.</p>
+      </section>
+
+      <section id="same-map-routing">
+        <h2>Same-Map Routing</h2>
+        <p>When both endpoints belong to the same topo map, the engine searches only that map. Transport services are not considered, even if leaving and re-entering the map could theoretically produce a lower cost.</p>
+        <p>The selected route minimizes the sum of its atomic-path costs while respecting path direction, hard access restrictions, banned tags, and uncertain-access policy.</p>
+        <p>This is an exact shortest-path search when all atomic-path costs are non-negative and the compiled topology is valid.</p>
+      </section>
+
+      <section id="low-rise-routing">
+        <h2>Fully Informed Low-Rise Routing</h2>
+        <figure>
+          <img src="../assets/low-rise-routing-placeholder.svg" alt="Placeholder for a diagram showing an end-to-end low-rise routing search across walking and transport edges">
+          <figcaption>Placeholder: an end-to-end search comparing complete walking, transfer, and transport costs.</figcaption>
+        </figure>
+        <p>With <code>isHighRise=false</code>, cross-map routing uses a fully informed hierarchical search. Its hierarchy contains the exact origin, the exact destination, and every transport landing in the building.</p>
+        <p>For each floor, the engine calculates shortest walking routes between relevant hierarchy nodes. These walking routes are combined with permitted transport rides in one building-wide cost search.</p>
+        <p>The resulting total includes:</p>
+        <ol>
+          <li>walking from the origin to the first transport;</li>
+          <li>cross-map transport travel;</li>
+          <li>walking transfers between transport landings;</li>
+          <li>additional transport travel; and</li>
+          <li>walking from the final transport to the destination.</li>
+        </ol>
+        <p>A slower transport near the origin may therefore be selected instead of a faster transport that requires a long walk.</p>
+        <pre><code>Route A
+100 seconds walking + 1 second express ride + 100 seconds walking
+Total: 201 seconds
+
+Route B
+1 second walking + 10 second ride + 1 second transfer
++ 10 second ride + 1 second walking
+Total: 23 seconds</code></pre>
+        <p>Fully informed routing selects Route B under <code>MinimizeTime</code>.</p>
+        <p>The current low-rise search always minimizes total traversal cost. <code>MinimizeTransfers</code> and <code>MinimizePhysicalDemands</code> do not change low-rise route selection.</p>
+      </section>
+
+      <section id="high-rise-routing">
+        <h2>High-Rise Routing</h2>
+        <figure>
+          <img src="../assets/high-rise-routing-placeholder.svg" alt="Placeholder for a diagram showing transport-first high-rise route selection followed by floor-level walking-route validation">
+          <figcaption>Placeholder: transport plans are ranked first, then connected and validated through floor-level walking routes.</figcaption>
+        </figure>
+        <p>With <code>isHighRise=true</code>, cross-map routing uses a transport-first strategy.</p>
+        <ol>
+          <li>Find transport stations on the origin and destination maps.</li>
+          <li>Calculate a transport plan for each origin-station and destination-station pairing.</li>
+          <li>Rank the resulting transport plans according to the requested route preference.</li>
+          <li>Connect the chosen stations using floor-level walking routes.</li>
+          <li>Try the next transport plan if a required walking connection is unavailable.</li>
+        </ol>
+        <p>Origin, destination, and transfer walking costs are included in the returned route. Origin and destination walking costs do not participate in the initial transport-plan ranking.</p>
+        <p>High-rise routing is therefore a transport-prioritized heuristic. It is suitable when transport selection is expected to dominate the journey, but it does not guarantee the globally lowest end-to-end cost.</p>
+        <p>For each origin-station and destination-station pairing, the candidate set retains only its lowest-cost transport path. Alternative transport paths between the same station pair are not independently ranked by the other preferences.</p>
+        <p>The <code>isHighRise</code> value selects a routing strategy. It is not checked against the building's physical height or floor count. The quick-demo endpoint defaults it to <code>true</code>.</p>
+      </section>
+
+      <section id="transport-selection">
+        <h2>Transport Discovery and Selection</h2>
+        <p>Only transports selected by <a href="../building/building-includes.html"><code>building-includes</code></a> participate in routing.</p>
+        <p>A directed ride is available only when:</p>
+        <ul>
+          <li>both maps are stations of the transport;</li>
+          <li>departure is permitted at the origin station;</li>
+          <li>arrival is permitted at the destination station;</li>
+          <li>the applicable <code>ride-from</code> policy permits the ordered pair; and</li>
+          <li>the request's uncertain-access policy permits the ride.</li>
+        </ul>
+        <p>An express transport serves only its declared stations. Passing the physical level of an undeclared floor does not make that floor reachable.</p>
+        <p>Changing between transports requires a traversable atomic-path route between their landing nodes. Serving the same floor does not create a zero-cost transfer. See <a href="../transport/transport.html#transfers">Transfers Between Transports</a>.</p>
+      </section>
+
+      <section id="route-cost">
+        <h2>Route-Cost Composition</h2>
+        <pre><code>total route cost =
+    walking-path costs
+  + transfer-walking costs
+  + elevator costs
+  + escalator costs
+  + stair costs</code></pre>
+        <p>Atomic-path <code>cost</code> values represent traversal time in seconds. Elevator cost includes estimated waiting and movement time, escalators use their declared fixed travel time, stairs use calculated climbing time, and transfers use the walking cost between landing nodes.</p>
+        <p>Uncertain access does not add a numeric penalty. The risk preference determines whether an uncertain traversal may participate. Tags, required actions, and other application annotations do not add or subtract route cost.</p>
+      </section>
+
+      <section id="exactness">
+        <h2>Exact and Heuristic Behavior</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Situation</th>
+              <th>Current behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Same-map routing</td>
+              <td>Exact minimum atomic-path cost.</td>
+            </tr>
+            <tr>
+              <td>Low-rise <code>MinimizeTime</code></td>
+              <td>Exact end-to-end minimum cost across walking and transport.</td>
+            </tr>
+            <tr>
+              <td>Low-rise other preferences</td>
+              <td>The same cost-minimizing behavior as <code>MinimizeTime</code>.</td>
+            </tr>
+            <tr>
+              <td>High-rise <code>MinimizeTime</code></td>
+              <td>Lowest-cost transport plan first; terminal walking is excluded from initial ranking.</td>
+            </tr>
+            <tr>
+              <td>High-rise <code>MinimizeTransfers</code></td>
+              <td>Transport plans are ranked by transport-graph edge count, then transport cost.</td>
+            </tr>
+            <tr>
+              <td>High-rise <code>MinimizePhysicalDemands</code></td>
+              <td>Transport plans are ranked by their transport physical-demand score.</td>
+            </tr>
+            <tr>
+              <td>Equal-ranked alternatives</td>
+              <td>No stable public tie-breaking order.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="ties-and-determinism">
+        <h2>Tie-Breaking and Determinism</h2>
+        <p>A strictly cheaper candidate replaces a more expensive candidate. An equal-cost candidate does not replace the route already retained.</p>
+        <p>Source declaration order, lexical identifier order, and station order are not public tie-breakers. When several routes have equal ranking values, the selected route is unspecified and may change between engine versions.</p>
+        <p>A fixed request with one uniquely best route produces a stable result. Applications must not depend on the identity of one particular route among exact ties.</p>
+      </section>
+
+      <section id="no-route">
+        <h2>No-Route Outcomes</h2>
+        <p>A route may be unavailable because:</p>
+        <ul>
+          <li>the origin or destination cannot be resolved;</li>
+          <li>the directed topology does not connect them;</li>
+          <li>an unsatisfied hard constraint removed a required path or ride;</li>
+          <li>a transport station prohibits arrival or departure;</li>
+          <li>a <code>ride-from</code> policy prohibits the required journey;</li>
+          <li>banned tags eliminate every candidate;</li>
+          <li>uncertain access is disallowed and no certain route remains; or</li>
+          <li>required transport transfers are not connected within their floor maps.</li>
+        </ul>
+        <p>The public service distinguishes <code>DESTINATION_HAS_BANNED_TAG</code>, <code>NO_ROUTE_WITH_BAN_TAGS</code>, <code>NO_ROUTE_FOR_USER_PARAMS</code>, and <code>NO_ROUTE_FOUND</code>.</p>
+        <p>A route request returns either a complete route or a no-route outcome. Partial routes are not returned.</p>
+      </section>
+
+    </article>
+  </main>
+</body>
+</html>

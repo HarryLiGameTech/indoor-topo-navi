@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Routing Modes and Preferences</title>
+</head>
+<body>
+  <main>
+    <article id="preferences-and-modes">
+      <header>
+        <h1>Routing Modes and Preferences</h1>
+        <p>A routing mode determines how the building is searched. A route-planning preference determines how eligible transport candidates are ranked within that search.</p>
+      </header>
+
+      <nav aria-label="Routing reference articles">
+        <ul>
+          <li><a href="routing-semantics.html">Routing semantics</a></li>
+          <li><a href="constraints-and-parameters.html">Constraints, parameters, and traversal filters</a></li>
+          <li><a href="preferences-and-modes.html">Routing modes and preferences</a></li>
+        </ul>
+      </nav>
+
+      <section id="request-body-controls">
+        <h2>Request-Body Controls</h2>
+        <p><code>routePlanningPreference</code>, <code>riskPreference</code>, and <code>banTags</code> are fields of the request body's <code>traversalPreference</code> object. Compilation parameters are fields of <code>userParams</code>.</p>
+        <pre><code>{
+  "userParams": {
+    "officeAccess": true
+  },
+  "traversalPreference": {
+    "routePlanningPreference": "MinimizeTime",
+    "riskPreference": "conservative",
+    "banTags": ["outdoor"]
+  }
+}</code></pre>
+        <p>For the full HTTP request format and examples, see the <a href="../../manuals/navigation_request_guide.md">Navigation Request Guide</a>.</p>
+      </section>
+
+      <section id="decision-order">
+        <h2>Order of Route Decisions</h2>
+        <figure>
+          <img src="../assets/route-decision-order-placeholder.svg" alt="Placeholder for a diagram showing compilation constraints, request filters, routing mode, preference ranking, and route output in order">
+          <figcaption>Placeholder: compiled access, request filters, routing mode, preference ranking, and output annotation.</figcaption>
+        </figure>
+        <ol>
+          <li>Compilation parameters establish the building's hard-access topology.</li>
+          <li>Banned tags exclude request-specific nodes and paths.</li>
+          <li>The risk preference determines whether failed uncertain access may participate.</li>
+          <li><code>isHighRise</code> selects the building-routing strategy.</li>
+          <li>The route-planning preference ranks eligible candidates.</li>
+          <li>Output annotations describe the selected route.</li>
+        </ol>
+        <p>A route preference cannot restore a path, station, or ride removed by a hard access constraint.</p>
+      </section>
+
+      <section id="building-routing-modes">
+        <h2>Building-Routing Modes</h2>
+        <dl>
+          <dt><code>isHighRise=false</code></dt>
+          <dd>Uses fully informed routing, which compares complete walking and transport costs throughout the building.</dd>
+
+          <dt><code>isHighRise=true</code></dt>
+          <dd>Uses transport-first routing, which ranks cross-map transport plans before connecting their floor-level walking legs.</dd>
+        </dl>
+        <p>The quick-demo endpoint defaults to <code>isHighRise=true</code>. The flag selects an algorithm and does not describe or validate the building's literal height.</p>
+        <p>See <a href="routing-semantics.html#low-rise-routing">Fully Informed Low-Rise Routing</a> and <a href="routing-semantics.html#high-rise-routing">High-Rise Routing</a>.</p>
+      </section>
+
+      <section id="primary-preferences">
+        <h2>Primary Route-Planning Preferences</h2>
+        <p>The supported values are <code>MinimizeTime</code>, <code>MinimizeTransfers</code>, and <code>MinimizePhysicalDemands</code>. The default is <code>MinimizeTime</code>. Unknown values are rejected by the web API.</p>
+      </section>
+
+      <section id="minimize-time">
+        <h2><code>MinimizeTime</code></h2>
+        <p>Routes are ranked using their calculated traversal costs.</p>
+        <p>In fully informed low-rise mode, this preference minimizes complete end-to-end cost.</p>
+        <p>In high-rise mode, it initially minimizes the transport portion of the journey. Walking to and from the selected transport is included in the returned route but not in the initial transport ranking.</p>
+      </section>
+
+      <section id="minimize-transfers">
+        <h2><code>MinimizeTransfers</code></h2>
+        <p>In high-rise mode, candidates are ordered first by the number of edges in the transport plan and then by total transport-plan cost.</p>
+        <p>The counted edges include both cross-map rides and same-floor connections between transport lines. The value is therefore a transport-plan hop count, not strictly the number of times a passenger changes vehicles.</p>
+        <p>In low-rise mode, this preference currently produces the same total-cost search as <code>MinimizeTime</code>.</p>
+      </section>
+
+      <section id="minimize-physical-demands">
+        <h2><code>MinimizePhysicalDemands</code></h2>
+        <p>High-rise transport candidates use the following relative score:</p>
+        <ul>
+          <li>elevator movement: <code>0.1 × vertical distance</code>;</li>
+          <li>stair movement: <code>10 × vertical distance</code>;</li>
+          <li>escalator movement: fixed travel time; and</li>
+          <li>walking between transport landings: walking time.</li>
+        </ul>
+        <p>Lower scores are preferred. Origin and destination walking legs are not part of the initial high-rise transport score.</p>
+        <p>This score is a routing heuristic, not a physiological, medical, energy-expenditure, or accessibility measurement.</p>
+        <p>In low-rise mode, this preference currently produces the same total-cost search as <code>MinimizeTime</code>.</p>
+      </section>
+
+      <figure>
+        <img src="../assets/preference-effect-example-placeholder.svg" alt="Placeholder for a diagram comparing how the same route candidates are ranked by each route-planning preference">
+        <figcaption>Placeholder: the same route candidates ranked by time, transport-plan hops, and physical-demand score.</figcaption>
+      </figure>
+
+      <section id="preference-summary">
+        <h2>Preference Summary</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Preference</th>
+              <th>Fully informed low-rise mode</th>
+              <th>High-rise mode</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>MinimizeTime</code></td>
+              <td>Minimizes complete route cost.</td>
+              <td>Ranks the transport plan by cost before floor-level walking is connected.</td>
+            </tr>
+            <tr>
+              <td><code>MinimizeTransfers</code></td>
+              <td>Currently minimizes complete route cost.</td>
+              <td>Ranks by transport-plan edge count, then transport cost.</td>
+            </tr>
+            <tr>
+              <td><code>MinimizePhysicalDemands</code></td>
+              <td>Currently minimizes complete route cost.</td>
+              <td>Ranks by the transport physical-demand heuristic.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

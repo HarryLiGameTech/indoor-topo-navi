@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Cross-Map Transportation</title>
+</head>
+<body>
+  <main>
+    <article id="transport">
+      <header>
+        <h1>Cross-Map Transportation</h1>
+        <p>A transport declares traversable connections between topo maps. Because each topo-map instance represents one floor, a transport normally describes movement between floors.</p>
+        <p>A transport does not replace the landing areas inside floor maps. Each participating map declares its own landing node; a transport station references that node and connects it to the transport network.</p>
+      </header>
+
+      <nav aria-label="Transport reference articles">
+        <ul>
+          <li><a href="transport.html">Common transport model</a></li>
+          <li><a href="elevators.html">Elevators</a></li>
+          <li><a href="escalators.html">Escalators</a></li>
+          <li><a href="stairs.html">Stairs</a></li>
+        </ul>
+      </nav>
+
+      <section id="topology-boundary">
+        <h2>Topology Boundary</h2>
+        <p><a href="../topology/paths.html">Atomic paths</a> describe movement within one topo map. Transports describe movement between topo maps.</p>
+        <p>An elevator hall, stair landing, or escalator landing remains an ordinary node in its floor map. Walking to the landing is described by that map's atomic paths. The transport begins and ends at the referenced landing nodes.</p>
+      </section>
+
+      <section id="project-inclusion">
+        <h2>Project Inclusion</h2>
+        <p>A transport participates in a building only when selected by <a href="../building/building-includes.html"><code>building-includes</code></a>:</p>
+        <pre><code>building-includes {
+  submap Lobby
+  submap OfficeLevel2
+  vehicle MainElevator
+}</code></pre>
+        <p><code>vehicle MainElevator</code> resolves <code>MainElevator.ttr</code>, falling back to the extensionless source <code>MainElevator</code>.</p>
+      </section>
+
+      <section id="supported-types">
+        <h2>Supported Transport Types</h2>
+        <pre><code>transport MainElevator is Elevator {
+}
+
+transport AtriumEscalator is Escalator {
+}
+
+transport WestStair is Stairs {
+}</code></pre>
+        <p>The supported type names are exactly <code>Elevator</code>, <code>Escalator</code>, and <code>Stairs</code>. They are case-sensitive. Generic, user-defined, and additional transport types are not currently supported.</p>
+      </section>
+
+      <section id="common-declaration-model">
+        <h2>Common Declaration Model</h2>
+        <p>A transport body may contain:</p>
+        <ul>
+          <li>a transport-specific local <code>params</code> record;</li>
+          <li>local <code>let</code>, <code>def</code>, and <code>constraint</code> declarations;</li>
+          <li>an optional string-valued <code>displayName</code> binding;</li>
+          <li>station declarations;</li>
+          <li>station access annotations; and</li>
+          <li><code>ride-from</code> policies.</li>
+        </ul>
+        <pre><code>transport MainElevator is Elevator {
+  let params = {
+    maxVelocity = 2.5,
+    acceleration = 0.8,
+    carAmount = 3
+  }
+
+  let displayName = "Main passenger elevators"
+
+  station Lobby at Lobby::main_elevator_landing {
+    location = 0.0,
+    departureRate = 0.40
+  }
+
+  station Office2 at OfficeLevel2::main_elevator_landing {
+    location = 4.2,
+    departureRate = 0.10
+  }
+}</code></pre>
+      </section>
+
+      <section id="stations">
+        <h2>Stations and Landing Nodes</h2>
+        <pre><code>station Office2 at OfficeLevel2::main_elevator_landing {
+  location = 4.2,
+  departureRate = 0.10
+}</code></pre>
+        <dl>
+          <dt><code>Office2</code></dt>
+          <dd>A station label local to this transport.</dd>
+
+          <dt><code>OfficeLevel2</code></dt>
+          <dd>The topo-map instance containing the landing.</dd>
+
+          <dt><code>main_elevator_landing</code></dt>
+          <dd>The existing node used as the transport endpoint on that map.</dd>
+        </dl>
+        <p>A station does not create its referenced map or node. The map must be included in the building and the node must exist in that map.</p>
+        <p>Station labels should be unique within a transport. They are used by station-specific <code>ride-from</code> policies and are distinct from map identifiers.</p>
+      </section>
+
+      <section id="service-range">
+        <h2>Service Range and Direction</h2>
+        <p>The declared stations define the maps served by a transport. An unlisted map is not a stop.</p>
+        <p>For elevators and stairs, the engine connects every permitted ordered pair of distinct station maps. Declaration order does not limit travel to adjacent stations. An express service is modeled by declaring only the maps at which it stops.</p>
+        <p>An escalator has a specialized two-station service model described in <a href="escalators.html">Escalators</a>.</p>
+      </section>
+
+      <section id="station-access">
+        <h2>Station Access</h2>
+        <p>A hard station requirement controls whether an elevator or escalator station may be used for arrival, departure, or both:</p>
+        <pre><code>station TradingFloor at OfficeLevel50::passenger_landing {
+  location = 222.0,
+  departureRate = 0.04
+} requires TradingFloorAccess on Arrive</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Form</th>
+              <th>Effect when the constraint is unsatisfied</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>requires Access</code></td>
+              <td>Neither arrival nor departure is permitted.</td>
+            </tr>
+            <tr>
+              <td><code>requires Access on Arrive</code></td>
+              <td>Arrival is prohibited; departure remains permitted.</td>
+            </tr>
+            <tr>
+              <td><code>requires Access on Depart</code></td>
+              <td>Departure is prohibited; arrival remains permitted.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>A station may be completely disabled:</p>
+        <pre><code>station F18 at OfficeLevel18::passenger_landing {
+  location = 84.0,
+  departureRate = 0.04
+} out-of-order</code></pre>
+        <p><code>out-of-order</code> prohibits both arrival and departure for elevators and escalators. Stair access is modeled differently; see <a href="stairs.html#stair-access-control">Stair Access Control</a>.</p>
+        <p>Constraints use root or transport-local declarations and are evaluated during compilation. Changing a supplied parameter requires a separately compiled building model. See <a href="../building/global-declarations.html#compilation-versus-routing">Compilation Time and Routing Time</a>.</p>
+      </section>
+
+      <section id="uncertain-station-access">
+        <h2>Uncertain Station Access</h2>
+        <p><code>subject-to</code> records uncertain station availability without removing the transport from the compiled model:</p>
+        <pre><code>station Roof at RoofLevel::lift_landing {
+  location = 180.0,
+  departureRate = 0.05
+} subject-to RoofLiftAvailable because "The roof lift may close in severe weather." on Arrive</code></pre>
+        <p>Routing-time selection, propagation, and disclosure are documented in <a href="../routing/constraints-and-parameters.html#uncertain-access">Uncertain Access and Risk Handling</a>.</p>
+      </section>
+
+      <section id="ride-policies">
+        <h2>Ride Policies</h2>
+        <p>A <code>ride-from</code> declaration controls matching directed rides according to one or more named constraints:</p>
+        <pre><code>ride-from any to HotelDomain requires HotelAccess
+ride-from ServiceLobby to OfficeDomain requires &lt;OfficeAccess &amp;&amp; CarryingGoods&gt;</code></pre>
+        <p>Each operand must be <code>any</code>, a station label declared by this transport, or an effective management-domain name. A topo-map identifier is not a ride-policy operand merely because a station serves that map.</p>
+        <p>An unsatisfied rule removes matching rides in the declared direction. It does not affect the reverse direction. A satisfied rule permits its matching pairs, subject to station permissions and other applicable rules. A pair not matched by any rule remains permitted; <code>ride-from</code> declarations are not a whitelist.</p>
+        <p>If several rules match, the rule with the highest specificity applies:</p>
+        <ol>
+          <li>station to station;</li>
+          <li>station to domain;</li>
+          <li>domain to station;</li>
+          <li>domain to domain;</li>
+          <li><code>any</code> to station;</li>
+          <li>station to <code>any</code>;</li>
+          <li><code>any</code> to domain;</li>
+          <li>domain to <code>any</code>;</li>
+          <li><code>any</code> to <code>any</code>.</li>
+        </ol>
+        <p>A station label takes precedence over a same-named management domain. Conflicting rules for the same operands and specificity are invalid.</p>
+        <p>Management-domain attachment and override precedence are defined in <a href="../building/building-includes.html#management-domains">Management-Domain Attachment</a>.</p>
+      </section>
+
+      <section id="transfers">
+        <h2>Transfers Between Transports</h2>
+        <p>When two transports serve the same topo map, transfer between them requires an intra-map walking route between their landing nodes.</p>
+        <pre><code>/* Inside OfficeExpress */
+station F30 at SkyLobby30::express_landing {
+  location = 138.0,
+  departureRate = 0.40
+}
+
+/* Inside OfficeLocal */
+station F30 at SkyLobby30::local_landing {
+  location = 138.0,
+  departureRate = 0.10
+}</code></pre>
+        <p>The transfer cost is the atomic-path cost of walking from <code>express_landing</code> to <code>local_landing</code>. If no permitted path connects the landing nodes, the transfer is unavailable on that map.</p>
+      </section>
+
+      <section id="cost-composition">
+        <h2>Entry, Exit, Transfer, and Ride Costs</h2>
+        <p>Walking to or from a landing is represented by the floor map's atomic paths. TopoScript does not declare separate transport entry or exit costs.</p>
+        <ul>
+          <li>Elevator cost combines estimated waiting time and movement time.</li>
+          <li>Escalator cost is the declared fixed travel time.</li>
+          <li>Stair cost represents climbing time.</li>
+          <li>A same-floor transfer uses the walking cost between landing nodes.</li>
+        </ul>
+        <p>End-to-end route-cost composition and routing preferences belong to the routing reference.</p>
+      </section>
+
+      <section id="route-output">
+        <h2>Route Output</h2>
+        <p>Elevator and escalator rides are returned as <code>Transport</code> segments. Stair traversal is returned as <code>Climbing</code>.</p>
+        <p>Current movement descriptions identify the transport and endpoint maps:</p>
+        <pre><code>Take MainElevator from Lobby to OfficeLevel2</code></pre>
+        <p><code>displayName</code> and station labels are retained in the compiled transport model, while route-step descriptions currently use the transport identifier. Transport-level tags, arbitrary annotation records, required actions, and navigation hints are not supported.</p>
+      </section>
+
+      <section id="invalid-references">
+        <h2>Invalid References and Declarations</h2>
+        <ul>
+          <li>An unsupported transport type fails parsing or transport elaboration.</li>
+          <li>A station referencing an unknown map or node fails compilation.</li>
+          <li>An unknown station label or management domain in <code>ride-from</code> fails compilation.</li>
+          <li>Duplicate station labels make station-specific policies ambiguous and are invalid.</li>
+          <li>A transport with fewer than two usable station maps cannot provide cross-map movement.</li>
+          <li>Transport-specific missing or incorrectly typed fields fail compilation as described in the specialized articles.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

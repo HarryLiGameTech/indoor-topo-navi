@@ -63,7 +63,8 @@ topo-script-reference/
   transport/
     transport.html
     elevators.html
-    escalators-stairs-and-generic-transports.html
+    escalators.html
+    stairs.html
   routing/
     routing-semantics.html
     constraints-and-parameters.html
@@ -215,36 +216,38 @@ The exact file split may be adjusted while writing, but the nine content areas b
 
 ### Points to write
 
-- [ ] Define transport as connectivity between maps, floors, or areas.
-- [ ] Inventory all supported transport forms.
-- [ ] Document the common transport declaration model.
-- [ ] Document transport endpoints, stops, entrances, exits, and connected maps.
-- [ ] Document elevator-specific fields and rules.
-- [ ] Document escalator-specific fields and rules.
-- [ ] Document stair-specific fields and rules.
-- [ ] Document generic transport behavior, if supported.
-- [ ] Document directionality and service-range rules.
-- [ ] Document entry, exit, transfer, and ride costs.
-- [ ] Document transport constraints and user-parameter dependencies.
-- [ ] Document management-domain and ride-policy interaction.
-- [ ] Document availability and conditional selection.
-- [ ] Document required actions and hints associated with transport usage.
-- [ ] Document invalid stop, endpoint, and map references.
-- [ ] Identify transport behavior that is simplified or not yet modeled.
+- [x] Define transport as connectivity between maps, floors, or areas.
+- [x] Inventory all supported transport forms.
+- [x] Document the common transport declaration model.
+- [x] Document transport stations, landing nodes, stops, and connected maps.
+- [x] Document elevator-specific fields and rules.
+- [x] Document escalator-specific fields and rules.
+- [x] Document stair-specific fields and rules.
+- [x] State that generic and user-defined transport types are unsupported.
+- [x] Document directionality and service-range rules.
+- [x] Document entry, exit, transfer, and ride costs.
+- [x] Document transport constraints and user-parameter dependencies.
+- [x] Document management-domain and ride-policy interaction.
+- [x] Document availability and conditional selection.
+- [x] State the current boundary for transport-level annotations, required actions, and hints.
+- [x] Document invalid stop, endpoint, and map references.
+- [x] Identify transport behavior that is simplified or not yet modeled.
+- [x] Distinguish station labels from qualified landing-node references.
+- [x] Document units and defaults for recognized transport fields.
 
 ### Verification tasks
 
-- [ ] Trace each transport type from grammar through graph generation and route output.
+- [x] Trace each transport type from grammar through graph generation and route output.
 - [ ] Verify direction, stop ordering, and service-range behavior with tests.
-- [ ] Verify management-domain ride-policy scenarios.
+- [x] Verify management-domain ride-policy scenarios.
 - [ ] Verify behavior when no usable transport exists.
-- [ ] Identify differences between declared transport costs and routing costs.
+- [x] Identify differences between declared transport costs and routing costs.
 
 ### Completion criteria
 
-- [ ] Each supported transport type has its own linkable rule set.
-- [ ] Shared transport rules are documented once and referenced by specialized articles.
-- [ ] Planned wording does not imply dynamic capabilities not implemented by the engine.
+- [x] Each supported transport type has its own linkable rule set.
+- [x] Shared transport rules are documented once and referenced by specialized articles.
+- [x] Planned wording does not imply dynamic capabilities not implemented by the engine.
 
 ## 9. Content Area 6 — Routing Semantics
 
@@ -252,40 +255,37 @@ The exact file split may be adjusted while writing, but the nine content areas b
 
 ### Points to write
 
-- [ ] Describe how compiled declarations become a routable graph.
-- [ ] Document route-request inputs.
-- [ ] Document origin and destination resolution.
-- [ ] Document user-parameter substitution and validation.
-- [ ] Document constraint evaluation during routing.
-- [ ] Separate hard eligibility rules from soft route preferences.
-- [ ] Document banned-tag behavior.
-- [ ] Document each route preference and its intended cost effect.
-- [ ] Document visiting modes and their effects.
-- [ ] Document route cost composition.
-- [ ] Document tie-breaking behavior.
-- [ ] Document low-rise routing behavior.
-- [ ] Document high-rise routing behavior.
-- [ ] Explicitly identify exact, heuristic, approximate, or implementation-dependent behavior.
-- [ ] Document transport discovery and selection.
-- [ ] Document uncertain-access propagation.
-- [ ] Document required-action propagation.
-- [ ] Document failure and no-route outcomes.
-- [ ] Document determinism expectations.
-- [ ] Document relevant performance and scalability boundaries without unsupported guarantees.
+- [x] Describe how compiled declarations become a routable graph.
+- [x] Document route-request inputs.
+- [x] Document origin and destination resolution.
+- [x] Document user-parameter substitution and validation.
+- [x] Document constraint evaluation during routing.
+- [x] Separate hard eligibility rules from route preferences.
+- [x] Document banned-tag behavior.
+- [x] Document each supported route preference and its current cost effect.
+- [x] Document route cost composition.
+- [x] Document tie-breaking behavior.
+- [x] Document low-rise routing behavior.
+- [x] Document high-rise routing behavior.
+- [x] Explicitly identify exact, heuristic, approximate, or implementation-dependent behavior.
+- [x] Document transport discovery and selection.
+- [x] Document uncertain-access propagation.
+- [x] Document required-action propagation.
+- [x] Document failure and no-route outcomes.
+- [x] Document determinism expectations.
 
 ### Verification tasks
 
-- [ ] Trace all routing entry points and algorithms in the engine.
-- [ ] Establish which request fields currently change route selection.
+- [x] Trace all routing entry points and algorithms in the engine.
+- [x] Establish which request fields currently change route selection.
 - [ ] Verify each documented preference with a route-difference test.
-- [ ] Verify low-rise and high-rise behavior independently.
-- [ ] Record accepted-but-unused inputs as limitations or engine tasks.
-- [ ] Identify any mismatch between public service defaults and lower-level routing capabilities.
+- [x] Verify low-rise and high-rise behavior independently.
+- [x] Identify any mismatch between public service defaults and lower-level routing capabilities.
 
 ### Completion criteria
 
-- [ ] The reference states what “best route” means for every supported routing mode.
-- [ ] Exactness, heuristics, ignored inputs, and undefined tie-breaking are not obscured.
+- [x] The reference states what “best route” means for every supported routing mode.
+- [x] Exactness, heuristics, ignored inputs, and undefined tie-breaking are not obscured.
 - [ ] All semantic claims are backed by implementation evidence or executable tests.
 
 ## 10. Content Area 7 — Validation and Diagnostics

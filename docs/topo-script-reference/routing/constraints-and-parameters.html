@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Constraints, Parameters, and Traversal Filters</title>
+</head>
+<body>
+  <main>
+    <article id="constraints-and-parameters">
+      <header>
+        <h1>Constraints, Parameters, and Traversal Filters</h1>
+        <p>TopoNavi separates access conditions that shape the compiled building from request-time controls that filter or rank routes through that building.</p>
+      </header>
+
+      <nav aria-label="Routing reference articles">
+        <ul>
+          <li><a href="routing-semantics.html">Routing semantics</a></li>
+          <li><a href="constraints-and-parameters.html">Constraints, parameters, and traversal filters</a></li>
+          <li><a href="preferences-and-modes.html">Routing modes and preferences</a></li>
+        </ul>
+      </nav>
+
+      <section id="compilation-and-route-inputs">
+        <h2>Compilation Inputs and Route Inputs</h2>
+        <p>User parameters are compilation inputs. They determine the user's access and capability context while the building is compiled:</p>
+        <pre><code>{
+  "userParams": {
+    "officeAccess": true,
+    "carryingWeight": 20,
+    "timeOfDayInSeconds": 50400
+  }
+}</code></pre>
+        <p>Risk preference, banned tags, and route-planning preference are request-time traversal controls:</p>
+        <pre><code>{
+  "traversalPreference": {
+    "routePlanningPreference": "MinimizeTime",
+    "banTags": ["outdoor", "rain_exposed"],
+    "riskPreference": "conservative"
+  }
+}</code></pre>
+        <p>Both groups are supplied in the navigation request body. For the full request format, see the <a href="../../manuals/navigation_request_guide.md">Navigation Request Guide</a>.</p>
+        <p>User parameters form part of the compiled-building cache identity. Changing them requires a matching compiled model. Traversal controls do not modify the compiled graph and may vary between route requests.</p>
+      </section>
+
+      <section id="hard-access-constraints">
+        <h2>Hard Access Constraints</h2>
+        <p>A failed <code>requires</code> condition is a hard prohibition. Depending on its attachment point, it may remove an atomic path, prohibit arrival at a station, prohibit departure from a station, prohibit both arrival and departure, or prohibit a directed transport ride.</p>
+        <pre><code>atomic-path [public_hall -&gt; staff_corridor] {
+  cost = 4
+} requires StaffAccess</code></pre>
+        <p>When <code>StaffAccess</code> is false, the directed path is absent from the usable compiled topology.</p>
+        <p>Hard constraints are evaluated during compilation. The route planner consumes their compiled effects and does not re-evaluate their expressions. See <a href="../building/global-declarations.html#compilation-versus-routing">Compilation Time and Routing Time</a>.</p>
+      </section>
+
+      <section id="uncertain-access">
+        <h2>Uncertain Access</h2>
+        <p>A <code>subject-to</code> condition describes a traversal that may be unavailable but is not a definite prohibition.</p>
+        <pre><code>atomic-path [public_hall -&gt; rooftop_garden] {
+  cost = 12
+} subject-to RooftopOpen
+  because "The rooftop may close during severe weather."</code></pre>
+        <p>If <code>RooftopOpen</code> is satisfied, the path is treated as ordinarily available.</p>
+        <p>If it is unsatisfied, the path remains in the compiled model, conservative searches exclude it, permissive searches may select it, and a selected route exposes its uncertainty reason.</p>
+        <p>Repeated failed uncertainty conditions of the same type are consolidated in route-level disclosure. A <code>requires</code> condition and a <code>subject-to</code> condition cannot be attached to the same element.</p>
+      </section>
+
+      <section id="risk-preferences">
+        <h2>Risk Preferences</h2>
+        <figure>
+          <img src="../assets/risk-preference-placeholder.svg" alt="Placeholder for a decision diagram comparing conservative, permissive, and aggressive uncertain-access routing">
+          <figcaption>Placeholder: route selection under conservative, permissive, and aggressive uncertain-access preferences.</figcaption>
+        </figure>
+
+        <h3><code>conservative</code></h3>
+        <p>The engine first searches without failed <code>subject-to</code> traversals. If a certain route exists, that route is returned.</p>
+        <p>If no certain route exists, the engine retries with uncertain traversals enabled and reports <code>permissive</code> as the applied risk preference. Conservative routing therefore prefers a certain route but returns an uncertain route rather than failing when it is the only available option.</p>
+
+        <h3><code>permissive</code></h3>
+        <p>The engine calculates the best route excluding failed uncertain access and the best route allowing it. The uncertain route is selected only when it meaningfully improves the primary route objective:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Primary preference</th>
+              <th>Required improvement</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>MinimizeTime</code></td>
+              <td>At least 15 seconds faster.</td>
+            </tr>
+            <tr>
+              <td><code>MinimizeTransfers</code></td>
+              <td>At least one fewer non-walking segment.</td>
+            </tr>
+            <tr>
+              <td><code>MinimizePhysicalDemands</code></td>
+              <td>At least a 10% lower physical-demand score.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>If no certain route exists, the uncertain route is returned.</p>
+
+        <h3><code>aggressive</code></h3>
+        <p>All uncertain traversals are admitted into the search. The best resulting route is returned without comparison against a certain-only route.</p>
+
+        <p><code>permissive</code> and <code>aggressive</code> do not assert that access is lawful, safe, or physically available. Uncertainty descriptions originate from the map author and may be inaccurate or outdated.</p>
+      </section>
+
+      <section id="banned-tags">
+        <h2>Banned Tags</h2>
+        <p><code>banTags</code> is a request-scoped hard filter over node and atomic-path tags.</p>
+        <pre><code>{
+  "traversalPreference": {
+    "banTags": ["outdoor", "rain_exposed"]
+  }
+}</code></pre>
+        <p>A route cannot traverse an atomic path containing a banned tag or enter a node containing a banned tag. Node and path tags are evaluated independently; a node tag is not automatically inherited by its incident paths.</p>
+        <p>Endpoint behavior is:</p>
+        <ul>
+          <li>A source node may contain a banned tag because the user is already there.</li>
+          <li>Outgoing paths from that source are still checked.</li>
+          <li>A destination containing a banned tag produces <code>DESTINATION_HAS_BANNED_TAG</code>.</li>
+          <li>An intermediate node containing a banned tag cannot be entered.</li>
+        </ul>
+        <p>Tag matching is exact and case-sensitive. If tag filtering leaves no route, the service returns <code>NO_ROUTE_WITH_BAN_TAGS</code>.</p>
+        <p>Transport rides do not carry traversable tags of their own. Tags on transport landing nodes can prevent entry into those landings.</p>
+        <p>For tag-authoring conventions, see the <a href="../../manuals/tagging_guide.md">TopoScript Tagging Guide</a>. For request-body usage, see the <a href="../../manuals/navigation_request_guide.md">Navigation Request Guide</a>.</p>
+      </section>
+
+      <section id="required-actions">
+        <h2>Required Actions and Other Annotations</h2>
+        <p>Atomic-path annotations are preserved on returned walking segments. The annotation keys <code>requiredActions</code>, <code>required_actions</code>, and <code>action_required</code> are recognized as required-action lists.</p>
+        <pre><code>atomic-path [public_hall -&gt; controlled_door] {
+  cost = 5,
+  requiredActions = ["tap_access_card", "open_door"]
+}</code></pre>
+        <p>Required actions are reported to the consuming application but do not affect route eligibility, cost, or ranking. The application is responsible for presenting or handling them.</p>
+        <p>Other custom path annotations are not interpreted as routing rules unless explicitly documented.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>
