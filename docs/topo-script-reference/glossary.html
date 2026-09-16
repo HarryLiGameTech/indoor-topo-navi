@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Glossary</title>
+</head>
+<body>
+  <main>
+    <article id="glossary">
+      <header>
+        <h1>Glossary</h1>
+        <p>This glossary gives short definitions of TopoScript terms and links to the clauses that define their full behavior. It summarizes existing rules and does not introduce new ones.</p>
+      </header>
+
+      <nav aria-label="Glossary letters">
+        <a href="#letter-a">A</a>
+        <a href="#letter-b">B</a>
+        <a href="#letter-c">C</a>
+        <a href="#letter-d">D</a>
+        <a href="#letter-e">E</a>
+        <a href="#letter-f">F</a>
+        <a href="#letter-g">G</a>
+        <a href="#letter-h">H</a>
+        <a href="#letter-i">I</a>
+        <a href="#letter-l">L</a>
+        <a href="#letter-m">M</a>
+        <a href="#letter-n">N</a>
+        <a href="#letter-o">O</a>
+        <a href="#letter-p">P</a>
+        <a href="#letter-q">Q</a>
+        <a href="#letter-r">R</a>
+        <a href="#letter-s">S</a>
+        <a href="#letter-t">T</a>
+        <a href="#letter-u">U</a>
+        <a href="#letter-v">V</a>
+        <a href="#letter-w">W</a>
+      </nav>
+
+      <section id="letter-a">
+        <h2>A</h2>
+        <dl>
+          <dt id="term-access-constraint">Access constraint</dt>
+          <dd>A Boolean condition attached with <code>requires</code> that determines whether a path, station use, or transport ride participates in the compiled routing model. See <a href="routing/constraints-and-parameters.html#hard-access-constraints">Hard Access Constraints</a>.</dd>
+
+          <dt id="term-annotation">Annotation</dt>
+          <dd>Data attached to a node or path. Recognized fields may affect filtering or route output; other fields have application-defined meaning. See <a href="topology/nodes.html#properties">Node Properties</a> and <a href="topology/paths.html#path-properties">Path Properties</a>.</dd>
+
+          <dt id="term-any"><code>any</code></dt>
+          <dd>A <code>ride-from</code> operand that matches every station or management domain at that operand position. See <a href="transport/transport.html#ride-policies">Ride Policies</a>.</dd>
+
+          <dt id="term-application-defined">Application-defined</dt>
+          <dd>Behavior whose meaning is intentionally left to the application consuming TopoNavi Engine output, especially custom annotations. See <a href="language/language-and-execution-model.html#stability-boundaries">Stability Boundaries</a>.</dd>
+
+          <dt id="term-arrive"><code>Arrive</code></dt>
+          <dd>A station-access qualifier indicating that a requirement applies when arriving at the station. See <a href="transport/transport.html#station-access">Station Access</a>.</dd>
+
+          <dt id="term-atomic-path">Atomic path</dt>
+          <dd>A direct, directed or bidirectional connection between two nodes in the same topo map that does not cross another intermediate node. It is declared with <code>atomic-path</code>. See <a href="topology/paths.html#atomicity">Atomicity</a>.</dd>
+
+          <dt id="term-at"><code>at</code></dt>
+          <dd>The station-declaration connector between a station label and its qualified landing-node identifier. See <a href="transport/transport.html#stations">Stations and Landing Nodes</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-b">
+        <h2>B</h2>
+        <dl>
+          <dt id="term-base-map">Base map</dt>
+          <dd>A reusable topo-map source named after <code>using</code> when constructing a map instance. See <a href="building/building-includes.html#reusable-submaps">Reusable Submap Instances</a>.</dd>
+
+          <dt id="term-bool"><code>Bool</code></dt>
+          <dd>The primitive Boolean type containing <code>true</code> and <code>false</code>. See <a href="language/language-and-execution-model.html#types">Primitive Types</a>.</dd>
+
+          <dt id="term-building">Building</dt>
+          <dd>The compiled collection of selected map graphs, transports, domains, and shared declarations that together describe one routable venue. See <a href="building/building-includes.html#compiled-building-model">Relationship to the Compiled Building</a>.</dd>
+
+          <dt id="term-building-includes"><code>building-includes</code></dt>
+          <dd>The mandatory project manifest that selects map instances and transports for one compiled building. See <a href="building/building-includes.html">Whole-Building Composition</a>.</dd>
+
+          <dt id="term-because"><code>because</code></dt>
+          <dd>An optional <code>subject-to</code> clause introducing a human-readable reason for uncertain access. See <a href="routing/constraints-and-parameters.html#uncertain-access">Uncertain Access</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-c">
+        <h2>C</h2>
+        <dl>
+          <dt id="term-climbing"><code>Climbing</code></dt>
+          <dd>The route-step category used for stair traversal. See <a href="transport/stairs.html#traversal-time">Stair Traversal Time</a> and <a href="routing/route-results.html#transport-step-fields">Transport and Climbing Step Fields</a>.</dd>
+
+          <dt id="term-compiled-building-model">Compiled building model</dt>
+          <dd>The navigation graphs and transport graph produced from a valid TopoScript project and its supplied compilation inputs. See <a href="routing/routing-semantics.html#compiled-routing-model">Compiled Routing Model</a>.</dd>
+
+          <dt id="term-compilation">Compilation</dt>
+          <dd>The process that parses, elaborates, evaluates, and links project sources into a building model. See <a href="language/language-and-execution-model.html#language-lifecycle">Language Lifecycle</a>.</dd>
+
+          <dt id="term-compilation-input">Compilation input</dt>
+          <dd>An external value supplied for a root parameter while compiling a project. See <a href="building/global-declarations.html#compilation-inputs">Compilation Inputs</a>.</dd>
+
+          <dt id="term-constraint">Constraint</dt>
+          <dd>A named set of Boolean requirements declared with <code>constraint</code>. Multiple <code>require</code> clauses form a conjunction. See <a href="building/global-declarations.html#global-constraints">Global Constraints</a>.</dd>
+
+          <dt id="term-cost">Cost</dt>
+          <dd>A non-negative traversal-time weight used when comparing routes. Atomic-path costs and transport costs are measured in seconds. See <a href="routing/routing-semantics.html#route-cost">Route-Cost Composition</a>.</dd>
+
+          <dt id="term-cost-seconds"><code>costSeconds</code></dt>
+          <dd>The route-output field containing one step's traversal time in seconds. See <a href="routing/route-results.html#cost-duration-and-distance">Cost, Duration, and Distance</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-d">
+        <h2>D</h2>
+        <dl>
+          <dt id="term-dc">Disconnected (<code>DC</code>)</dt>
+          <dd>An RCC relationship in which two physical node areas share no physical point. See <a href="topology/nodes.html#physical-semantics">Node Physical Semantics</a>.</dd>
+
+          <dt id="term-def"><code>def</code></dt>
+          <dd>A declaration of a reusable function or calculated value. Root-level definitions are visible to selected maps and transports. See <a href="building/global-declarations.html#global-functions">Global Functions</a>.</dd>
+
+          <dt id="term-depart"><code>Depart</code></dt>
+          <dd>A station-access qualifier indicating that a requirement applies when departing from the station. See <a href="transport/transport.html#station-access">Station Access</a>.</dd>
+
+          <dt id="term-directional-arrow">Directional arrow</dt>
+          <dd>A <code>directional-arrow</code> declaration describing a target node's direction relative to the facing direction established at an anchor node. See <a href="topology/paths.html#directional-arrows">Turn Hints</a>.</dd>
+
+          <dt id="term-domain">Domain</dt>
+          <dd>Short form for management domain when discussing map grouping and ride policies. It is not a network or internet domain. See <a href="building/global-declarations.html#management-domains">Management Domains</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-e">
+        <h2>E</h2>
+        <dl>
+          <dt id="term-ec">Externally connected (<code>EC</code>)</dt>
+          <dd>An RCC relationship in which two physical node areas touch at their boundaries but their interiors do not intersect. See <a href="topology/nodes.html#physical-semantics">Node Physical Semantics</a>.</dd>
+
+          <dt id="term-edge">Edge</dt>
+          <dd>A directed connection in a compiled graph. An atomic path produces one edge, or two opposing edges when declared bidirectionally. See <a href="routing/routing-semantics.html#compiled-routing-model">Compiled Routing Model</a>.</dd>
+
+          <dt id="term-elaboration">Elaboration</dt>
+          <dd>The compilation phase that resolves names, evaluates declarations and constraints, and converts surface-language declarations into compiled values. See <a href="validation/validation-and-error-reporting.html#validation-phases">Validation Phases</a>.</dd>
+
+          <dt id="term-elevator">Elevator</dt>
+          <dd>A multi-station transport whose cost is estimated from waiting and vertical movement time. See <a href="transport/elevators.html">Elevators</a>.</dd>
+
+          <dt id="term-escalator">Escalator</dt>
+          <dd>A two-station fixed-time transport currently modeled as traversable in both directions. See <a href="transport/escalators.html">Escalators</a>.</dd>
+
+          <dt id="term-expression">Expression</dt>
+          <dd>Source text that evaluates to a value, including literals, names, function applications, operators, records, lists, and conditional expressions. See <a href="language/language-and-execution-model.html#expressions-and-evaluation">Expressions and Evaluation</a>.</dd>
+
+          <dt id="term-experimental">Experimental</dt>
+          <dd>Behavior that may change substantially or be removed, currently including coordinate estimation from spatial relationships. See <a href="language/language-and-execution-model.html#stability-boundaries">Stability Boundaries</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-f">
+        <h2>F</h2>
+        <dl>
+          <dt id="term-fix"><code>fix</code></dt>
+          <dd>An expression-language form for explicitly introducing recursion through a fixed-point expression. See <a href="language/language-and-execution-model.html#expressions-and-evaluation">Expressions and Evaluation</a>.</dd>
+
+          <dt id="term-float"><code>Float</code></dt>
+          <dd>The primitive floating-point type. TopoScript does not generally convert between <code>Float</code> and <code>Int</code> implicitly. See <a href="language/language-and-execution-model.html#types">Primitive Types</a>.</dd>
+
+          <dt id="term-floor">Floor</dt>
+          <dd>The physical building level normally modeled by one topo map. A floor name in prose should not be confused with a map identifier unless the project deliberately uses the same name. See <a href="topology/topomap.html#responsibilities-and-boundaries">Topo-Map Responsibilities and Boundaries</a>.</dd>
+
+          <dt id="term-fn"><code>fn</code></dt>
+          <dd>A keyword for writing an anonymous function. The backslash form is equivalent. See <a href="language/language-and-execution-model.html#expressions-and-evaluation">Expressions and Evaluation</a>.</dd>
+
+          <dt id="term-function">Function</dt>
+          <dd>A value that accepts an argument and produces another value. Function types use <code>-&gt;</code>, and named functions are commonly declared with <code>def</code>. See <a href="language/language-and-execution-model.html#types">Function Types</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-g">
+        <h2>G</h2>
+        <dl>
+          <dt id="term-graph">Graph</dt>
+          <dd>A compiled collection of nodes and directed edges used by routing. In API output, <code>graph</code> normally contains the identifier of the corresponding topo-map instance. See <a href="routing/route-results.html#waypoints-and-identifiers">Waypoints and Identifiers</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-h">
+        <h2>H</h2>
+        <dl>
+          <dt id="term-hard-access">Hard access</dt>
+          <dd>An access condition that removes an unsatisfied path, station permission, or ride from the compiled routing model. Contrast with uncertain access. See <a href="routing/constraints-and-parameters.html#hard-access-constraints">Hard Access Constraints</a>.</dd>
+
+          <dt id="term-high-rise-routing">High-rise routing</dt>
+          <dd>A transport-first routing strategy selected with <code>isHighRise=true</code>. It is a strategy name, not a test of the building's physical height. See <a href="routing/routing-semantics.html#high-rise-routing">High-Rise Routing</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-i">
+        <h2>I</h2>
+        <dl>
+          <dt id="term-identifier">Identifier</dt>
+          <dd>A case-sensitive source name beginning with a letter or underscore and followed by letters, digits, or underscores. See <a href="language/language-and-execution-model.html#identifiers-and-qualified-names">Identifiers and Qualified Names</a>.</dd>
+
+          <dt id="term-if"><code>if</code> / <code>then</code> / <code>else</code></dt>
+          <dd>The expression-language conditional form. Its condition must be Boolean, and only the selected branch is evaluated. See <a href="language/language-and-execution-model.html#expressions-and-evaluation">Expressions and Evaluation</a>.</dd>
+
+          <dt id="term-implementation-defined">Implementation-defined</dt>
+          <dd>Behavior selected by TopoNavi Engine rather than fixed by TopoScript source semantics, including pathfinding and route-preference handling. See <a href="language/language-and-execution-model.html#stability-boundaries">Stability Boundaries</a>.</dd>
+
+          <dt id="term-int"><code>Int</code></dt>
+          <dd>The primitive signed-integer type. See <a href="language/language-and-execution-model.html#types">Primitive Types</a>.</dd>
+
+          <dt id="term-is-high-rise"><code>isHighRise</code></dt>
+          <dd>A route-request selector choosing high-rise or fully informed low-rise routing. It does not describe a TopoScript declaration or physical-height threshold. See <a href="routing/preferences-and-modes.html#building-routing-modes">Building-Routing Modes</a>.</dd>
+
+          <dt id="term-is"><code>is</code></dt>
+          <dd>The transport-declaration connector between a transport identifier and its kind, as in <code>transport MainLift is Elevator</code>. See <a href="transport/transport.html#common-declaration-model">Common Transport Declaration Model</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-l">
+        <h2>L</h2>
+        <dl>
+          <dt id="term-landing-node">Landing node</dt>
+          <dd>An existing node referenced by a transport station as the physical endpoint of that transport on a map. See <a href="transport/transport.html#stations">Stations and Landing Nodes</a>.</dd>
+
+          <dt id="term-let"><code>let</code></dt>
+          <dd>A local value binding. The expression form <code>let name = value in body</code> limits the name to the body; declaration forms may also appear inside supported source bodies. See <a href="language/language-and-execution-model.html#expressions-and-evaluation">Expressions and Evaluation</a>.</dd>
+
+          <dt id="term-linear-path">Linear path</dt>
+          <dd>A <code>linear-path</code> hint listing nodes in their physical order along one straight walking line. It groups route output but does not create connectivity. See <a href="topology/paths.html#linear-paths">Straight-Line Hints</a>.</dd>
+
+          <dt id="term-list">List</dt>
+          <dd>An ordered value containing elements of one inferred type. See <a href="language/language-and-execution-model.html#types">Composite Types</a>.</dd>
+
+          <dt id="term-low-rise-routing">Low-rise routing</dt>
+          <dd>The fully informed building-wide routing strategy selected with <code>isHighRise=false</code>. The name denotes an algorithmic mode rather than a physical-height test. See <a href="routing/routing-semantics.html#low-rise-routing">Fully Informed Low-Rise Routing</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-m">
+        <h2>M</h2>
+        <dl>
+          <dt id="term-managed-by"><code>managed-by</code></dt>
+          <dd>A <code>building-includes</code> clause assigning a management domain to one configured map instance. See <a href="building/building-includes.html#management-domains">Management-Domain Attachment</a>.</dd>
+
+          <dt id="term-management-domain">Management domain</dt>
+          <dd>A named grouping of maps, usually based on the party responsible for managing access. Ride policies may use domain names as operands. See <a href="building/global-declarations.html#management-domains">Management Domains</a>.</dd>
+
+          <dt id="term-map">Map</dt>
+          <dd>Short form for topo map when referring to a modeled floor and its local topology. It does not mean a metric drawing or coordinate plan. See <a href="topology/topomap.html">Topo Maps</a>.</dd>
+
+          <dt id="term-map-instance">Map instance</dt>
+          <dd>A named map included in a building, either directly or constructed from a reusable base with <code>using</code>. Transports and route requests use the instance name. See <a href="building/building-includes.html#reusable-submaps">Reusable Submap Instances</a>.</dd>
+
+          <dt id="term-metadata">Metadata</dt>
+          <dd>Descriptive or application-facing data attached to compiled entities. Metadata does not affect routing unless a field is explicitly recognized by TopoNavi Engine.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-n">
+        <h2>N</h2>
+        <dl>
+          <dt id="term-navigation-graph">Navigation graph</dt>
+          <dd>The compiled directed graph for one topo map, formed from its nodes and atomic paths. See <a href="routing/routing-semantics.html#compiled-routing-model">Compiled Routing Model</a>.</dd>
+
+          <dt id="term-node">Node</dt>
+          <dd>A named topological entity representing one unambiguous, physically bounded, non-overlapping area of a venue. Source declarations use <code>topo-node</code>. See <a href="topology/nodes.html">Nodes</a>.</dd>
+
+          <dt id="term-no-route">No-route outcome</dt>
+          <dd>A routing result indicating that no complete eligible path connects the requested origin and destination. It is not a partial route. See <a href="routing/routing-semantics.html#no-route">No-Route Outcomes</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-o">
+        <h2>O</h2>
+        <dl>
+          <dt id="term-out-of-order"><code>out-of-order</code></dt>
+          <dd>A station marker that disables both arrival and departure for an elevator or escalator station. See <a href="transport/transport.html#station-access">Station Access</a>.</dd>
+
+          <dt id="term-on"><code>on</code></dt>
+          <dd>A station-annotation connector used with <code>Arrive</code> or <code>Depart</code> to limit which direction of station use an access condition affects. See <a href="transport/transport.html#station-access">Station Access</a>.</dd>
+
+          <dt id="term-override-managed-by"><code>override-managed-by</code></dt>
+          <dd>A topo-map declaration clause specifying the map's own management-domain override. See <a href="topology/topomap.html#management-domain-override">Management-Domain Override</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-p">
+        <h2>P</h2>
+        <dl>
+          <dt id="term-parameter">Parameter</dt>
+          <dd>A named typed input to a root, map, function, or other parameterized declaration. Root parameters receive application-supplied compilation inputs. See <a href="building/global-declarations.html#compilation-inputs">Compilation Inputs</a>.</dd>
+
+          <dt id="term-params"><code>params</code></dt>
+          <dd>The conventional local record containing recognized map or transport parameters. Its required fields depend on the containing declaration. See <a href="topology/topomap.html#map-parameters">Map Parameters</a> and <a href="transport/transport.html#common-declaration-model">Transport Declarations</a>.</dd>
+
+          <dt id="term-path">Path</dt>
+          <dd>In source-language discussions, normally an atomic path between two nodes. In routing discussions, it may mean an entire selected route. Use <em>atomic path</em> or <em>route</em> when the distinction matters.</dd>
+
+          <dt id="term-path-tag">Path tag</dt>
+          <dd>A canonical string in a path's <code>tags</code> annotation. Tags may participate in request-time traversal filtering. See <a href="routing/constraints-and-parameters.html#banned-tags">Banned Tags</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-q">
+        <h2>Q</h2>
+        <dl>
+          <dt id="term-qualified-identifier">Qualified identifier</dt>
+          <dd>A name containing its scope, such as <code>Lobby::main_entrance</code>. For nodes, the left part is the map-instance identifier and the right part is the node's local identifier. See <a href="language/language-and-execution-model.html#identifiers-and-qualified-names">Identifiers and Qualified Names</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-r">
+        <h2>R</h2>
+        <dl>
+          <dt id="term-record">Record</dt>
+          <dd>A value containing named fields, written with braces. Fields are read using projection such as <code>params.capacity</code>. See <a href="language/language-and-execution-model.html#types">Composite Types</a>.</dd>
+
+          <dt id="term-rec"><code>rec</code></dt>
+          <dd>A modifier in a <code>let rec</code> expression that introduces an explicitly recursive binding. See <a href="language/language-and-execution-model.html#expressions-and-evaluation">Expressions and Evaluation</a>.</dd>
+
+          <dt id="term-rcc">Region Connection Calculus (RCC)</dt>
+          <dd>The qualitative spatial framework used here to state that distinct node areas must be disconnected (<code>DC</code>) or externally connected (<code>EC</code>), never overlapping. See <a href="topology/nodes.html#physical-semantics">Node Physical Semantics</a>.</dd>
+
+          <dt id="term-require"><code>require</code></dt>
+          <dd>A clause inside a named <code>constraint</code>. Its expression must evaluate to <code>Bool</code>. See <a href="building/global-declarations.html#global-constraints">Global Constraints</a>.</dd>
+
+          <dt id="term-required-action">Required action</dt>
+          <dd>An application-facing instruction attached to a path, such as tapping an access card or opening a door. It is reported but does not change route eligibility or cost. See <a href="routing/constraints-and-parameters.html#required-actions">Required Actions</a>.</dd>
+
+          <dt id="term-requires"><code>requires</code></dt>
+          <dd>An annotation attaching one or more named hard access constraints to a path, station use, or ride policy. Contrast with the singular <code>require</code> clause inside a constraint declaration.</dd>
+
+          <dt id="term-ride-from"><code>ride-from</code></dt>
+          <dd>A directed policy controlling rides between station labels, management domains, or <code>any</code>. It is not a whitelist: unmatched rides remain permitted. See <a href="transport/transport.html#ride-policies">Ride Policies</a>.</dd>
+
+          <dt id="term-risk-preference">Risk preference</dt>
+          <dd>A request-time control deciding whether routes with uncertain access may be selected. See <a href="routing/constraints-and-parameters.html#risk-preferences">Risk Preferences</a>.</dd>
+
+          <dt id="term-root"><code>root</code></dt>
+          <dd>The optional project-global source declaration providing shared parameters, constraints, and functions. It does not create a navigable map. See <a href="building/global-declarations.html#root-source">The Root Source</a>.</dd>
+
+          <dt id="term-route">Route</dt>
+          <dd>A traversable ordered result consisting of walking edges and transport movements between an origin node and a destination node. See <a href="language/language-and-execution-model.html#route-entity">Route Entity</a>.</dd>
+
+          <dt id="term-route-planning-preference">Route-planning preference</dt>
+          <dd>A request-time choice controlling how eligible route candidates are ranked, such as <code>MinimizeTime</code>, <code>MinimizeTransfers</code>, or <code>MinimizePhysicalDemands</code>. See <a href="routing/preferences-and-modes.html#primary-preferences">Primary Route-Planning Preferences</a>.</dd>
+
+          <dt id="term-route-step">Route step</dt>
+          <dd>One ordered consumer-facing segment of a route result, such as <code>Walk</code>, <code>WalkStraight</code>, <code>Transport</code>, or <code>Climbing</code>. See <a href="routing/route-results.html#step-order-and-types">Step Order and Types</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-s">
+        <h2>S</h2>
+        <dl>
+          <dt id="term-stairs">Stairs</dt>
+          <dd>A cross-map transport whose cost represents climbing time. See <a href="transport/stairs.html">Stairs</a>.</dd>
+
+          <dt id="term-station">Station</dt>
+          <dd>A labeled transport stop connecting one transport to one existing landing node in a map. See <a href="transport/transport.html#stations">Stations and Landing Nodes</a>.</dd>
+
+          <dt id="term-station-label">Station label</dt>
+          <dd>A name local to one transport declaration. Ride policies may use it as an operand; it is distinct from the map and landing-node identifiers. See <a href="transport/transport.html#stations">Stations and Landing Nodes</a>.</dd>
+
+          <dt id="term-string"><code>String</code></dt>
+          <dd>The primitive character-sequence type represented by a double-quoted literal. See <a href="language/language-and-execution-model.html#types">Primitive Types</a>.</dd>
+
+          <dt id="term-subject-to"><code>subject-to</code></dt>
+          <dd>An annotation recording uncertain access without removing the affected path or station use from the compiled model. An optional <code>because</code> clause supplies a human-readable reason. See <a href="routing/constraints-and-parameters.html#uncertain-access">Uncertain Access</a>.</dd>
+
+          <dt id="term-submap"><code>submap</code></dt>
+          <dd>A <code>building-includes</code> entry selecting or instantiating a topo map. Despite its name, it does not create a parent-child map hierarchy. See <a href="topology/submaps.html#no-parent-map">No Parent-Map Hierarchy</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-t">
+        <h2>T</h2>
+        <dl>
+          <dt id="term-tag">Tag</dt>
+          <dd>A canonical string classifying a map entity for application use or recognized traversal filtering. See the <a href="../manuals/tagging_guide.md">TopoScript Tagging Guide</a>.</dd>
+
+          <dt id="term-topological">Topological</dt>
+          <dd>Describing connectivity, adjacency, and navigation-relevant relationships without requiring metric coordinates or a geometrically accurate floor plan.</dd>
+
+          <dt id="term-to"><code>to</code></dt>
+          <dd>The <code>ride-from</code> connector separating its directed source and destination operands. See <a href="transport/transport.html#ride-policies">Ride Policies</a>.</dd>
+
+          <dt id="term-topo-map">Topo map</dt>
+          <dd>A graph-like declaration representing the navigable topology of one particular floor. It contains nodes, atomic paths, and optional navigation hints. See <a href="topology/topomap.html">Topo Maps</a>.</dd>
+
+          <dt id="term-topo-node"><code>topo-node</code></dt>
+          <dd>The source declaration for a node in a topo map. See <a href="topology/nodes.html#syntax">Node Syntax</a>.</dd>
+
+          <dt id="term-toposcript">TopoScript</dt>
+          <dd>The domain-specific language used to describe an indoor venue's routable topology, cross-map transportation, access conditions, and navigation-relevant metadata. See <a href="language/language-and-execution-model.html#system-category">Category of System</a>.</dd>
+
+          <dt id="term-transport">Transport</dt>
+          <dd>A connection between multiple topo maps. Supported transport kinds are <code>Elevator</code>, <code>Escalator</code>, and <code>Stairs</code>. See <a href="transport/transport.html">Cross-Map Transportation</a>.</dd>
+
+          <dt id="term-transport-graph">Transport graph</dt>
+          <dd>The compiled graph connecting transport stations across otherwise independent map graphs. See <a href="routing/routing-semantics.html#compiled-routing-model">Compiled Routing Model</a>.</dd>
+
+          <dt id="term-true-false"><code>true</code> and <code>false</code></dt>
+          <dd>The two literals of type <code>Bool</code>. See <a href="language/language-and-execution-model.html#types">Primitive Types</a>.</dd>
+
+          <dt id="term-type"><code>type</code></dt>
+          <dd>A parser-supported named type declaration. Its intended long-term role at building-global scope remains under design review and is not part of the stable global surface. See <a href="building/global-declarations.html#declaration-inventory">Documented Global Declarations</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-u">
+        <h2>U</h2>
+        <dl>
+          <dt id="term-uncertain-access">Uncertain access</dt>
+          <dd>A condition indicating that a path or station use may not be available, while allowing risk-aware routing to decide whether it may participate. See <a href="routing/constraints-and-parameters.html#uncertain-access">Uncertain Access</a>.</dd>
+
+          <dt id="term-using"><code>using</code></dt>
+          <dd>A <code>submap</code> clause constructing a named map instance from a reusable base topo-map source. See <a href="building/building-includes.html#reusable-submaps">Reusable Submap Instances</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-v">
+        <h2>V</h2>
+        <dl>
+          <dt id="term-vehicle"><code>vehicle</code></dt>
+          <dd>The current <code>building-includes</code> keyword that selects a transport source. In explanatory prose, the canonical term is <em>transport</em>. See <a href="building/building-includes.html#syntax">Whole-Building Syntax</a>.</dd>
+
+          <dt id="term-visiting-mode">Visiting mode</dt>
+          <dd>An internal routing concept historically used for mode-specific path costs. It is not part of the stable request-facing TopoScript reference at present.</dd>
+        </dl>
+      </section>
+
+      <section id="letter-w">
+        <h2>W</h2>
+        <dl>
+          <dt id="term-waypoint">Waypoint</dt>
+          <dd>A structured node record included in a route step. Its <code>graph</code> and <code>nodeId</code> fields identify the corresponding TopoScript node. See <a href="routing/route-results.html#waypoints-and-identifiers">Waypoints, Identifiers, and Descriptions</a>.</dd>
+
+          <dt id="term-walk"><code>Walk</code></dt>
+          <dd>A route-step type grouping one or more consecutive walking edges on the same map. See <a href="routing/route-results.html#step-order-and-types">Step Order and Types</a>.</dd>
+
+          <dt id="term-walk-straight"><code>WalkStraight</code></dt>
+          <dd>A walking route step recognized as lying along one declared <code>linear-path</code>. See <a href="routing/route-results.html#spatial-and-turn-hints">Spatial and Turn Hints</a>.</dd>
+        </dl>
+      </section>
+
+      <section id="terminology-distinctions">
+        <h2>Important Terminology Distinctions</h2>
+        <ul>
+          <li><strong>Node and point:</strong> a node represents a bounded physical area, not an infinitesimal coordinate point.</li>
+          <li><strong>Atomic path and route:</strong> an atomic path is one direct local connection; a route is the complete ordered journey.</li>
+          <li><strong>Topo map and floor plan:</strong> a topo map models navigation topology, not metric geometry or architectural drawing data.</li>
+          <li><strong>Map and graph:</strong> a topo map is the source-language declaration; a navigation graph is its compiled routing representation.</li>
+          <li><strong>Map and submap:</strong> <code>submap</code> is the manifest keyword for a configured map instance; it does not imply containment beneath a parent map.</li>
+          <li><strong>Transport and vehicle:</strong> transport is the canonical concept; <code>vehicle</code> is the current manifest keyword used to select a transport source.</li>
+          <li><strong><code>require</code> and <code>requires</code>:</strong> <code>require</code> appears inside a constraint declaration; <code>requires</code> attaches a named constraint to another declaration.</li>
+          <li><strong>Hard and uncertain access:</strong> failed hard access removes an option; uncertain access remains available only according to risk preference and is disclosed in the result.</li>
+          <li><strong>Station label and landing node:</strong> a station label names a stop within one transport; a landing node names the physical area in its topo map.</li>
+          <li><strong>Floor and map identifier:</strong> floor labels are real-world descriptions; map identifiers are exact, case-sensitive source names.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

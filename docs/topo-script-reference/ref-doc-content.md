@@ -47,11 +47,9 @@ A documentation item is complete only when:
 
 ```text
 topo-script-reference/
-  index.html
   language/
     language-and-execution-model.html
     lexical-structure.html
-    types-expressions-and-units.html
   building/
     building-includes.html
     global-declarations.html
@@ -392,26 +390,26 @@ The exact file split may be adjusted while writing, but the nine content areas b
 
 ### Points to write: glossary
 
-- [ ] Define every language keyword and domain term.
-- [ ] Distinguish similarly named concepts.
-- [ ] Standardize singular, plural, capitalization, and hyphenation.
-- [ ] Link each term to its normative reference clause.
-- [ ] Identify deprecated or compatibility terminology.
-- [ ] Prevent marketing names from replacing precise language terms.
+- [x] Define every stable language keyword and domain term, and identify parser-supported terms whose long-term status is unsettled.
+- [x] Distinguish similarly named concepts.
+- [x] Standardize singular, plural, capitalization, and hyphenation.
+- [x] Link each term to its normative reference clause.
+- [x] Identify deprecated, legacy, or compatibility terminology.
+- [x] Prevent marketing names from replacing precise language terms.
 
 ### Verification tasks
 
 - [ ] Compile every valid example in automated tests or documentation checks.
 - [ ] Assert expected failures for invalid examples.
 - [ ] Run route requests for examples that claim runtime behavior.
-- [ ] Check all glossary links and term usage.
+- [x] Check all glossary links and term usage.
 - [ ] Ensure examples use synthetic data with clear licensing.
 
 ### Completion criteria
 
 - [ ] Every major construct appears in at least one verified example.
 - [ ] Every example identifies the engine version against which it was verified.
-- [ ] The glossary contains no definition that conflicts with a normative article.
+- [x] The glossary contains no definition that conflicts with a normative article.
 
 ## 13. Standard Article Template
 
