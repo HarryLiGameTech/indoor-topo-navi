@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="300" viewBox="0 0 960 300" role="img" aria-labelledby="title description">
+  <title id="title">Spatial and turn hints diagram placeholder</title>
+  <desc id="description">Placeholder for a route-output diagram relating linear paths and directional arrows to straight walking steps and turn hints.</desc>
+  <rect x="1" y="1" width="958" height="298" fill="none" stroke="black"/>
+  <text x="480" y="125" text-anchor="middle" font-family="sans-serif" font-size="24">Spatial and Turn Hints Diagram</text>
+  <text x="480" y="165" text-anchor="middle" font-family="sans-serif" font-size="16">linear-path → WalkStraight · directional-arrow → turnDirection + turnAtNode</text>
+</svg>

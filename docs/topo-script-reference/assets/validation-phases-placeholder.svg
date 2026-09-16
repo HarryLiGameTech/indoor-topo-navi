@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="240" viewBox="0 0 960 240" role="img" aria-labelledby="title description">
+  <title id="title">Validation phases diagram placeholder</title>
+  <desc id="description">Placeholder for project loading, parsing, elaboration and evaluation, and graph construction and linking.</desc>
+  <rect x="1" y="1" width="958" height="238" fill="none" stroke="black"/>
+  <text x="480" y="100" text-anchor="middle" font-family="sans-serif" font-size="24">Validation Phases Diagram</text>
+  <text x="480" y="140" text-anchor="middle" font-family="sans-serif" font-size="16">Project loading → Parsing → Elaboration and evaluation → Graph construction and linking</text>
+</svg>

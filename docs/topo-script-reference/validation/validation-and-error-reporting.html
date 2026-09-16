@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Validation and Error Reporting</title>
+</head>
+<body>
+  <main>
+    <article id="validation-and-error-reporting">
+      <header>
+        <h1>Validation and Error Reporting</h1>
+        <p>A TopoScript project is valid when its selected sources can be parsed, elaborated, evaluated, and linked into a compiled building model.</p>
+        <p>Successful compilation establishes structural language validity. It does not guarantee that every real-world route is available, that application-defined annotations are accurate, or that the modeled venue remains unchanged.</p>
+      </header>
+
+      <section id="validation-scope">
+        <h2>Validation Scope</h2>
+        <p>Project validation covers:</p>
+        <ul>
+          <li>the whole-building configuration and selected project sources;</li>
+          <li>lexical and grammatical correctness;</li>
+          <li>name resolution, scopes, types, and expression evaluation;</li>
+          <li>topo-map nodes and paths;</li>
+          <li>transport declarations, stations, and ride policies; and</li>
+          <li>cross-file references required to construct the navigation and transport graphs.</li>
+        </ul>
+        <p>Route availability for a particular origin, destination, access context, or routing preference is a routing result rather than a project-validity test. See <a href="../routing/routing-semantics.html#no-route">No-Route Outcomes</a>.</p>
+      </section>
+
+      <section id="validation-phases">
+        <h2>Validation Phases</h2>
+        <figure>
+          <img src="../assets/validation-phases-placeholder.svg" alt="Placeholder for a diagram showing project loading, parsing, elaboration and evaluation, and graph linking">
+          <figcaption>Placeholder: validation from project sources to the compiled building model.</figcaption>
+        </figure>
+        <ol>
+          <li>
+            <strong>Project loading and composition:</strong>
+            resolve the configuration, root source, selected topo maps, reusable map bases, and transports.
+          </li>
+          <li>
+            <strong>Parsing:</strong>
+            recognize TopoScript tokens, expressions, declarations, and source-specific top-level forms.
+          </li>
+          <li>
+            <strong>Elaboration and evaluation:</strong>
+            resolve visible names, check expression types, evaluate parameters and constraints, and construct map and transport declarations.
+          </li>
+          <li>
+            <strong>Graph construction and linking:</strong>
+            build per-map navigation graphs, resolve qualified station endpoints, validate transport-specific invariants, and construct the cross-map transport graph.
+          </li>
+        </ol>
+        <p>The distinction between source declarations, compilation, and route planning is defined in <a href="../language/language-and-execution-model.html#language-lifecycle">Language Lifecycle</a>.</p>
+      </section>
+
+      <section id="invalidity-classes">
+        <h2>Common Invalidity Classes</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Examples</th>
+              <th>Governing reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Syntax</td>
+              <td>Invalid tokens, malformed declarations, incomplete expressions, or the wrong top-level source form.</td>
+              <td><a href="../language/lexical-structure.html">Lexical Structure</a> and the syntax section for the relevant declaration.</td>
+            </tr>
+            <tr>
+              <td>Names and types</td>
+              <td>Unknown symbols, invisible local names, incompatible expression types, missing record fields, or a non-Boolean constraint.</td>
+              <td><a href="../language/language-and-execution-model.html#identifiers-and-qualified-names">Identifiers and Qualified Names</a>, <a href="../language/language-and-execution-model.html#name-scopes-and-visibility">Name Scopes and Visibility</a>, and <a href="../language/language-and-execution-model.html#types">Types</a>.</td>
+            </tr>
+            <tr>
+              <td>Project composition</td>
+              <td>Missing selected sources, unresolved reusable bases, invalid cross-file references, or mismatched project names.</td>
+              <td><a href="../building/building-includes.html">Whole-Building Composition</a>.</td>
+            </tr>
+            <tr>
+              <td>Topology</td>
+              <td>Unknown path endpoints, missing path cost, invalid direction declarations, or malformed topo-map data.</td>
+              <td><a href="../topology/topomap.html">Topo Maps</a>, <a href="../topology/nodes.html">Nodes</a>, and <a href="../topology/paths.html">Paths and Local Movement</a>.</td>
+            </tr>
+            <tr>
+              <td>Transport</td>
+              <td>Unknown landing nodes, invalid station fields, unsupported transport types, invalid service ranges, or conflicting ride policies.</td>
+              <td><a href="../transport/transport.html">Cross-Map Transportation</a> and the type-specific elevator, escalator, or stair article.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="reporting-limits">
+        <h2>Current Reporting Limits</h2>
+        <p>Parsing failures may identify and highlight a source position. Errors discovered during later compilation phases may provide only a human-readable description without an attached source range.</p>
+        <p>Validation may stop after reporting one failure. A single run is not guaranteed to return every independent problem in the project.</p>
+        <p>Human-readable error text is intended to help authors correct their source, but its exact wording is not a stable API. Applications and editor integrations must not use message text as a persistent diagnostic identifier.</p>
+      </section>
+
+      <section id="correcting-invalid-projects">
+        <h2>Correcting an Invalid Project</h2>
+
+        <h3>Missing Path Cost</h3>
+        <p>Every atomic path requires a numeric, non-negative <code>cost</code>.</p>
+        <p>Invalid:</p>
+        <pre><code>atomic-path [lobby -&gt; reception] {
+  tags = ["indoor"]
+}</code></pre>
+        <p>Corrected:</p>
+        <pre><code>atomic-path [lobby -&gt; reception] {
+  cost = 6,
+  tags = ["indoor"]
+}</code></pre>
+        <p>See <a href="../topology/paths.html#cost">Path Cost</a>.</p>
+
+        <h3>Unknown Transport Landing</h3>
+        <p>A station must reference an existing node in a compiled map.</p>
+        <p>Invalid when <code>Lobby</code> does not declare <code>main_lift</code>:</p>
+        <pre><code>station LobbyStop at Lobby::main_lift {
+  location = 0.0,
+  departureRate = 0.25
+}</code></pre>
+        <p>Corrected using the landing node declared by the map:</p>
+        <pre><code>station LobbyStop at Lobby::main_elevator_landing {
+  location = 0.0,
+  departureRate = 0.25
+}</code></pre>
+        <p>See <a href="../transport/transport.html#stations">Stations and Landing Nodes</a>.</p>
+
+        <h3>Non-Boolean Constraint</h3>
+        <p>The expression required by a constraint must evaluate to <code>Bool</code>.</p>
+        <p>Invalid:</p>
+        <pre><code>root Building(officeAccess: Int) {
+  constraint OfficeAccess {
+    require officeAccess
+  }
+}</code></pre>
+        <p>Corrected:</p>
+        <pre><code>root Building(officeAccess: Bool) {
+  constraint OfficeAccess {
+    require officeAccess
+  }
+}</code></pre>
+        <p>See <a href="../building/global-declarations.html#global-constraints">Global Constraints</a>.</p>
+
+        <h3>Invalid Escalator Service Range</h3>
+        <p>An escalator must contain exactly two stations belonging to two distinct maps.</p>
+        <p>Invalid:</p>
+        <pre><code>transport AtriumEscalator is Escalator {
+  let params = { time = 18.0 }
+
+  station Lower at Mall2::escalator_landing {}
+  station Middle at Mall3::escalator_landing {}
+  station Upper at Mall4::escalator_landing {}
+}</code></pre>
+        <p>Corrected:</p>
+        <pre><code>transport AtriumEscalator is Escalator {
+  let params = { time = 18.0 }
+
+  station Lower at Mall2::escalator_landing {}
+  station Upper at Mall3::escalator_landing {}
+}</code></pre>
+        <p>See <a href="../transport/escalators.html#stations">Escalator Stations</a>.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

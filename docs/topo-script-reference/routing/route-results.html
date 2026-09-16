@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TopoScript Reference — Compiled and Runtime Outputs</title>
+</head>
+<body>
+  <main>
+    <article id="compiled-and-runtime-outputs">
+      <header>
+        <h1>Compiled and Runtime Outputs</h1>
+        <p>TopoNavi Engine compiles a TopoScript project into a building model and uses that model to produce an ordered route plan. Applications commonly receive a JSON representation of the route plan through the TopoNavi web service.</p>
+        <p>This article defines the relationship between TopoScript declarations and the current consumer-visible output. HTTP status codes, cache metadata, and service-specific response envelopes are API concerns rather than TopoScript language semantics.</p>
+      </header>
+
+      <nav aria-label="Routing reference articles">
+        <ul>
+          <li><a href="routing-semantics.html">Routing semantics</a></li>
+          <li><a href="constraints-and-parameters.html">Constraints, parameters, and traversal filters</a></li>
+          <li><a href="preferences-and-modes.html">Routing modes and preferences</a></li>
+          <li><a href="route-results.html">Compiled and runtime outputs</a></li>
+        </ul>
+      </nav>
+
+      <section id="output-boundary">
+        <h2>Output Boundary</h2>
+        <p>The compiler's internal result contains per-map navigation graphs, a transport graph, map ordering, spatial hints, and compiler metadata. These internal Scala objects are not a portable serialization format and are not a public JSON contract.</p>
+        <p>The supported consumer-facing representation is a route projected into ordered structured steps and waypoint records. REST, MCP, editor, and agent integrations may wrap or transform that representation. Such envelopes do not change the meaning of a <a href="../topology/nodes.html">node</a>, <a href="../topology/paths.html">path</a>, <a href="../topology/topomap.html">topo map</a>, or <a href="../transport/transport.html">transport</a>.</p>
+      </section>
+
+      <section id="compiled-building-views">
+        <h2>Compiled-Building Views</h2>
+        <p>A compiled building contains the map graphs and connecting transport graph described by <a href="../building/building-includes.html#compiled-building-model">Relationship to the Compiled Building</a>. The current web service provides convenience views for:</p>
+        <ul>
+          <li>available <a href="../topology/topomap.html">maps</a>;</li>
+          <li>available <a href="../topology/nodes.html">nodes</a>, with optional node attributes;</li>
+          <li>compiled directed <a href="../topology/paths.html">walking edges</a>;</li>
+          <li>compiled <a href="../transport/elevators.html">elevators</a> and their stations;</li>
+          <li>one node's attributes; and</li>
+          <li>nodes reachable near a supplied node.</li>
+        </ul>
+        <p>These are web-service projections of the compiled model, not additional TopoScript entities. Consumers must not serialize or persist the engine's internal graph objects as though they were a language-defined interchange format.</p>
+      </section>
+
+      <section id="successful-route-response">
+        <h2>Successful Route Response</h2>
+        <p>The current quick-demo REST endpoint returns the following top-level fields after a successful route request:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>status</code></td>
+              <td><code>"success"</code> for a successful web request.</td>
+            </tr>
+            <tr>
+              <td><code>path</code></td>
+              <td>A human-readable rendering of the route. It is for display and inspection, not machine parsing.</td>
+            </tr>
+            <tr>
+              <td><code>steps</code></td>
+              <td>The ordered structured route steps defined below.</td>
+            </tr>
+            <tr>
+              <td><code>appliedTraversalPreference</code></td>
+              <td>The applied route-planning preference, banned tags, and risk preference. See <a href="preferences-and-modes.html#request-body-controls">Request-Body Controls</a>.</td>
+            </tr>
+            <tr>
+              <td><code>riskSummary</code></td>
+              <td>Present only when the selected route uses uncertain access.</td>
+            </tr>
+            <tr>
+              <td><code>deprecations</code></td>
+              <td>Machine-readable notices for response fields that consumers should replace.</td>
+            </tr>
+            <tr>
+              <td><code>filesLoaded</code>, <code>cacheKey</code>, <code>fromCache</code></td>
+              <td>Quick-demo service metadata. These fields do not describe the route or the TopoScript language.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>The structured response does not currently contain a top-level numeric total. A consumer can obtain the route's total traversal time by summing <code>costSeconds</code> across all steps.</p>
+      </section>
+
+      <section id="step-order-and-types">
+        <h2>Step Order and Types</h2>
+        <p><code>steps</code> is in traversal order. Each <code>step</code> number is one-based and increases contiguously.</p>
+        <table>
+          <thead>
+            <tr>
+              <th><code>type</code></th>
+              <th>Meaning</th>
+              <th>Source relationship</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Walk</code></td>
+              <td>One or more consecutive walking edges on one map.</td>
+              <td>Generated from traversed <a href="../topology/paths.html#atomicity"><code>atomic-path</code></a> declarations.</td>
+            </tr>
+            <tr>
+              <td><code>WalkStraight</code></td>
+              <td>A walking group recognized as part of one declared straight line.</td>
+              <td>Generated when traversed atomic paths match a <a href="../topology/paths.html#linear-paths"><code>linear-path</code></a>.</td>
+            </tr>
+            <tr>
+              <td><code>Transport</code></td>
+              <td>An elevator or escalator ride between maps.</td>
+              <td>Generated from a selected <a href="../transport/transport.html">transport</a> ride.</td>
+            </tr>
+            <tr>
+              <td><code>Climbing</code></td>
+              <td>A stair traversal between maps.</td>
+              <td>Generated from a selected <a href="../transport/stairs.html">stairs</a> transport.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Consecutive walking edges on the same map are grouped into one <code>Walk</code> step unless spatial hints split them into <code>WalkStraight</code> steps. Every non-walking route edge becomes its own transport or climbing step.</p>
+      </section>
+
+      <section id="walking-step-fields">
+        <h2>Walking-Step Fields</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Presence</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>step</code>, <code>type</code></td>
+              <td>Always</td>
+              <td>Sequence number and <code>Walk</code> or <code>WalkStraight</code>.</td>
+            </tr>
+            <tr>
+              <td><code>graph</code></td>
+              <td>Always</td>
+              <td>The identifier of the containing <a href="../topology/topomap.html#declaration">topo map</a>.</td>
+            </tr>
+            <tr>
+              <td><code>from</code>, <code>to</code></td>
+              <td>Always</td>
+              <td>Human-readable endpoint strings assembled from node identifiers and descriptions. Prefer <code>waypoints</code> for machine use.</td>
+            </tr>
+            <tr>
+              <td><code>waypoints</code></td>
+              <td>Always</td>
+              <td>Structured, ordered <a href="../topology/nodes.html">node</a> records traversed by the step.</td>
+            </tr>
+            <tr>
+              <td><code>namedWaypoints</code></td>
+              <td>Currently present</td>
+              <td>Legacy human-readable strings. This field is marked for deprecation; use <code>waypoints</code>.</td>
+            </tr>
+            <tr>
+              <td><code>costSeconds</code></td>
+              <td>Always</td>
+              <td>The sum of the traversed <a href="../topology/paths.html#cost">atomic-path costs</a>, in seconds.</td>
+            </tr>
+            <tr>
+              <td><code>tags</code></td>
+              <td>Always</td>
+              <td>The distinct, sorted tags collected from the step's atomic paths.</td>
+            </tr>
+            <tr>
+              <td><code>requiredActions</code>, <code>requiredActionEvents</code></td>
+              <td>Always</td>
+              <td>Application-facing actions collected from the traversed paths, plus their exact edge locations.</td>
+            </tr>
+            <tr>
+              <td><code>uncertainAccess</code></td>
+              <td>Conditional</td>
+              <td>Present when the step uses one or more uncertain paths.</td>
+            </tr>
+            <tr>
+              <td><code>turnDirection</code>, <code>turnAtNode</code></td>
+              <td>Conditional on <code>WalkStraight</code></td>
+              <td>A resolved turn hint for entering this straight segment.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="transport-step-fields">
+        <h2>Transport and Climbing Step Fields</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>step</code>, <code>type</code></td>
+              <td>The sequence number and either <code>Transport</code> or <code>Climbing</code>.</td>
+            </tr>
+            <tr>
+              <td><code>description</code></td>
+              <td>A human-readable sentence identifying the transport and endpoint maps, such as <code>Take OfficeExpress from Lobby to OfficeLevel30</code>.</td>
+            </tr>
+            <tr>
+              <td><code>fromGraph</code>, <code>toGraph</code></td>
+              <td>The identifiers of the departure and arrival <a href="../topology/topomap.html">maps</a>.</td>
+            </tr>
+            <tr>
+              <td><code>waypoints</code></td>
+              <td>The ordered departure and arrival <a href="../transport/transport.html#stations">landing nodes</a>.</td>
+            </tr>
+            <tr>
+              <td><code>costSeconds</code></td>
+              <td>The calculated ride or climbing time in seconds. Its calculation depends on the <a href="../transport/elevators.html#cost-model">elevator</a>, <a href="../transport/escalators.html#travel-time">escalator</a>, or <a href="../transport/stairs.html#traversal-time">stair</a> model.</td>
+            </tr>
+            <tr>
+              <td><code>tags</code>, <code>requiredActions</code>, <code>requiredActionEvents</code></td>
+              <td>Present as arrays. Current transport rides do not contribute transport-level tags or required actions.</td>
+            </tr>
+            <tr>
+              <td><code>uncertainAccess</code></td>
+              <td>Present when the selected ride uses uncertain station access.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Walking to a landing, walking between two landing nodes during a transfer, and walking away from a landing are ordinary walking steps. Transport entry, ride, transfer, and exit are therefore not encoded as four artificial event types: the ordered walking and transport steps preserve the actual modeled movement.</p>
+      </section>
+
+      <section id="waypoints-and-identifiers">
+        <h2>Waypoints, Identifiers, and Descriptions</h2>
+        <p>Each waypoint contains <code>nodeId</code> and <code>graph</code>. Together they identify the source node as <code>graph::nodeId</code>, matching the qualified-name form used by route requests and <a href="../transport/transport.html#stations">transport stations</a>.</p>
+        <p>The structured waypoint projection also includes the recognized <a href="../topology/nodes.html#properties">node properties</a>: <code>description</code>, shop and facility names and categories, positions and throughput data, <code>tags</code>, <code>narration</code>, <code>refVisualUrl</code>, and <code>beaconId</code>. Missing optional values are serialized as <code>null</code>; missing node tags are serialized as an empty array.</p>
+        <p><code>isIntermediate</code> states whether a waypoint lies between the first and last waypoint of that step. <code>isTrivial</code> identifies a node that normally needs no standalone presentation; an explicit <code>isTrivial</code> node property overrides the default classification.</p>
+        <p>Generated internal routing nodes are omitted from the waypoint projection. Consumers should use structured waypoint fields for labels and localized narration rather than parsing <code>from</code>, <code>to</code>, <code>path</code>, or a transport step's <code>description</code>.</p>
+      </section>
+
+      <section id="cost-duration-and-distance">
+        <h2>Cost, Duration, and Distance</h2>
+        <p><code>costSeconds</code> is a floating-point traversal-time value in seconds. The route cost is the sum of walking, transfer-walking, elevator, escalator, and stair time described by <a href="routing-semantics.html#route-cost">Route-Cost Composition</a>.</p>
+        <p>The current route result does not expose geometric distance. Node coordinates, estimated coordinates, and arbitrary application annotations must not be interpreted as a route-distance field.</p>
+      </section>
+
+      <section id="required-actions">
+        <h2>Required Actions</h2>
+        <p><code>requiredActions</code> is a de-duplicated list of actions collected from the step's <a href="../topology/paths.html#path-properties">path annotations</a>. <code>requiredActionEvents</code> preserves where each action occurs:</p>
+        <pre><code>{
+  "action": "tap_access_card",
+  "from": "public_hall",
+  "to": "controlled_door",
+  "graph": "OfficeLevel30"
+}</code></pre>
+        <p>Actions inform the consuming application. They do not change route eligibility, traversal cost, or ranking. The recognized source keys and their behavior are defined in <a href="constraints-and-parameters.html#required-actions">Required Actions and Other Annotations</a>.</p>
+      </section>
+
+      <section id="uncertain-access-output">
+        <h2>Uncertain Access and Access Failures</h2>
+        <p>A returned step that uses <a href="constraints-and-parameters.html#uncertain-access">uncertain access</a> contains:</p>
+        <pre><code>"uncertainAccess": {
+  "uncertaintyReasons": [
+    {
+      "type": "CardAccess",
+      "reason": "The floor button may require a card."
+    }
+  ],
+  "message": "This segment may require additional access and may not always be available."
+}</code></pre>
+        <p>The successful response also contains a top-level <code>riskSummary</code> with <code>routeNotNecessarilyAvailable</code>, the applied risk preference, aggregated uncertainty reasons, and a disclaimer.</p>
+        <p>A failed hard <code>requires</code> condition removes the affected path, station permission, or ride from the compiled routing model. It is not emitted as a warning on an otherwise successful route. If the remaining model has no complete route, the request produces a no-route response.</p>
+      </section>
+
+      <section id="spatial-and-turn-hints">
+        <h2>Spatial and Turn Hints</h2>
+        <figure>
+          <img src="../assets/spatial-and-turn-hints-placeholder.svg" alt="Placeholder for a diagram relating linear paths and directional arrows to straight walking steps and resolved turn hints">
+          <figcaption>Placeholder: how source-level spatial hints shape structured walking steps.</figcaption>
+        </figure>
+        <p>A <a href="../topology/paths.html#linear-paths"><code>linear-path</code></a> can divide a walking route into <code>WalkStraight</code> steps. It does not create connectivity or add cost.</p>
+        <p>When a matching <a href="../topology/paths.html#directional-arrows"><code>directional-arrow</code></a> exists at the boundary between straight segments, the later segment may contain:</p>
+        <pre><code>{
+  "type": "WalkStraight",
+  "turnDirection": "LEFT",
+  "turnAtNode": "atrium_junction"
+}</code></pre>
+        <p><code>turnDirection</code> is resolved for the route's actual direction of travel. <code>turnAtNode</code> is the arrow's anchor node, where the turn applies. When no matching hint exists, both fields are absent.</p>
+      </section>
+
+      <section id="empty-and-failed-results">
+        <h2>Empty, Failed, and No-Route Results</h2>
+        <dl>
+          <dt>Origin equals destination</dt>
+          <dd>The route is successful, <code>steps</code> is empty, and the human-readable path states that no movement is required.</dd>
+
+          <dt>No complete route</dt>
+          <dd>The service returns an error response rather than a partial route. Common codes include <code>NO_ROUTE_FOUND</code>, <code>NO_ROUTE_FOR_USER_PARAMS</code>, and <code>NO_ROUTE_WITH_BAN_TAGS</code>.</dd>
+
+          <dt>Banned destination</dt>
+          <dd>The service returns <code>DESTINATION_HAS_BANNED_TAG</code> with the qualified node identifier and conflicting tags.</dd>
+
+          <dt>Invalid project</dt>
+          <dd>Compilation fails before routing. See <a href="../validation/validation-and-error-reporting.html">Validation and Error Reporting</a>.</dd>
+        </dl>
+        <p>A route response is complete or absent. The current engine does not return a best-effort prefix ending at the point where navigation became impossible. See <a href="routing-semantics.html#no-route">No-Route Outcomes</a>.</p>
+      </section>
+
+      <section id="ordering-and-optionality">
+        <h2>Ordering and Optionality</h2>
+        <ul>
+          <li>Steps and waypoints are ordered by traversal.</li>
+          <li>Step numbers are one-based and contiguous.</li>
+          <li>Path tags are distinct and sorted.</li>
+          <li>Required actions are de-duplicated while preserving their first encountered order.</li>
+          <li><code>turnDirection</code>, <code>turnAtNode</code>, <code>uncertainAccess</code>, and top-level <code>riskSummary</code> are omitted when inapplicable.</li>
+          <li>Equal-ranked alternative routes have no stable selection order. See <a href="routing-semantics.html#ties-and-determinism">Tie-Breaking and Determinism</a>.</li>
+        </ul>
+      </section>
+
+      <section id="serialization-and-compatibility">
+        <h2>Serialization and Compatibility</h2>
+        <p>Structured output uses JSON objects, arrays, strings, numbers, Booleans, and <code>null</code>. Applications should consume documented structured fields and tolerate the addition of new optional fields.</p>
+        <p>The exact text of <code>path</code>, <code>from</code>, <code>to</code>, transport <code>description</code>, disclaimers, and error messages is human-readable output rather than a stable identifier. Applications must not branch on that wording.</p>
+        <p>The response's <code>deprecations</code> array currently marks <code>steps[].namedWaypoints</code> as scheduled for replacement by <code>steps[].waypoints</code>. Consumers should migrate to the structured field.</p>
+        <p>REST fields such as HTTP status, cache state, and loaded-file count belong to the web adapter. An MCP server, editor, or agent may use a different envelope while preserving the route-step meanings defined here.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

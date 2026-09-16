@@ -71,7 +71,7 @@ topo-script-reference/
     preferences-and-modes.html
     route-results.html
   validation/
-    diagnostics.html
+    validation-and-error-reporting.html
   examples/
     feature-by-feature-tutorials.html
     skyrim-tower.html
@@ -288,38 +288,34 @@ The exact file split may be adjusted while writing, but the nine content areas b
 - [x] Exactness, heuristics, ignored inputs, and undefined tie-breaking are not obscured.
 - [ ] All semantic claims are backed by implementation evidence or executable tests.
 
-## 10. Content Area 7 — Validation and Diagnostics
+## 10. Content Area 7 — Validation and Error Reporting
 
-**Primary output:** `validation/diagnostics.html`
+**Primary output:** `validation/validation-and-error-reporting.html`
 
 ### Points to write
 
-- [ ] Define the validation phases.
-- [ ] Document lexical and syntax error categories.
-- [ ] Document type error categories.
-- [ ] Document name-resolution error categories.
-- [ ] Document include and project-composition errors.
-- [ ] Document invalid topology errors.
-- [ ] Document invalid transport errors.
-- [ ] Document constraint and parameter errors.
-- [ ] Document compiler consistency errors.
-- [ ] Distinguish errors, warnings, and informational diagnostics.
-- [ ] Document source-location reporting.
-- [ ] Document whether multiple diagnostics may be returned in one run.
-- [ ] Document diagnostic stability expectations for tool integrations.
-- [ ] Provide a planned index from diagnostic identifiers to relevant reference clauses.
+- [x] Define what successful TopoScript project validation covers.
+- [x] Define the validation phases.
+- [x] Summarize the broad invalidity classes: syntax, names and types, project composition, topology, and transport.
+- [x] Link each invalidity class to the reference article that defines its detailed validity rules.
+- [x] Document current reporting limits: source locations may be absent, reporting may be fail-fast, and message text is not a stable API.
+- [!] Document error and warning effects after diagnostic codes and severity behavior stabilize. Deferred because this interface is expected to change frequently.
+- [x] Provide a small set of invalid-and-corrected examples for common authoring mistakes.
+- [x] Keep clause-specific validity rules in their respective language articles rather than duplicating them here.
 
 ### Verification tasks
 
-- [ ] Inventory diagnostic types and messages in parser, type checker, compiler, and web layer.
-- [ ] Identify diagnostics represented only as exceptions or unstructured strings.
-- [ ] Verify source positions and multi-error behavior.
-- [ ] Create a test fixture for every documented diagnostic family.
+- [x] Trace project loading, parsing, elaboration, evaluation, and graph-linking failure paths.
+- [x] Verify current parser source spans and fail-fast behavior.
+- [ ] Verify representative invalid examples for each broad invalidity class.
+- [x] Confirm that every cross-reference points to the clause that defines the relevant rule.
+- [x] Identify reporting behavior that is structured versus exception- or message-based without exposing unstable internal messages as public contracts.
 
 ### Completion criteria
 
-- [ ] Every invalid example used by the reference maps to an expected diagnostic family.
-- [ ] Tool authors can distinguish stable diagnostic fields from human-readable message text.
+- [x] A reader can identify the phase and broad cause of an invalid project and reach the governing reference clause.
+- [x] The article accurately states when source locations or multiple diagnostics may be unavailable.
+- [x] The article does not imply stable diagnostic codes, severities, or message text before those contracts exist.
 
 ## 11. Content Area 8 — Compiled and Runtime Outputs
 
@@ -327,34 +323,34 @@ The exact file split may be adjusted while writing, but the nine content areas b
 
 ### Points to write
 
-- [ ] Describe the boundary between internal compiler structures and supported public output.
-- [ ] Document the compiled-building summary exposed to consumers, if supported.
-- [ ] Document route-result top-level fields.
-- [ ] Document route-step variants.
-- [ ] Document node, path, map, and transport identifiers in output.
-- [ ] Document labels and human-readable descriptions.
-- [ ] Document duration, distance, cost, and their units.
-- [ ] Document floor and map transitions.
-- [ ] Document transport-entry, ride, transfer, and exit representation.
-- [ ] Document required actions.
-- [ ] Document uncertainty and access warnings.
-- [ ] Document spatial and turn hints.
-- [ ] Document empty, partial, failed, and no-route responses.
-- [ ] Document field optionality and ordering guarantees.
-- [ ] Document serialization and compatibility expectations.
-- [ ] Separate language guarantees from REST- or MCP-specific envelopes.
+- [x] Describe the boundary between internal compiler structures and supported public output.
+- [x] Document the compiled-building summary exposed to consumers, if supported.
+- [x] Document route-result top-level fields.
+- [x] Document route-step variants.
+- [x] Document node, path, map, and transport identifiers in output.
+- [x] Document labels and human-readable descriptions.
+- [x] Document duration, distance, cost, and their units.
+- [x] Document floor and map transitions.
+- [x] Document transport-entry, ride, transfer, and exit representation.
+- [x] Document required actions.
+- [x] Document uncertainty and access warnings.
+- [x] Document spatial and turn hints.
+- [x] Document empty, partial, failed, and no-route responses.
+- [x] Document field optionality and ordering guarantees.
+- [x] Document serialization and compatibility expectations.
+- [x] Separate language guarantees from REST- or MCP-specific envelopes.
 
 ### Verification tasks
 
-- [ ] Inventory route result and API DTO types.
+- [x] Inventory route result and API DTO types.
 - [ ] Capture deterministic outputs for canonical examples.
-- [ ] Trace every output field to its source declaration or routing calculation.
-- [ ] Identify internal identifiers or implementation details that should not become compatibility guarantees.
+- [x] Trace every documented output field to its source declaration or routing calculation.
+- [x] Identify internal identifiers or implementation details that should not become compatibility guarantees.
 - [ ] Compare engine, REST, MCP, editor, and agent expectations for output shape.
 
 ### Completion criteria
 
-- [ ] Consumer-visible fields have planned definitions for meaning, type, units, optionality, and stability.
+- [x] Consumer-visible fields have planned definitions for meaning, type, units, optionality, and stability.
 - [ ] Transport transitions, actions, hints, and warnings are covered by verified examples.
 
 ## 12. Content Area 9 — Examples and Glossary
