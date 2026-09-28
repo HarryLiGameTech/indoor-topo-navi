@@ -301,6 +301,11 @@ object TypeChecker {
       case (OpKind.Sub, Type.FloatType, Type.FloatType) => TypeCheckResult.Ok(Type.FloatType)
       case (OpKind.Mul, Type.FloatType, Type.FloatType) => TypeCheckResult.Ok(Type.FloatType)
 
+      case (OpKind.Div, Type.IntType, Type.IntType)     => TypeCheckResult.Ok(Type.FloatType)
+      case (OpKind.Div, Type.IntType, Type.FloatType)   => TypeCheckResult.Ok(Type.FloatType)
+      case (OpKind.Div, Type.FloatType, Type.IntType)   => TypeCheckResult.Ok(Type.FloatType)
+      case (OpKind.Div, Type.FloatType, Type.FloatType) => TypeCheckResult.Ok(Type.FloatType)
+
       case (OpKind.Eq, Type.IntType, Type.IntType)     => TypeCheckResult.Ok(Type.BoolType)
       case (OpKind.Lt, Type.IntType, Type.IntType)     => TypeCheckResult.Ok(Type.BoolType)
       case (OpKind.Gt, Type.IntType, Type.IntType)     => TypeCheckResult.Ok(Type.BoolType)

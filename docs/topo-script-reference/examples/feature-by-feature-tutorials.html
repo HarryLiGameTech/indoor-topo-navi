@@ -288,13 +288,13 @@ atomic-path [gate_lounge &lt;-&gt; fire_door_landing] {
   cost = corridorSeconds + 2.0
 }</code></pre>
 
-        <p><strong>Classification:</strong> Compilation-invalid. General expressions do not implicitly convert between <code>Int</code> and <code>Float</code>.</p>
+        <p><strong>Classification:</strong> Compilation-invalid. Addition, subtraction, and multiplication do not implicitly convert between <code>Int</code> and <code>Float</code>.</p>
 
-        <h3>Invalid example: parsed but unsupported operator</h3>
+        <h3>Valid example: fractional division</h3>
 
         <pre><code>let halfTransferTime = 30.0 / 2.0</code></pre>
 
-        <p><strong>Classification:</strong> Compilation-invalid. Division appears in the current grammar but is not implemented by the surface-language evaluator.</p>
+        <p><strong>Classification:</strong> Valid. The result is <code>15.0</code>. Division accepts any pair of integer or floating-point operands and always returns a <code>Float</code>; <code>3 / 2</code> therefore produces <code>1.5</code>. A zero denominator or a nonfinite operand or result fails with an arithmetic error.</p>
 
         <h3>Invalid example: unknown value</h3>
 

@@ -342,6 +342,11 @@
               <td>A value of the same numeric type</td>
             </tr>
             <tr>
+              <td><code>/</code></td>
+              <td>Any pair of <code>Int</code> or <code>Float</code> values</td>
+              <td><code>Float</code>, including for two integer operands</td>
+            </tr>
+            <tr>
               <td><code>==</code></td>
               <td>Two compatible <code>Int</code>, <code>Float</code>, <code>Bool</code>, or <code>String</code> values</td>
               <td><code>Bool</code></td>
@@ -354,10 +359,11 @@
           </tbody>
         </table>
 
-        <p>Mixed <code>Int</code> and <code>Float</code> arithmetic is not implicitly converted. Division, <code>&lt;=</code>, and <code>&gt;=</code> appear in the current parser grammar but are not implemented by the surface-language evaluator and must not be used. General-purpose Boolean operators are not currently supported; <code>&amp;&amp;</code> inside a grouped <code>requires</code> annotation denotes a conjunction of named requirements rather than an ordinary expression operator.</p>
+        <p>Division converts integer operands to floating point before evaluation: <code>3 / 2</code> produces <code>1.5</code>, and <code>240 / 300</code> produces <code>0.8</code>. Division by <code>0</code>, <code>0.0</code>, or <code>-0.0</code> fails with an arithmetic error. Nonfinite operands and results are also rejected. Calculations use double-precision floating point, so rounding can occur, including loss of integer precision beyond 2<sup>53</sup>.</p>
+        <p>Mixed <code>Int</code> and <code>Float</code> addition, subtraction, and multiplication are not implicitly converted. The operators <code>&lt;=</code> and <code>&gt;=</code> appear in the current parser grammar but are not implemented by the surface-language evaluator and must not be used. General-purpose Boolean operators are not currently supported; <code>&amp;&amp;</code> inside a grouped <code>requires</code> annotation denotes a conjunction of named requirements rather than an ordinary expression operator.</p>
 
         <h3>Precedence</h3>
-        <p>From highest to lowest, the principal precedence groups are atomic values and projection, function application, unary negation, multiplication, addition and subtraction, comparison, and control-flow expressions. Parentheses may be used to make grouping explicit.</p>
+        <p>From highest to lowest, the principal precedence groups are atomic values and projection, function application, unary negation, multiplication and division, addition and subtraction, comparison, and control-flow expressions. Multiplication and division associate to the left: <code>12 / 3 / 2</code> means <code>(12 / 3) / 2</code>. Parentheses may be used to make grouping explicit.</p>
 
         <h3>Evaluation Rules</h3>
         <p>TopoScript expressions are deterministic and have no general-purpose side effects. Evaluation is strict except that an <code>if</code> expression evaluates only its selected branch. References must resolve, function arguments must match parameter types, record fields must exist when projected, and operators require compatible operand types.</p>

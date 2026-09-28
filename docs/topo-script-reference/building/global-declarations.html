@@ -111,6 +111,7 @@
     cost = timeWhenRushing(10.0, 240)
   }
 }</code></pre>
+        <p>This call produces a cost of <code>8.0</code>: integer division returns the fractional <code>Float</code> ratio <code>240 / 300 = 0.8</code>, which is multiplied by <code>10.0</code>.</p>
         <p>Function definitions are evaluated according to their dependency graph rather than their textual order. A cyclic dependency fails compilation. Parameter annotations participate in function construction, while declared return types are parsed but are not yet consistently enforced.</p>
       </section>
 

@@ -45,6 +45,7 @@
   narration = "explicit"
 }</code></pre>
         <p>The node identifier is local to its containing topo map. Local paths and navigation-hint declarations use the simple name. A transport refers to the node with a qualified name such as <code>MallLevel5::east_lift_lobby</code>.</p>
+        <p>Node identifiers must be unique within each topo map. A repeated identifier is rejected during parsing, even when both declarations have identical annotations; the error names the node and its containing map. Identifiers are case-sensitive, and separate maps or instances of a reusable map may use the same local node names.</p>
       </section>
 
       <section id="properties">

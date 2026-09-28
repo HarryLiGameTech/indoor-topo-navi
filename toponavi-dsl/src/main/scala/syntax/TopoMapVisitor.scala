@@ -83,6 +83,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       (paramName, paramType)
     }.toList
 
+    val nodeNames = mutable.HashSet.empty[String]
+
     ctx.surfaceBody().surfaceBodyElement().asScala.foldLeft(
       SubTopoMapExpr(name, params, managementDomainOverride = managementDomainOverride)
     ) { (acc, element) => element match
@@ -90,6 +92,10 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
         val envUpdate = visitSurfaceElementCoreDef(coreDefCtx)
         acc.copy(env = acc.env.merge(envUpdate))
       case topoNodeCtx: SurfaceElementTopoNodeContext =>
+        val nodeName = topoNodeCtx.ID().getText
+        if (!nodeNames.add(nodeName)) {
+          throw new RuntimeException(s"Duplicate topo-node '$nodeName' in topo-map '$name'")
+        }
         val node = visitSurfaceElementTopoNode(topoNodeCtx)
         acc.copy(nodes = acc.nodes :+ node)
       case atomicPathCtx: SurfaceElementAtomicPathContext =>

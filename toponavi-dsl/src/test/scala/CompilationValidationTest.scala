@@ -48,6 +48,62 @@ class CompilationValidationTest extends AnyFunSuite with Matchers {
   for (fromDirectory <- Seq(false, true)) {
     val entryPoint = if (fromDirectory) "directory" else "in-memory"
 
+    for (duplicate <- Seq("topo-node A", "topo-node A {label = \"other\"}", "topo-node A {label = \"first\"}")) {
+      test(s"$entryPoint compiler rejects duplicate node declaration: $duplicate") {
+        val source = s"""topo-map Floor() {
+          |  let params = {}
+          |  topo-node A {label = "first"}
+          |  topo-node B
+          |  atomic-path [A -> B] {cost = 1}
+          |  $duplicate
+          |}""".stripMargin
+        val error = intercept[RuntimeException] {
+          compile(Map("configuration" -> "building-includes { submap Floor }", "Floor" -> source), fromDirectory)
+        }
+        error.getMessage should include("Duplicate topo-node 'A' in topo-map 'Floor'")
+      }
+    }
+
+    test(s"$entryPoint compiler rejects duplicate nodes in a reusable base before evaluating data") {
+      val source = """topo-map Base() {
+        |  let params = {}
+        |  topo-node A {label = missingValue}
+        |  topo-node A
+        |}""".stripMargin
+      val error = intercept[RuntimeException] {
+        compile(Map("configuration" -> "building-includes { submap Floor using Base }", "Base" -> source), fromDirectory)
+      }
+      error.getMessage should include("Duplicate topo-node 'A' in topo-map 'Base'")
+    }
+
+    test(s"$entryPoint compiler permits identical node identifiers in different maps") {
+      val result = compile(Map(
+        "configuration" -> "building-includes {\nsubmap Floor\nsubmap Other\n}",
+        "Floor" -> mapSource("1"),
+        "Other" -> mapSource("2").replace("topo-map Floor", "topo-map Other")
+      ), fromDirectory)
+      result.graphs.keySet shouldBe Set("Floor", "Other")
+      result.graphs.values.foreach(_.nodes.map(_.identifier).toSet shouldBe Set("A", "B"))
+      result.graphs("Floor").adjacencyList.head.costs(VisitingMode.Normal) shouldBe 1.0
+      result.graphs("Other").adjacencyList.head.costs(VisitingMode.Normal) shouldBe 2.0
+    }
+
+    test(s"$entryPoint compiler keeps node identifiers case-sensitive") {
+      val result = compile(Map(
+        "configuration" -> "building-includes { submap Floor }",
+        "Floor" -> mapSource("1").replace("topo-node B", "topo-node a").replace("A -> B", "A -> a")
+      ), fromDirectory)
+      result.graphs("Floor").nodes.map(_.identifier).toSet shouldBe Set("A", "a")
+    }
+
+    test(s"$entryPoint compiler accepts a map with no nodes") {
+      val result = compile(Map(
+        "configuration" -> "building-includes { submap Floor }",
+        "Floor" -> "topo-map Floor() { let params = {} }"
+      ), fromDirectory)
+      result.graphs("Floor").nodes shouldBe empty
+    }
+
     invalidConfigurations.foreach { case (description, declarations, expectedMessage) =>
       test(s"$entryPoint compiler rejects $description before loading sources") {
         val error = intercept[RuntimeException] {

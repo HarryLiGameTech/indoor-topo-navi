@@ -169,7 +169,7 @@ class CoreLangVisitor[SurfaceTerm] extends MapFileBaseVisitor[
   override def visitMulDivExpr(ctx: MulDivExprContext): Expr = {
     val op = ctx.op.getText match {
       case "*" => OpKind.Mul
-      case "/" => throw new UnsupportedOperationException("Division not supported in OpKind yet")
+      case "/" => OpKind.Div
     }
     Expr.BinOp(op, visitExpr(ctx.expr(0)), visitExpr(ctx.expr(1)))
   }

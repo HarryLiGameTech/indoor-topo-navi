@@ -22,6 +22,21 @@ object Interpreter {
     evalTramp(term)(using env).result
   }
 
+  // Division always returns a Float, including when both operands are integers.
+  private def divide(left: Double, right: Double): Value = {
+    if (!left.isFinite || !right.isFinite) {
+      throw new ArithmeticException("Division requires finite operands")
+    }
+    if (right == 0.0) {
+      throw new ArithmeticException("Division by zero")
+    }
+    val result = left / right
+    if (!result.isFinite) {
+      throw new ArithmeticException("Division result must be finite")
+    }
+    Value.FloatVal(result)
+  }
+
   private def evalTramp(term: Term)(using env: Env): TailRec[Value] = term match {
 
     case Term.Var(index) =>
@@ -94,6 +109,11 @@ object Interpreter {
         case (OpKind.Eq, Value.IntVal(l), Value.IntVal(r)) => Value.BoolVal(l == r)
         case (OpKind.Lt, Value.IntVal(l), Value.IntVal(r)) => Value.BoolVal(l < r)
         case (OpKind.Gt, Value.IntVal(l), Value.IntVal(r)) => Value.BoolVal(l > r)
+        // Division supports every Int/Float operand combination.
+        case (OpKind.Div, Value.IntVal(l), Value.IntVal(r))     => divide(l.toDouble, r.toDouble)
+        case (OpKind.Div, Value.IntVal(l), Value.FloatVal(r))   => divide(l.toDouble, r)
+        case (OpKind.Div, Value.FloatVal(l), Value.IntVal(r))   => divide(l, r.toDouble)
+        case (OpKind.Div, Value.FloatVal(l), Value.FloatVal(r)) => divide(l, r)
         // Other operations
         case (OpKind.Eq, Value.BoolVal(l), Value.BoolVal(r)) => Value.BoolVal(l == r)
         case (OpKind.Eq, Value.StringVal(l), Value.StringVal(r)) => Value.BoolVal(l == r)

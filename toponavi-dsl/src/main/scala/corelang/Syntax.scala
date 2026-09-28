@@ -40,13 +40,14 @@ enum OpKind {
   // TODO: Add first-class boolean operators (And, Or, Not) and wire them through
   // MapFile.g4, CoreLangVisitor, Interpreter, and TypeChecker so constraints can
   // express alternatives such as `require conditionA || conditionB`.
-  case Add, Sub, Mul, Eq, Lt, Gt, Concat, Neg
+  case Add, Sub, Mul, Eq, Lt, Gt, Concat, Neg, Div
 
   override def toString: String = this match {
     case Add => "+"
     case Concat => "++"
     case Sub => "-"
     case Mul => "*"
+    case Div => "/"
     case Eq  => "=="
     case Lt  => "<"
     case Gt  => ">"
@@ -265,6 +266,10 @@ enum Term {
       case (OpKind.Add, Type.FloatType, Type.FloatType) => Type.FloatType
       case (OpKind.Sub, Type.FloatType, Type.FloatType) => Type.FloatType
       case (OpKind.Mul, Type.FloatType, Type.FloatType) => Type.FloatType
+      case (OpKind.Div, Type.IntType, Type.IntType)     => Type.FloatType
+      case (OpKind.Div, Type.IntType, Type.FloatType)   => Type.FloatType
+      case (OpKind.Div, Type.FloatType, Type.IntType)   => Type.FloatType
+      case (OpKind.Div, Type.FloatType, Type.FloatType) => Type.FloatType
       case (OpKind.Eq, Type.FloatType, Type.FloatType)  => Type.BoolType
       case (OpKind.Lt, Type.FloatType, Type.FloatType)  => Type.BoolType
       case (OpKind.Gt, Type.FloatType, Type.FloatType)  => Type.BoolType
