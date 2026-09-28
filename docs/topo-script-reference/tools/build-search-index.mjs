@@ -41,7 +41,7 @@ async function htmlFiles(directory) {
     if (entry.name === "assets" || entry.name === "tools") continue;
     const absolute = path.join(directory, entry.name);
     if (entry.isDirectory()) files.push(...await htmlFiles(absolute));
-    else if (entry.isFile() && entry.name.endsWith(".html")) files.push(absolute);
+    else if (entry.isFile() && entry.name.endsWith(".html") && entry.name !== "index.html") files.push(absolute);
   }
   return files;
 }
