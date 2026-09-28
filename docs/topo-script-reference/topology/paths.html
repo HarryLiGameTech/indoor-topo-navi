@@ -59,6 +59,7 @@ atomic-path [upper_ramp -> lower_ramp] {
   cost = 7.5
 }</code></pre>
         <p>The value may be an <code>Int</code> or <code>Float</code> and must be non-negative. The routing algorithm combines path costs to compare candidate routes.</p>
+        <p>For each path included after access-constraint evaluation, the compiler checks the evaluated cost before constructing graph edges. Negative literals and expressions that evaluate to negative values fail compilation with the map and endpoint names in the error. Zero-cost paths are permitted, and the same check applies to directed and bidirectional paths.</p>
         <p><code>cost</code> is the only atomic-path weight required by the TopoNavi Engine. TopoScript does not require separate <code>distance</code> or <code>time</code> fields. Applications may add such annotations, but their meaning and use are application-defined.</p>
       </section>
 

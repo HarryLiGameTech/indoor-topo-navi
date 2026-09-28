@@ -493,6 +493,11 @@ class TopoScriptCompiler() {
          case Some(Value.IntVal(v)) => v.toDouble
          case _ => throw RuntimeException("Must contain a 'cost' field of type int or float in path data")
        }
+       if (cost < 0) {
+         throw new RuntimeException(
+           s"atomic-path [${mapVal.name}::${pathVal.from.name} -> ${mapVal.name}::${pathVal.to.name}] cost must be non-negative, got: $cost"
+         )
+       }
        // TODO: Refactor?
        val costs = Map(
          enums.VisitingMode.Normal -> cost,

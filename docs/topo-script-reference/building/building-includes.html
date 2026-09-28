@@ -151,6 +151,7 @@ submap OfficeLevel28 using StandardOfficeFloor managed-by Office</code></pre>
   departureRate = 0.25
 }</code></pre>
         <p>Identifiers are case-sensitive. <code>Lobby::main_elevator_landing</code>, <code>lobby::main_elevator_landing</code>, and <code>Lobby::Main_Elevator_Landing</code> are distinct names.</p>
+        <p>Every declared <code>submap</code> instance name must be unique across direct entries and <code>using</code> instances. Repeated <code>vehicle</code> declarations are also rejected. An instance created with <code>using</code> must not have the same name as any reusable base source selected by the configuration, because base maps are compiled under their own names. These checks run before map or transport sources are loaded. Distinct instances may share a base, and that base may also have one direct <code>submap</code> entry.</p>
         <p>The current compiler does not consistently diagnose a mismatch between a manifest name, its filename, and the top-level name declared inside that source. Such mismatches are invalid project authoring and must not be used for aliasing.</p>
       </section>
 
@@ -206,7 +207,7 @@ submap OfficeLevel28 using StandardOfficeFloor managed-by Office</code></pre>
   submap A using B
   submap B using A
 }</code></pre>
-        <p>The parser may accept these declarations, but the compiler does not provide recursive alias resolution or a dedicated cycle diagnostic. Authors must use an independent base topo-map source for reusable instances.</p>
+        <p>Alias chains, self-reference, and cycles are rejected as collisions between instance names and reusable base names; the compiler does not recursively resolve aliases. Authors must use an independent base topo-map source for reusable instances.</p>
       </section>
 
       <section id="compiled-building-model">

@@ -142,7 +142,7 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
   }
 
   override def visitSurfaceDefGlobalConfigExpr(ctx: SurfaceDefGlobalConfigExprContext): GlobalConfigExpr = {
-    Option(ctx.globalConfigBody)
+    val config = Option(ctx.globalConfigBody)
       .flatMap(body => Option(body.globalConfigElement))
       .map(_.asScala.toList)
       .getOrElse(List.empty)
@@ -189,6 +189,29 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
           case _ => acc // Ignore other elements
         }
       }
+
+    def rejectDuplicates(names: List[String], kind: String): Unit = {
+      val seen = scala.collection.mutable.HashSet.empty[String]
+      names.foreach { name =>
+        if (!seen.add(name)) {
+          throw new RuntimeException(s"Duplicate $kind '$name' in building-includes")
+        }
+      }
+    }
+
+    rejectDuplicates(config.orderedSubmapNames, "submap instance")
+    rejectDuplicates(config.vehicles.map(_.name), "vehicle")
+
+    // Base sources are also compiled under their own names. An alias must not
+    // overwrite one of those graphs, even if the base has no plain submap entry.
+    val baseNames = config.submapUsages.keysIterator.map(_.name).toSet
+    val aliasNames = config.submapUsages.valuesIterator.flatten.toSet
+    config.orderedSubmapNames.find(name => aliasNames(name) && baseNames(name)).foreach { name =>
+      throw new RuntimeException(
+        s"Submap instance '$name' collides with a reusable base map in building-includes"
+      )
+    }
+    config
   }
 
   override def visitGlobalConfigElementVehicleRef(ctx: GlobalConfigElementVehicleRefContext): VehicleRef = {
