@@ -129,6 +129,30 @@ class TraversalPreferenceTest extends AnyFlatSpec with Matchers {
     result.left.toOption.get shouldBe a[PreferenceSearchLimitExceeded]
   }
 
+  it should "share label and expansion budgets across both search passes" in {
+    val graph = NavigationGraph("Floor", List(start, goal), List(path(start, goal, 1.0)))
+    Seq((3, 2), (4, 1)).foreach { case (labels, expansions) =>
+      val result = new TraversalPreferencePlanner(Map("Floor" -> graph), TransportGraph(Nil), labels, expansions)
+        .navigate(GlobalNode(graph, start), GlobalNode(graph, goal), Normal, MinimizeTime,
+          TraversalTagPolicy.AllowAll, false, Some("outdoor"))
+
+      result.left.toOption.get shouldBe a[PreferenceSearchLimitExceeded]
+    }
+  }
+
+  it should "allow the exact search budget and start each request with a fresh budget" in {
+    val graph = NavigationGraph("Floor", List(start, goal), List(path(start, goal, 1.0)))
+    val planner = new TraversalPreferencePlanner(Map("Floor" -> graph), TransportGraph(Nil),
+      maxLabels = 4, maxExpansions = 2)
+
+    (1 to 2).foreach { _ =>
+      val result = planner.navigate(GlobalNode(graph, start), GlobalNode(graph, goal), Normal, MinimizeTime,
+        TraversalTagPolicy.AllowAll, false, Some("outdoor"))
+
+      result.toOption.get.totalCost shouldBe 1.0
+    }
+  }
+
   it should "allow two actual line changes but reject a third" in {
     Seq(3 -> 2, 4 -> 0).foreach { case (rides, expectedTransfers) =>
       val base = TopoNode("base", outdoor + ("minDwellSeconds" -> DoubleValue(1.0)))

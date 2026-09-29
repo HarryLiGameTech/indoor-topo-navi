@@ -5,7 +5,8 @@ import enums.{NavigationError, RouteEdgeCategory, RoutePlanningPreferences, Visi
 import enums.NavigationError.{InvalidData, NoRouteFound, PreferenceSearchLimitExceeded}
 import enums.RoutePlanningPreferences.{MinimizePhysicalDemands, MinimizeTime, MinimizeTransfers}
 
-import scala.collection.mutable
+import scala.annotation.tailrec
+import scala.collection.immutable.TreeSet
 
 // Complete-route search for soft tag avoidance and mandatory intermediate-node dwell.
 class TraversalPreferencePlanner(
@@ -15,7 +16,17 @@ class TraversalPreferencePlanner(
   maxExpansions: Int = 200000
 ) {
   private def key(node: GlobalNode): String = s"${node.owningGraph.identifier}::${node.localNode.identifier}"
-  private case class SearchLimit() extends RuntimeException
+
+  private case class SearchBudget(generated: Int = 0, expanded: Int = 0) {
+    private def exceeded: NavigationError = PreferenceSearchLimitExceeded(
+      s"Traversal preference search exceeded $maxLabels labels or $maxExpansions edge expansions")
+
+    def generate: Either[NavigationError, SearchBudget] =
+      Either.cond(generated < maxLabels, copy(generated = generated + 1), exceeded)
+
+    def expand: Either[NavigationError, SearchBudget] =
+      Either.cond(expanded < maxExpansions, copy(expanded = expanded + 1), exceeded)
+  }
 
   def navigate(
     source: GlobalNode,
@@ -72,126 +83,149 @@ class TraversalPreferencePlanner(
       }
 
       def lowerBounds(weight: RouteEdge => Double): Map[String, Double] = {
-        given Ordering[(String, Double)] = Ordering.by[(String, Double), Double](_._2).reverse
-        val queue = mutable.PriorityQueue(goal -> 0.0)
-        val distances = mutable.Map(goal -> 0.0)
-        while (queue.nonEmpty) {
-          val (current, distance) = queue.dequeue()
-          if (distance <= distances(current)) {
-            reverse.getOrElse(current, Vector.empty).foreach { edge =>
-              val previous = key(edge.source)
-              val candidate = distance + weight(edge)
-              if (candidate < distances.getOrElse(previous, Double.PositiveInfinity)) {
-                distances(previous) = candidate
-                queue.enqueue(previous -> candidate)
-              }
-            }
+        given Ordering[(String, Double)] = Ordering.by { case (node, distance) => (distance, node) }
+
+        @tailrec
+        def visit(queue: TreeSet[(String, Double)], distances: Map[String, Double]): Map[String, Double] =
+          queue.headOption match {
+            case None => distances
+            case Some((current, distance)) if distance > distances(current) => visit(queue.tail, distances)
+            case Some((current, distance)) =>
+              val (nextQueue, nextDistances) = reverse.getOrElse(current, Vector.empty)
+                .foldLeft((queue.tail, distances)) { case ((pending, known), edge) =>
+                  val previous = key(edge.source)
+                  val candidate = distance + weight(edge)
+                  if (candidate < known.getOrElse(previous, Double.PositiveInfinity))
+                    (pending + (previous -> candidate), known.updated(previous, candidate))
+                  else (pending, known)
+                }
+              visit(nextQueue, nextDistances)
           }
-        }
-        distances.toMap
+
+        visit(TreeSet(goal -> 0.0), Map(goal -> 0.0))
       }
 
       val timeRemaining = lowerBounds(_.cost)
-      if (!timeRemaining.contains(start)) return Left(NoRouteFound(s"No route from $start to $goal"))
-      val primaryRemaining = preference match {
-        case MinimizeTime => timeRemaining
-        case MinimizePhysicalDemands => lowerBounds(_.physicalDemandScore)
-        case MinimizeTransfers => timeRemaining.keys.map(_ -> 0.0).toMap
-      }
-      val exposureRemaining = if (minimizeTag.isDefined) lowerBounds(exposure) else Map.empty[String, Double]
-
-      case class Label(
-        node: String,
-        lastLine: Option[String],
-        time: Double,
-        transfers: Int,
-        physical: Double,
-        tagExposure: Double,
-        reversedEdges: List[RouteEdge],
-        visited: Set[String],
-        signature: String
-      ) {
-        def primary: Double = preference match {
-          case MinimizeTime => time
-          case MinimizeTransfers => transfers.toDouble
-          case MinimizePhysicalDemands => physical
+      val noRoute = NoRouteFound(s"No route from $start to $goal")
+      if (!timeRemaining.contains(start)) Left(noRoute)
+      else {
+        val primaryRemaining = preference match {
+          case MinimizeTime => timeRemaining
+          case MinimizePhysicalDemands => lowerBounds(_.physicalDemandScore)
+          case MinimizeTransfers => timeRemaining.keys.map(_ -> 0.0).toMap
         }
-        def state: (String, Option[String]) = node -> (if (preference == MinimizeTransfers) lastLine else None)
-      }
+        val exposureRemaining = if (minimizeTag.isDefined) lowerBounds(exposure) else Map.empty[String, Double]
 
-      var generated = 0
-      var expanded = 0
-      def search(limit: Double, useTags: Boolean): Option[Label] = {
-        def priority(label: Label): (Double, Double, Double, String) = {
-          val primary = label.primary + primaryRemaining.getOrElse(label.node, Double.PositiveInfinity)
-          val time = label.time + timeRemaining.getOrElse(label.node, Double.PositiveInfinity)
-          if (useTags) (label.tagExposure + exposureRemaining.getOrElse(label.node, Double.PositiveInfinity), primary, time, label.signature)
-          else (primary, time, 0.0, label.signature)
-        }
-        given Ordering[Label] = Ordering.by[Label, (Double, Double, Double, String)](priority).reverse
-        val queue = mutable.PriorityQueue.empty[Label]
-        val labels = mutable.Map.empty[(String, Option[String]), Vector[Label]]
-
-        def dominates(a: Label, b: Label): Boolean =
-          a.primary <= b.primary && a.time <= b.time && (!useTags || a.tagExposure <= b.tagExposure) &&
-            a.visited.subsetOf(b.visited) &&
-            (a.primary < b.primary || a.time < b.time || (useTags && a.tagExposure < b.tagExposure) || a.signature <= b.signature)
-
-        def enqueue(label: Label): Unit = {
-          val existing = labels.getOrElse(label.state, Vector.empty)
-          if (!existing.exists(dominates(_, label))) {
-            generated += 1
-            if (generated > maxLabels) throw SearchLimit()
-            labels(label.state) = existing.filterNot(dominates(label, _)) :+ label
-            queue.enqueue(label)
+        case class Label(
+          node: String,
+          lastLine: Option[String],
+          time: Double,
+          transfers: Int,
+          physical: Double,
+          tagExposure: Double,
+          reversedEdges: List[RouteEdge],
+          visited: Set[String],
+          signature: String
+        ) {
+          def primary: Double = preference match {
+            case MinimizeTime => time
+            case MinimizeTransfers => transfers.toDouble
+            case MinimizePhysicalDemands => physical
           }
+          def state: (String, Option[String]) = node -> (if (preference == MinimizeTransfers) lastLine else None)
         }
 
-        enqueue(Label(start, None, 0.0, 0, 0.0, 0.0, Nil, Set(start), ""))
-        while (queue.nonEmpty) {
-          val current = queue.dequeue()
-          if (labels.getOrElse(current.state, Vector.empty).contains(current)) {
-            if (current.node == goal) return Some(current)
-            outgoing.getOrElse(current.node, Vector.empty).foreach { case (edge, index) =>
-              expanded += 1
-              if (expanded > maxExpansions) throw SearchLimit()
+        case class SearchState(
+          queue: TreeSet[Label],
+          labels: Map[(String, Option[String]), Vector[Label]],
+          budget: SearchBudget
+        )
+        case class SearchResult(label: Option[Label], budget: SearchBudget)
+
+        def search(limit: Double, useTags: Boolean, budget: SearchBudget): Either[NavigationError, SearchResult] = {
+          def priority(label: Label): (Double, Double, Double, String) = {
+            val primary = label.primary + primaryRemaining.getOrElse(label.node, Double.PositiveInfinity)
+            val time = label.time + timeRemaining.getOrElse(label.node, Double.PositiveInfinity)
+            if (useTags) (label.tagExposure + exposureRemaining.getOrElse(label.node, Double.PositiveInfinity), primary, time, label.signature)
+            else (primary, time, 0.0, label.signature)
+          }
+          // The path signature keeps equally scored routes distinct in the ordered set.
+          given Ordering[Label] = Ordering.by[Label, (Double, Double, Double, String)](priority)
+
+          def dominates(a: Label, b: Label): Boolean =
+            a.primary <= b.primary && a.time <= b.time && (!useTags || a.tagExposure <= b.tagExposure) &&
+              a.visited.subsetOf(b.visited) &&
+              (a.primary < b.primary || a.time < b.time || (useTags && a.tagExposure < b.tagExposure) || a.signature <= b.signature)
+
+          def enqueue(state: SearchState, label: Label): Either[NavigationError, SearchState] = {
+            val existing = state.labels.getOrElse(label.state, Vector.empty)
+            if (existing.exists(dominates(_, label))) Right(state)
+            else state.budget.generate.map { nextBudget =>
+              state.copy(
+                queue = state.queue + label,
+                labels = state.labels.updated(label.state, existing.filterNot(dominates(label, _)) :+ label),
+                budget = nextBudget
+              )
+            }
+          }
+
+          def expand(state: SearchState, current: Label, edge: RouteEdge, index: Int): Either[NavigationError, SearchState] =
+            state.budget.expand.flatMap { nextBudget =>
+              val nextState = state.copy(budget = nextBudget)
               val next = key(edge.target)
-              if (!current.visited.contains(next) && timeRemaining.contains(next)) {
+              if (current.visited.contains(next) || !timeRemaining.contains(next)) Right(nextState)
+              else {
                 val line = edge.transport.map(_.lineIdentifier)
                 val transfers = current.transfers + (if (line.exists(id => current.lastLine.exists(_ != id))) 1 else 0)
                 val candidate = Label(next, line.orElse(current.lastLine), current.time + edge.cost, transfers,
                   current.physical + edge.physicalDemandScore, current.tagExposure + exposure(edge),
                   edge :: current.reversedEdges, current.visited + next, current.signature + f"/$index%08d")
                 val tolerance = if (limit == 0.0) 0.0 else 1e-9
-                if (candidate.primary + primaryRemaining(next) <= limit + tolerance) enqueue(candidate)
+                if (candidate.primary + primaryRemaining(next) <= limit + tolerance) enqueue(nextState, candidate)
+                else Right(nextState)
               }
             }
-          }
-        }
-        None
-      }
 
-      val primary = search(Double.PositiveInfinity, useTags = false)
-      val selected = primary.flatMap { best =>
-        if (minimizeTag.isEmpty) Some(best)
-        else {
-          val limit = preference match {
-            case MinimizeTime => best.primary + 60.0
-            case MinimizeTransfers => best.primary + 2.0
-            case MinimizePhysicalDemands => best.primary * 1.25
+          @tailrec
+          def visit(state: SearchState): Either[NavigationError, SearchResult] = state.queue.headOption match {
+            case None => Right(SearchResult(None, state.budget))
+            case Some(current) if !state.labels.getOrElse(current.state, Vector.empty).contains(current) =>
+              visit(state.copy(queue = state.queue.tail))
+            case Some(current) if current.node == goal => Right(SearchResult(Some(current), state.budget))
+            case Some(current) =>
+              val expanded = outgoing.getOrElse(current.node, Vector.empty)
+                .foldLeft[Either[NavigationError, SearchState]](Right(state.copy(queue = state.queue.tail))) {
+                  case (result, (edge, index)) => result.flatMap(expand(_, current, edge, index))
+                }
+              expanded match {
+                case Left(error) => Left(error)
+                case Right(next) => visit(next)
+              }
           }
-          search(limit, useTags = true)
+
+          val initial = Label(start, None, 0.0, 0, 0.0, 0.0, Nil, Set(start), "")
+          enqueue(SearchState(TreeSet.empty[Label], Map.empty, budget), initial).flatMap(visit)
         }
-      }
-      selected match {
-        case None => Left(NoRouteFound(s"No route from $start to $goal"))
-        case Some(label) =>
+
+        for {
+          primary <- search(Double.PositiveInfinity, useTags = false, SearchBudget())
+          selected <- primary.label match {
+            case Some(best) if minimizeTag.isDefined =>
+              val limit = preference match {
+                case MinimizeTime => best.primary + 60.0
+                case MinimizeTransfers => best.primary + 2.0
+                case MinimizePhysicalDemands => best.primary * 1.25
+              }
+              search(limit, useTags = true, primary.budget)
+            case _ => Right(primary)
+          }
+          label <- selected.label.toRight(noRoute)
+        } yield {
           val routeEdges = label.reversedEdges.reverse
-          Right(NavigationOutputPath(source :: routeEdges.map(_.target), routeEdges))
+          NavigationOutputPath(source :: routeEdges.map(_.target), routeEdges)
+        }
       }
     } catch {
-      case _: SearchLimit => Left(PreferenceSearchLimitExceeded(
-        s"Traversal preference search exceeded $maxLabels labels or $maxExpansions edge expansions"))
       case error: IllegalArgumentException => Left(InvalidData(error.getMessage))
     }
   }
