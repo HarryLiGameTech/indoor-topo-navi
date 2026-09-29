@@ -44,6 +44,8 @@ The [examples](examples/) directory contains four datasets. Their root declarati
 
 Supply inputs through the compiler parameter map or the API's `userParams` field. These datasets include legacy syntax and validation issues; their presence does not guarantee successful compilation. Use the synthetic projects in the compiler tests for reproducible examples.
 
+`GET /api/v1/available-buildings` lists installed map projects under the configured `EXAMPLES_PATH`: immediate subdirectories containing a readable `configuration.tcfg` or `configuration`. The response is `{"status":"success","buildings":["indigoBJ","nbc4","swfc","trent"]}` for the shipped examples. This inventory does not compile the maps or validate a user's access parameters. An empty directory returns an empty list; an unreadable inventory returns HTTP 503. MCP reads this endpoint at startup, so restart MCP after changing installed projects.
+
 ## Documentation and limitations
 
 - [TopoScript reference](docs/topo-script-reference/index.html)

@@ -62,6 +62,22 @@ public class TopoController {
         ));
     }
 
+    @GetMapping("/available-buildings")
+    public ResponseEntity<?> availableBuildings() {
+        try {
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "buildings", availableBuildingNames(java.nio.file.Paths.get(examplesPathConfig))
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(503).body(Map.of(
+                    "status", "error",
+                    "code", "BUILDING_CATALOG_UNAVAILABLE",
+                    "message", "The configured map inventory could not be read."
+            ));
+        }
+    }
+
     @GetMapping(value = "test-constraints")
     public ResponseEntity<?> testConstraints() {
         try {
@@ -936,6 +952,20 @@ public class TopoController {
         }
 
         return files;
+    }
+
+    static List<String> availableBuildingNames(java.nio.file.Path examplesRoot) throws IOException {
+        try (java.util.stream.Stream<java.nio.file.Path> children = java.nio.file.Files.list(examplesRoot)) {
+            return children
+                    .filter(java.nio.file.Files::isDirectory)
+                    .filter(path -> java.util.stream.Stream.of("configuration.tcfg", "configuration")
+                            .map(path::resolve)
+                            .anyMatch(file -> java.nio.file.Files.isRegularFile(file)
+                                    && java.nio.file.Files.isReadable(file)))
+                    .map(path -> path.getFileName().toString())
+                    .sorted()
+                    .toList();
+        }
     }
 
     static java.nio.file.Path resolveExampleDirectory(
