@@ -1,6 +1,13 @@
 # Escalator Support Spec
 
-Status: Accepted for implementation
+Status: Implemented
+
+This document records the original escalator delivery. The finalized
+[Traversal Preference Spec](../roadmap/traversal-preference-spec.md) extends it
+with optional `params.distance` in metres and shared physical-demand scoring.
+`distanceBetweenStations` now returns that measured distance, or zero when
+omitted. The original synthetic zero/one locations remain ordering metadata;
+the distance behavior described below is historical.
 
 ## Context
 

@@ -33,13 +33,14 @@ class EscalatorTest extends AnyFlatSpec with Matchers {
     subject.travelTimeBetweenStations(upper, upper) shouldBe 0.0
   }
 
-  it should "use synthetic station locations for distance" in {
+  it should "use measured distance without interpreting synthetic station locations as metres" in {
     val subject = escalator()
 
     subject.distanceBetweenStations(lower, lower) shouldBe 0.0
     subject.distanceBetweenStations(upper, upper) shouldBe 0.0
-    subject.distanceBetweenStations(lower, upper) shouldBe 1.0
-    subject.distanceBetweenStations(upper, lower) shouldBe 1.0
+    subject.distanceBetweenStations(lower, upper) shouldBe 0.0
+    subject.copy(distanceMeters = 12.0).distanceBetweenStations(lower, upper) shouldBe 12.0
+    subject.copy(distanceMeters = 12.0).distanceBetweenStations(upper, lower) shouldBe 12.0
   }
 
   it should "respect all station permission modes and reject unknown graphs" in {

@@ -140,7 +140,7 @@ public class TopoController {
             String resolvedPreference = resolveRoutePlanningPreference(routePlanningPreference, null);
             return quickDemoNavigation(
                     buildingName, startNode, endNode, resolvedPreference, forceRecompile,
-                    Collections.emptyMap(), Collections.emptyList(), isHighRise, "conservative");
+                    Collections.emptyMap(), Collections.emptyList(), isHighRise, "conservative", null);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
         }
@@ -156,6 +156,12 @@ public class TopoController {
             @RequestParam(required = false) String forceRecompile,
             @RequestBody(required = false) QuickDemoNavigationRequest body) {
         try {
+            if (body != null && body.traversalPreference != null
+                    && hasText(body.traversalPreference.minimizeTag) && hasText(body.traversalPreference.maximizeTag)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "status", "error", "code", "CONFLICTING_TAG_PREFERENCES",
+                        "message", "minimizeTag and maximizeTag cannot be combined."));
+            }
             List<String> unsupportedFields = unsupportedTraversalFields(body);
             if (!unsupportedFields.isEmpty()) {
                 return ResponseEntity.status(501).body(Map.of(
@@ -170,7 +176,7 @@ public class TopoController {
             String riskPreference = resolveRiskPreference(body);
             List<String> banTags = resolveBanTags(body);
             return quickDemoNavigation(buildingName, startNode, endNode, resolvedPreference, forceRecompile,
-                    extractUserParams(body), banTags, isHighRise, riskPreference);
+                    extractUserParams(body), banTags, isHighRise, riskPreference, resolveMinimizeTag(body));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
         }
@@ -180,7 +186,7 @@ public class TopoController {
             String buildingName, String startNode, String endNode,
             String routePlanningPreference, String forceRecompile,
             Map<String, Object> userParams, List<String> banTags, boolean isHighRise,
-            String riskPreference) {
+            String riskPreference, String minimizeTag) {
         try {
             Map<String, String> exampleFiles = loadExampleFiles(buildingName);
             if (exampleFiles.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No example files found in examples directory"));
@@ -191,7 +197,7 @@ public class TopoController {
             CompileOutcome outcome = compileWithCache(buildingName, exampleFiles, userParams);
             RiskAwareNavigationResult planned = TopoNaviService.findRoutePlanWithRiskPreference(
                     outcome.result(), startNode, endNode, routePlanningPreference,
-                    banTags, isHighRise, riskPreference);
+                    banTags, isHighRise, riskPreference, minimizeTag);
             NavigationOutputPath plan = planned.plan();
 
             Map<String, Object> response = new LinkedHashMap<>();
@@ -199,11 +205,12 @@ public class TopoController {
             response.put("path", plan.prettyPrint());
             response.put("steps", plan.toStructuredSteps());
             response.put("deprecations", RouteResponseDeprecationSpec.activeDeprecations());
-            response.put("appliedTraversalPreference", Map.of(
-                    "routePlanningPreference", routePlanningPreference,
-                    "banTags", banTags,
-                    "riskPreference", planned.appliedRiskPreference()
-            ));
+            Map<String, Object> appliedPreference = new LinkedHashMap<>();
+            appliedPreference.put("routePlanningPreference", routePlanningPreference);
+            appliedPreference.put("banTags", banTags);
+            appliedPreference.put("riskPreference", planned.appliedRiskPreference());
+            if (minimizeTag != null) appliedPreference.put("minimizeTag", minimizeTag);
+            response.put("appliedTraversalPreference", appliedPreference);
             riskSummary(plan, planned.appliedRiskPreference()).ifPresent(summary ->
                     response.put("riskSummary", summary));
             response.put("filesLoaded", exampleFiles.size());
@@ -781,12 +788,16 @@ public class TopoController {
         return resolved;
     }
 
+    static String resolveMinimizeTag(QuickDemoNavigationRequest body) {
+        if (body == null || body.traversalPreference == null || !hasText(body.traversalPreference.minimizeTag)) return null;
+        return body.traversalPreference.minimizeTag.trim();
+    }
+
     static List<String> unsupportedTraversalFields(QuickDemoNavigationRequest body) {
         if (body == null || body.traversalPreference == null) return Collections.emptyList();
 
         TraversalPreferenceRequest preference = body.traversalPreference;
         List<String> unsupported = new ArrayList<>();
-        if (hasText(preference.minimizeTag)) unsupported.add("minimizeTag");
         if (hasText(preference.maximizeTag)) unsupported.add("maximizeTag");
         return unsupported;
     }

@@ -474,10 +474,18 @@ class TopoScriptCompiler() {
 
     // 1. Convert Nodes
     val coreNodes = mapVal.nodes.map { nodeVal =>
-      nodeVal -> data.TopoNode(
-        identifier = nodeVal.name,
-        attributes = convertAttributes(nodeVal.data)
-      )
+      val dwell = nodeVal.data.fields.get("minDwellSeconds").map {
+        case Value.IntVal(value) => value.toDouble
+        case Value.FloatVal(value) => value
+        case _ => throw new RuntimeException("minDwellSeconds must be numeric")
+      }
+      if (dwell.exists(value => !value.isFinite || value < 0.0)) {
+        throw new RuntimeException("minDwellSeconds must be finite and non-negative")
+      }
+      val attributes = convertAttributes(nodeVal.data) ++ dwell.map { value =>
+        "minDwellSeconds" -> enums.AttributeValue.DoubleValue(value)
+      }
+      nodeVal -> data.TopoNode(identifier = nodeVal.name, attributes = attributes)
     }.toMap
 
     // 2. Convert Paths
@@ -699,6 +707,19 @@ class TopoScriptCompiler() {
       throw new RuntimeException(s"Escalator '${transVal.name}' params.time must be finite and greater than 0")
     }
 
+    val distance = transVal.context.values.get(corelang.Identifier.Symbol("params")) match {
+      case Some(Value.RecordVal(fields)) => fields.get("distance") match {
+        case None => 0.0 // Legacy time-only escalators have no measured distance contribution.
+        case Some(Value.FloatVal(value)) => value
+        case Some(Value.IntVal(value)) => value.toDouble
+        case _ => throw new RuntimeException(s"Escalator '${transVal.name}' params.distance must be numeric")
+      }
+      case _ => throw invalidNumericTime
+    }
+    if (!distance.isFinite || distance < 0.0) {
+      throw new RuntimeException(s"Escalator '${transVal.name}' params.distance must be finite and non-negative")
+    }
+
     if (transVal.stations.size != 2) {
       throw new RuntimeException(s"Escalator '${transVal.name}' must have exactly 2 stations")
     }
@@ -740,7 +761,8 @@ class TopoScriptCompiler() {
       stationLabels = stationLabels,
       displayName = transportDisplayName(transVal),
       allowedRidePairs = allowedRidePairs,
-      stationUncertainAccess = buildStationUncertainAccess(transVal, graphs)
+      stationUncertainAccess = buildStationUncertainAccess(transVal, graphs),
+      distanceMeters = distance
     )
   }
 

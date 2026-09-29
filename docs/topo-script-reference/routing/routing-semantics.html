@@ -152,11 +152,12 @@ Total: 23 seconds</code></pre>
   + escalator costs
   + stair costs</code></pre>
         <p>Atomic-path <code>cost</code> values represent traversal time in seconds. Elevator cost includes estimated waiting and movement time, escalators use their declared fixed travel time, stairs use calculated climbing time, and transfers use the walking cost between landing nodes.</p>
-        <p>Uncertain access does not add a numeric penalty. The risk preference determines whether an uncertain traversal may participate. Tags, required actions, and other application annotations do not add or subtract route cost.</p>
+        <p>Uncertain access does not add a numeric penalty. The risk preference determines whether an uncertain traversal may participate. Tags and required actions do not add or subtract route cost. Explicit <code>minDwellSeconds</code> adds mandatory dwell at intermediate nodes, excluding the fixed endpoints.</p>
       </section>
 
       <section id="exactness">
         <h2>Exact and Heuristic Behavior</h2>
+        <p>Requests with <code>minimizeTag</code>, or buildings containing <code>minDwellSeconds</code>, use bounded complete-route preference search in both modes. Successful results optimize the specified primary and soft-tag criteria over loop-free routes; exhausting 50,000 labels or 200,000 edge expansions returns <code>TRAVERSAL_PREFERENCE_SEARCH_LIMIT</code>. See <a href="preferences-and-modes.html#soft-tag-preferences">Soft Tag Avoidance</a>. The table below describes the other requests.</p>
         <table>
           <thead>
             <tr>
@@ -183,7 +184,7 @@ Total: 23 seconds</code></pre>
             </tr>
             <tr>
               <td>High-rise <code>MinimizeTransfers</code></td>
-              <td>Transport plans are ranked by transport-graph edge count, then transport cost.</td>
+              <td>Transport plans are ranked by actual transport-line changes, then transport cost.</td>
             </tr>
             <tr>
               <td>High-rise <code>MinimizePhysicalDemands</code></td>
@@ -199,6 +200,7 @@ Total: 23 seconds</code></pre>
 
       <section id="ties-and-determinism">
         <h2>Tie-Breaking and Determinism</h2>
+        <p>Complete-route preference search uses exposure, primary score, total time, then canonical route order. The remaining behavior below applies to the legacy strategies.</p>
         <p>A strictly cheaper candidate replaces a more expensive candidate. An equal-cost candidate does not replace the route already retained.</p>
         <p>Source declaration order, lexical identifier order, and station order are not public tie-breakers. When several routes have equal ranking values, the selected route is unspecified and may change between engine versions.</p>
         <p>A fixed request with one uniquely best route produces a stable result. Applications must not depend on the identity of one particular route among exact ties.</p>

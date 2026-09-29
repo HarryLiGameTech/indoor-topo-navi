@@ -114,7 +114,7 @@ class TransportGraph private(
     }
     val sortedPaths = preference match {
       case MinimizeTime => allPaths.sortBy(_.totalCost)
-      case MinimizeTransfers => allPaths.sortBy(p => (p.routeEdges.size, p.totalCost)) // Fallback to total cost when transfer counts are equal
+      case MinimizeTransfers => allPaths.sortBy(p => (p.transferCount, p.totalCost)) // Fallback to total cost when transfer counts are equal
       case MinimizePhysicalDemands => allPaths.sortBy(_.physicalDemandScore)
       case _ => allPaths.sortBy(_.totalCost)
     }

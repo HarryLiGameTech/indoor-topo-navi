@@ -15,6 +15,17 @@ case class TopoNode(
   attributes: Map[String, AttributeValue] = Map.empty,
   estimatedCoord: Option[TpccCoord] = None
 ){
+  def minimumDwellSeconds: Double = {
+    val value = attributes.get("minDwellSeconds") match {
+      case None => 0.0
+      case Some(AttributeValue.IntValue(seconds)) => seconds.toDouble
+      case Some(AttributeValue.DoubleValue(seconds)) => seconds
+      case _ => throw new IllegalArgumentException("minDwellSeconds must be numeric")
+    }
+    require(value.isFinite && value >= 0.0, "minDwellSeconds must be finite and non-negative")
+    value
+  }
+
   override def toString: String = identifier
 }
 
@@ -88,8 +99,16 @@ case class RouteEdge(
   category: RouteEdgeCategory,
   movementDescription: String,
   attributes: Map[String, AttributeValue] = Map.empty,
-  uncertainAccess: Option[UncertainAccess] = None
+  uncertainAccess: Option[UncertainAccess] = None,
+  transport: Option[TransportTraversal] = None,
+  nodeDwellSeconds: Double = 0.0
 ) {
+  def physicalDemandScore: Double = transport match {
+    case Some(traversal) => traversal.physicalDemandScore(cost - nodeDwellSeconds) + nodeDwellSeconds
+    case None if category == RouteEdgeCategory.Walking || category == RouteEdgeCategory.Portal => cost
+    case None => throw new IllegalStateException("Transport route edges require traversal metadata for physical-demand scoring")
+  }
+
   def hasFailedUncertainAccess: Boolean =
     uncertainAccess.exists(_.constraintFailed)
 
@@ -183,15 +202,16 @@ case class TransportationPath(
     routeEdges.map(_.cost).sum
   }
 
+  def transferCount: Int = TransportTraversal.countChanges(routeEdges.collect {
+    case edge if edge.source.ownerLine == edge.target.ownerLine => edge.source.ownerLine.identifier
+  })
+
   def physicalDemandScore: Double = routeEdges.map { edge =>
     if (edge.source.ownerLine == edge.target.ownerLine)
-      edge.source.ownerLine match {
-        case _: ElevatorBank => 0.1 * edge.source.ownerLine.distanceBetweenStations(edge.source.ownerGraph, edge.target.ownerGraph)
-        case _: StairCase    => 10.0 * edge.source.ownerLine.distanceBetweenStations(edge.source.ownerGraph, edge.target.ownerGraph)
-        case _               => 1.0 * edge.cost
-      }
+      TransportTraversal.between(edge.source.ownerLine, edge.source.ownerGraph, edge.target.ownerGraph)
+        .physicalDemandScore(edge.cost)
     else
-      1.0 * edge.cost // walking transfer between different transport lines on the same floor
+      edge.cost // Walking transfer between different transport lines on the same floor
   }.sum
 }
 
@@ -212,14 +232,10 @@ case class NavigationOutputPath(
   def transportSegmentCount: Int =
     routeEdges.count(_.category != RouteEdgeCategory.Walking)
 
-  def physicalDemandScore: Double = routeEdges.map { edge =>
-    edge.category match {
-      case RouteEdgeCategory.Walking   => edge.cost
-      case RouteEdgeCategory.Climbing  => edge.cost * 10.0
-      case RouteEdgeCategory.Transport => edge.cost * 0.1
-      case RouteEdgeCategory.Portal    => edge.cost
-    }
-  }.sum
+  def transferCount: Int =
+    TransportTraversal.countChanges(routeEdges.flatMap(_.transport.map(_.lineIdentifier)))
+
+  def physicalDemandScore: Double = routeEdges.map(_.physicalDemandScore).sum
 
   def prettyPrint: String = {
     val legs = buildLegs

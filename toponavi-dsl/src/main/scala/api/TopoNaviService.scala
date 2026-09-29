@@ -92,6 +92,18 @@ object TopoNaviService {
     banTags: Set[String],
     isHighRise: Boolean,
     allowUncertainAccess: Boolean
+  ): NavigationOutputPath = findRoutePlan(
+    result, startNodeName, endNodeName, preference, banTags, isHighRise, allowUncertainAccess, None)
+
+  def findRoutePlan(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: RoutePlanningPreferences,
+    banTags: Set[String],
+    isHighRise: Boolean,
+    allowUncertainAccess: Boolean,
+    minimizeTag: Option[String]
   ): NavigationOutputPath = {
     // TODO (production): Consider refactoring to hold a Map[BuildingKey, RoutePlanner] and only rebuild on cache miss.
     val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, isHighRise)
@@ -100,7 +112,7 @@ object TopoNaviService {
     val tagPolicy = TraversalTagPolicy(banTags)
     routePlanner.navigate(
       startGraphName, endGraphName, startNode, endNode,
-      Normal, preference, tagPolicy, allowUncertainAccess
+      Normal, preference, tagPolicy, allowUncertainAccess, minimizeTag
     ) match {
       case Left(DestinationHasBannedTags(nodeIdentifier, conflicts)) =>
         throw NavigationRequestException(
@@ -123,6 +135,8 @@ object TopoNaviService {
           message,
           Map.empty[String, Object].asJava
         )
+      case Left(NavigationError.PreferenceSearchLimitExceeded(message)) =>
+        throw NavigationRequestException("TRAVERSAL_PREFERENCE_SEARCH_LIMIT", message, Map.empty[String, Object].asJava)
       case Left(error) => throw new RuntimeException(formatError(error))
       case Right(plan) =>
         // Convert DSL-level spatial annotations into slim core-level types and attach to the plan
@@ -246,6 +260,18 @@ object TopoNaviService {
     banTags: JList[String],
     isHighRise: Boolean,
     riskPreference: String
+  ): RiskAwareNavigationResult = findRoutePlanWithRiskPreference(
+    result, startNodeName, endNodeName, preference, banTags, isHighRise, riskPreference, null)
+
+  def findRoutePlanWithRiskPreference(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: String,
+    banTags: JList[String],
+    isHighRise: Boolean,
+    riskPreference: String,
+    minimizeTag: String
   ): RiskAwareNavigationResult = {
     val parsedPreference = parsePreference(preference)
     val tags = if banTags == null then Set.empty else banTags.asScala.toSet
@@ -253,7 +279,7 @@ object TopoNaviService {
     def route(allowUncertainAccess: Boolean): NavigationOutputPath =
       findRoutePlan(
         result, startNodeName, endNodeName, parsedPreference,
-        tags, isHighRise, allowUncertainAccess)
+        tags, isHighRise, allowUncertainAccess, Option(minimizeTag).map(_.trim).filter(_.nonEmpty))
 
     def deterministicRoute(): Option[NavigationOutputPath] =
       try Some(route(allowUncertainAccess = false))
@@ -294,7 +320,7 @@ object TopoNaviService {
       case RoutePlanningPreferences.MinimizeTime =>
         deterministic.totalCost - candidate.totalCost >= 15.0
       case RoutePlanningPreferences.MinimizeTransfers =>
-        deterministic.transportSegmentCount - candidate.transportSegmentCount >= 1
+        deterministic.transferCount - candidate.transferCount >= 1
       case RoutePlanningPreferences.MinimizePhysicalDemands =>
         deterministic.physicalDemandScore > 0.0 &&
           candidate.physicalDemandScore <= deterministic.physicalDemandScore * 0.9
@@ -334,6 +360,7 @@ object TopoNaviService {
   private def formatError(error: NavigationError): String = error match {
     case NoRouteFound(msg)     => msg
     case InvalidData(msg)      => msg
+    case NavigationError.PreferenceSearchLimitExceeded(msg) => msg
     case ConstraintFailure(msg) => msg
     case DestinationHasBannedTags(nodeIdentifier, tags) =>
       s"Destination '$nodeIdentifier' has banned tags: ${tags.mkString(", ")}"

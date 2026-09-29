@@ -10,6 +10,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class TopoControllerPreferenceTest {
 
@@ -55,9 +56,38 @@ class TopoControllerPreferenceTest {
         body.traversalPreference.riskPreference = "conservative";
 
         assertEquals(
-                List.of("minimizeTag", "maximizeTag"),
+                List.of("maximizeTag"),
                 TopoController.unsupportedTraversalFields(body)
         );
+    }
+
+    @Test
+    void minimizeTagIsSupportedAndNormalized() {
+        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
+        body.traversalPreference.minimizeTag = " outdoor ";
+
+        assertEquals("outdoor", TopoController.resolveMinimizeTag(body));
+        assertEquals(List.of(), TopoController.unsupportedTraversalFields(body));
+        assertNull(TopoController.resolveMinimizeTag(null));
+        body.traversalPreference.minimizeTag = " ";
+        assertNull(TopoController.resolveMinimizeTag(body));
+    }
+
+    @Test
+    void conflictingSoftTagsAreRejectedAndMaximizeRemainsDeferred() {
+        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
+        body.traversalPreference.minimizeTag = "outdoor";
+        body.traversalPreference.maximizeTag = "shop";
+        TopoController controller = new TopoController();
+
+        var conflict = controller.quickDemoNavigationPost("unused", "start", "goal", null, false, null, body);
+        assertEquals(400, conflict.getStatusCode().value());
+        assertEquals("CONFLICTING_TAG_PREFERENCES", ((Map<?, ?>) conflict.getBody()).get("code"));
+
+        body.traversalPreference.minimizeTag = null;
+        var deferred = controller.quickDemoNavigationPost("unused", "start", "goal", null, false, null, body);
+        assertEquals(501, deferred.getStatusCode().value());
+        assertEquals("TRAVERSAL_PREFERENCE_NOT_IMPLEMENTED", ((Map<?, ?>) deferred.getBody()).get("code"));
     }
 
     @Test

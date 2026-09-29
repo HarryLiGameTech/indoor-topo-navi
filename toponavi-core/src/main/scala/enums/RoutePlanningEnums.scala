@@ -3,6 +3,7 @@ package enums
 enum NavigationError:
   case NoRouteFound(message: String)
   case InvalidData(message: String)
+  case PreferenceSearchLimitExceeded(message: String)
   case ConstraintFailure(message: String)
   case DestinationHasBannedTags(nodeIdentifier: String, tags: List[String])
 

@@ -84,7 +84,7 @@ timeSeconds = abs(destination.location - source.location) / 0.167
             + turnBackCost * intermediateTurns</code></pre>
         <p>Equal or adjacent segment indices add no turn cost. Indices <code>0</code> and <code>4</code> add three turn costs in either direction: a vertical difference of <code>3.34</code> metres with <code>turnBackCost = 3</code> takes <code>29</code> seconds. A zero turn cost disables this addition. Existing compiled projects must be recompiled to refresh their stored transport-edge costs.</p>
         <p>The formula applies independently to each transport edge. Splitting a climb at an intermediate landing can therefore reduce its summed turn cost: indices <code>0 → 2 → 4</code> count two turns, while a direct <code>0 → 4</code> edge counts three. The planner does not yet preserve turn continuity across consecutive legs of the same staircase.</p>
-        <p>Low-rise routing returns stair traversal as <code>Climbing</code>; high-rise output currently uses the generic <code>Transport</code> category. <code>turnBackCost</code> is elapsed time, separate from the route preference's physical-demand scoring.</p>
+        <p>Both routing modes return stair traversal as <code>Climbing</code>. <code>turnBackCost</code> is elapsed time, separate from the route preference's physical-demand scoring.</p>
       </section>
 
       <section id="service-range">

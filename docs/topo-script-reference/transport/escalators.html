@@ -21,7 +21,8 @@
         <h2>Declaration</h2>
         <pre><code>transport AtriumEscalator is Escalator {
   let params = {
-    time = 18.0
+    time = 18.0,
+    distance = 8.5
   }
 
   let displayName = "Atrium escalator"
@@ -40,6 +41,12 @@
           <li>It must be finite and greater than zero.</li>
           <li>No additional waiting, velocity, acceleration, or dwell-time calculation is applied.</li>
         </ul>
+      </section>
+
+      <section id="distance-and-physical-demand">
+        <h2>Distance and Physical Demand</h2>
+        <p>Optional <code>params.distance</code> is the measured distance along the escalator in metres. It accepts a finite, non-negative <code>Int</code> or <code>Float</code>. Omitting it preserves time-only declarations and contributes zero to the distance term; synthetic station indices are not physical metres.</p>
+        <p>Planning and returned-route scores both use <code>0.1 × distance + 0.65 × time</code>. Distance does not change the declared travel time.</p>
       </section>
 
       <section id="stations">
@@ -73,6 +80,7 @@
         <ul>
           <li>A missing or non-numeric <code>params.time</code> fails compilation.</li>
           <li>A non-finite, zero, or negative <code>time</code> fails compilation.</li>
+          <li>A non-numeric, non-finite, or negative <code>params.distance</code> fails compilation.</li>
           <li>Fewer or more than two stations fail compilation.</li>
           <li>Two stations belonging to the same topo-map instance fail compilation.</li>
           <li>An unknown station map or node fails compilation.</li>

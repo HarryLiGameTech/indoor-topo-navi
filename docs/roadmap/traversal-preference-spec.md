@@ -1,8 +1,8 @@
 # Traversal Preference Spec
 
-Status: Draft
+Status: Finalized
 
-Implementation scope: `minimizeTag` only. `maximizeTag` remains deferred.
+Implementation: hard bans and `minimizeTag` are supported in the engine and quick-demo REST API. MCP soft-preference forwarding is separate adapter work. `maximizeTag` remains deferred.
 
 ## Context
 
@@ -23,7 +23,7 @@ Canonical tag names and map-authoring rules are defined in the [TopoScript Taggi
 
 - Represent route environment semantics directly with tags on paths and, where useful, nodes.
 - Keep access-control constraints separate from traversal preferences.
-- Support hard bans in the short term without requiring major route-planner scoring changes.
+- Apply hard bans independently of soft route ranking.
 - Support soft preferences through stable, deterministic near-tie-breaking.
 - Keep the request shape friendly for an AI navigation agent.
 
@@ -47,7 +47,7 @@ atomic-path [gate_elevator_T <-> outdoor_LT] {
 }
 ```
 
-Node tags may also be supported for description, search, POI classification, or area semantics:
+Node tags also support description, search, POI classification, or area semantics:
 
 ```toposcript
 topo-node outdoor_LT {
@@ -80,7 +80,7 @@ This keeps "can the user pass?" separate from "does the user prefer this route?"
 
 ## Request Shape
 
-The quick-demo navigation POST request should accept `traversalPreference` in the body:
+The quick-demo navigation POST request accepts `traversalPreference` in the body:
 
 ```json
 {
@@ -196,7 +196,7 @@ Rules:
 - A point-only POI tag does not influence soft ranking merely because its node appears in a route. It needs a truthful positive `minDwellSeconds` or separately modeled tagged-edge exposure.
 - Candidate routes must not repeat a `GlobalNode`. This prevents `maximizeTag` from selecting routes that loop through the same tagged place to inflate the score.
 
-`minDwellSeconds` represents actual mandatory dwell rather than an arbitrary preference weight. When implemented, an intermediate node's dwell must also contribute to the route's total time under `MinimizeTime`, whether or not a soft tag preference is present.
+`minDwellSeconds` represents actual mandatory dwell rather than an arbitrary preference weight. An intermediate node's dwell also contributes to the route's total time under `MinimizeTime`, whether or not a soft tag preference is present.
 
 ## Near-Tie Rule
 
@@ -207,7 +207,7 @@ Initial hard-coded thresholds:
 ```text
 MinimizeTime:            +60 seconds
 MinimizeTransfers:       +2 transfers
-MinimizePhysicalDemands: +10 percent
+MinimizePhysicalDemands: +25 percent
 ```
 
 For `MinimizeTime`, a route is a near-tie if:
@@ -224,27 +224,40 @@ For `MinimizeTransfers`, a route is a near-tie if:
 candidate.transferCount <= bestPrimary.transferCount + 2
 ```
 
-`transferCount` counts actual changes between transport lines. A walking-only route or a route using one transport line has zero transfers. Consecutive rides on the same line do not add transfers; switching to another line adds one, including when walking connects the two lines. For example, `LiftA → walk → LiftB → EscalatorC` has two transfers. This replaces the legacy high-rise transport-plan edge count for the planned implementation.
+`transferCount` counts actual changes between transport lines. A walking-only route or a route using one transport line has zero transfers. Consecutive rides on the same line do not add transfers; switching to another line adds one, including when walking connects the two lines. For example, `LiftA → walk → LiftB → EscalatorC` has two transfers. High-rise transport-plan ranking and complete-route scoring both use this definition.
 
 For `MinimizePhysicalDemands`, a route is a near-tie if:
 
 ```text
-candidate.physicalDemand <= bestPrimary.physicalDemand * 1.10
+candidate.physicalDemand <= bestPrimary.physicalDemand * 1.25
 ```
 
-The exact implementation can be refined later, but the product semantics are:
+The threshold applies only to the selected primary objective. Transfer and physical-demand preferences do not impose an additional 60-second time cap. If the best physical-demand score is zero, only zero-score candidates qualify.
 
-> Soft preferences may choose among essentially comparable routes; they must not cause large detours.
+### Physical-Demand Metric
+
+Planning and returned-route scoring use the same per-traversal criteria:
+
+| Traversal | Physical-demand score |
+| --- | --- |
+| Elevator | `0.1 × vertical metres + 0.5 × seconds` |
+| Escalator | `0.1 × distance metres + 0.65 × seconds` |
+| Stairs | `10 × vertical metres` |
+| Walking and mandatory intermediate-node dwell | `1 × seconds` |
+
+Elevator seconds include the estimated waiting and ride time. Escalator seconds are `params.time`; distance is optional `params.distance`, a finite, non-negative `Int` or `Float` in metres along the escalator. A legacy time-only escalator contributes zero to the distance term; its synthetic station indices are never interpreted as metres. Stair turn costs remain elapsed time and do not alter its distance-based physical score.
+
+The near-tie comparison uses complete routes, including walking to and from transport and mandatory intermediate-node dwell. Legacy high-rise transport planning uses the same edge formulas for its transport-plan subtotal. This is a relative routing score, not a physiological measurement.
 
 ## Sorting Semantics
 
-Recommended ordering:
+Required ordering:
 
-1. Exclude any route containing a banned tag.
+1. Apply hard access constraints, the current uncertain-access policy, and tag bans.
 2. Find the best value under the primary `routePlanningPreference`.
 3. Keep loop-free candidates within that objective's near-tie threshold.
-4. Apply the one requested `minimizeTag` or `maximizeTag`, if present.
-5. Use the primary value, then total time, as deterministic tie-breakers.
+4. Minimize exposure to the requested `minimizeTag`, if present.
+5. Use the primary value, then total time, then canonical route order as deterministic tie-breakers.
 
 The planner must not turn tag scores into hidden time penalties or rewards.
 
@@ -252,15 +265,23 @@ The planner must not turn tag scores into hidden time penalties or rewards.
 
 The existing shortest-path algorithms retain only the best-known way to reach each node. That is sufficient for hard bans but not for near-tie soft preferences: a slightly slower partial route may have a substantially better tag exposure score and still finish within the allowed threshold.
 
-The eventual implementation should therefore:
+The implementation performs two searches over the complete walking and transport graph:
 
-1. Run the primary planner to obtain the best primary value.
+1. Find the best primary value, breaking ties by total time.
 2. Derive the objective-specific near-tie limit.
 3. Explore loop-free alternative routes within that limit.
 4. Retain multiple non-dominated partial ways to reach a node when they trade primary cost against tag exposure.
 5. Select the complete candidate with the best requested tag score and apply deterministic tie-breakers.
 
-Candidate generation must have deterministic resource limits so that dense maps cannot cause unbounded search. This is a larger planner change than `banTags` filtering and is intentionally deferred. The quick-demo request schema may parse `minimizeTag` and `maximizeTag`, but the endpoint should continue returning `TRAVERSAL_PREFERENCE_NOT_IMPLEMENTED` until this search behavior is implemented end to end.
+The search keeps non-dominated labels, including the last transport line when counting transfers and the visited-node set for loop prevention. Reverse shortest-path bounds prune alternatives that cannot meet the threshold. Canonical edge ordering makes equal-score selection independent of declaration order.
+
+Each search invocation has a shared budget of 50,000 generated labels and 200,000 edge expansions across both passes. Exceeding either limit returns HTTP 422 with `TRAVERSAL_PREFERENCE_SEARCH_LIMIT`; it never returns a partial result as optimal. These bounds do not replace deployment-level input, memory, or request-time limits.
+
+Requests with `minimizeTag`, or buildings containing `minDwellSeconds`, use this complete-route search in both high-rise and low-rise modes. Other requests retain the existing routing strategies and their documented limitations. Without a soft tag, mandatory-dwell routing performs only the primary pass.
+
+Risk preferences retain their separate policy: the engine searches the strict and/or uncertain-access graph as required, applies soft ranking within each search, and compares their results using the existing risk thresholds. The near-tie tolerances do not change those risk thresholds.
+
+The endpoint accepts `minimizeTag`. `maximizeTag` alone still returns HTTP 501 with `TRAVERSAL_PREFERENCE_NOT_IMPLEMENTED`; providing both soft fields returns HTTP 400 with `CONFLICTING_TAG_PREFERENCES`.
 
 ## Why Not Numeric Penalties Initially
 
@@ -268,7 +289,7 @@ The initial API intentionally avoids a user-facing `tagPenalty` map.
 
 Numeric penalties can make route selection harder to reason about, test, and explain. A route could become slower by an arbitrary amount because of hidden scoring weights rather than a clear rule. This is especially unfriendly for an AI navigation agent that needs to explain choices in natural language.
 
-The proposed design keeps behavior stable:
+The design keeps behavior stable:
 
 - `banTags` are hard and easy to explain.
 - `minimizeTag` and `maximizeTag` are soft and only affect near-ties.
@@ -314,7 +335,7 @@ Request:
 
 User: "I prefer the route with more shops."
 
-Request:
+Deferred request shape (currently returns HTTP 501):
 
 ```json
 {
@@ -345,20 +366,15 @@ This is not required for the first hard-ban implementation, but it is important 
 
 ## Compatibility Plan
 
-Short-term:
+Supported:
 
-- Keep existing quick-demo query parameters working.
-- Add body-level `traversalPreference`.
-- Treat query-string `routePlanningPreference` as a fallback when body `traversalPreference.routePlanningPreference` is absent.
-- Apply `banTags` at runtime to both paths and entered nodes without mutating the cached compilation result.
+- Existing quick-demo query parameters continue to work.
+- Body-level `traversalPreference` takes precedence; query-string `routePlanningPreference` remains the fallback.
+- `banTags` and `minimizeTag` apply per request without mutating cached compilation results or entering the compilation cache key.
+- `minDwellSeconds` contributes to mandatory intermediate-node time and soft tag exposure.
+- Recompile persisted building caches created before traversal metadata or escalator distance was introduced.
 
-Medium-term:
-
-- Add candidate route enumeration for stable near-tie handling.
-- Implement `minimizeTag` as a near-tie-breaker.
-- Add `minDwellSeconds` to node-time accounting and soft tag scoring.
-
-Long-term:
+Deferred:
 
 - Keep `maximizeTag` deferred until its implementation is explicitly scheduled.
 - Consider richer internal scoring, but avoid exposing arbitrary numeric penalties until the behavior is explainable and testable.

@@ -85,8 +85,8 @@
 
       <section id="minimize-transfers">
         <h2><code>MinimizeTransfers</code></h2>
-        <p>In high-rise mode, candidates are ordered first by the number of edges in the transport plan and then by total transport-plan cost.</p>
-        <p>The counted edges include both cross-map rides and same-floor connections between transport lines. The value is therefore a transport-plan hop count, not strictly the number of times a passenger changes vehicles.</p>
+        <p>In high-rise mode, candidates are ordered first by actual transport-line changes and then by total transport-plan cost.</p>
+        <p>Walking-only routes and trips on a single line count as zero transfers. Switching to another line adds one, including when walking connects the lines; consecutive rides on the same line add none.</p>
         <p>In low-rise mode, this preference currently produces the same total-cost search as <code>MinimizeTime</code>.</p>
       </section>
 
@@ -94,23 +94,32 @@
         <h2><code>MinimizePhysicalDemands</code></h2>
         <p>High-rise transport candidates use the following relative score:</p>
         <ul>
-          <li>elevator movement: <code>0.1 × vertical distance</code>;</li>
-          <li>stair movement: <code>10 × vertical distance</code>;</li>
-          <li>escalator movement: fixed travel time; and</li>
-          <li>walking between transport landings: walking time.</li>
+          <li>elevator movement: <code>0.1 × vertical metres + 0.5 × seconds</code>;</li>
+          <li>stair movement: <code>10 × vertical metres</code>;</li>
+          <li>escalator movement: <code>0.1 × distance metres + 0.65 × seconds</code>; and</li>
+          <li>walking and mandatory intermediate-node dwell: elapsed seconds.</li>
         </ul>
-        <p>Lower scores are preferred. Origin and destination walking legs are not part of the initial high-rise transport score.</p>
+        <p>Lower scores are preferred. Elevator seconds include waiting and movement. Escalator metres come from optional <code>params.distance</code>, defaulting to zero when omitted. Returned-route scoring uses the same formulas and includes terminal walking; origin and destination walking legs are not part of the initial high-rise transport score.</p>
         <p>This score is a routing heuristic, not a physiological, medical, energy-expenditure, or accessibility measurement.</p>
         <p>In low-rise mode, this preference currently produces the same total-cost search as <code>MinimizeTime</code>.</p>
       </section>
 
       <figure>
         <img src="../assets/preference-effect-example-placeholder.svg" alt="Placeholder for a diagram comparing how the same route candidates are ranked by each route-planning preference">
-        <figcaption>Placeholder: the same route candidates ranked by time, transport-plan hops, and physical-demand score.</figcaption>
+        <figcaption>Placeholder: the same route candidates ranked by time, transport-line changes, and physical-demand score.</figcaption>
       </figure>
+
+      <section id="soft-tag-preferences">
+        <h2>Soft Tag Avoidance</h2>
+        <p><code>traversalPreference.minimizeTag</code> selects the least-exposed route within the primary objective's tolerance: 60 extra seconds, two extra transport-line changes, or 25% extra physical demand. Ties use the primary score, total time, and canonical route order. Hard access constraints and tag bans still apply.</p>
+        <p>Tagged edges contribute traversal seconds; tagged intermediate nodes contribute explicit <code>minDwellSeconds</code>. Mandatory intermediate-node dwell always adds to time and physical demand, even without a soft preference. Endpoint dwell is excluded.</p>
+        <p>A soft-tag request, or a building containing mandatory node dwell, uses complete-route search in either routing mode. The primary objective and tolerance then include all walking and transport. Search is limited to 50,000 labels and 200,000 edge expansions; exceeding a limit returns HTTP 422 with <code>TRAVERSAL_PREFERENCE_SEARCH_LIMIT</code>.</p>
+        <p><code>maximizeTag</code> remains deferred. See the finalized <a href="../../roadmap/traversal-preference-spec.md">Traversal Preference Spec</a> for the complete contract.</p>
+      </section>
 
       <section id="preference-summary">
         <h2>Preference Summary</h2>
+        <p>The legacy strategies below apply when neither soft avoidance nor mandatory node dwell invokes complete-route preference search.</p>
         <table>
           <thead>
             <tr>
@@ -128,7 +137,7 @@
             <tr>
               <td><code>MinimizeTransfers</code></td>
               <td>Currently minimizes complete route cost.</td>
-              <td>Ranks by transport-plan edge count, then transport cost.</td>
+              <td>Ranks by transport-line changes, then transport cost.</td>
             </tr>
             <tr>
               <td><code>MinimizePhysicalDemands</code></td>

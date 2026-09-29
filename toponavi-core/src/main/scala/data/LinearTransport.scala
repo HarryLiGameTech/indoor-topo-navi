@@ -100,7 +100,8 @@ case class Escalator(
   stationLabels: Map[NavigationGraph, String] = Map.empty,
   displayName: Option[String] = None,
   allowedRidePairs: Option[Set[(NavigationGraph, NavigationGraph)]] = None,
-  override val stationUncertainAccess: Map[NavigationGraph, StationUncertainAccess] = Map.empty
+  override val stationUncertainAccess: Map[NavigationGraph, StationUncertainAccess] = Map.empty,
+  distanceMeters: Double = 0.0
 ) extends LinearTransport {
 
   override def maxVelocity: Double = 0.0
@@ -130,8 +131,11 @@ case class Escalator(
   override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern): Double =
     netTimeBetweenStations(src, dst)
 
-  override def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double =
-    Math.abs(stationLocations(a) - stationLocations(b))
+  override def distanceBetweenStations(a: NavigationGraph, b: NavigationGraph): Double = {
+    stationLocations(a)
+    stationLocations(b)
+    if (a == b) 0.0 else distanceMeters
+  }
 }
 
 

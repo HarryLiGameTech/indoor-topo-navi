@@ -64,7 +64,7 @@ topo-node security_screening {
 
 When `minDwellSeconds` is omitted, its value is `0`. There is no implicit one-second contribution and no automatic occurrence count.
 
-Use this attribute only for a real minimum dwell caused by the represented place or action. Do not assign an arbitrary value merely to make a POI rank higher under `maximizeTag`. Because the value represents real time, an eventual soft-preference implementation must add an intermediate node's dwell to both total route time and the exposure score of each requested tag carried by that node.
+Use this attribute only for a real minimum dwell caused by the represented place or action. Do not assign an arbitrary value merely to make a POI rank higher under `maximizeTag`. Because the value represents real time, the planner adds an intermediate node's dwell to total route time and physical-demand score, and to exposure when that node carries the requested `minimizeTag`.
 
 The route source and destination do not contribute node dwell to soft tag ranking. Candidate routes for soft ranking must not revisit the same `GlobalNode` to accumulate dwell repeatedly.
 

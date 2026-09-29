@@ -1,6 +1,6 @@
 package navigation
 
-import data.{GlobalNode, NavigationGraph, NavigationOutputPath, RouteEdge, StairCase, TopoNode, TransportGraph, UncertainAccess}
+import data.{GlobalNode, NavigationGraph, NavigationOutputPath, RouteEdge, StairCase, TopoNode, TransportGraph, TransportTraversal, UncertainAccess}
 import enums.{AttributeValue, NavigationError, RouteEdgeCategory, RoutePlanningPreferences}
 import enums.NavigationError.{DestinationHasBannedTags, InvalidData, NoRouteFound}
 import enums.ElevatorTrafficPattern.UpRush
@@ -25,7 +25,8 @@ class RoutePlanner private(
     visitingMode: enums.VisitingMode,
     preference: RoutePlanningPreferences,
     tagPolicy: TraversalTagPolicy = TraversalTagPolicy.AllowAll,
-    allowUncertainAccess: Boolean = false
+    allowUncertainAccess: Boolean = false,
+    minimizeTag: Option[String] = None
   ): Either[NavigationError, NavigationOutputPath] = {
     // This would involve combining intra-map paths and transportation paths
     // to create a complete route from startNode in startGraph to goalNode in goalGraph
@@ -41,6 +42,11 @@ class RoutePlanner private(
                 s"${goalGraph.identifier}::${goalNode.identifier}",
                 destinationConflicts.toList.sorted
               ))
+            }
+            else if minimizeTag.exists(_.trim.nonEmpty) || graphs.values.exists(_.nodes.exists(_.attributes.contains("minDwellSeconds"))) then {
+              new TraversalPreferencePlanner(graphs, transportGraph).navigate(
+                GlobalNode(sourceGraph, sourceNode), GlobalNode(goalGraph, goalNode),
+                visitingMode, preference, tagPolicy, allowUncertainAccess, minimizeTag.map(_.trim).filter(_.nonEmpty))
             }
             else if isHighRise then{
               findRouteForHighRiseBuilding(
@@ -116,7 +122,8 @@ class RoutePlanner private(
       cost: Double,
       category: RouteEdgeCategory,
       description: String,
-      uncertainAccess: Option[UncertainAccess]
+      uncertainAccess: Option[UncertainAccess],
+      transport: TransportTraversal
     ) extends HierarchyHop
 
     def resolveStation(station: data.StationNode): Option[HierarchyNode] =
@@ -200,7 +207,8 @@ class RoutePlanner private(
               category,
               s"Take ${station.ownerLine.identifier} from ${currentGraph.identifier} " +
                 s"to ${neighborStation.ownerGraph.identifier}",
-              uncertainty
+              uncertainty,
+              TransportTraversal.between(station.ownerLine, station.ownerGraph, neighborStation.ownerGraph)
             )
             openSet.enqueue(neighbor -> candidateDistance)
           }
@@ -237,7 +245,8 @@ class RoutePlanner private(
           cost = hop.cost,
           category = hop.category,
           movementDescription = hop.description,
-          uncertainAccess = hop.uncertainAccess
+          uncertainAccess = hop.uncertainAccess,
+          transport = Some(hop.transport)
         )
         routeNodes += targetGlobalNode
     }
@@ -365,7 +374,12 @@ class RoutePlanner private(
                 nextInterchange.ownerGraph,
                 UpRush
               ),
-              category = RouteEdgeCategory.Transport,
+              category = currentInterchange.ownerLine match {
+                case _: StairCase => RouteEdgeCategory.Climbing
+                case _ => RouteEdgeCategory.Transport
+              },
+              transport = Some(TransportTraversal.between(
+                currentInterchange.ownerLine, currentInterchange.ownerGraph, nextInterchange.ownerGraph)),
               movementDescription = s"Take ${currentInterchange.ownerLine.identifier} from ${currentInterchange.ownerGraph.identifier} to ${nextInterchange.ownerGraph.identifier}",
               uncertainAccess = currentInterchange.ownerLine.uncertainAccessBetween(
                 currentInterchange.ownerGraph,
@@ -482,7 +496,8 @@ class RoutePlanner private(
       category: RouteEdgeCategory,
       description: String,
       attributes: Map[String, AttributeValue] = Map.empty,
-      uncertainAccess: Option[UncertainAccess] = None
+      uncertainAccess: Option[UncertainAccess] = None,
+      transport: Option[TransportTraversal] = None
     )
 
     // Floor index derived from subMapNames ordering
@@ -590,7 +605,9 @@ class RoutePlanner private(
                       cost = edgeCost,
                       category = category,
                       description = s"Take ${stationNode.ownerLine.identifier} from ${curGraph.identifier} to ${neighborStation.ownerGraph.identifier}",
-                      uncertainAccess = uncertainty
+                      uncertainAccess = uncertainty,
+                      transport = Option.when(stationNode.ownerLine == neighborStation.ownerLine)(
+                        TransportTraversal.between(stationNode.ownerLine, stationNode.ownerGraph, neighborStation.ownerGraph))
                     )
                     openSet.enqueue((nb, fScore(nb)))
                   }
@@ -640,7 +657,8 @@ class RoutePlanner private(
           category = hop.category,
           movementDescription = hop.description,
           attributes = hop.attributes,
-          uncertainAccess = hop.uncertainAccess
+          uncertainAccess = hop.uncertainAccess,
+          transport = hop.transport
         )
       }
     }
