@@ -2,6 +2,8 @@
 
 Status: Draft
 
+Implementation scope: `minimizeTag` only. `maximizeTag` remains deferred.
+
 ## Context
 
 Users may ask route-quality questions such as:
@@ -151,6 +153,8 @@ Example: a goods mover says "avoid the kitchen back door if possible"; the agent
 
 ### `maximizeTag`
 
+Deferred: this section describes future behavior and is excluded from the current implementation scope.
+
 Type: nullable string
 
 Default: null
@@ -201,22 +205,26 @@ Soft tag preferences are only applied when candidate routes are close enough und
 Initial hard-coded thresholds:
 
 ```text
-MinimizeTime:            +15 seconds
-MinimizeTransfers:       +1 transfer
+MinimizeTime:            +60 seconds
+MinimizeTransfers:       +2 transfers
 MinimizePhysicalDemands: +10 percent
 ```
 
 For `MinimizeTime`, a route is a near-tie if:
 
 ```text
-candidate.totalCost <= bestPrimary.totalCost + 15 seconds
+candidate.totalCost <= bestPrimary.totalCost + 60 seconds
 ```
+
+Within this allowance, the requested tag score takes priority; a smaller improvement in exposure does not reduce the allowed extra time. For example, if the fastest permitted route takes 60 seconds, a 120-second route with lower unwanted-tag exposure is eligible, while a 121-second route is not. Equal exposure is resolved in favor of the faster route.
 
 For `MinimizeTransfers`, a route is a near-tie if:
 
 ```text
-candidate.transferCount <= bestPrimary.transferCount + 1
+candidate.transferCount <= bestPrimary.transferCount + 2
 ```
+
+`transferCount` counts actual changes between transport lines. A walking-only route or a route using one transport line has zero transfers. Consecutive rides on the same line do not add transfers; switching to another line adds one, including when walking connects the two lines. For example, `LiftA → walk → LiftB → EscalatorC` has two transfers. This replaces the legacy high-rise transport-plan edge count for the planned implementation.
 
 For `MinimizePhysicalDemands`, a route is a near-tie if:
 
@@ -347,9 +355,10 @@ Short-term:
 Medium-term:
 
 - Add candidate route enumeration for stable near-tie handling.
-- Implement `minimizeTag` and `maximizeTag` as near-tie-breakers.
+- Implement `minimizeTag` as a near-tie-breaker.
 - Add `minDwellSeconds` to node-time accounting and soft tag scoring.
 
 Long-term:
 
+- Keep `maximizeTag` deferred until its implementation is explicitly scheduled.
 - Consider richer internal scoring, but avoid exposing arbitrary numeric penalties until the behavior is explainable and testable.

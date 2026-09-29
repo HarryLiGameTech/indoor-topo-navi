@@ -27,6 +27,8 @@ Run the full test suite with:
 
 The full suite currently has known failures in mixed arithmetic, example data, and older tests; see the [validation findings](docs/arithmetic-validation-findings.md).
 
+Run the opt-in [transport benchmark testers](toponavi-dsl/src/benchmark/README.md) with `./gradlew :toponavi-dsl:transportBenchmark`. They report compilation and routing performance separately from the test suite; use `--args='--profile smoke'` for a quick correctness check.
+
 The web service additionally requires database and authentication configuration. See [application.yml](toponavi-web/src/main/resources/application.yml) and [.env.example](.env.example) for its settings.
 
 ## Example maps

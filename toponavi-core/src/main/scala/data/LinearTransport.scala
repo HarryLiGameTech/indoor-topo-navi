@@ -71,13 +71,13 @@ case class StairCase(
     allowedRidePairs.forall(_.contains(source -> target))
 
   override def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph): Double = {
-    val distance = distanceBetweenStations(src, dst)
-    distance / 0.167 // Assume average vertical speed of 0.167 m/s for stairs (a.k.a. Covering 100m height in 10 minutes)
+    netTimeBetweenStations(src, dst, 0.167) // Assume average vertical speed of 0.167 m/s for stairs (a.k.a. Covering 100m height in 10 minutes)
   }
 
   def netTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, verticalSpeed: Double): Double = {
-    val distance = distanceBetweenStations(src, dst) // Add turn-around loss if changing flights
-    distance / verticalSpeed + turnAroundLoss * Math.max(0, Math.abs(stationRunIndices(src) - stationRunIndices(dst)) - 1)
+    val distance = distanceBetweenStations(src, dst)
+    val intermediateTurns = Math.max(0L, Math.abs(stationRunIndices(src).toLong - stationRunIndices(dst).toLong) - 1L)
+    distance / verticalSpeed + turnAroundLoss * intermediateTurns // Add turn-around loss if changing flights
   }
 
   override def travelTimeBetweenStations(src: NavigationGraph, dst: NavigationGraph, trafficPattern: ElevatorTrafficPattern): Double = {

@@ -852,7 +852,11 @@ class TopoScriptCompiler() {
       case None => throw new RuntimeException("Must contain a 'params' record in transport context for transport data")
     }
 
-    val turnBackCost = d.get("turnBackCost").map { case Value.IntVal(v) => v.toInt; case _ => throw RuntimeException("turnBackCost must be Int") }.getOrElse(3)
+    val turnBackCost = d.get("turnBackCost") match {
+      case Some(Value.IntVal(v)) if v >= 0 => v.toDouble
+      case None => 3.0
+      case _ => throw RuntimeException("turnBackCost must be a non-negative Int")
+    }
     val displayName = transportDisplayName(transVal)
 
     val stations = transVal.stations.map { case (nodeRef, stationData) =>
@@ -879,7 +883,8 @@ class TopoScriptCompiler() {
     val runIndices = transVal.stations.map { case (nodeRef, stationData) =>
       val loopGraph = graphs(nodeRef.fromMapName)
       val loc = stationData.fields.get("directSegmentIndex") match {
-        case Some(Value.IntVal(v)) => v.toInt
+        case Some(Value.IntVal(v)) if v >= Int.MinValue && v <= Int.MaxValue => v.toInt
+        case Some(Value.IntVal(_)) => throw RuntimeException("directSegmentIndex must fit in a signed 32-bit Int")
         case _ => throw RuntimeException("directSegmentIndex must be specified as an Int for each station")
       }
       (loopGraph, loc)

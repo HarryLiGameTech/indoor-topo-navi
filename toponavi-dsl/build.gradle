@@ -42,6 +42,26 @@ sourceSets {
             srcDirs = []
         }
     }
+    benchmark {
+        scala.srcDirs = ['src/benchmark/scala']
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    benchmarkImplementation.extendsFrom implementation
+    benchmarkRuntimeOnly.extendsFrom runtimeOnly
+}
+
+tasks.register('transportBenchmark', JavaExec) {
+    group = 'benchmark'
+    description = 'Runs the opt-in synthetic transport benchmark testers and writes CSV reports.'
+    dependsOn benchmarkClasses
+    classpath = sourceSets.benchmark.runtimeClasspath
+    mainClass = 'benchmarks.TransportBenchmarks'
+    maxHeapSize = providers.gradleProperty('benchmarkHeap').getOrElse('2g')
+    workingDir = rootProject.projectDir
 }
 
 generateGrammarSource {
