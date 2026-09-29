@@ -19,20 +19,19 @@ case class RiskAwareNavigationResult(
 )
 
 object TopoNaviService {
-  private val compiler = new TopoScriptCompiler()
-
   // 1. Compile and return result (for use by web layer with caching)
+  // Each request owns its compiler metadata, including validation requests.
   def compile(files: JMap[String, String], params: JMap[String, AnyRef]): CompilationResult =
-    compiler.compileProject(files, params)
+    new TopoScriptCompiler().compileProject(files, params)
 
   // Backward-compatible overload with no params
   def compile(files: JMap[String, String]): CompilationResult =
-    compiler.compileProject(files)
+    compile(files, java.util.Collections.emptyMap())
 
   // 2. Compilation Check (stateless, no cache)
   def validateCode(files: JMap[String, String], params: JMap[String, AnyRef]): String = {
     try {
-      compiler.compileProject(files, params)
+      compile(files, params)
       "Compilation Successful"
     } catch {
       case e: Exception => throw new RuntimeException(e.getMessage)
@@ -166,7 +165,7 @@ object TopoNaviService {
     endNodeName: String,
     preference: RoutePlanningPreferences
   ): String = {
-    val result: CompilationResult = compiler.compileProject(files, params)
+    val result: CompilationResult = compile(files, params)
     findPathFromResult(result, startNodeName, endNodeName, preference)
   }
 

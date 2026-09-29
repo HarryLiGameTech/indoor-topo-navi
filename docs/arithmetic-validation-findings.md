@@ -63,13 +63,15 @@ For a standard cost of `10.0`, the verified proportional results are:
 
 All four cases pass through both compiler entry points. Because division returns a `Float`, the outer multiplication is `Float * Float` and needs no mixed-multiplication support.
 
-## Full-suite context after division support
+## Full-suite verification, 2026-09-29
 
 `./gradlew test --continue` produced these results:
 
 - Core: 19 tests passed.
 - Web: 17 tests passed.
-- DSL: 314 tests, 11 failures. All 73 `CompilationValidationTest` cases and all 46 `DivisionTest` cases passed.
+- DSL: 323 tests, 11 failures. All 73 `CompilationValidationTest` cases, 46 `DivisionTest` cases, seven `RootConstraintTest` cases, and two `CompilationIsolationTest` cases passed.
+
+Service compilation, validation, and on-demand navigation now use a fresh compiler per request. The isolation test exercises 96 concurrent calls across those entry points and their parameter overloads. Root definitions are evaluated in dependency order before root constraints, with compilation tests covering map paths and transport permissions.
 
 Of the 11 DSL failures, six are the deferred mixed-arithmetic acceptance tests above. Three are the previously documented failures: two `TesterCacheGenerator` tests missing `haveStaffCard`, and the `TypeCheckerTest` fixpoint expectation mismatch.
 

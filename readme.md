@@ -1,147 +1,60 @@
-# TopoNavi: An Indoor Navigation Engine with Collaborative Topological Mapping
+# TopoNavi
 
-## Project Overview
+**Developer Preview** — an indoor routing engine built around TopoScript. Describe floor topology, access rules, and transports in text files, compile them into navigation graphs, and request routes through the Scala API or REST service.
 
-TopoNavi is a indoor navigation engine built around **TopoScript**, a purpose-designed DSL (Domain-Specific Language) for describing the topological structure of buildings. Authors define floor maps, nodes, walking paths, and vertical transport (elevators, escalators, staircases) using plain-text TopoScript files. The engine compiles these files into an in-memory navigation graph and computes optimal multi-floor routes on demand.
+## Modules
 
-The system is split into three layers: a **core graph model** (Scala), a **DSL compiler and navigation API** (Scala, built on ANTLR 4), and a **REST web service** (Spring Boot / Java) that exposes compilation, route planning, and map inspection endpoints. A compilation cache prevents re-parsing unchanged map sets on repeated requests.
-
-Two real-world example maps are included: `swfc` (Shanghai World Financial Center — 100+ floors, 60+ elevator/escalator lines) and `trent` (The administrative building of UNNC), demonstrating how TopoScript scales from a single multi-floor building to a complex high-rise.
-
----
-
-## Key Features
-
-- **Multi-Floor Indoor Navigation**: Guides users through complex multi-floor indoor environments such as malls and office buildings. Navigation spans across floors via elevators, escalators, and staircases, stitched together by intra-floor walking paths.
-- **Collaborative Topological Mapping**: Multiple contributors can author and maintain independent TopoScript submap files. A `configuration` file assembles them into a complete building, enabling low-cost incremental map updates without rewriting the whole structure.
-- **TopoScript DSL**: A human-readable, declarative language for defining floor topology. Authors declare named nodes, weighted walking paths (`atomic-path`), and transport definitions (`transport … is Elevator/Stairs/Escalator`) with per-station location parameters — **no GIS tools or coordinate systems required**.
-- **Flexible Route Planning Preferences**: **3 planning modes are supported** — `MinimizeTime` (shortest total travel time), `MinimizeTransfers` (fewest floor changes, with time as a tiebreaker), and `MinimizePhysicalDemands` (prefers elevators over staircases, weighted by floor distance).
-- **Submap Reuse via Templating**: Identical floor layouts (e.g. a standard hotel guest-room floor) can be written once as a template and reused across many floors with a single `using` directive in the `configuration` file, eliminating repetition.
-- **Compilation Cache**: The web layer caches compiled `CompilationResult` objects on disk. Repeated navigation requests against the same map set skip re-compilation entirely.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
+| Module | Responsibility |
 |---|---|
-| DSL grammar | ANTLR 4 (generated lexer + parser) |
-| Compiler & navigation engine | Scala 3.3 |
-| Graph algorithms | Custom A* on `NavigationGraph` and `TransportGraph` |
-| Functional utilities | Cats Effect 3 |
-| Web service | Spring Boot 3 (Java) |
-| Persistence | PostgreSQL + Spring Data JPA |
-| Authentication | GitHub OAuth 2.0 + JWT |
-| Collaborative map storage | GitHub App API (org-hosted repositories) |
-| Build system | sbt (Scala modules) + Gradle (web module) |
-| Testing | ScalaTest `AnyFunSuite`, manual `App`-based testers |
+| `toponavi-core` | Graphs, transport models, and route planning |
+| `toponavi-dsl` | TopoScript parser, compiler, and navigation API |
+| `toponavi-web` | Spring Boot REST service and map management |
 
----
+## Build and test
 
-## Quick Start Guide
+Use JDK 20 (tested with 20.0.2) and the included Gradle 8.4 wrapper. Run commands from the repository root; Scala and other build dependencies are managed by Gradle.
 
-### 1. One-Click Service Deployment (Linux)
-
-First, edit `toponavi-web/src/main/resources/application.yml` to set `examples-path` — the path to the TopoScript map directory the service should load on startup (e.g. `../examples/trent`).
-
-If you want to enable collaborative map editing (GitHub-backed map storage and OAuth login), copy `.env.example` to `.env` and fill in your GitHub App credentials, installation ID, organisation name, and a public-facing domain. You will need to register your own GitHub App and configure a public domain for OAuth callbacks.
-
-Then start the service with:
-
-```bash
-./run.sh
+```sh
+./gradlew assemble
+./gradlew :toponavi-dsl:test --tests CompilationValidationTest --tests RootConstraintTest --tests CompilationIsolationTest
 ```
 
-The REST API will be available at `http://localhost:8080/api/v1`. Key endpoints:
+Run the full test suite with:
 
-- `GET /api/v1/quick-demo-navigation?buildingName=<name>&startNode=<A>&endNode=<B>&routePlanningPreference=<pref>&isHighRise=<true|false>` — navigate between two nodes; `isHighRise` defaults to `true`, while `false` compares fully informed end-to-end costs
-- `GET /api/v1/quick-demo-available-submaps` — list all compiled submaps
-- `GET /api/v1/quick-demo-all-available-nodes` — list all nodes (optionally with attributes)
-- `GET /api/v1/quick-demo-all-available-edges` — list compiled directed edges with costs, tags, required actions, and attributes
-- `GET /api/v1/quick-demo-elevators?simple=true` — list elevator transport declarations and their served stops
-- `GET /api/v1/quick-demo-proximity-nodes?nodeIdentifier=<map>::<node>&amount=5` — list direct outgoing neighbors ordered by cost
-- `POST /api/v1/validate` — validate a set of TopoScript files without navigating
-
-### 2. Navigation Quick-Demo (no server required)
-
-To try out route planning directly without deploying the web service:
-
-**Step 1 — Generate the test cache** (compiles the example map and saves the result to `~/.toponavi/`):
-
-```bash
-# From the toponavi-dsl module directory, run via sbt:
-sbt "testOnly TesterCacheGenerator"
+```sh
+./gradlew test --continue
 ```
 
-This produces `~/.toponavi/tester_swfc` and `~/.toponavi/tester_trent`.
+The full suite currently has known failures in mixed arithmetic, example data, and older tests; see the [validation findings](docs/arithmetic-validation-findings.md).
 
-**Step 2 — Run a navigation test**:
+The web service additionally requires database and authentication configuration. See [application.yml](toponavi-web/src/main/resources/application.yml) and [.env.example](.env.example) for its settings.
 
-```bash
-# SWFC high-rise example:
-sbt "runMain SwfcRoutePlanningTester"
+## Example maps
 
-# Trent building example (includes diagnostic output):
-sbt "runMain TrentRoutePlanningTester"
-```
+The [examples](examples/) directory contains four datasets. Their root declarations specify these compilation inputs:
 
-Both testers load the cached `CompilationResult`, run a sample route query, and print a step-by-step navigation plan to stdout.
+| Dataset | Inputs |
+|---|---|
+| `indigoBJ` | None |
+| `trent` | `haveStaffCard: Bool`, `timeOfDay: Int` |
+| `swfc` | `haveStaffCard: Bool`, `haveManagementCard: Bool`, `haveRoomKey: Bool`, `id: Int`, `aggregatedWeight: Int` |
+| `nbc4` | `haveStaffCard: Bool`, `haveManagementCard: Bool`, `id: Int`, `aggregatedWeight: Int` |
 
----
+Supply inputs through the compiler parameter map or the API's `userParams` field. These datasets include legacy syntax and validation issues; their presence does not guarantee successful compilation. Use the synthetic projects in the compiler tests for reproducible examples.
 
-## TopoScript Syntax at a Glance
+## Documentation and limitations
 
-**Floor map file** (e.g. `LowerLobby`):
-```
-topo-map LowerLobby() {
-    topo-node entrance_main
-    topo-node lobby_center
-    topo-node elevator_hall {description = "Main elevator lobby"}
+- [TopoScript reference](docs/topo-script-reference/index.html)
+- [Project structure and source files](docs/topo-script-reference/building/building-includes.html)
+- [Root parameters, functions, and constraints](docs/topo-script-reference/building/global-declarations.html)
+- [Routing semantics](docs/topo-script-reference/routing/routing-semantics.html)
 
-    atomic-path [entrance_main <-> lobby_center] {cost = 10}
-    atomic-path [lobby_center <-> elevator_hall] {cost = 5}
-}
-```
+High-rise routing is heuristic. Graphs are compiled in memory, and resource requirements depend on map size and transport connectivity; no general capacity guarantee is established. APIs and language behavior are evolving, and accessibility depends on the supplied map data and policies.
 
-**Elevator transport file** (e.g. `MainElevator`):
-```
-transport MainElevator is Elevator {
-    let params: {maxSpeed: Float, acceleration: Float, cars: Int} = {
-        maxSpeed = 2.0,
-        acceleration = 1.0,
-        cars = 3
-    }
-    station B1  at FloorB1::elevator_hall    {location = -5.0, departureRate = 0.05}
-    station G   at LowerLobby::elevator_hall {location = 0.0,  departureRate = 0.9}
-    station F3  at Floor3::elevator_hall     {location = 12.0, departureRate = 0.05}
-}
-```
+## Contributing
 
-**Staircase transport file** (e.g. `ST_LLT`):
-```
-transport ST_LLT is Stairs {
-    let params: {turnBackCost: Int} = { 
-        turnBackCost = 3 
-    }
-    station F3 at Floor3::Stair_LLT        {location = 8.0, directSegmentIndex = 4}
-    station F2 at Floor2::room_201_out_1   {location = 3.5, directSegmentIndex = 2}
-    station F1 at Floor1::stair_LLT        {location = 0.0, directSegmentIndex = 0}
-}
-```
-
-**Configuration file** (`configuration`):
-```
-building-includes {
-    submap Floor5 using StandardFloor   // reuse a template
-    submap Floor4 using StandardFloor   // reuse a template
-    submap Floor3
-    submap Floor2
-    submap Floor1
-    
-    vehicle MainElevator
-    vehicle ST_LLT
-}
-```
+Keep changes focused, follow the surrounding code style, and add regression tests for behavior changes. Run the relevant tests and report any remaining full-suite failures. After editing the language reference, rebuild its search index with `node docs/topo-script-reference/tools/build-search-index.mjs`.
 
 ## License
-This project is licensed under the [Apache License 2.0](LICENSE).
+
+[Apache License 2.0](LICENSE).

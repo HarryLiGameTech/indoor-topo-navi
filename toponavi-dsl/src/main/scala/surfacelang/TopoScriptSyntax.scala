@@ -124,20 +124,20 @@ case class RootExpr(
 ) extends SurfaceSyntax with SyntaxNameSpace with Elaborateable[RootValue] {
   
   override def elaborate(using topoEnv: TopoEnvironment): RootValue = {
+    // Evaluate root definitions in dependency order before constraints use them.
+    val evaluatedEnv = this.synthesisEnv
+    val envWithCore = topoEnv.merge(evaluatedEnv)
+
     // Evaluate each named constraint and bind its BoolVal result into the core env by name,
     // so that `requires <Name>` in child elements resolves as a plain Expr.Var lookup.
-    val envWithConstraints = constraints.foldLeft(topoEnv) { (acc, c) =>
+    val envWithConstraints = constraints.foldLeft(envWithCore) { (acc, c) =>
       acc.copy(env = acc.env.addValueVar(Identifier.Symbol(c.name), c.elaborate(using acc)))
     }
-    // Merge local definitions on top; also carry constraint BoolVals into the
-    // returned context so that submaps elaborated from this root can resolve them.
-    val evaluatedEnv = this.synthesisEnv(using envWithConstraints)
-    val contextWithConstraints = envWithConstraints.env.merge(evaluatedEnv)
 
     RootValue(
       name = name,
       params = params,
-      context = contextWithConstraints
+      context = envWithConstraints.env
     )
   }
 }

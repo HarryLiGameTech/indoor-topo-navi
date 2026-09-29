@@ -155,8 +155,13 @@
 
       <section id="constraint-evaluation-order">
         <h2>Constraint Evaluation Order</h2>
-        <p>Root constraints are evaluated during compilation and in source order. They should depend directly on supplied compilation parameters and literals.</p>
-        <p>In the current implementation, root constraints are evaluated before root-level function definitions. A root constraint therefore cannot call a root <code>def</code>, even if the function appears earlier in the source. This differs from map-local and transport-local constraints, which are evaluated after their local definitions.</p>
+        <p>Root definitions are evaluated in dependency order before root constraints. A root constraint may use supplied compilation parameters, root values, and root functions, regardless of where those definitions appear in the source. Map-local and transport-local constraints likewise run after their local definitions.</p>
+        <pre><code>root Building(weight: Int) {
+  constraint CanEnter { require allowedWeight(weight) }
+  def allowedWeight(w: Int): Bool = w &lt; limit
+  def limit: Int = 20
+}</code></pre>
+        <p>Root constraints are then evaluated in source order. Root functions capture the root definition environment; they cannot depend on constraint results that have not yet been evaluated. Definition dependency cycles fail compilation.</p>
         <p>A constraint may refer to a previously evaluated constraint, but directly listing the required predicates is usually clearer. A reference to a later constraint is unresolved at the time of evaluation.</p>
       </section>
 
