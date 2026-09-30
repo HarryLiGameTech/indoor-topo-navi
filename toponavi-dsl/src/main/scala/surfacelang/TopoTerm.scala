@@ -22,7 +22,8 @@ case class TransportValue(
   data: Value.RecordVal,
   context: Context,
   ridePolicies: List[RidePolicyValue] = List.empty,
-  stationUncertainAccess: Map[TopoNodeRefValue, StationUncertainAccessValue] = Map.empty
+  stationUncertainAccess: Map[TopoNodeRefValue, StationUncertainAccessValue] = Map.empty,
+  rideDirections: Option[Set[(TopoNodeRefValue, TopoNodeRefValue)]] = None
 )
 
 case class UncertaintyReasonValue(

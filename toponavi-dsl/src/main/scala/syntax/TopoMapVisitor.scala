@@ -3,7 +3,7 @@ package syntax
 import corelang.{Environment, Expr, Identifier, OpKind, Type}
 import enums.TPCCRelationship
 import org.antlr.v4.runtime.tree.ParseTree
-import surfacelang.{AtomicPathExpr, ConstraintExpr, DirectionalArrowExpr, GlobalConfigExpr, LinearPathExpr, RidePolicyExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportExpr, UncertainAccessExpr, VehicleRef}
+import surfacelang.{AtomicPathExpr, ConstraintExpr, DirectionalArrowExpr, GlobalConfigExpr, LinearPathExpr, RidePolicyExpr, RootExpr, StationDef, SubTopoMapExpr, SurfaceSyntax, TopoMapRef, TopoNodeExpr, TopoNodeRef, TransportDirectionExpr, TransportExpr, UncertainAccessExpr, VehicleRef}
 import topomap.grammar.MapFileParser.*
 import topomap.grammar.{MapFileBaseVisitor, MapFileParser, MapFileVisitor}
 
@@ -68,6 +68,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       case constraintCtx: SurfaceElementConstraintContext =>
         val constraint = visitSurfaceElementConstraint(constraintCtx)
         acc.copy(constraints = acc.constraints :+ constraint)
+      case _: SurfaceElementTransportDirectionContext =>
+        throw new RuntimeException("direction is only supported inside Escalator transports")
       case _ => acc // Ignore other elements for now
     }
   }
@@ -110,6 +112,8 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
       case lineCtx: SurfaceElementLinearPathContext =>
         val linearPath = visitSurfaceElementLinearPath(lineCtx)
         acc.copy(linearPaths = acc.linearPaths :+ linearPath)
+      case _: SurfaceElementTransportDirectionContext =>
+        throw new RuntimeException("direction is only supported inside Escalator transports")
       case _ => acc // Ignore other elements for now
     }
   }
@@ -143,6 +147,11 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
         acc.copy(constraints = acc.constraints :+ constraint)
       case ridePolicyCtx: SurfaceElementRidePolicyContext =>
         acc.copy(ridePolicies = acc.ridePolicies :+ visitSurfaceElementRidePolicy(ridePolicyCtx))
+      case directionCtx: SurfaceElementTransportDirectionContext =>
+        if (acc.direction.isDefined) {
+          throw new RuntimeException(s"Transport '$name' may declare only one direction")
+        }
+        acc.copy(direction = Some(visitSurfaceElementTransportDirection(directionCtx)))
       case _ => acc // Ignore other elements for now
     }
   }
@@ -366,6 +375,13 @@ class TopoMapVisitor extends CoreLangVisitor[SurfaceSyntax] {
         throw new RuntimeException(s"Unknown station permission scope '$other'. Expected Depart or Arrive")
     }
   }
+
+  override def visitSurfaceElementTransportDirection(ctx: SurfaceElementTransportDirectionContext): TransportDirectionExpr =
+    TransportDirectionExpr(
+      source = ctx.ID(0).getText,
+      target = ctx.ID(1).getText,
+      bidirectional = ctx.direction.getText == "<->"
+    )
 
   override def visitSurfaceElementRidePolicy(ctx: SurfaceElementRidePolicyContext): RidePolicyExpr = {
     val constraints = ctx.requirements().ID().asScala.map(id => Expr.Var(id.getText)).toList

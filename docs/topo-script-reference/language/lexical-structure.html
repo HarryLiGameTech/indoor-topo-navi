@@ -50,6 +50,7 @@
         <pre><code>[A-Za-z_][A-Za-z0-9_]*</code></pre>
 
         <p>Identifiers are case-sensitive. Hyphens, spaces, punctuation, and non-ASCII letters are not permitted. Reserved TopoScript keywords cannot be used where the grammar expects an identifier.</p>
+        <p><code>direction</code> is a reserved keyword for <a href="../transport/escalators.html#direction">escalator operating direction</a>. It cannot be used as a variable, record-field, node, or station identifier.</p>
 
         <p>A simple identifier consists of one identifier segment, such as <code>Lobby</code> or <code>elevator_hall</code>. A qualified name joins identifier segments with <code>::</code>, such as <code>Floor1::elevator_hall</code>.</p>
 

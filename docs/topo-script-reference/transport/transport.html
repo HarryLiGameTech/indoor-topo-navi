@@ -112,7 +112,7 @@ transport WestStair is Stairs {
         <h2>Service Range and Direction</h2>
         <p>The declared stations define the maps served by a transport. An unlisted map is not a stop.</p>
         <p>For elevators and stairs, the engine connects every permitted ordered pair of distinct station maps. Declaration order does not limit travel to adjacent stations. An express service is modeled by declaring only the maps at which it stops.</p>
-        <p>An escalator has a specialized two-station service model described in <a href="escalators.html">Escalators</a>.</p>
+        <p>An escalator serves exactly two stations. Optional <code>direction A -&gt; B</code> permits only that ordered ride; <code>direction A &lt;-&gt; B</code> or omission permits both directions. The operands are station labels. See <a href="escalators.html#direction">Escalator Operating Direction</a>.</p>
       </section>
 
       <section id="station-access">
@@ -169,7 +169,7 @@ transport WestStair is Stairs {
         <pre><code>ride-from any to HotelDomain requires HotelAccess
 ride-from ServiceLobby to OfficeDomain requires &lt;OfficeAccess &amp;&amp; CarryingGoods&gt;</code></pre>
         <p>Each operand must be <code>any</code>, a station label declared by this transport, or an effective management-domain name. A topo-map identifier is not a ride-policy operand merely because a station serves that map.</p>
-        <p>An unsatisfied rule removes matching rides in the declared direction. It does not affect the reverse direction. A satisfied rule permits its matching pairs, subject to station permissions and other applicable rules. A pair not matched by any rule remains permitted; <code>ride-from</code> declarations are not a whitelist.</p>
+        <p>An unsatisfied rule removes matching rides in the declared direction. It does not affect the reverse direction. A satisfied rule permits its matching pairs, subject to station permissions, escalator operating direction, and other applicable rules. A pair not matched by any rule remains permitted by ride policy; <code>ride-from</code> declarations are not a whitelist and cannot restore rides excluded by an escalator's <code>direction</code>.</p>
         <p>If several rules match, the rule with the highest specificity applies:</p>
         <ol>
           <li>station to station;</li>

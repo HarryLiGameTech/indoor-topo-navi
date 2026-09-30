@@ -9,6 +9,12 @@ with optional `params.distance` in metres and shared physical-demand scoring.
 omitted. The original synthetic zero/one locations remain ordering metadata;
 the distance behavior described below is historical.
 
+Native station-to-station `direction A -> B` and `direction A <-> B` are also
+implemented; omission remains bidirectional. See the current
+[escalator language reference](../topo-script-reference/transport/escalators.html#direction).
+The original direction limitations below describe the initial delivery;
+scheduled and runtime reversal remain deferred.
+
 ## Context
 
 TopoScript already parses `transport ... is Escalator` declarations, and the

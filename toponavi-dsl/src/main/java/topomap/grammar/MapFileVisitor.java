@@ -100,6 +100,13 @@ public interface MapFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSurfaceElementRidePolicy(MapFileParser.SurfaceElementRidePolicyContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code SurfaceElementTransportDirection}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSurfaceElementTransportDirection(MapFileParser.SurfaceElementTransportDirectionContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code SurfaceElementArrow}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree

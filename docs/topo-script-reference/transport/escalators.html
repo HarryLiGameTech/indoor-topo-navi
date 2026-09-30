@@ -29,6 +29,8 @@
 
   station Lower at MallLevel2::atrium_escalator_landing {}
   station Upper at MallLevel3::atrium_escalator_landing {}
+
+  direction Lower -&gt; Upper
 }</code></pre>
       </section>
 
@@ -57,9 +59,20 @@
 
       <section id="direction">
         <h2>Operating Direction</h2>
-        <p>An escalator is currently modeled as a fixed-time connection that can be traversed in either direction. This model is suitable for a bidirectional escalator service, such as a paired up-and-down installation represented as one transport.</p>
-        <p>A map author cannot currently declare that a particular escalator operates only upward, only downward, or reverses direction according to an operating schedule.</p>
-        <p>Station access requirements and <code>out-of-order</code> describe authorization or availability. They do not describe the escalator's ordinary operating direction.</p>
+        <p>An optional <code>direction</code> declaration names the two station labels and establishes the escalator's operating direction:</p>
+        <table>
+          <thead><tr><th>Declaration</th><th>Operating rides</th></tr></thead>
+          <tbody>
+            <tr><td><code>direction Lower -&gt; Upper</code></td><td>Lower to Upper only.</td></tr>
+            <tr><td><code>direction Upper -&gt; Lower</code></td><td>Upper to Lower only.</td></tr>
+            <tr><td><code>direction Lower &lt;-&gt; Upper</code></td><td>Both directions.</td></tr>
+            <tr><td>Omitted</td><td>Both directions, preserving existing declarations.</td></tr>
+          </tbody>
+        </table>
+        <p>The operands are case-sensitive station labels declared in the same transport, not map names, qualified node references, management domains, or <code>any</code>. Each must identify exactly one station, and the two stations must be distinct. At most one <code>direction</code> declaration is allowed, even when repeated declarations agree.</p>
+        <p>The declaration may appear before or after the stations. Station order and names such as <code>Lower</code> and <code>Upper</code> do not themselves imply elevation. To reverse a one-way direction, swap the labels; <code>&lt;-</code> is not supported here.</p>
+        <p><code>direction</code> is supported only inside <code>Escalator</code> transports. It determines which directed rides may exist; station permissions, <code>out-of-order</code>, and <code>ride-from</code> policies may remove further rides. A successful access rule or permissive uncertain-access preference cannot restore travel against the operating direction.</p>
+        <p>Travel time and physical-demand formulas are unchanged for permitted rides. An explicit or implicit bidirectional declaration can represent a paired up-and-down service. It does not model a single escalator reversing over time: scheduled and runtime reversal remain unsupported, and changing direction requires recompilation.</p>
       </section>
 
       <section id="station-availability">
@@ -84,6 +97,9 @@
           <li>Fewer or more than two stations fail compilation.</li>
           <li>Two stations belonging to the same topo-map instance fail compilation.</li>
           <li>An unknown station map or node fails compilation.</li>
+          <li>An unknown or ambiguous direction station label, or a direction from a station to itself, fails compilation.</li>
+          <li>More than one <code>direction</code> declaration fails compilation.</li>
+          <li><code>direction</code> in an elevator, staircase, topo-map, or root declaration is rejected.</li>
         </ul>
       </section>
     </article>

@@ -207,6 +207,27 @@ case class RidePolicyExpr(
   constraints: List[Expr]
 ) extends SurfaceSyntax
 
+case class TransportDirectionExpr(
+  source: String,
+  target: String,
+  bidirectional: Boolean
+) extends SurfaceSyntax {
+  def elaborate(stations: List[StationDef], transportName: String)(using TopoEnvironment): Set[(TopoNodeRefValue, TopoNodeRefValue)] = {
+    def resolve(label: String): TopoNodeRefValue = stations.filter(_.label == label) match {
+      case List(station) => station.node.elaborate
+      case Nil => throw new RuntimeException(s"Unknown direction station label '$label' in transport '$transportName'")
+      case _ => throw new RuntimeException(s"Duplicate station label '$label' in transport '$transportName'")
+    }
+
+    val from = resolve(source)
+    val to = resolve(target)
+    if (from == to) {
+      throw new RuntimeException(s"Direction in transport '$transportName' must connect distinct stations")
+    }
+    if (bidirectional) Set(from -> to, to -> from) else Set(from -> to)
+  }
+}
+
 case class TransportExpr(
   name: String,
   surfaceType: String = "Elevator", // e.g., "Elevator", "Escalator", "Stairs"
@@ -214,9 +235,17 @@ case class TransportExpr(
   env: Environment[Identifier, Type, Expr] = Environment.empty,
   data: Data,
   constraints: List[ConstraintExpr] = List.empty,
-  ridePolicies: List[RidePolicyExpr] = List.empty
+  ridePolicies: List[RidePolicyExpr] = List.empty,
+  direction: Option[TransportDirectionExpr] = None
 ) extends SyntaxNameSpace with SurfaceSyntax with Elaborateable[TransportValue] {
   override def elaborate(using topoEnv: TopoEnvironment): TransportValue = {
+    val rideDirections = direction.map { declaration =>
+      if (surfaceType != "Escalator") {
+        throw new RuntimeException(s"direction is only supported for Escalator transports, got '$surfaceType' in '$name'")
+      }
+      declaration.elaborate(stations, name)
+    }
+
     // Evaluate local definitions (e.g., let bindings inside the transport block)
     val localCtx = this.synthesisEnv
     // Create an environment that includes both global values and local definitions
@@ -270,6 +299,7 @@ case class TransportExpr(
         (nodeValue, finalDataVal)
       },
       stationLabels = stations.map(station => station.node.elaborate -> station.label).toMap,
+      rideDirections = rideDirections,
       // Use envWithConstraints to allow transport data to reference local variables
       data = Interpreter.eval(data.toTerm(envWithConstraints.env))(using envWithConstraints.env) match {
         case rv: Value.RecordVal => rv

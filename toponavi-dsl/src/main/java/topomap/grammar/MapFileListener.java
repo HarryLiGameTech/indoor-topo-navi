@@ -160,6 +160,18 @@ public interface MapFileListener extends ParseTreeListener {
 	 */
 	void exitSurfaceElementRidePolicy(MapFileParser.SurfaceElementRidePolicyContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code SurfaceElementTransportDirection}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterSurfaceElementTransportDirection(MapFileParser.SurfaceElementTransportDirectionContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SurfaceElementTransportDirection}
+	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitSurfaceElementTransportDirection(MapFileParser.SurfaceElementTransportDirectionContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code SurfaceElementArrow}
 	 * labeled alternative in {@link MapFileParser#surfaceBodyElement}.
 	 * @param ctx the parse tree

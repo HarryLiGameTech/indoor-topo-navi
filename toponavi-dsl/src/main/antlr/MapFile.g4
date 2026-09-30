@@ -31,6 +31,7 @@ surfaceBodyElement
     | 'atomic-path' pathSpec recordAssign (NL* accessAnnotation)*     # SurfaceElementAtomicPath
     | 'station' ID 'at' identifier ('at' expr)* recordAssign (NL* accessAnnotation)* ('on' expr)? OUT_OF_ORDER?  # SurfaceElementStation
     | 'ride-from' ridePolicyOperand 'to' ridePolicyOperand requirements  # SurfaceElementRidePolicy
+    | 'direction' ID direction=('<->' | '->') ID             # SurfaceElementTransportDirection
     | 'directional-arrow' arrowSpec ID ID                   # SurfaceElementArrow
     | 'linear-path' linearPathSpec                          # SurfaceElementLinearPath
     | 'constraint' ID constraintBody                        # SurfaceElementConstraint

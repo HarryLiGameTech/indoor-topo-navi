@@ -676,7 +676,11 @@ class TopoScriptCompiler() {
     graphs: Map[String, NavigationGraph],
     effectiveManagementDomains: Map[String, String]
   ): LinearTransport = {
-    val allowedRidePairs = buildAllowedRidePairs(transVal, graphs, effectiveManagementDomains)
+    val policyPairs = buildAllowedRidePairs(transVal, graphs, effectiveManagementDomains)
+    val directionPairs = transVal.rideDirections.map(_.map { case (source, target) =>
+      graphs(source.fromMapName) -> graphs(target.fromMapName)
+    })
+    val allowedRidePairs = (policyPairs.toList ++ directionPairs.toList).reduceOption(_ intersect _)
     transVal.surfaceType match {
       case "Elevator"  => buildElevatorBank(transVal, graphs, allowedRidePairs)
       case "Escalator" => buildEscalator(transVal, graphs, allowedRidePairs)
