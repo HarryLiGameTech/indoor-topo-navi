@@ -63,17 +63,21 @@ For a standard cost of `10.0`, the verified proportional results are:
 
 All four cases pass through both compiler entry points. Because division returns a `Float`, the outer multiplication is `Float * Float` and needs no mixed-multiplication support.
 
-## Full-suite verification, 2026-09-29
+## Full-suite verification, 2026-09-30
 
 `./gradlew test --continue` produced these results:
 
-- Core: 19 tests passed.
-- Web: 17 tests passed.
-- DSL: 323 tests, 11 failures. All 73 `CompilationValidationTest` cases, 46 `DivisionTest` cases, seven `RootConstraintTest` cases, and two `CompilationIsolationTest` cases passed.
+- Core: 42 tests passed.
+- Web: 21 tests passed.
+- DSL: 403 tests, 8 failures. All 55 `TypeCheckerTest` cases, six `FixpointTest` cases, two `CompilationSerializationTest` cases, and 29 `InterpreterTest` cases passed.
 
 Service compilation, validation, and on-demand navigation now use a fresh compiler per request. The isolation test exercises 96 concurrent calls across those entry points and their parameter overloads. Root definitions are evaluated in dependency order before root constraints, with compilation tests covering map paths and transport permissions.
 
-Of the 11 DSL failures, six are the deferred mixed-arithmetic acceptance tests above. Three are the previously documented failures: two `TesterCacheGenerator` tests missing `haveStaffCard`, and the `TypeCheckerTest` fixpoint expectation mismatch.
+Six DSL failures are the deferred mixed-arithmetic acceptance tests above.
+
+The two former `TesterCacheGenerator` tests are now an explicit [developer utility](../toponavi-dsl/src/developer/README.md), alongside the manual route testers that consume its output. Cache generation accepts explicit root parameters and is excluded from the regular test suite. `CompilationSerializationTest` replaces their regression coverage with a controlled project and an in-memory serialization round trip, verifying graph references, access-dependent walking routes, directed transport edges, and both route-planning modes.
+
+The fixpoint failure was a type-checker bug, not a stale expectation. For `fix f: T. body`, the checker now binds `f: T` and checks that `body` has type `T`; it previously demanded `T -> T`. The original factorial test remains unchanged. New tests cover parsed `fix` and `let rec`, captured variables, non-function results, and rejection of the extra function layer previously accepted by the checker.
 
 The remaining two failures are invalid example data now caught by the duplicate-node check:
 

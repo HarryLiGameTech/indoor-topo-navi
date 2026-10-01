@@ -47,11 +47,33 @@ sourceSets {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += sourceSets.main.output
     }
+    developer {
+        scala.srcDirs = ['src/developer/scala']
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
 }
 
 configurations {
     benchmarkImplementation.extendsFrom implementation
     benchmarkRuntimeOnly.extendsFrom runtimeOnly
+    developerImplementation.extendsFrom implementation
+    developerRuntimeOnly.extendsFrom runtimeOnly
+}
+
+[
+    generateTesterCache: 'TesterCacheGenerator',
+    swfcRoutePlanningTester: 'SwfcRoutePlanningTester',
+    trentRoutePlanningTester: 'TrentRoutePlanningTester'
+].each { taskName, entryPoint ->
+    tasks.register(taskName, JavaExec) {
+        group = 'development'
+        description = "Runs the opt-in ${entryPoint} developer utility."
+        dependsOn developerClasses
+        classpath = sourceSets.developer.runtimeClasspath
+        mainClass = entryPoint
+        workingDir = rootProject.projectDir
+    }
 }
 
 tasks.register('transportBenchmark', JavaExec) {

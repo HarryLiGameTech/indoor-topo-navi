@@ -172,15 +172,14 @@ object TypeChecker {
 
     case Term.Fix(annotatedType, body) =>
       // Fix introduces a self-reference at De Bruijn index 0 of type `annotatedType`.
-      // The body must therefore be a function `annotatedType -> annotatedType`.
+      // With that recursive binding in scope, the body must have the annotated type.
       val extEnv = annotatedType :: env
       infer(body, extEnv) match {
         case TypeCheckResult.Err(es) => TypeCheckResult.Err(es)
         case TypeCheckResult.Ok(bodyType) =>
-          val expected = Type.Arrow(annotatedType, annotatedType)
-          if (bodyType != expected)
+          if (bodyType != annotatedType)
             TypeCheckResult.Err(List(TypeCheckError(
-              s"Fix body must have type $expected, but got $bodyType"
+              s"Fix body must have type $annotatedType, but got $bodyType"
             )))
           else
             TypeCheckResult.Ok(annotatedType)
