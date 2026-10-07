@@ -75,7 +75,7 @@ topo-map Floor89(){
     atomic-path [A_corridor_outside <-> intersaction3] {cost = 5}
     atomic-path [intersaction3 <-> A_hall_outside] {cost = 5}
     atomic-path [A_hall_outside -> LS14_hall] {cost = 3}
-    atomic-path [LS14_hall -> A_hall_outside] {cost = 5} // requires card
+    atomic-path [LS14_hall -> A_hall_outside] {cost = 5} requires ManagementOnly
     atomic-path [LS14_hall <-> FS4_6_hall] {cost = 1}
     atomic-path [FS4_6_hall <-> staircase_A] {cost = 2}
 
@@ -93,8 +93,8 @@ topo-map Floor89(){
     atomic-path [intersaction6 <-> B_hall_outside_2] {cost = 3}
     atomic-path [intersaction5 <-> intersaction6] {cost = 5}
 
-    atomic-path [B_hall_outside_2 -> B_hall_inside_2] {cost = 3} 
-    atomic-path [B_hall_inside_2 -> B_hall_outside_2] {cost = 5} // Requires card
+    atomic-path [B_hall_outside_2 -> B_hall_inside_2] {cost = 3}
+    atomic-path [B_hall_inside_2 -> B_hall_outside_2] {cost = 5} requires HotelStaffOnly
 
     atomic-path [intersaction6 <-> conn_north_inside] {cost = 5}
     atomic-path [conn_north_inside <-> intersaction2] {cost = 5}
@@ -111,7 +111,7 @@ topo-map Floor89(){
 
     atomic-path [B_corridor_outside <-> B_hall_outside_1] {cost = 8}
     atomic-path [B_hall_outside_1 -> B_hall_inside_1] {cost = 3}
-    atomic-path [B_hall_inside_1 -> B_hall_outside_1] {cost = 5} // Requires card
+    atomic-path [B_hall_inside_1 -> B_hall_outside_1] {cost = 5} requires HotelStaffOnly
     atomic-path [B_hall_inside_1 <-> FS1_3_hall] {cost = 3}
     atomic-path [FS1_3_hall <-> staircase_B] {cost = 2}
     atomic-path [FS1_3_hall <-> B_hall_inside_2] {cost = 4}

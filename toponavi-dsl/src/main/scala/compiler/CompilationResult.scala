@@ -10,5 +10,7 @@ case class CompilationResult(
   graphSequence: List[String] = List.empty,
   linearPaths: Map[String, Set[LinearPathValue]] = Map.empty,
   directionalArrows: Map[String, Set[DirectionalArrowValue]] = Map.empty,
-  metadata: Map[String, AttributeValue] = Map.empty
+  metadata: Map[String, AttributeValue] = Map.empty,
+  mapAttributes: Map[String, DiscoveryValue] = Map.empty,
+  transportDeclarations: List[TransportDiscovery] = List.empty
 )

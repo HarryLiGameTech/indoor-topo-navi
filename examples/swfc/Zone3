@@ -59,12 +59,14 @@ topo-map Zone3(){
   atomic-path [G4_out <-> G4_in] {cost = 3}
   atomic-path [G4_out <-> service_corr_A] {cost = 3}
   atomic-path [service_corr_A <-> A_hall_out] {cost = 5}
-  atomic-path [A_hall_out <-> LS6_hall] {cost = 4}
+  atomic-path [A_hall_out -> LS6_hall] {cost = 4}
+  atomic-path [LS6_hall -> A_hall_out] {cost = 4} requires TenantsOnly
   atomic-path [LS6_hall <-> FS4_6_hall] {cost = 1}
   atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
   atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
   atomic-path [LS5_hall <-> FS1_3_hall] {cost = 1}
-  atomic-path [LS5_hall <-> B_hall_out] {cost = 4}
+  atomic-path [B_hall_out -> LS5_hall] {cost = 4}
+  atomic-path [LS5_hall -> B_hall_out] {cost = 4} requires TenantsOnly
   atomic-path [B_hall_out <-> service_corr_B] {cost = 5}
   atomic-path [G2_out <-> service_corr_B] {cost = 3}
   atomic-path [toilet_B_out <-> G2_out] {cost = 2}

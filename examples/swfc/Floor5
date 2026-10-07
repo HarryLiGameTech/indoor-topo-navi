@@ -27,7 +27,7 @@ topo-map Floor5(){
   atomic-path [corner_LT <-> serv_gate_in] {cost = 45}
   atomic-path [serv_gate_in <-> core_door_R] {cost = 20}
   atomic-path [core_door_R <-> mori_entrance] {cost = 35}
-  atomic-path [mori_entrance <-> escalator_5only] {cost = 4}
+  atomic-path [mori_entrance <-> escalator_5only] {cost = 4, required_actions = ["cross_auto_door"]} requires ManagementOnly
   atomic-path [mori_entrance <-> core_door_B] {cost = 12}
   atomic-path [core_door_B <-> corner_LB] {cost = 25}
   atomic-path [corner_LB <-> MP3_hall] {cost = 4}

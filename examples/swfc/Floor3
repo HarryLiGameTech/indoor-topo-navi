@@ -56,7 +56,7 @@ topo-map Floor3(){
   topo-node office_toilet_B
   topo-node BOH_inner_corner
   topo-node BOH_alley_door_in
-  atomic-path [LS1_hall <-> B_hall_out] {cost = 4}
+  atomic-path [LS1_hall <-> B_hall_out] {cost = 4} requires ManagementOnly
   atomic-path [LS1_hall <-> FS1_3_hall] {cost = 1}
   atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
   atomic-path [B_hall_out <-> B_hall_intersact] {cost = 5}
@@ -70,7 +70,7 @@ topo-map Floor3(){
   atomic-path [BOH_alley_gate_B <-> ST_C_out] {cost = 6}
   atomic-path [ST_C_out <-> ST_C] {cost = 3}
   atomic-path [A_hall_intersact <-> A_hall_out] {cost = 5}
-  atomic-path [A_hall_out <-> LS2_hall] {cost = 4}
+  atomic-path [A_hall_out <-> LS2_hall] {cost = 4} requires ManagementOnly
   atomic-path [LS2_hall <-> FS4_6_hall] {cost = 1}
   atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
   atomic-path [MP3_alley_end <-> n_cd48199cba08455e8ecb039629c96277] {cost = 6}

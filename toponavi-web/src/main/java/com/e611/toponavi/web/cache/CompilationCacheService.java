@@ -15,8 +15,11 @@ public class CompilationCacheService {
     private final Path cacheDir;
 
     public CompilationCacheService() {
-        String home = System.getProperty("user.home");
-        this.cacheDir = Paths.get(home, ".toponavi-cache");
+        this(Paths.get(System.getProperty("user.home"), ".toponavi-cache"));
+    }
+
+    public CompilationCacheService(Path cacheDir) {
+        this.cacheDir = cacheDir;
         createCacheDirectoryIfNotExists();
     }
 
@@ -102,13 +105,21 @@ public class CompilationCacheService {
         Path cacheFile = cacheDir.resolve(cacheHash + ".ser");
         Path metaFile = cacheDir.resolve(cacheHash + ".meta");
 
-        try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(cacheFile))) {
-            oos.writeObject(result);
+        Path temporary = null;
+        try {
+            temporary = Files.createTempFile(cacheDir, cacheHash, ".tmp");
+            try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(temporary))) {
+                oos.writeObject(result);
+            }
+            Files.move(temporary, cacheFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             Files.writeString(metaFile, cacheHash);
-            System.out.println("Cache SAVED [" + buildingName + "]: " + cacheHash.substring(0, 8) + "...");
         } catch (IOException e) {
             System.err.println("Cache write failed for " + cacheHash.substring(0, 8) + "...: " + e.getMessage());
-            throw new RuntimeException("Failed to cache compilation result", e);
+        } finally {
+            if (temporary != null) {
+                try { Files.deleteIfExists(temporary); }
+                catch (IOException ignored) { /* A failed cache write must not fail a compiled request. */ }
+            }
         }
     }
 
@@ -202,18 +213,19 @@ public class CompilationCacheService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-            // Seed with building name to scope the hash per building
-            digest.update(buildingName.toLowerCase().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            // Version the serialized discovery metadata and preserve canonical building identity.
+            hashPart(digest, "discovery-v1");
+            hashPart(digest, buildingName);
 
             java.util.List<String> sortedFilenames = files.keySet().stream()
                 .sorted()
                 .toList();
 
             for (String filename : sortedFilenames) {
-                digest.update(filename.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                hashPart(digest, filename);
                 String content = files.get(filename);
                 if (content != null) {
-                    digest.update(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    hashPart(digest, content);
                 }
             }
 
@@ -222,8 +234,9 @@ public class CompilationCacheService {
                 userParams.entrySet().stream()
                     .sorted(java.util.Map.Entry.comparingByKey())
                     .forEach(e -> {
-                        digest.update(e.getKey().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                        digest.update(String.valueOf(e.getValue()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        hashPart(digest, e.getKey());
+                        hashPart(digest, e.getValue().getClass().getName());
+                        hashPart(digest, String.valueOf(e.getValue()));
                     });
             }
 
@@ -232,6 +245,12 @@ public class CompilationCacheService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 algorithm not available", e);
         }
+    }
+
+    private static void hashPart(MessageDigest digest, String value) {
+        byte[] bytes = value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        digest.update(java.nio.ByteBuffer.allocate(Integer.BYTES).putInt(bytes.length).array());
+        digest.update(bytes);
     }
 
     /**

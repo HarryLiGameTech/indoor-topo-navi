@@ -2,7 +2,7 @@
 
 Status: Finalized
 
-Implementation: hard bans and `minimizeTag` are supported in the engine and quick-demo REST API. MCP soft-preference forwarding is separate adapter work. `maximizeTag` remains deferred.
+Implementation: hard bans and `minimizeTag` are supported in the engine and building-scoped REST API. MCP soft-preference forwarding is separate adapter work. `maximizeTag` remains deferred.
 
 ## Context
 
@@ -80,7 +80,7 @@ This keeps "can the user pass?" separate from "does the user prefer this route?"
 
 ## Request Shape
 
-The quick-demo navigation POST request accepts `traversalPreference` in the body:
+The `/api/v1/buildings/{buildingId}/find-route` POST request accepts `traversalPreference` in the body:
 
 ```json
 {
@@ -368,7 +368,7 @@ This is not required for the first hard-ban implementation, but it is important 
 
 Supported:
 
-- Existing quick-demo query parameters continue to work.
+- Requests use the body fields specified in [Endpoint Design](../endpoint-design.md); legacy quick-demo query parameters are removed.
 - Body-level `traversalPreference` takes precedence; query-string `routePlanningPreference` remains the fallback.
 - `banTags` and `minimizeTag` apply per request without mutating cached compilation results or entering the compilation cache key.
 - `minDwellSeconds` contributes to mandatory intermediate-node time and soft tag exposure.

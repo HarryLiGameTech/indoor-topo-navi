@@ -1,197 +1,37 @@
 package com.e611.toponavi.web.controller;
 
+import com.e611.toponavi.web.api.ApiException;
+import com.e611.toponavi.web.service.NavigationApiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.e611.toponavi.web.dto.QuickDemoNavigationRequest;
-import com.e611.toponavi.web.dto.TraversalPreferenceRequest;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class TopoControllerPreferenceTest {
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final NavigationApiService service = new NavigationApiService(null, mapper);
 
     @Test
-    void bodyPreferenceOverridesLegacyQueryParameter() {
-        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTransfers");
-
-        assertEquals(
-                "MinimizeTransfers",
-                TopoController.resolveRoutePlanningPreference("MinimizeTime", body)
-        );
+    void rejectsConflictingAndDeferredSoftPreferencesBeforeCompilation() throws Exception {
+        var body = mapper.readTree("""
+                {"startNode":"F::a","endNode":"F::b","traversalPreference":{"minimizeTag":"outdoor","maximizeTag":"shop"}}
+                """);
+        assertEquals(400, assertThrows(ApiException.class, () -> service.findRoute("unused", body)).status());
+        ((com.fasterxml.jackson.databind.node.ObjectNode) body.get("traversalPreference")).remove("minimizeTag");
+        var error = assertThrows(ApiException.class, () -> service.findRoute("unused", body));
+        assertEquals(422, error.status());
+        assertTrue(error.body().toString().contains("UNSUPPORTED_TRAVERSAL_PREFERENCE"));
     }
 
     @Test
-    void queryParameterRemainsAsFallback() {
-        assertEquals(
-                "MinimizePhysicalDemands",
-                TopoController.resolveRoutePlanningPreference("MinimizePhysicalDemands", null)
-        );
-    }
-
-    @Test
-    void missingPreferenceDefaultsToMinimizeTime() {
-        assertEquals("MinimizeTime", TopoController.resolveRoutePlanningPreference(null, null));
-    }
-
-    @Test
-    void invalidPreferenceIsRejectedInsteadOfSilentlyDefaulted() {
-        QuickDemoNavigationRequest body = requestWithPreference("FastestMaybe");
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> TopoController.resolveRoutePlanningPreference(null, body)
-        );
-    }
-
-    @Test
-    void unsupportedRuntimePreferenceFieldsAreReported() {
-        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
-        body.traversalPreference.banTags = List.of("outdoor");
-        body.traversalPreference.minimizeTag = "odor_prone";
-        body.traversalPreference.maximizeTag = "shop";
-        body.traversalPreference.riskPreference = "conservative";
-
-        assertEquals(
-                List.of("maximizeTag"),
-                TopoController.unsupportedTraversalFields(body)
-        );
-    }
-
-    @Test
-    void minimizeTagIsSupportedAndNormalized() {
-        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
-        body.traversalPreference.minimizeTag = " outdoor ";
-
-        assertEquals("outdoor", TopoController.resolveMinimizeTag(body));
-        assertEquals(List.of(), TopoController.unsupportedTraversalFields(body));
-        assertNull(TopoController.resolveMinimizeTag(null));
-        body.traversalPreference.minimizeTag = " ";
-        assertNull(TopoController.resolveMinimizeTag(body));
-    }
-
-    @Test
-    void conflictingSoftTagsAreRejectedAndMaximizeRemainsDeferred() {
-        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
-        body.traversalPreference.minimizeTag = "outdoor";
-        body.traversalPreference.maximizeTag = "shop";
-        TopoController controller = new TopoController();
-
-        var conflict = controller.quickDemoNavigationPost("unused", "start", "goal", null, false, null, body);
-        assertEquals(400, conflict.getStatusCode().value());
-        assertEquals("CONFLICTING_TAG_PREFERENCES", ((Map<?, ?>) conflict.getBody()).get("code"));
-
-        body.traversalPreference.minimizeTag = null;
-        var deferred = controller.quickDemoNavigationPost("unused", "start", "goal", null, false, null, body);
-        assertEquals(501, deferred.getStatusCode().value());
-        assertEquals("TRAVERSAL_PREFERENCE_NOT_IMPLEMENTED", ((Map<?, ?>) deferred.getBody()).get("code"));
-    }
-
-    @Test
-    void riskPreferenceDefaultsToConservativeAndAcceptsAllModes() {
-        assertEquals("conservative", TopoController.resolveRiskPreference(null));
-
-        for (String riskPreference : List.of("conservative", "permissive", "aggressive")) {
-            QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
-            body.traversalPreference.riskPreference = riskPreference;
-            assertEquals(riskPreference, TopoController.resolveRiskPreference(body));
+    void rejectsInvalidPreferencesAndUnknownInputs() throws Exception {
+        for (String preference : new String[]{"\"routePlanningPreference\":\"FastestMaybe\"", "\"riskPreference\":\"reckless\"",
+                "\"banTags\":[\" \"]", "\"surprise\":true", "\"minimizeTag\":null"}) {
+            var body = mapper.readTree("{\"startNode\":\"F::a\",\"endNode\":\"F::b\",\"traversalPreference\":{" + preference + "}}");
+            assertEquals(400, assertThrows(ApiException.class, () -> service.findRoute("unused", body)).status());
         }
-    }
-
-    @Test
-    void invalidRiskPreferenceIsRejected() {
-        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
-        body.traversalPreference.riskPreference = "reckless";
-
-        assertThrows(IllegalArgumentException.class, () -> TopoController.resolveRiskPreference(body));
-    }
-
-    @Test
-    void jsonBodyBindsTraversalPreferenceAndUserParams() throws Exception {
-        String json = """
-                {
-                  "userParams": {"haveCard": true},
-                  "traversalPreference": {
-                    "routePlanningPreference": "MinimizeTime",
-                    "banTags": ["outdoor"]
-                  }
-                }
-                """;
-
-        QuickDemoNavigationRequest body = new ObjectMapper()
-                .readValue(json, QuickDemoNavigationRequest.class);
-
-        assertEquals(true, body.userParams.get("haveCard"));
-        assertEquals("MinimizeTime", body.traversalPreference.routePlanningPreference);
-        assertEquals(List.of("outdoor"), body.traversalPreference.banTags);
-    }
-
-    @Test
-    void banTagsAreResolvedAndDeduplicated() {
-        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
-        body.traversalPreference.banTags = List.of("outdoor", "rain_exposed", "outdoor");
-
-        assertEquals(
-                List.of("outdoor", "rain_exposed"),
-                TopoController.resolveBanTags(body)
-        );
-        assertEquals(List.of(), TopoController.unsupportedTraversalFields(body));
-    }
-
-    @Test
-    void blankBanTagIsRejected() {
-        QuickDemoNavigationRequest body = requestWithPreference("MinimizeTime");
-        body.traversalPreference.banTags = List.of("outdoor", " ");
-
-        assertThrows(IllegalArgumentException.class, () -> TopoController.resolveBanTags(body));
-    }
-
-    @Test
-    void proximityNodesKeepTheCheapestDirectEdgeAndRespectAmount() {
-        List<TopoController.ProximityNodeView> candidates = List.of(
-                proximityNode("Floor1::b", 8),
-                proximityNode("Floor1::a", 3),
-                proximityNode("Floor1::b", 2),
-                proximityNode("Floor1::c", 4)
-        );
-
-        List<TopoController.ProximityNodeView> nearest =
-                TopoController.nearestProximityNodes(candidates, 2);
-
-        assertEquals(List.of("Floor1::b", "Floor1::a"),
-                nearest.stream().map(TopoController.ProximityNodeView::nodeIdentifier).toList());
-        assertEquals(List.of(2.0, 3.0),
-                nearest.stream().map(TopoController.ProximityNodeView::costSeconds).toList());
-    }
-
-    @Test
-    void proximityAmountMustBePositive() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> TopoController.nearestProximityNodes(List.of(), 0)
-        );
-    }
-
-    private QuickDemoNavigationRequest requestWithPreference(String preference) {
-        QuickDemoNavigationRequest body = new QuickDemoNavigationRequest();
-        body.traversalPreference = new TraversalPreferenceRequest();
-        body.traversalPreference.routePlanningPreference = preference;
-        return body;
-    }
-
-    private TopoController.ProximityNodeView proximityNode(String nodeIdentifier, double costSeconds) {
-        String[] parts = nodeIdentifier.split("::", 2);
-        return new TopoController.ProximityNodeView(
-                nodeIdentifier,
-                parts[0],
-                parts[1],
-                costSeconds,
-                Map.of(),
-                List.of(),
-                List.of()
-        );
+        for (String extra : new String[]{"\"isHighRise\":true", "\"forceRecompile\":true", "\"routingMode\":\"auto\""}) {
+            var body = mapper.readTree("{\"startNode\":\"F::a\",\"endNode\":\"F::b\"," + extra + "}");
+            assertEquals(400, assertThrows(ApiException.class, () -> service.findRoute("unused", body)).status());
+        }
     }
 }

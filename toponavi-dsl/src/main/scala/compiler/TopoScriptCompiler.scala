@@ -202,7 +202,9 @@ class TopoScriptCompiler() {
       graphSequence     = globalConfig.orderedSubmapNames,
       linearPaths       = finalLinearPaths,
       directionalArrows = finalArrows,
-      metadata          = compilationResultMetadata.toMap
+      metadata          = compilationResultMetadata.toMap,
+      mapAttributes     = allElaboratedMaps.view.mapValues(DiscoveryMetadata.mapAttributes).toMap,
+      transportDeclarations = elaboratedTransports.toList.map(DiscoveryMetadata.transport)
     )
   }
 
@@ -378,7 +380,9 @@ class TopoScriptCompiler() {
       graphSequence     = globalConfig.orderedSubmapNames,
       linearPaths       = finalLinearPaths,
       directionalArrows = finalArrows,
-      metadata          = compilationResultMetadata.toMap
+      metadata          = compilationResultMetadata.toMap,
+      mapAttributes     = allElaboratedMaps.view.mapValues(DiscoveryMetadata.mapAttributes).toMap,
+      transportDeclarations = elaboratedTransports.toList.map(DiscoveryMetadata.transport)
     )
   }
 

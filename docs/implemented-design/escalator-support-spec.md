@@ -300,17 +300,16 @@ web response-contract test may regress.
 ### 5. Local REST smoke test
 
 Start `toponavi-web` locally with `EXAMPLES_PATH` pointing at the repository's
-`examples` directory. Use `POST /api/v1/quick-demo-navigation` and set
-`forceRecompile=true` for the first request so a pre-change cache cannot hide a
-compiler failure.
+`examples` directory. Use the building-scoped `find-route` endpoint. Supply a platform bearer token, or explicitly configure the test building for anonymous demo access. Cache identity includes source contents, typed parameters, and the discovery metadata format version.
 
 Example primary request:
 
 ```bash
 curl --fail-with-body --request POST \
-  'http://127.0.0.1:8080/api/v1/quick-demo-navigation?buildingName=indigoBJ&startNode=Level1%3A%3Amid_gate_inside&endNode=Level3%3A%3Ashop_341_outside&routePlanningPreference=MinimizeTime&forceRecompile=true' \
+  'http://127.0.0.1:8080/api/v1/buildings/indigoBJ/find-route' \
+  --header "Authorization: Bearer $TOPONAVI_API_TOKEN" \
   --header 'Content-Type: application/json' \
-  --data '{"userParams":{},"traversalPreference":{"routePlanningPreference":"MinimizeTime","banTags":[]}}'
+  --data '{"userParams":{},"startNode":"Level1::mid_gate_inside","endNode":"Level3::shop_341_outside","traversalPreference":{"routePlanningPreference":"MinimizeTime","banTags":[]}}'
 ```
 
 Repeat for the other two exact-node pairs. Apply the same assertions as the

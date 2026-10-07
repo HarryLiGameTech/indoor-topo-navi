@@ -44,7 +44,8 @@ topo-map Zone1(){
   atomic-path [G2_in <-> G2_out] {cost = 3}
   atomic-path [G2_out <-> service_corr_B] {cost = 2}
   atomic-path [service_corr_B <-> B_hall_out] {cost = 5}
-  atomic-path [B_hall_out <-> LS1B_hall] {cost = 5}
+  atomic-path [B_hall_out -> LS1B_hall] {cost = 5}
+  atomic-path [LS1B_hall -> B_hall_out] {cost = 5} requires TenantsOnly
   atomic-path [LS1B_hall <-> FS1_3_hall] {cost = 1}
   atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
   atomic-path [G2_in <-> corner_RB] {cost = 22}
@@ -58,7 +59,8 @@ topo-map Zone1(){
   atomic-path [elevator_hall_end_A <-> G4_out] {cost = 2}
   atomic-path [G4_out <-> service_corr_A] {cost = 2}
   atomic-path [service_corr_A <-> A_hall_out] {cost = 5}
-  atomic-path [A_hall_out <-> LS2B_hall] {cost = 5}
+  atomic-path [A_hall_out -> LS2B_hall] {cost = 5}
+  atomic-path [LS2B_hall -> A_hall_out] {cost = 5} requires TenantsOnly
   atomic-path [LS2B_hall <-> FS4_6_hall] {cost = 1}
   atomic-path [FS4_6_hall <-> ST_A] {cost = 3}
   atomic-path [G4_out <-> G4_in] {cost = 3}

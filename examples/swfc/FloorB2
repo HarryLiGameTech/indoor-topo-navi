@@ -72,11 +72,11 @@ topo-map FloorB2(){
   atomic-path [retail_BOH_corner <-> retail_BOH_end] {cost = 6}
   atomic-path [n_f5352bd4b66944f2b3d22ea783a60ce9 <-> core_gate_T] {cost = 6}
   atomic-path [egress_corr_A <-> A_hall_out] {cost = 5}
-  atomic-path [A_hall_out <-> LS2_hall] {cost = 3}
+  atomic-path [A_hall_out <-> LS2_hall] {cost = 5} requires ManagementOnly
   atomic-path [LS2_hall <-> FS4_6_hall] {cost = 1}
   atomic-path [hotel_BOH_corner <-> SH3_hall] {cost = 5}
   atomic-path [SH3_hall <-> egress_corr_BL] {cost = 3}
-  atomic-path [egress_corr_BL <-> LS1_hall] {cost = 5}
+  atomic-path [egress_corr_BL <-> LS1_hall] {cost = 5} requires HotelStaffOnly
   atomic-path [LS1_hall <-> FS1_3_hall] {cost = 1}
   atomic-path [egress_corr_BL <-> n_dee63b00f3df4b1bb1fdfebf354f39ad] {cost = 4}
   atomic-path [n_dee63b00f3df4b1bb1fdfebf354f39ad <-> egress_corr_BR] {cost = 3}

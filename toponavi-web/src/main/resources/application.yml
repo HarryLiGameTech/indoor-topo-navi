@@ -27,6 +27,25 @@ spring:
             user-name-attribute: login
 
 platform:
+  api:
+    allow-cors: ${TOPONAVI_ALLOW_CORS:false}
+    anonymous-buildings: ${TOPONAVI_ANONYMOUS_BUILDINGS:}
+    cors:
+      allowed-origins: ${TOPONAVI_CORS_ALLOWED_ORIGINS:}
+      allowed-methods: GET,POST,OPTIONS
+      allowed-headers: Content-Type,Authorization
+      allow-credentials: ${TOPONAVI_CORS_ALLOW_CREDENTIALS:false}
+    filter:
+      max-depth: 16
+      max-predicates: 256
+      max-path-length: 1024
+      max-literal-bytes: 16384
+      max-membership: 256
+    authoring:
+      allow-guests: ${TOPONAVI_ALLOW_GUEST_AUTHORING:false}
+      max-files: 512
+      max-source-bytes: 4194304
+      max-concurrent-compilations: 2
   frontend-url: ${FRONTEND_URL:http://topomap-store.hnrobert.space}
   jwt:
     secret: ${JWT_SECRET:changeme_replace_in_production_with_a_strong_random_secret}

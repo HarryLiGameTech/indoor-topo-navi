@@ -44,12 +44,12 @@ topo-map SL53(){
   atomic-path [ST_C_out <-> ST_C] {cost = 3}
   atomic-path [toilet_out <-> toilet_B] {cost = 2}
   atomic-path [toilet_out <-> toilet_A] {cost = 2}
-  atomic-path [toilet_out <-> G5_in] {cost = 4}
+  atomic-path [toilet_out <-> G5_in] {cost = 5, required_actions = ["swipe_card", "cross_turnstile"]} requires TenantsOnly
   atomic-path [G5_in <-> G5_out] {cost = 5}
-  atomic-path [G3_out <-> G3_in] {cost = 5}
+  atomic-path [G3_out <-> G3_in] {cost = 5, required_actions = ["swipe_card", "cross_turnstile"]} requires TenantsOnly
   atomic-path [halls_entrance <-> G3_out] {cost = 5}
-  atomic-path [G1_2_in <-> halls_entrance] {cost = 5}
-  atomic-path [G2_out <-> G1_2_in] {cost = 5}
+  atomic-path [G1_2_in <-> halls_entrance] {cost = 5, required_actions = ["swipe_card", "cross_turnstile"]} requires TenantsOnly
+  atomic-path [G2_out <-> G1_2_in] {cost = 5, required_actions = ["swipe_card", "cross_turnstile"]} requires TenantsOnly
   atomic-path [G1_2_in <-> L5_hall] {cost = 2}
   atomic-path [L6_hall <-> G5_in] {cost = 2}
   atomic-path [ST_C_out <-> G4_out] {cost = 5}

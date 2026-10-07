@@ -1,4 +1,4 @@
-topo-map PHSH_Floor86(){
+topo-map Floor86(){
    let params: {permResident: Int} = {
        permResident = 10
     }
@@ -32,7 +32,7 @@ topo-map PHSH_Floor86(){
   atomic-path [salon_5_6 <-> salon_6_7] {cost = 13}
   atomic-path [salon_6_7 <-> salon_7_8] {cost = 7}
   atomic-path [B_egress_hall_interm <-> salon_7_8] {cost = 4}
-  atomic-path [B_egress_hall_interm <-> LS13_hall] {cost = 5}
+  atomic-path [B_egress_hall_interm <-> LS13_hall] {cost = 5} requires HotelStaffOnly
   atomic-path [LS13_hall <-> FS1_3_hall] {cost = 1}
   atomic-path [FS1_3_hall <-> ST_B] {cost = 3}
   atomic-path [LS13_hall <-> HS3_4_hall] {cost = 3}
@@ -50,7 +50,7 @@ topo-map PHSH_Floor86(){
   atomic-path [A_egress_hall_out <-> salon_3_4] {cost = 5}
   atomic-path [salon_3_4 <-> small_stairs] {cost = 7}
   atomic-path [small_stairs <-> pantry_intersect] {cost = 5}
-  atomic-path [A_egress_hall_interm <-> LS14_hall] {cost = 5}
+  atomic-path [A_egress_hall_interm <-> LS14_hall] {cost = 5} requires ManagementOnly
   atomic-path [ST_A <-> FS4_6_hall] {cost = 3}
   atomic-path [FS4_6_hall <-> LS14_hall] {cost = 1}
 }

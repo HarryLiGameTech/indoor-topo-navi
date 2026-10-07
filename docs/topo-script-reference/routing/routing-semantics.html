@@ -44,13 +44,12 @@
       <section id="route-request">
         <h2>Route Request</h2>
         <p>A route request identifies a compiled building, an origin node, a destination node, a building-routing mode, and the requested traversal preferences.</p>
-        <p>Risk preference, banned tags, route-planning preference, and user parameters are supplied in the request body. The current quick-demo endpoint receives the building name, origin, destination, and <code>isHighRise</code> selector as query parameters.</p>
-        <pre><code>POST /api/v1/quick-demo-navigation
-  ?buildingName=SkyrimTower
-  &amp;startNode=Lobby::main_entrance
-  &amp;endNode=OfficeLevel30::reception
-  &amp;isHighRise=true</code></pre>
+        <p>The canonical building ID is part of the URL. Origin, destination, routing mode, traversal preferences, and compilation parameters are supplied in a JSON body. The endpoint requires a platform bearer token unless anonymous access is explicitly enabled for that building.</p>
+        <pre><code>POST /api/v1/buildings/SkyrimTower/find-route</code></pre>
         <pre><code>{
+  "startNode": "Lobby::main_entrance",
+  "endNode": "OfficeLevel30::reception",
+  "routingMode": "partiallyInformed",
   "userParams": {
     "officeAccess": true,
     "timeOfDayInSeconds": 50400
@@ -85,7 +84,7 @@
           <img src="../assets/low-rise-routing-placeholder.svg" alt="Placeholder for a diagram showing an end-to-end low-rise routing search across walking and transport edges">
           <figcaption>Placeholder: an end-to-end search comparing complete walking, transfer, and transport costs.</figcaption>
         </figure>
-        <p>With <code>isHighRise=false</code>, cross-map routing uses a fully informed hierarchical search. Its hierarchy contains the exact origin, the exact destination, and every transport landing in the building.</p>
+        <p>With <code>routingMode: "fullyInformed"</code>, cross-map routing uses a fully informed hierarchical search. Its hierarchy contains the exact origin, the exact destination, and every transport landing in the building.</p>
         <p>For each floor, the engine calculates shortest walking routes between relevant hierarchy nodes. These walking routes are combined with permitted transport rides in one building-wide cost search.</p>
         <p>The resulting total includes:</p>
         <ol>
@@ -114,7 +113,7 @@ Total: 23 seconds</code></pre>
           <img src="../assets/high-rise-routing-placeholder.svg" alt="Placeholder for a diagram showing transport-first high-rise route selection followed by floor-level walking-route validation">
           <figcaption>Placeholder: transport plans are ranked first, then connected and validated through floor-level walking routes.</figcaption>
         </figure>
-        <p>With <code>isHighRise=true</code>, cross-map routing uses a transport-first strategy.</p>
+        <p>With <code>routingMode: "partiallyInformed"</code>, cross-map routing uses a transport-first strategy.</p>
         <ol>
           <li>Find transport stations on the origin and destination maps.</li>
           <li>Calculate a transport plan for each origin-station and destination-station pairing.</li>
@@ -125,7 +124,7 @@ Total: 23 seconds</code></pre>
         <p>Origin, destination, and transfer walking costs are included in the returned route. Origin and destination walking costs do not participate in the initial transport-plan ranking.</p>
         <p>High-rise routing is therefore a transport-prioritized heuristic. It is suitable when transport selection is expected to dominate the journey, but it does not guarantee the globally lowest end-to-end cost.</p>
         <p>For each origin-station and destination-station pairing, the candidate set retains only its lowest-cost transport path. Alternative transport paths between the same station pair are not independently ranked by the other preferences.</p>
-        <p>The <code>isHighRise</code> value selects a routing strategy. It is not checked against the building's physical height or floor count. The quick-demo endpoint defaults it to <code>true</code>.</p>
+        <p>The <code>routingMode</code> value selects a routing strategy independently of the building's physical height or floor count. The API defaults to <code>partiallyInformed</code>; MCP explicitly requests <code>fullyInformed</code>.</p>
       </section>
 
       <section id="transport-selection">

@@ -8,6 +8,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.e611.toponavi.web.api.ApiException;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Spring Security configuration.
@@ -36,18 +42,40 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, ApiAccessPolicy access,
+                                          UrlBasedCorsConfigurationSource apiCorsSource,
+                                          ObjectMapper mapper) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(apiCorsSource))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/github", "/auth/callback", "/error", "/oauth2/authorization/github", "/login/oauth2/code/github").permitAll()
-                .requestMatchers("/api/v1/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/api/v1/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/buildings").access((authentication, context) ->
+                    new AuthorizationDecision(access.catalogue(authentication.get())))
+                .requestMatchers(HttpMethod.POST, "/api/v1/buildings/{buildingId}/**").access((authentication, context) ->
+                    new AuthorizationDecision(access.building(authentication.get(), context.getVariables().get("buildingId"))))
+                .requestMatchers(HttpMethod.POST, "/api/v1/authoring/validate").access((authentication, context) ->
+                    new AuthorizationDecision(access.authoring(authentication.get())))
+                .requestMatchers("/api/v1/**").authenticated()
                 .requestMatchers("/api/me").authenticated()
                 .requestMatchers("/api/maps/**").authenticated()
                 .anyRequest().permitAll()
             )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(errors -> errors
+                .defaultAuthenticationEntryPointFor((request, response, error) -> {
+                    response.setStatus(401);
+                    response.setContentType("application/json");
+                    mapper.writeValue(response.getOutputStream(), new ApiException(401, "AUTHENTICATION_REQUIRED", "Authentication is required.").body());
+                }, new AntPathRequestMatcher("/api/v1/**"))
+                .defaultAccessDeniedHandlerFor((request, response, error) -> {
+                    response.setStatus(403);
+                    response.setContentType("application/json");
+                    mapper.writeValue(response.getOutputStream(), new ApiException(403, "ACCESS_DENIED", "Access is denied.").body());
+                }, new AntPathRequestMatcher("/api/v1/**")));
 
         // Only wire up OAuth2 login if credentials are actually configured
         if (clientRegistrationRepository.findByRegistrationId("github") != null) {

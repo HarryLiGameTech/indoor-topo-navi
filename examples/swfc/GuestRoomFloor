@@ -71,7 +71,7 @@ topo-map GuestRoomFloor(){
   topo-node rooms_20
   atomic-path [ST_A <-> FS4_6_hall] {cost = 3}
   atomic-path [FS4_6_hall <-> LS14_hall] {cost = 1}
-  atomic-path [LS14_hall <-> A_egress_hall_interm] {cost = 5}
+  atomic-path [LS14_hall <-> A_egress_hall_interm] {cost = 5} requires ManagementOnly
   atomic-path [A_egress_hall_interm <-> A_egress_hall_out] {cost = 4}
   atomic-path [A_egress_hall_out <-> n_e0afebf32f8b474e9f1d831112adc7d8] {cost = 3}
   atomic-path [n_e0afebf32f8b474e9f1d831112adc7d8 <-> HL_hall] {cost = 4}
@@ -123,7 +123,7 @@ topo-map GuestRoomFloor(){
   atomic-path [rooms_21_22 <-> room_21_in] {cost = 4}
   atomic-path [ST_B <-> FS1_3_hall] {cost = 3}
   atomic-path [FS1_3_hall <-> LS13_hall] {cost = 1}
-  atomic-path [LS13_hall <-> B_egress_hall_interm] {cost = 5}
+  atomic-path [LS13_hall <-> B_egress_hall_interm] {cost = 5} requires HotelStaffOnly
   atomic-path [B_egress_hall_interm <-> B_egress_hall_out] {cost = 4}
   atomic-path [B_egress_hall_out <-> n_fb8b6ab23ca240dfa03fbb277be4268d] {cost = 3}
   atomic-path [B_egress_hall_out <-> n_8bf02a7611d642adb6afd570768f3d16] {cost = 2}
@@ -131,7 +131,7 @@ topo-map GuestRoomFloor(){
   atomic-path [HS3_4_hall <-> service_corr_in] {cost = 6}
   atomic-path [service_corr_in <-> service_corr_interm] {cost = 3}
   atomic-path [service_corr_interm <-> service_corr_out] {cost = 3}
-  atomic-path [HS3_4_hall <-> LS13_hall] {cost = 3}
+  atomic-path [HS3_4_hall <-> LS13_hall] {cost = 3} requires HotelStaffOnly
   atomic-path [n_8bf02a7611d642adb6afd570768f3d16 <-> n_70524c59eba44e42b6dd2881b4d27211] {cost = 4}
   atomic-path [n_70524c59eba44e42b6dd2881b4d27211 <-> rooms_20] {cost = 3, description = "Intersect between the main corridor and the hallway of room 20"}
   atomic-path [rooms_17_18 <-> room_17_in] {cost = 4}

@@ -20,13 +20,17 @@ topo-map Floor96(){
   topo-node FS7_hall
   topo-node ST_U1
   topo-node corner_2B
-  atomic-path [corner_2A <-> sub_roof_gate_2] {cost = 5}
-  atomic-path [sub_roof_gate_2 <-> corner_2B] {cost = 5}
+  atomic-path [corner_2A -> sub_roof_gate_2] {cost = 5}
+  atomic-path [sub_roof_gate_2 -> corner_2A] {cost = 5} requires ManagementOnly
+  atomic-path [sub_roof_gate_2 -> corner_2B] {cost = 5} requires ManagementOnly
+  atomic-path [corner_2B -> sub_roof_gate_2] {cost = 5}
   atomic-path [corner_2B <-> cart_B] {cost = 18}
   atomic-path [cart_A <-> corner_2A] {cost = 18}
   atomic-path [cart_A <-> corner_1A] {cost = 18}
-  atomic-path [corner_1A <-> sub_roof_gate_1] {cost = 5}
-  atomic-path [sub_roof_gate_1 <-> corner_1B] {cost = 5}
+  atomic-path [corner_1A -> sub_roof_gate_1] {cost = 5}
+  atomic-path [sub_roof_gate_1 -> corner_1A] {cost = 5} requires ManagementOnly
+  atomic-path [sub_roof_gate_1 -> corner_1B] {cost = 5} requires ManagementOnly
+  atomic-path [corner_1B -> sub_roof_gate_1] {cost = 5} 
   atomic-path [sub_roof_gate_1 <-> sub_roof_interm_2] {cost = 5}
   atomic-path [sub_roof_interm_2 <-> sub_roof_out_2] {cost = 2}
   atomic-path [sub_roof_out_2 <-> FS10_hall] {cost = 2}

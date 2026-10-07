@@ -75,6 +75,7 @@ building-includes{
     submap SL29
     submap SL28
     submap Floor27 using Zone2
+    // submap Floor27 using Zone 2 {displayName = "27th Floor", aliases = ["27th Floor", "Floor 27", "Level 27"]} // TODO: override the params metadata
     submap Floor26 using Zone2
     submap Floor25 using Zone2
     submap Floor24 using Zone2

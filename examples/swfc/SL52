@@ -42,8 +42,8 @@ topo-map SL52(){
   topo-node Gate_R2_intermediate
   atomic-path [lobby_entrance <-> S2_hall] {cost = 5}
   atomic-path [S2_hall <-> halls_entrance] {cost = 4}
-  atomic-path [G1_2_in <-> halls_entrance] {cost = 5}
-  atomic-path [G2_out <-> G1_2_in] {cost = 5}
+  atomic-path [G1_2_in <-> halls_entrance] {cost = 5, required_actions = ["swipe_card", "cross_turnstile"]} requires TenantsOnly
+  atomic-path [G2_out <-> G1_2_in] {cost = 5, required_actions = ["swipe_card", "cross_turnstile"]} requires TenantsOnly
   atomic-path [G2_out <-> service_corr_A] {cost = 3}
   atomic-path [Gate_L_out <-> lobby_intersact] {cost = 18}
   atomic-path [Gate_L_out <-> Gate_L_intermediate] {cost = 4}
@@ -54,15 +54,15 @@ topo-map SL52(){
   atomic-path [toilet_out <-> ST_C_out] {cost = 7}
   atomic-path [ST_C_out <-> ST_C] {cost = 3}
   atomic-path [L6_hall <-> G5_in] {cost = 2}
-  atomic-path [G5_in <-> toilet_out] {cost = 4}
+  atomic-path [G5_in <-> toilet_out] {cost = 4, required_actions = ["swipe_card", "cross_turnstile"]} requires TenantsOnly
   atomic-path [G5_in <-> G5_out] {cost = 5}
   atomic-path [ST_C_out <-> G4_out] {cost = 5}
   atomic-path [G4_out <-> service_corr_B] {cost = 3}
   atomic-path [reception <-> lobby_intersact] {cost = 3}
   atomic-path [halls_entrance <-> G3_out] {cost = 5}
-  atomic-path [G3_out <-> G3_in] {cost = 5}
+  atomic-path [G3_out <-> G3_in] {cost = 5, required_actions = ["swipe_card", "cross_turnstile"]} requires TenantsOnly
   atomic-path [G3_in <-> ST_C_out] {cost = 15}
-  atomic-path [lobby_intersact <-> lobby_entrance] {cost = 4}
+  atomic-path [lobby_intersact <-> lobby_entrance] {cost = 4, required_actions = ["cross_auto_door"]}
   atomic-path [reception <-> escalator_52R] {cost = 6}
   atomic-path [reception <-> escalator_52L] {cost = 10}
   atomic-path [escalator_52L <-> lobby_intersact] {cost = 6}

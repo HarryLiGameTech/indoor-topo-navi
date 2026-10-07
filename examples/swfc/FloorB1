@@ -76,7 +76,8 @@ topo-map FloorB1(){
   atomic-path [observatory_intersect <-> observatory_escalator_B1A] {cost = 5}
   atomic-path [observatory_escalator_B1A <-> OB_elevator_hall_A_gate] {cost = 12}
   atomic-path [OB_elevator_hall_A_gate <-> GE1_2_hall] {cost = 6}
-  atomic-path [observatory_intersect <-> n_6368a1ddeca0459795eb4ea031957e0a] {cost = 15}
+  atomic-path [observatory_intersect -> n_6368a1ddeca0459795eb4ea031957e0a] {cost = 15} subject-to OccasionalGE4Restriction because "Observatory employees may stop you from accessing GE4 elevator"
+  atomic-path [n_6368a1ddeca0459795eb4ea031957e0a -> observatory_intersect] {cost = 15}
   atomic-path [n_6368a1ddeca0459795eb4ea031957e0a <-> observatory_escalator_B1B] {cost = 18}
   atomic-path [observatory_escalator_B1B <-> OB_elevator_hall_B_gate] {cost = 12}
   atomic-path [OB_elevator_hall_B_gate <-> GE4_hall] {cost = 6}
@@ -95,7 +96,8 @@ topo-map FloorB1(){
   atomic-path [escalator_B1_OBgate <-> retail_observatory_conn] {cost = 7}
   atomic-path [retail_observatory_conn <-> CP3_4_corr_intersect] {cost = 15}
   atomic-path [carpark_main_gate <-> logistics_carpark_conn] {cost = 35}
-  atomic-path [core_gate_R_out <-> registration_booth] {cost = 3}
+  atomic-path [core_gate_R_out -> registration_booth] {cost = 3}
+  atomic-path [registration_booth -> core_gate_R_out] {cost = 3} subject-to OccasionalFreightPermitCheck because "Security may check your freight permit before letting you in"
   atomic-path [observatory_individual_entrance <-> observatory_intersect] {cost = 60}
   atomic-path [logistics_outer_corner <-> SS3_4_hall] {cost = 4}
   atomic-path [L1_1_3_escape <-> L2_2_4_escape] {cost = 10}

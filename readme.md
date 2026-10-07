@@ -46,10 +46,13 @@ The [examples](examples/) directory contains four datasets. Their root declarati
 
 Supply inputs through the compiler parameter map or the API's `userParams` field. These datasets include legacy syntax and validation issues; their presence does not guarantee successful compilation. Use the synthetic projects in the compiler tests for reproducible examples.
 
-`GET /api/v1/available-buildings` lists installed map projects under the configured `EXAMPLES_PATH`: immediate subdirectories containing a readable `configuration.tcfg` or `configuration`. The response is `{"status":"success","buildings":["indigoBJ","nbc4","swfc","trent"]}` for the shipped examples. This inventory does not compile the maps or validate a user's access parameters. An empty directory returns an empty list; an unreadable inventory returns HTTP 503. MCP reads this endpoint at startup, so restart MCP after changing installed projects.
+`GET /api/v1/buildings` lists installed map projects under the configured `EXAMPLES_PATH`: immediate subdirectories containing a readable `configuration.tcfg` or `configuration`. The response is `{"status":"success","buildings":["indigoBJ","nbc4","swfc","trent"]}` for the shipped examples. This inventory does not compile the maps or validate a user's access parameters. An empty directory returns an empty list; an unreadable inventory returns HTTP 503. MCP reads this endpoint at startup, so restart MCP after changing installed projects. Navigation and discovery require a platform JWT unless their building is explicitly listed in `TOPONAVI_ANONYMOUS_BUILDINGS`.
+
+The [API contract](docs/endpoint-design.md) describes building-scoped JSON queries, `find-route`, shared data predicates, and `inDetail`. Authoring validation at `/api/v1/authoring/validate` returns source diagnostics and scoped constraint declarations. It requires login unless `TOPONAVI_ALLOW_GUEST_AUTHORING=true`. CORS is disabled unless `TOPONAVI_ALLOW_CORS=true` and explicit `TOPONAVI_CORS_ALLOWED_ORIGINS` are configured.
 
 ## Documentation and limitations
 
+- [HTTP API guide and examples](docs/http-api.md)
 - [TopoScript reference](docs/topo-script-reference/index.html)
 - [Project structure and source files](docs/topo-script-reference/building/building-includes.html)
 - [Root parameters, functions, and constraints](docs/topo-script-reference/building/global-declarations.html)
