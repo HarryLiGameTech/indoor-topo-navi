@@ -58,7 +58,7 @@ The [API contract](docs/endpoint-design.md) describes building-scoped JSON queri
 - [Root parameters, functions, and constraints](docs/topo-script-reference/building/global-declarations.html)
 - [Routing semantics](docs/topo-script-reference/routing/routing-semantics.html)
 
-High-rise routing is heuristic. Graphs are compiled in memory, and resource requirements depend on map size and transport connectivity; no general capacity guarantee is established. APIs and language behavior are evolving, and accessibility depends on the supplied map data and policies.
+High-rise routing searches transport connections with complete walking costs; time, transfers, physical demand, and custom data are native objectives. Preference searches have explicit resource limits. Graphs are compiled in memory, and resource requirements depend on map size and transport connectivity; no general capacity guarantee is established. APIs and language behavior are evolving, and accessibility depends on the supplied map data and policies.
 
 ## Contributing
 

@@ -34,8 +34,8 @@ class TopologyContractTest {
                   let params = {permResident = 1, description = "Lower floor"}
                   topo-node landing {tags = ["indoor"]}
                   topo-node destination {description = "Destination"}
-                  atomic-path [landing -> destination] {cost = 2, tags = ["outdoor"]}
-                  atomic-path [landing -> destination] {cost = 5, tags = ["indoor"]}
+                  atomic-path [landing -> destination] {cost = 2, tags = ["outdoor"], effort = 1}
+                  atomic-path [landing -> destination] {cost = 5, tags = ["indoor"], effort = 0.5}
                   constraint Local { require false }
                 }
                 """);
@@ -57,6 +57,46 @@ class TopologyContractTest {
         ObjectNode body = mapper.createObjectNode();
         body.putObject("userParams").put("allowed", allowed);
         return body;
+    }
+
+    @Test
+    void exposesNativeCustomObjectivesAndTheirScoresInBothRoutingModes() throws Exception {
+        var navigation = new NavigationApiService(buildings, mapper);
+        for (String mode : java.util.List.of("fullyInformed", "partiallyInformed")) {
+            ObjectNode body = request(true).put("startNode", "Lower::landing").put("endNode", "Lower::destination")
+                    .put("routingMode", mode);
+            ObjectNode preference = body.putObject("traversalPreference").put("routePlanningPreference", "MinimizeCustomData");
+            preference.putObject("customObjective").put("kind", "tagExposure").put("tag", "outdoor");
+            var tagged = navigation.findRoute("fixture", body);
+            assertEquals(5, tagged.path("totalCostSeconds").asDouble());
+            assertEquals(0, tagged.path("customCost").asDouble());
+            assertEquals(0, tagged.path("transferCount").asInt());
+            assertEquals(5, tagged.path("physicalDemand").asDouble());
+            assertEquals("MinimizeTransfers", tagged.path("appliedTraversalPreference").path("customObjective")
+                    .path("tieBreakers").get(0).asText());
+            preference.putObject("customObjective").put("kind", "edgeAttribute").put("attribute", "effort")
+                    .putArray("tieBreakers").add("MinimizeTime").add("MinimizeTransfers");
+            var numeric = navigation.findRoute("fixture", body);
+            assertEquals(5, numeric.path("totalCostSeconds").asDouble());
+            assertEquals(0.5, numeric.path("customCost").asDouble());
+            assertEquals(0, numeric.path("appliedTraversalPreference").path("customObjective").path("missingValue").asDouble());
+            preference.putObject("customObjective").put("kind", "edgeAttribute").put("attribute", "absent").put("missingValue", 2);
+            var missing = navigation.findRoute("fixture", body);
+            assertEquals(2, missing.path("totalCostSeconds").asDouble());
+            assertEquals(2, missing.path("customCost").asDouble());
+        }
+    }
+
+    @Test
+    void returnsStructuredErrorsForInvalidCustomMapData() throws Exception {
+        Path file = root.resolve("fixture/Lower");
+        Files.writeString(file, Files.readString(file).replace("effort = 1", "effort = -1"));
+        ObjectNode body = request(true).put("startNode", "Lower::landing").put("endNode", "Lower::destination");
+        body.putObject("traversalPreference").put("routePlanningPreference", "MinimizeCustomData")
+                .putObject("customObjective").put("kind", "edgeAttribute").put("attribute", "effort");
+        var error = assertThrows(ApiException.class, () -> new NavigationApiService(buildings, mapper).findRoute("fixture", body));
+        assertEquals(422, error.status());
+        assertTrue(error.body().toString().contains("INVALID_ROUTING_DATA"));
     }
 
     @Test

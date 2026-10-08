@@ -13,7 +13,7 @@
     <article id="preferences-and-modes">
       <header>
         <h1>Routing Modes and Preferences</h1>
-        <p>A routing mode determines how the building is searched. A route-planning preference determines how eligible transport candidates are ranked within that search.</p>
+        <p>A routing mode determines how the building is searched. A route-planning preference determines how complete routes are ranked, including all walking, transport, and mandatory intermediate-node dwell.</p>
       </header>
 
       <nav aria-label="Routing reference articles">
@@ -38,7 +38,7 @@
     "banTags": ["outdoor"]
   }
 }</code></pre>
-        <p>For the full HTTP request format and examples, see the <a href="../../manuals/navigation_request_guide.md">Navigation Request Guide</a>.</p>
+        <p>For the full HTTP request format and examples, see the <a href="../../http-api.md#route-calculation">HTTP API reference</a>.</p>
       </section>
 
       <section id="decision-order">
@@ -51,8 +51,8 @@
           <li>Compilation parameters establish the building's hard-access topology.</li>
           <li>Banned tags exclude request-specific nodes and paths.</li>
           <li>The risk preference determines whether failed uncertain access may participate.</li>
-          <li><code>isHighRise</code> selects the building-routing strategy.</li>
-          <li>The route-planning preference ranks eligible candidates.</li>
+          <li><code>routingMode</code> selects the building-routing strategy.</li>
+          <li>The route-planning preference supplies the search objective and tie-breakers.</li>
           <li>Output annotations describe the selected route.</li>
         </ol>
         <p>A route preference cannot restore a path, station, or ride removed by a hard access constraint.</p>
@@ -61,47 +61,64 @@
       <section id="building-routing-modes">
         <h2>Building-Routing Modes</h2>
         <dl>
-          <dt><code>isHighRise=false</code></dt>
-          <dd>Uses fully informed routing, which compares complete walking and transport costs throughout the building.</dd>
+          <dt><code>routingMode: "fullyInformed"</code></dt>
+          <dd>Searches individual walking and transport edges throughout the building.</dd>
 
-          <dt><code>isHighRise=true</code></dt>
-          <dd>Uses transport-first routing, which ranks cross-map transport plans before connecting their floor-level walking legs.</dd>
+          <dt><code>routingMode: "partiallyInformed"</code></dt>
+          <dd>Searches a hierarchy of transport landings and the exact endpoints. Floor-level walking connections are computed on demand, and their full costs participate in route selection.</dd>
         </dl>
-        <p>The quick-demo endpoint defaults to <code>isHighRise=true</code>. The flag selects an algorithm and does not describe or validate the building's literal height.</p>
+        <p>The HTTP API defaults to <code>partiallyInformed</code>. Both modes support the same objectives; the mode does not describe or validate the building's literal height. Core callers select the corresponding strategy with <code>isHighRise</code>.</p>
         <p>See <a href="routing-semantics.html#low-rise-routing">Fully Informed Low-Rise Routing</a> and <a href="routing-semantics.html#high-rise-routing">High-Rise Routing</a>.</p>
       </section>
 
       <section id="primary-preferences">
         <h2>Primary Route-Planning Preferences</h2>
-        <p>The supported values are <code>MinimizeTime</code>, <code>MinimizeTransfers</code>, and <code>MinimizePhysicalDemands</code>. The default is <code>MinimizeTime</code>. Unknown values are rejected by the web API.</p>
+        <p>The supported values are <code>MinimizeTime</code>, <code>MinimizeTransfers</code>, <code>MinimizePhysicalDemands</code>, and <code>MinimizeCustomData</code>. The default is <code>MinimizeTime</code>. Unknown values are rejected by the web API.</p>
       </section>
 
       <section id="minimize-time">
         <h2><code>MinimizeTime</code></h2>
-        <p>Routes are ranked using their calculated traversal costs.</p>
-        <p>In fully informed low-rise mode, this preference minimizes complete end-to-end cost.</p>
-        <p>In high-rise mode, it initially minimizes the transport portion of the journey. Walking to and from the selected transport is included in the returned route but not in the initial transport ranking.</p>
+        <p>Minimizes complete end-to-end traversal time in either routing mode, including walking to and from transports and mandatory intermediate-node dwell.</p>
       </section>
 
       <section id="minimize-transfers">
         <h2><code>MinimizeTransfers</code></h2>
-        <p>In high-rise mode, candidates are ordered first by actual transport-line changes and then by total transport-plan cost.</p>
+        <p>Minimizes actual transport-line changes, then complete end-to-end traversal time, in either routing mode.</p>
         <p>Walking-only routes and trips on a single line count as zero transfers. Switching to another line adds one, including when walking connects the lines; consecutive rides on the same line add none.</p>
-        <p>In low-rise mode, this preference currently produces the same total-cost search as <code>MinimizeTime</code>.</p>
       </section>
 
       <section id="minimize-physical-demands">
         <h2><code>MinimizePhysicalDemands</code></h2>
-        <p>High-rise transport candidates use the following relative score:</p>
+        <p>Both routing modes minimize the following complete-route score, then traversal time:</p>
         <ul>
           <li>elevator movement: <code>0.1 × vertical metres + 0.5 × seconds</code>;</li>
           <li>stair movement: <code>10 × vertical metres</code>;</li>
           <li>escalator movement: <code>0.1 × distance metres + 0.65 × seconds</code>; and</li>
           <li>walking and mandatory intermediate-node dwell: elapsed seconds.</li>
         </ul>
-        <p>Lower scores are preferred. Elevator seconds include waiting and movement. Escalator metres come from optional <code>params.distance</code>, defaulting to zero when omitted. Returned-route scoring uses the same formulas and includes terminal walking; origin and destination walking legs are not part of the initial high-rise transport score.</p>
+        <p>Lower scores are preferred. Elevator seconds include waiting and movement. Escalator metres come from optional <code>params.distance</code>, defaulting to zero when omitted. Origin, destination, and transfer walking all participate in route selection.</p>
         <p>This score is a routing heuristic, not a physiological, medical, energy-expenditure, or accessibility measurement.</p>
-        <p>In low-rise mode, this preference currently produces the same total-cost search as <code>MinimizeTime</code>.</p>
+      </section>
+
+      <section id="minimize-custom-data">
+        <h2><code>MinimizeCustomData</code></h2>
+        <p>Minimizes an additive custom cost as the primary objective in either routing mode. Equal custom costs are resolved by transport-line changes, then total time. Set <code>tieBreakers</code> to reverse that order; both criteria must appear exactly once.</p>
+        <pre><code>"traversalPreference": {
+  "routePlanningPreference": "MinimizeCustomData",
+  "customObjective": {
+    "kind": "tagExposure",
+    "tag": "outdoor",
+    "tieBreakers": ["MinimizeTransfers", "MinimizeTime"]
+  }
+}</code></pre>
+        <p><code>tagExposure</code> sums tagged-edge traversal seconds and explicit dwell at tagged intermediate nodes. Alternatively, <code>edgeAttribute</code> sums a named numeric atomic-path attribute:</p>
+        <pre><code>"customObjective": {
+  "kind": "edgeAttribute",
+  "attribute": "effort",
+  "missingValue": 0
+}</code></pre>
+        <p>Attribute values must be finite, non-negative <code>Int</code> or <code>Float</code> values. Missing values use <code>missingValue</code>, which defaults to zero. Transport rides contribute zero to this attribute sum; transport parameters and node attributes are not included. Invalid selected attribute data returns <code>INVALID_ROUTING_DATA</code>.</p>
+        <p>This mode has no near-tie tolerance and cannot be combined with <code>minimizeTag</code>. An absent tag gives every route zero exposure, so the configured tie-breakers decide. See the <a href="../../http-api.md">HTTP API reference</a> for validation and response fields.</p>
       </section>
 
       <figure>
@@ -113,13 +130,14 @@
         <h2>Soft Tag Avoidance</h2>
         <p><code>traversalPreference.minimizeTag</code> selects the least-exposed route within the primary objective's tolerance: 60 extra seconds, two extra transport-line changes, or 25% extra physical demand. Ties use the primary score, total time, and canonical route order. Hard access constraints and tag bans still apply.</p>
         <p>Tagged edges contribute traversal seconds; tagged intermediate nodes contribute explicit <code>minDwellSeconds</code>. Mandatory intermediate-node dwell always adds to time and physical demand, even without a soft preference. Endpoint dwell is excluded.</p>
-        <p>A soft-tag request, or a building containing mandatory node dwell, uses complete-route search in either routing mode. The primary objective and tolerance then include all walking and transport. Search is limited to 50,000 labels and 200,000 edge expansions; exceeding a limit returns HTTP 422 with <code>TRAVERSAL_PREFERENCE_SEARCH_LIMIT</code>.</p>
+        <p>The primary route uses the selected routing mode. If it has zero exposure, it is already optimal and no additional search runs. Otherwise a constrained complete-route search selects the least exposure inside the tolerance. That additional search can still be expensive. Native custom optimization does not require this tolerance-constrained search.</p>
+        <p>Every objective includes all walking and transport. The primary search, floor-level connections, and any subsequent soft-tag search share a limit of 50,000 generated labels and 200,000 edge expansions. Exceeding a limit returns HTTP 503 with <code>TRAVERSAL_PREFERENCE_SEARCH_LIMIT</code>.</p>
         <p><code>maximizeTag</code> remains deferred. See the finalized <a href="../../roadmap/traversal-preference-spec.md">Traversal Preference Spec</a> for the complete contract.</p>
       </section>
 
       <section id="preference-summary">
         <h2>Preference Summary</h2>
-        <p>The legacy strategies below apply when neither soft avoidance nor mandatory node dwell invokes complete-route preference search.</p>
+        <p>The following rankings apply in both routing modes. Optional <code>minimizeTag</code> retains its separate tolerance-based selection contract for the first three preferences.</p>
         <table>
           <thead>
             <tr>
@@ -132,17 +150,22 @@
             <tr>
               <td><code>MinimizeTime</code></td>
               <td>Minimizes complete route cost.</td>
-              <td>Ranks the transport plan by cost before floor-level walking is connected.</td>
+              <td>Minimizes complete route cost.</td>
             </tr>
             <tr>
               <td><code>MinimizeTransfers</code></td>
-              <td>Currently minimizes complete route cost.</td>
-              <td>Ranks by transport-line changes, then transport cost.</td>
+              <td>Minimizes transport-line changes, then complete route time.</td>
+              <td>Minimizes transport-line changes, then complete route time.</td>
             </tr>
             <tr>
               <td><code>MinimizePhysicalDemands</code></td>
-              <td>Currently minimizes complete route cost.</td>
-              <td>Ranks by the transport physical-demand heuristic.</td>
+              <td>Minimizes complete physical-demand score, then time.</td>
+              <td>Minimizes complete physical-demand score, then time.</td>
+            </tr>
+            <tr>
+              <td><code>MinimizeCustomData</code></td>
+              <td>Minimizes custom cost, then the configured transfer/time tie-breakers.</td>
+              <td>Minimizes custom cost, then the configured transfer/time tie-breakers.</td>
             </tr>
           </tbody>
         </table>

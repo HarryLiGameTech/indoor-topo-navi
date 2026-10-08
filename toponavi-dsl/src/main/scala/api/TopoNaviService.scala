@@ -6,7 +6,7 @@ import data.{LinearSegment, NavigationOutputPath, TurnHint}
 import enums.{NavigationError, RoutePlanningPreferences}
 import enums.RoutePlanningPreferences.MinimizeTime
 import enums.VisitingMode.Normal
-import navigation.{RoutePlanner, TraversalTagPolicy}
+import navigation.{CustomRouteCost, CustomRouteObjective, RoutePlanner, TraversalTagPolicy}
 import enums.NavigationError.{ConstraintFailure, DestinationHasBannedTags, InvalidData, NoRouteFound}
 
 import java.util.List as JList
@@ -104,6 +104,19 @@ object TopoNaviService {
     isHighRise: Boolean,
     allowUncertainAccess: Boolean,
     minimizeTag: Option[String]
+  ): NavigationOutputPath = findRoutePlan(
+    result, startNodeName, endNodeName, preference, banTags, isHighRise, allowUncertainAccess, minimizeTag, None)
+
+  def findRoutePlan(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: RoutePlanningPreferences,
+    banTags: Set[String],
+    isHighRise: Boolean,
+    allowUncertainAccess: Boolean,
+    minimizeTag: Option[String],
+    customObjective: Option[CustomRouteObjective]
   ): NavigationOutputPath = {
     // TODO (production): Consider refactoring to hold a Map[BuildingKey, RoutePlanner] and only rebuild on cache miss.
     val routePlanner = RoutePlanner(result.graphs, result.transportGraph, result.graphSequence, isHighRise)
@@ -112,7 +125,7 @@ object TopoNaviService {
     val tagPolicy = TraversalTagPolicy(banTags)
     routePlanner.navigate(
       startGraphName, endGraphName, startNode, endNode,
-      Normal, preference, tagPolicy, allowUncertainAccess, minimizeTag
+      Normal, preference, tagPolicy, allowUncertainAccess, minimizeTag, customObjective
     ) match {
       case Left(DestinationHasBannedTags(nodeIdentifier, conflicts)) =>
         throw NavigationRequestException(
@@ -137,6 +150,8 @@ object TopoNaviService {
         )
       case Left(NavigationError.PreferenceSearchLimitExceeded(message)) =>
         throw NavigationRequestException("TRAVERSAL_PREFERENCE_SEARCH_LIMIT", message, Map.empty[String, Object].asJava)
+      case Left(InvalidData(message)) =>
+        throw NavigationRequestException("INVALID_ROUTING_DATA", message, Map.empty[String, Object].asJava)
       case Left(error) => throw new RuntimeException(formatError(error))
       case Right(plan) =>
         // Convert DSL-level spatial annotations into slim core-level types and attach to the plan
@@ -272,6 +287,19 @@ object TopoNaviService {
     isHighRise: Boolean,
     riskPreference: String,
     minimizeTag: String
+  ): RiskAwareNavigationResult = findRoutePlanWithRiskPreference(
+    result, startNodeName, endNodeName, preference, banTags, isHighRise, riskPreference, minimizeTag, null)
+
+  def findRoutePlanWithRiskPreference(
+    result: CompilationResult,
+    startNodeName: String,
+    endNodeName: String,
+    preference: String,
+    banTags: JList[String],
+    isHighRise: Boolean,
+    riskPreference: String,
+    minimizeTag: String,
+    customObjective: CustomRouteObjective
   ): RiskAwareNavigationResult = {
     val parsedPreference = parsePreference(preference)
     val tags = if banTags == null then Set.empty else banTags.asScala.toSet
@@ -279,7 +307,7 @@ object TopoNaviService {
     def route(allowUncertainAccess: Boolean): NavigationOutputPath =
       findRoutePlan(
         result, startNodeName, endNodeName, parsedPreference,
-        tags, isHighRise, allowUncertainAccess, Option(minimizeTag).map(_.trim).filter(_.nonEmpty))
+        tags, isHighRise, allowUncertainAccess, Option(minimizeTag).map(_.trim).filter(_.nonEmpty), Option(customObjective))
 
     def deterministicRoute(): Option[NavigationOutputPath] =
       try Some(route(allowUncertainAccess = false))
@@ -299,7 +327,7 @@ object TopoNaviService {
         val allAccess = route(allowUncertainAccess = true)
         val selected = deterministic match {
           case None => allAccess
-          case Some(safe) if meaningfullyImproves(allAccess, safe, parsedPreference) => allAccess
+          case Some(safe) if meaningfullyImproves(allAccess, safe, parsedPreference, Option(customObjective)) => allAccess
           case Some(safe) => safe
         }
         RiskAwareNavigationResult(selected, "permissive")
@@ -309,14 +337,29 @@ object TopoNaviService {
     }
   }
 
+  // Java-facing construction keeps the custom-cost contract shared with core callers.
+  def customRouteObjective(kind: String, field: String, missingValue: Double, tieBreakers: JList[String]): CustomRouteObjective = {
+    val cost = kind match {
+      case "tagExposure" => CustomRouteCost.TagExposure(field)
+      case "edgeAttribute" => CustomRouteCost.EdgeAttribute(field, missingValue)
+      case _ => throw new IllegalArgumentException(s"Unsupported custom cost kind: $kind")
+    }
+    val order = Option(tieBreakers).fold(List("MinimizeTransfers", "MinimizeTime"))(_.asScala.toList)
+    require(order.forall(Set("MinimizeTransfers", "MinimizeTime")), "Unsupported custom tie-breaker")
+    CustomRouteObjective(cost, order.map(parsePreference))
+  }
+
   private def meaningfullyImproves(
     candidate: NavigationOutputPath,
     deterministic: NavigationOutputPath,
-    preference: RoutePlanningPreferences
+    preference: RoutePlanningPreferences,
+    customObjective: Option[CustomRouteObjective]
   ): Boolean = {
     if (candidate.uncertainAccess.isEmpty) return false
 
     preference match {
+      case RoutePlanningPreferences.MinimizeCustomData =>
+        customObjective.get.cost.total(candidate) < customObjective.get.cost.total(deterministic)
       case RoutePlanningPreferences.MinimizeTime =>
         deterministic.totalCost - candidate.totalCost >= 15.0
       case RoutePlanningPreferences.MinimizeTransfers =>
@@ -333,6 +376,7 @@ object TopoNaviService {
   private def parsePreference(s: String): RoutePlanningPreferences = s match {
     case "MinimizeTransfers"       => RoutePlanningPreferences.MinimizeTransfers
     case "MinimizePhysicalDemands" => RoutePlanningPreferences.MinimizePhysicalDemands
+    case "MinimizeCustomData"      => RoutePlanningPreferences.MinimizeCustomData
     case _                         => RoutePlanningPreferences.MinimizeTime
   }
 

@@ -11,6 +11,22 @@ class TopoControllerPreferenceTest {
     private final NavigationApiService service = new NavigationApiService(null, mapper);
 
     @Test
+    void validatesCustomObjectiveContractsBeforeCompilation() throws Exception {
+        for (String preference : new String[]{
+                "\"routePlanningPreference\":\"MinimizeCustomData\"",
+                "\"customObjective\":{\"kind\":\"tagExposure\",\"tag\":\"outdoor\"}",
+                "\"routePlanningPreference\":\"MinimizeCustomData\",\"customObjective\":null",
+                "\"routePlanningPreference\":\"MinimizeCustomData\",\"customObjective\":{\"kind\":\"unknown\"}",
+                "\"routePlanningPreference\":\"MinimizeCustomData\",\"customObjective\":{\"kind\":\"tagExposure\"}",
+                "\"routePlanningPreference\":\"MinimizeCustomData\",\"minimizeTag\":\"outdoor\",\"customObjective\":{\"kind\":\"tagExposure\",\"tag\":\"outdoor\"}",
+                "\"routePlanningPreference\":\"MinimizeCustomData\",\"customObjective\":{\"kind\":\"edgeAttribute\",\"attribute\":\"cost\",\"missingValue\":-1}",
+                "\"routePlanningPreference\":\"MinimizeCustomData\",\"customObjective\":{\"kind\":\"tagExposure\",\"tag\":\"outdoor\",\"tieBreakers\":[\"MinimizeTime\",\"MinimizeTime\"]}"}) {
+            var body = mapper.readTree("{\"startNode\":\"F::a\",\"endNode\":\"F::b\",\"traversalPreference\":{" + preference + "}}");
+            assertEquals(400, assertThrows(ApiException.class, () -> service.findRoute("unused", body)).status(), preference);
+        }
+    }
+
+    @Test
     void rejectsConflictingAndDeferredSoftPreferencesBeforeCompilation() throws Exception {
         var body = mapper.readTree("""
                 {"startNode":"F::a","endNode":"F::b","traversalPreference":{"minimizeTag":"outdoor","maximizeTag":"shop"}}

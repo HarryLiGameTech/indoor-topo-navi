@@ -2,7 +2,9 @@
 
 Status: Finalized
 
-Implementation: hard bans and `minimizeTag` are supported in the engine and building-scoped REST API. MCP soft-preference forwarding is separate adapter work. `maximizeTag` remains deferred.
+Implementation: native primary objectives (including `MinimizeCustomData`), hard bans and `minimizeTag` are supported in the engine and building-scoped REST API. MCP soft-preference forwarding is separate adapter work. `maximizeTag` remains deferred.
+
+Roadmap direction (2026-10-08): move tolerance-based secondary preferences and route-alternative orchestration to the agent layer. Keep engine searches focused on one primary objective with deterministic tie-breakers. The deferred section below describes the target architecture; existing endpoint behavior remains in place until an explicit migration.
 
 ## Context
 
@@ -111,10 +113,17 @@ Allowed values:
 - `MinimizeTime`
 - `MinimizeTransfers`
 - `MinimizePhysicalDemands`
+- `MinimizeCustomData`
 
 Default: `MinimizeTime`
 
-This replaces or subsumes the existing query-string `routePlanningPreference` for POST requests. The existing query parameter may remain temporarily for backward compatibility.
+This field belongs to the JSON body of building-scoped route requests. Legacy query-string preferences are not supported.
+
+### `customObjective`
+
+Required only with `MinimizeCustomData`. A native custom objective uses lexicographic ordering: custom cost, followed by the declared tie-breakers. This is primary optimization, not tolerance-based soft avoidance. Supported definitions and validation rules are specified in the [HTTP API guide](../http-api.md#route-calculation).
+
+`kind: "tagExposure"` uses the tag exposure score below. `kind: "edgeAttribute"` sums a finite, non-negative numeric atomic-path attribute, with an explicit missing-value policy defaulting to zero. Rides contribute zero to the atomic-path attribute sum. The default tie-breakers are `MinimizeTransfers`, then `MinimizeTime`; reversing those two is supported. Native custom objectives cannot be combined with `minimizeTag`.
 
 ### `banTags`
 
@@ -247,41 +256,83 @@ Planning and returned-route scoring use the same per-traversal criteria:
 
 Elevator seconds include the estimated waiting and ride time. Escalator seconds are `params.time`; distance is optional `params.distance`, a finite, non-negative `Int` or `Float` in metres along the escalator. A legacy time-only escalator contributes zero to the distance term; its synthetic station indices are never interpreted as metres. Stair turn costs remain elapsed time and do not alter its distance-based physical score.
 
-The near-tie comparison uses complete routes, including walking to and from transport and mandatory intermediate-node dwell. Legacy high-rise transport planning uses the same edge formulas for its transport-plan subtotal. This is a relative routing score, not a physiological measurement.
+The near-tie comparison uses complete routes, including walking to and from transport and mandatory intermediate-node dwell. Both primary-search strategies include all walking, ride, and dwell contributions in selection. This is a relative routing score, not a physiological measurement.
 
 ## Sorting Semantics
 
-Required ordering:
+Native primary search uses one ordered score:
 
-1. Apply hard access constraints, the current uncertain-access policy, and tag bans.
-2. Find the best value under the primary `routePlanningPreference`.
-3. Keep loop-free candidates within that objective's near-tie threshold.
-4. Minimize exposure to the requested `minimizeTag`, if present.
-5. Use the primary value, then total time, then canonical route order as deterministic tie-breakers.
+- `MinimizeTime`: complete traversal seconds.
+- `MinimizeTransfers`: actual line changes, then complete traversal seconds.
+- `MinimizePhysicalDemands`: complete physical-demand score, then traversal seconds.
+- `MinimizeCustomData`: custom cost, followed by the two declared tie-breakers.
 
-The planner must not turn tag scores into hidden time penalties or rewards.
+Hard permissions come from the compiled model. Banned tags and uncertain-access policy filter the model per request. A fixed canonical edge and state order resolves exact score ties deterministically. Routes returned to callers do not repeat a `GlobalNode`.
 
-## Soft-Preference Search Requirements
+For the separate, backwards-compatible `minimizeTag` policy:
 
-The existing shortest-path algorithms retain only the best-known way to reach each node. That is sufficient for hard bans but not for near-tie soft preferences: a slightly slower partial route may have a substantially better tag exposure score and still finish within the allowed threshold.
+1. Find the native primary optimum using the selected routing mode.
+2. If its tag exposure is zero, return it immediately: zero is the minimum possible exposure, and the primary tie-breaks are already optimal.
+3. Otherwise derive the objective-specific near-tie threshold.
+4. Search loop-free routes within that threshold, minimizing tag exposure, then primary value, total time, and canonical route order.
 
-The implementation performs two searches over the complete walking and transport graph:
+The tag policy does not introduce hidden time penalties or rewards. `maximizeTag` remains deferred.
 
-1. Find the best primary value, breaking ties by total time.
-2. Derive the objective-specific near-tie limit.
-3. Explore loop-free alternative routes within that limit.
-4. Retain multiple non-dominated partial ways to reach a node when they trade primary cost against tag exposure.
-5. Select the complete candidate with the best requested tag score and apply deterministic tie-breakers.
+## Search Structure and Resource Limits
 
-The search keeps non-dominated labels, including the last transport line when counting transfers and the visited-node set for loop prevention. Reverse shortest-path bounds prune alternatives that cannot meet the threshold. Canonical edge ordering makes equal-score selection independent of declaration order.
+`partiallyInformed` uses a transport hierarchy whose vertices are transport landings and the exact origin and destination. Walking connections are searched under the native objective and cached per departure node. Their full costs participate in building-wide selection. `fullyInformed` searches the walking and ride edges directly. Both retain one best native score per location and, when transfers affect ranking, previous transport line. Primary search does not retain competing visited-node histories.
 
-Each search invocation has a shared budget of 50,000 generated labels and 200,000 edge expansions across both passes. Exceeding either limit returns HTTP 422 with `TRAVERSAL_PREFERENCE_SEARCH_LIMIT`; it never returns a partial result as optimal. These bounds do not replace deployment-level input, memory, or request-time limits.
+Adding a tag preference or mandatory node dwell does not replace the selected primary-search strategy. Mandatory intermediate-node dwell is included in native scoring; source and destination dwell is excluded. The optional tolerance-based tag phase still retains non-dominated route histories because its constrained objective can require alternatives that primary search safely discards.
 
-Requests with `minimizeTag`, or buildings containing `minDwellSeconds`, use this complete-route search in both high-rise and low-rise modes. Other requests retain the existing routing strategies and their documented limitations. Without a soft tag, mandatory-dwell routing performs only the primary pass.
+Each invocation shares a budget of 50,000 admitted labels and 200,000 expansion attempts across primary search, floor-level connection searches, and any constrained tag phase. Exceeding either limit returns HTTP 503 with `TRAVERSAL_PREFERENCE_SEARCH_LIMIT`; it does not return an unproven partial result as optimal. Counts refer to search states and candidate extensions, not distinct physical nodes. Graph preparation is outside these counters. Positive-exposure constrained tag searches can still exhaust their budget; native custom objectives avoid that second phase. These bounds do not replace deployment-level input, memory, or request-time limits.
 
-Risk preferences retain their separate policy: the engine searches the strict and/or uncertain-access graph as required, applies soft ranking within each search, and compares their results using the existing risk thresholds. The near-tie tolerances do not change those risk thresholds.
+Risk preferences search the strict and/or uncertain-access graph independently. The original objectives retain their existing risk-improvement thresholds. For `MinimizeCustomData`, permissive routing requires a strictly lower custom cost before choosing uncertain access; equal-cost improvements in transfers or time alone do not qualify.
 
-The endpoint accepts `minimizeTag`. `maximizeTag` alone still returns HTTP 501 with `TRAVERSAL_PREFERENCE_NOT_IMPLEMENTED`; providing both soft fields returns HTTP 400 with `CONFLICTING_TAG_PREFERENCES`.
+`maximizeTag` alone returns HTTP 422 with `UNSUPPORTED_TRAVERSAL_PREFERENCE`; combining both soft fields returns HTTP 400 with `CONFLICTING_TAG_PREFERENCES`.
+
+## Deferred: Reliable Secondary Preferences and Route Alternatives
+
+Architecture direction agreed on 2026-10-08; implementation remains deferred. The agent layer owns secondary-preference trade-offs and the presentation of route alternatives. The engine supplies bounded single-primary-objective searches and authoritative route metrics. This replaces the proposed engine-side expansion of tolerance-constrained alternative search.
+
+### Responsibilities
+
+- **Engine:** optimize one primary objective per search, such as time, line changes, physical demand, or a selected additive custom cost. Retain deterministic tie-breakers for equal primary scores; these do not grant a tolerance for sacrificing the primary objective. Include all walking, transport, and intermediate dwell in scoring. Continue consuming compiled access permissions and enforcing request bans and uncertain-access policy.
+- **Route metrics:** provide complete time, line changes, physical demand, and requested tag exposure for each selected route, independently of which metric drove selection. Adding observation metrics must not change route choice or start another optimization. The current API does not yet provide a general requested-tag-exposure summary for every primary mode; specify this contract before implementing the agent workflow.
+- **Agent controller:** issue a bounded set of engine requests, retain the primary result, compare candidates against the user's tolerances, deduplicate routes, and rank or present useful alternatives. Numeric comparisons, request limits, and termination belong in deterministic orchestration code. The language model interprets intent and explains verified results.
+- **Applications:** may use the same orchestration policy without an LLM. The engine's native routing API remains independently usable.
+
+### Intended Workflow
+
+1. Request the primary optimum, for example `MinimizeTime`, and record its complete time and requested tag exposure.
+2. Request a different native optimum, for example `MinimizeCustomData` with `customObjective: {kind: "tagExposure", tag: "rain_exposed"}` and time before transfers in its tie-breakers. Each engine request continues to optimize its own primary objective.
+3. Compare returned routes in the agent controller. For the existing time policy, retain a tag-improving alternative only when it is within 60 seconds of the fastest result. Preserve the primary result for presentation. Other supported primary policies retain their documented tolerances unless explicitly revised.
+4. Make any additional candidate probes within a defined request and elapsed-time budget. Stop when the budget or candidate target is reached; reuse identical queries instead of repeatedly calling the engine.
+5. Present the baseline and useful alternatives with measured time and exposure. Remove duplicates and candidates that are no better on any selected metric and worse on at least one.
+
+Comparisons must use the same building revision or compiled snapshot, endpoints, user parameters, bans, and risk policy. Preserve each candidate's uncertainty disclosure. Define the required revision/snapshot contract, total call budget, bounded concurrency, candidate-count policy, and failure handling before implementation. A failed alternative request must not discard a successful primary route. Candidate-count controls and multi-route output belong to the orchestration contract; the engine's current route endpoint returns one route per request.
+
+### Example
+
+Example for travel time as the primary objective and `rain_exposed` as the secondary preference:
+
+| Result | Route | Travel time | Rain exposure |
+|---|---|---|---|
+| Found route | A–B–C | 2 min 30 sec | 35 sec |
+| Alternative | A–D–E–C | 3 min | 5 sec |
+
+The alternative takes 30 seconds longer and reduces rain exposure by 30 seconds. It fits the existing +60-second time tolerance. Both options remain useful because one is faster and the other has less exposure.
+
+### Guarantees and Limits
+
+Single-objective search avoids the tolerance-constrained route-history explosion, but its work still depends on graph size, transport connectivity, and search state. Engine resource limits remain necessary. Multiple engine calls also incur orchestration and network cost; moving the policy does not make total work trivial.
+
+A few independent optima do not guarantee discovery of the best compromise. If the fastest route is A–B–C at 150 seconds with 35 seconds of exposure, and the least-exposed route takes 600 seconds with zero exposure, those two queries alone can miss A–D–E–C at 180 seconds with 5 seconds of exposure. The controller must describe results as the best among the candidates explored. Finding no suitable candidate does not prove that none exists. A globally optimal secondary result under a time bound would require a separately specified constrained-search guarantee.
+
+Before shipping, test the bounded workflow on the example above, a missed-compromise case, duplicate optima, absent tags, failed or budget-exhausted alternative searches, and mismatched building revisions. Define the candidate-generation policy before promising alternative coverage. Existing restrictions on user-configurable numeric penalties and multi-tag weights remain unchanged.
+
+### Migration
+
+The agent workflow and route-metric contract are deferred. Existing engine `minimizeTag` behavior remains available until its callers have an explicit migration path; later deprecation or removal of its constrained second pass is separate implementation work. This documentation change does not remove it. Native `MinimizeCustomData` keeps strict custom-first ordering. `riskPreference: "permissive"` continues to govern uncertain access independently of objective tolerances, and `maximizeTag` remains separately deferred.
 
 ## Why Not Numeric Penalties Initially
 
@@ -369,12 +420,13 @@ This is not required for the first hard-ban implementation, but it is important 
 Supported:
 
 - Requests use the body fields specified in [Endpoint Design](../endpoint-design.md); legacy quick-demo query parameters are removed.
-- Body-level `traversalPreference` takes precedence; query-string `routePlanningPreference` remains the fallback.
+- Traversal preferences are supplied only through the JSON body.
 - `banTags` and `minimizeTag` apply per request without mutating cached compilation results or entering the compilation cache key.
 - `minDwellSeconds` contributes to mandatory intermediate-node time and soft tag exposure.
 - Recompile persisted building caches created before traversal metadata or escalator distance was introduced.
 
 Deferred:
 
+- Implement bounded agent-layer orchestration for secondary preferences and useful alternatives, with engine-provided route metrics and an explicit migration of legacy engine `minimizeTag`, as described above.
 - Keep `maximizeTag` deferred until its implementation is explicitly scheduled.
 - Consider richer internal scoring, but avoid exposing arbitrary numeric penalties until the behavior is explainable and testable.

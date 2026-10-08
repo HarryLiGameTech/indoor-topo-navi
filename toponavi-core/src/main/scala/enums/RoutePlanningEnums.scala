@@ -11,6 +11,7 @@ enum RoutePlanningPreferences:
   case MinimizeTime
   case MinimizeTransfers
   case MinimizePhysicalDemands
+  case MinimizeCustomData
 
 enum RouteEdgeCategory:
   case Walking

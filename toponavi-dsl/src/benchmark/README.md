@@ -1,6 +1,6 @@
 # Transport benchmark testers
 
-This directory contains opt-in performance testers for contributors. They are separate from unit and regression tests: `test`, `check`, and normal application packaging do not run or include them. The Gradle `benchmark` source set compiles them only when requested. They need no database, web server, external datasets, or additional libraries.
+This directory contains opt-in performance testers for contributors. They are separate from unit and regression tests: `test`, `check`, and normal application packaging do not run or include them. The Gradle `benchmark` source set compiles them only when requested. The synthetic transport tester needs no database, web server, external datasets, or additional libraries. The separate SWFC tester requires an explicitly supplied map checkout.
 
 The testers generate deterministic synthetic TopoScript projects and exercise the real compiler and navigation API. Compilation uses a fresh compiler each time. Navigation reuses a compiled project and measures both low-rise and high-rise `MinimizeTime` routing.
 
@@ -59,7 +59,7 @@ Smoke reduces the largest dense case to 8 floors and 3 banks, and the zoned case
 - `environment.properties`: timestamp, JVM/OS/architecture, processor count, JVM arguments, maximum heap, profile, iteration settings, and query seed.
 - `SUCCESS`: written only after every scenario completes and all correctness checks pass. A failed run may leave partial CSVs without this marker; failures exit with a nonzero status.
 
-`TransportReference.scala` independently runs Dijkstra over a flattened physical graph containing walking edges and compiled ride edges. It verifies reachability, endpoints, continuity, permitted edges, and costs. Low-rise results must equal the reference optimum. High-rise results must be valid; their optimality gap is reported because that planner is heuristic. The reference also checks expected station/floor counts and rejects ride edges on unavailable lines. Both no-route fixtures must be unreachable in the reference and return `NO_ROUTE_FOUND` through the API.
+`TransportReference.scala` independently runs Dijkstra over a flattened physical graph containing walking edges and compiled ride edges. It verifies reachability, endpoints, continuity, permitted edges, and costs. Both routing modes must equal the reference optimum within floating-point tolerance. The reference also checks expected station/floor counts and rejects ride edges on unavailable lines. Both no-route fixtures must be unreachable in the reference and return `NO_ROUTE_FOUND` through the API.
 
 Timing excludes source generation, reference search, correctness assertions, and CSV writes. It includes compilation itself or one public `findRoutePlan` call, including its automatic no-route retry. Compiler and routing diagnostic output is suppressed. Warmed measurements use one JVM and a fixed scenario order; they are application-level benchmarks, not isolated JVM microbenchmarks or cold-start measurements.
 
@@ -70,3 +70,15 @@ There are no wall-clock pass/fail thresholds. The results establish measured beh
 ## Extend
 
 Add fixtures in `scala/benchmarks/TransportScenarios.scala`, keeping identifiers and queries deterministic. Put new performance testers in this source set rather than `src/test`. Use explicit expected reachability and correctness checks so a faster but invalid route cannot pass unnoticed. Update this scenario table when adding workloads. Keep generated reports under `build/`; when sharing results, include all three report files, the source revision, and any uncommitted changes.
+
+## SWFC native-objective regression benchmark
+
+`swfcPreferenceBenchmark` is an opt-in tester for a separately supplied SWFC map checkout:
+
+```sh
+./gradlew :toponavi-dsl:swfcPreferenceBenchmark --args='/path/to/topomaps/swfc'
+```
+
+It compiles that directory with the all-false card/key profile, `id = 0`, and `aggregatedWeight = 200`. It tests public routes from `LowerLobby::gate_1` to `Floor98::staircase_U2` and `SkyWalk100::skywalk_booth_1`, in both modes, under time, transfers, physical demand, and native custom tag exposure. Transfer cases also include the absent-tag request that previously exhausted the label budget. A Floor7 denial check verifies that optimization does not bypass compiled restrictions.
+
+Each case gets one warmup and three measured requests in the same JVM. CSV rows on standard output report request time, route time, transfers, and custom score where applicable; compilation is excluded from those timings. Successful runs require consistent loop-free routes, no failed uncertain access for the public destinations, at most the two line changes of the known public route, and `NO_ROUTE_FOUND` for Floor7. This tester does not prove global optimality by itself; synthetic native-objective regressions cover competing objectives and tie-breakers. Keep the map revision and runtime alongside captured output when comparing runs.

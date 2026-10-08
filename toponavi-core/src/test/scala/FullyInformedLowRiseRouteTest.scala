@@ -77,7 +77,7 @@ class FullyInformedLowRiseRouteTest extends AnyFlatSpec with Matchers {
     result.totalCost shouldBe 23.0
   }
 
-  it should "retain transport-first fuzzy routing in high-rise mode" in {
+  it should "include complete walking costs in transport-first high-rise mode" in {
     val result = planner(isHighRise = true).navigate(
       floor1.identifier,
       floor3.identifier,
@@ -88,9 +88,10 @@ class FullyInformedLowRiseRouteTest extends AnyFlatSpec with Matchers {
     ).toOption.get
 
     result.routeEdges.filter(_.category == Transport).map(_.movementDescription) shouldBe List(
-      "Take Express from Floor1 to Floor3"
+      "Take LocalLower from Floor1 to Floor2",
+      "Take LocalUpper from Floor2 to Floor3"
     )
-    result.totalCost shouldBe 201.0
+    result.totalCost shouldBe 23.0
   }
 
   private def planner(isHighRise: Boolean): RoutePlanner = RoutePlanner(

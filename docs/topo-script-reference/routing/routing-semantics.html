@@ -60,7 +60,7 @@
     "riskPreference": "conservative"
   }
 }</code></pre>
-        <p>For request construction and endpoint-specific behavior, see the <a href="../../manuals/navigation_request_guide.md">Navigation Request Guide</a>.</p>
+        <p>For request construction and endpoint-specific behavior, see the <a href="../../http-api.md#route-calculation">HTTP API reference</a>.</p>
       </section>
 
       <section id="endpoint-resolution">
@@ -73,9 +73,8 @@
 
       <section id="same-map-routing">
         <h2>Same-Map Routing</h2>
-        <p>When both endpoints belong to the same topo map, the engine searches only that map. Transport services are not considered, even if leaving and re-entering the map could theoretically produce a lower cost.</p>
-        <p>The selected route minimizes the sum of its atomic-path costs while respecting path direction, hard access restrictions, banned tags, and uncertain-access policy.</p>
-        <p>This is an exact shortest-path search when all atomic-path costs are non-negative and the compiled topology is valid.</p>
+        <p>Same-map requests use the same objective and search strategy as cross-map requests. A direct walking route competes with routes using transport, including leaving and re-entering the map when this improves the requested objective.</p>
+        <p>The selected route respects path direction, compiled hard access restrictions, banned tags, and uncertain-access policy.</p>
       </section>
 
       <section id="low-rise-routing">
@@ -84,8 +83,7 @@
           <img src="../assets/low-rise-routing-placeholder.svg" alt="Placeholder for a diagram showing an end-to-end low-rise routing search across walking and transport edges">
           <figcaption>Placeholder: an end-to-end search comparing complete walking, transfer, and transport costs.</figcaption>
         </figure>
-        <p>With <code>routingMode: "fullyInformed"</code>, cross-map routing uses a fully informed hierarchical search. Its hierarchy contains the exact origin, the exact destination, and every transport landing in the building.</p>
-        <p>For each floor, the engine calculates shortest walking routes between relevant hierarchy nodes. These walking routes are combined with permitted transport rides in one building-wide cost search.</p>
+        <p>With <code>routingMode: "fullyInformed"</code>, the engine searches individual walking and transport edges in one building-wide network. The requested primary objective and its tie-breakers determine which route is selected.</p>
         <p>The resulting total includes:</p>
         <ol>
           <li>walking from the origin to the first transport;</li>
@@ -104,26 +102,26 @@ Route B
 + 10 second ride + 1 second walking
 Total: 23 seconds</code></pre>
         <p>Fully informed routing selects Route B under <code>MinimizeTime</code>.</p>
-        <p>The current low-rise search always minimizes total traversal cost. <code>MinimizeTransfers</code> and <code>MinimizePhysicalDemands</code> do not change low-rise route selection.</p>
+        <p><code>MinimizeTransfers</code>, <code>MinimizePhysicalDemands</code>, and <code>MinimizeCustomData</code> are native objectives of this search. For the example above, <code>MinimizeTransfers</code> selects Route A if Route B changes transport lines.</p>
       </section>
 
       <section id="high-rise-routing">
         <h2>High-Rise Routing</h2>
         <figure>
-          <img src="../assets/high-rise-routing-placeholder.svg" alt="Placeholder for a diagram showing transport-first high-rise route selection followed by floor-level walking-route validation">
-          <figcaption>Placeholder: transport plans are ranked first, then connected and validated through floor-level walking routes.</figcaption>
+          <img src="../assets/high-rise-routing-placeholder.svg" alt="Placeholder for a diagram showing transport landings connected by walking routes and transport rides">
+          <figcaption>Placeholder: a hierarchy of transport landings with complete walking and transport costs.</figcaption>
         </figure>
         <p>With <code>routingMode: "partiallyInformed"</code>, cross-map routing uses a transport-first strategy.</p>
         <ol>
-          <li>Find transport stations on the origin and destination maps.</li>
-          <li>Calculate a transport plan for each origin-station and destination-station pairing.</li>
-          <li>Rank the resulting transport plans according to the requested route preference.</li>
-          <li>Connect the chosen stations using floor-level walking routes.</li>
-          <li>Try the next transport plan if a required walking connection is unavailable.</li>
+          <li>Create a hierarchy containing transport landings and the exact origin and destination.</li>
+          <li>Compute walking connections from each visited hierarchy node on demand, using the requested objective.</li>
+          <li>Cache those connections for reuse during this search.</li>
+          <li>Search walking connections and permitted rides together, using complete-route scores.</li>
+          <li>Expand the selected connections into the returned route.</li>
         </ol>
-        <p>Origin, destination, and transfer walking costs are included in the returned route. Origin and destination walking costs do not participate in the initial transport-plan ranking.</p>
-        <p>High-rise routing is therefore a transport-prioritized heuristic. It is suitable when transport selection is expected to dominate the journey, but it does not guarantee the globally lowest end-to-end cost.</p>
-        <p>For each origin-station and destination-station pairing, the candidate set retains only its lowest-cost transport path. Alternative transport paths between the same station pair are not independently ranked by the other preferences.</p>
+        <p>Origin, destination, and transfer walking costs participate in route selection, including mandatory intermediate-node dwell. Under <code>MinimizeTime</code>, this mode also selects the 23-second Route B in the example above.</p>
+        <p>Transport-line changes and custom cost are search objectives. The planner does not first choose time-optimal transport plans and then rerank them. For transfer-aware objectives, the search state includes the previous transport line; walking preserves that line, and boarding the first line counts as zero changes.</p>
+        <p>Only the best score at a location and previous line is retained. Primary search does not preserve separate labels for every walking history. The first custom-cost definitions are additive, finite, and non-negative, allowing the same search to optimize them directly.</p>
         <p>The <code>routingMode</code> value selects a routing strategy independently of the building's physical height or floor count. The API defaults to <code>partiallyInformed</code>; MCP explicitly requests <code>fullyInformed</code>.</p>
       </section>
 
@@ -155,8 +153,9 @@ Total: 23 seconds</code></pre>
       </section>
 
       <section id="exactness">
-        <h2>Exact and Heuristic Behavior</h2>
-        <p>Requests with <code>minimizeTag</code>, or buildings containing <code>minDwellSeconds</code>, use bounded complete-route preference search in both modes. Successful results optimize the specified primary and soft-tag criteria over loop-free routes; exhausting 50,000 labels or 200,000 edge expansions returns <code>TRAVERSAL_PREFERENCE_SEARCH_LIMIT</code>. See <a href="preferences-and-modes.html#soft-tag-preferences">Soft Tag Avoidance</a>. The table below describes the other requests.</p>
+        <h2>Optimization Guarantees and Search Limits</h2>
+        <p>For valid finite, non-negative costs, native primary search minimizes the requested complete-route ranking when it completes, in either routing mode. Transport travel times remain estimates supplied by the transport model. Returned routes contain no repeated node.</p>
+        <p>All requests have a shared budget of 50,000 generated labels and 200,000 edge expansions per access-policy search, including on-demand walking connections and any soft-tag refinement. Exhaustion returns HTTP 503 with <code>TRAVERSAL_PREFERENCE_SEARCH_LIMIT</code>; a partial or unverified best-so-far route is not returned.</p>
         <table>
           <thead>
             <tr>
@@ -166,32 +165,28 @@ Total: 23 seconds</code></pre>
           </thead>
           <tbody>
             <tr>
-              <td>Same-map routing</td>
-              <td>Exact minimum atomic-path cost.</td>
+              <td><code>MinimizeTime</code></td>
+              <td>Minimum complete traversal time.</td>
             </tr>
             <tr>
-              <td>Low-rise <code>MinimizeTime</code></td>
-              <td>Exact end-to-end minimum cost across walking and transport.</td>
+              <td><code>MinimizeTransfers</code></td>
+              <td>Minimum transport-line changes, then complete traversal time.</td>
             </tr>
             <tr>
-              <td>Low-rise other preferences</td>
-              <td>The same cost-minimizing behavior as <code>MinimizeTime</code>.</td>
+              <td><code>MinimizePhysicalDemands</code></td>
+              <td>Minimum complete physical-demand score, then traversal time.</td>
             </tr>
             <tr>
-              <td>High-rise <code>MinimizeTime</code></td>
-              <td>Lowest-cost transport plan first; terminal walking is excluded from initial ranking.</td>
+              <td><code>MinimizeCustomData</code></td>
+              <td>Minimum additive custom cost, then configured transfer/time tie-breakers.</td>
             </tr>
             <tr>
-              <td>High-rise <code>MinimizeTransfers</code></td>
-              <td>Transport plans are ranked by actual transport-line changes, then transport cost.</td>
-            </tr>
-            <tr>
-              <td>High-rise <code>MinimizePhysicalDemands</code></td>
-              <td>Transport plans are ranked by their transport physical-demand score.</td>
+              <td>Optional <code>minimizeTag</code></td>
+              <td>Least exposure within the documented primary tolerance. A zero-exposure primary route needs no further search; otherwise a constrained search runs and may exhaust the shared budget.</td>
             </tr>
             <tr>
               <td>Equal-ranked alternatives</td>
-              <td>No stable public tie-breaking order.</td>
+              <td>Deterministic within the implementation; no particular route identity is guaranteed across engine versions.</td>
             </tr>
           </tbody>
         </table>
@@ -199,7 +194,7 @@ Total: 23 seconds</code></pre>
 
       <section id="ties-and-determinism">
         <h2>Tie-Breaking and Determinism</h2>
-        <p>Complete-route preference search uses exposure, primary score, total time, then canonical route order. The remaining behavior below applies to the legacy strategies.</p>
+        <p>Native primary search compares the objective and tie-breakers listed above. Soft-tag refinement compares exposure, primary score, total time, then canonical route order. See <a href="preferences-and-modes.html#soft-tag-preferences">Soft Tag Avoidance</a> for its tolerances.</p>
         <p>A strictly cheaper candidate replaces a more expensive candidate. An equal-cost candidate does not replace the route already retained.</p>
         <p>Source declaration order, lexical identifier order, and station order are not public tie-breakers. When several routes have equal ranking values, the selected route is unspecified and may change between engine versions.</p>
         <p>A fixed request with one uniquely best route produces a stable result. Applications must not depend on the identity of one particular route among exact ties.</p>

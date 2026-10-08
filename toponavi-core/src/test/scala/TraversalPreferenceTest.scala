@@ -130,7 +130,7 @@ class TraversalPreferenceTest extends AnyFlatSpec with Matchers {
   }
 
   it should "share label and expansion budgets across both search passes" in {
-    val graph = NavigationGraph("Floor", List(start, goal), List(path(start, goal, 1.0)))
+    val graph = NavigationGraph("Floor", List(start, goal), List(path(start, goal, 1.0, tagged = true)))
     Seq((3, 2), (4, 1)).foreach { case (labels, expansions) =>
       val result = new TraversalPreferencePlanner(Map("Floor" -> graph), TransportGraph(Nil), labels, expansions)
         .navigate(GlobalNode(graph, start), GlobalNode(graph, goal), Normal, MinimizeTime,

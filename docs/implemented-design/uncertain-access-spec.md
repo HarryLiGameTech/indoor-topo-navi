@@ -201,6 +201,10 @@ MinimizeTransfers:
 
 MinimizePhysicalDemands:
   uncertain route must improve physical-demand score by at least 10%.
+
+MinimizeCustomData:
+  uncertain route must have strictly lower custom cost.
+  improvements in transfer or time tie-breakers alone do not qualify.
 ```
 
 These thresholds intentionally avoid arbitrary user-configurable numeric penalties. They make behavior more stable, testable, and explainable.

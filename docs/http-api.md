@@ -84,20 +84,43 @@ SWFC requires the five inputs shown above. Other projects declare their own inpu
 | `routingMode` | `"partiallyInformed"` | `"partiallyInformed"` or `"fullyInformed"`; selects the routing algorithm |
 | `traversalPreference` | `{}` | Options below |
 
-The modes are algorithm choices, not inferred building heights. Partially informed routing uses a heuristic transport search. Route quality and resource requirements depend on topology and transport connectivity; the modes can produce different results.
+The modes are algorithm choices, not inferred building heights. `partiallyInformed` searches a hierarchy of transport landings and the exact endpoints, computing and caching floor-level walking connections as needed. `fullyInformed` searches individual walking and ride edges. Both optimize the selected primary objective using complete-route costs, including origin, transfer, and destination walking and intermediate-node dwell. Tag preferences do not change the selected primary-search strategy.
 
 Preference fields:
 
 | Field | Default | Accepted values / behavior |
 |---|---|---|
-| `routePlanningPreference` | `"MinimizeTime"` | Also `"MinimizeTransfers"` and `"MinimizePhysicalDemands"` |
+| `routePlanningPreference` | `"MinimizeTime"` | Also `"MinimizeTransfers"`, `"MinimizePhysicalDemands"`, and `"MinimizeCustomData"` |
+| `customObjective` | Required for `MinimizeCustomData`; otherwise omitted | Custom cost and ordered tie-breakers, below |
 | `banTags` | `[]` | Hard exclusions by exact tag |
 | `minimizeTag` | Omitted | One tag whose exposure should be reduced among near-tie routes |
 | `riskPreference` | `"conservative"` | Also `"permissive"` and `"aggressive"` |
 
 For `minimizeTag`, the near-tie allowance is +60 seconds, +2 transport-line changes, or +25% physical demand, according to the primary preference. Only that primary objective supplies the allowance. See the [traversal preference specification](roadmap/traversal-preference-spec.md) for exposure and physical-demand scoring. `maximizeTag` is not supported and returns an error.
 
-Conservative routing first searches without uncertain-access edges, then falls back to allowing them if no route exists. Permissive routing compares the two searches and uses uncertain access when it meaningfully improves the selected objective. Aggressive routing searches with uncertain access allowed. None of these modes overrides hard access restrictions. Inspect the returned applied preference and uncertainty metadata even when requesting conservative routing.
+`MinimizeCustomData` is a primary objective. For example:
+
+```json
+{
+  "routePlanningPreference": "MinimizeCustomData",
+  "customObjective": {
+    "kind": "tagExposure",
+    "tag": "outdoor",
+    "tieBreakers": ["MinimizeTransfers", "MinimizeTime"]
+  }
+}
+```
+
+Put this object in `traversalPreference`. The planner minimizes custom cost first, then applies the two tie-breakers in the declared order. `tieBreakers` defaults to the order shown; both entries must occur exactly once, and reversing them is supported. Tie-breakers apply only when preceding scores are equal. There is no implicit time, transfer, or physical-demand tolerance in this mode.
+
+Supported custom objectives:
+
+- `{"kind":"tagExposure","tag":"outdoor"}`: sum tagged traversal seconds and explicit dwell seconds at tagged intermediate nodes. Point tags without dwell contribute zero; endpoint dwell is excluded.
+- `{"kind":"edgeAttribute","attribute":"effort","missingValue":0}`: sum the specified top-level numeric attribute on every traversed atomic path. `Int` and `Float` are supported. Missing attributes use `missingValue`, which defaults to zero. Transport rides contribute zero for this metric; transport parameters and node attributes are not implicitly included. This is a direct attribute name, not a filter expression or executable function.
+
+Custom numeric values and missing-value defaults must be finite and non-negative. A present nonnumeric, negative, or nonfinite value on an otherwise usable path returns HTTP 422 with `INVALID_ROUTING_DATA`. Invalid objective definitions return HTTP 400. `customObjective` is required with `MinimizeCustomData`, forbidden with other primary preferences, and cannot be combined with `minimizeTag`.
+
+Conservative routing first searches without uncertain-access edges, then falls back to allowing them if no route exists. Permissive routing compares the two searches and uses uncertain access when it meaningfully improves the selected objective. Aggressive routing searches with uncertain access allowed. None of these modes overrides hard access restrictions. For `MinimizeCustomData`, permissive routing selects an uncertain alternative only for a strictly lower custom cost; improvements in tie-breakers alone do not relax access. Inspect the returned applied preference and uncertainty metadata even when requesting conservative routing.
 
 Successful route fields:
 
@@ -105,9 +128,11 @@ Successful route fields:
 |---|---|
 | `status` | `"success"` |
 | `totalCostSeconds` | Numeric total traversal time in seconds |
-| `routingMode` | Applied algorithm |
+| `routingMode` | Applied primary-search strategy |
+| `transferCount`, `physicalDemand` | Complete-route line changes and physical-demand score |
+| `customCost` | Present for `MinimizeCustomData`; sum under the requested custom objective |
 | `steps` | Ordered route legs |
-| `appliedTraversalPreference` | Applied primary preference, risk preference, bans, and requested `minimizeTag` when present |
+| `appliedTraversalPreference` | Applied primary preference, risk preference, bans, requested `minimizeTag`, and normalized `customObjective` when present |
 | `riskSummary` | Present when the route includes uncertain access; contains reasons and `routeNotNecessarilyAvailable` |
 | `path` | Human-readable route text; use structured steps for application logic |
 | `deprecations` | Field migration notices |

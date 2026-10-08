@@ -86,6 +86,16 @@ tasks.register('transportBenchmark', JavaExec) {
     workingDir = rootProject.projectDir
 }
 
+tasks.register('swfcPreferenceBenchmark', JavaExec) {
+    group = 'benchmark'
+    description = 'Reproduces SWFC transfer and custom-objective searches against an explicit map directory.'
+    dependsOn benchmarkClasses
+    classpath = sourceSets.benchmark.runtimeClasspath
+    mainClass = 'benchmarks.SwfcPreferenceBenchmarks'
+    maxHeapSize = providers.gradleProperty('benchmarkHeap').getOrElse('2g')
+    workingDir = rootProject.projectDir
+}
+
 generateGrammarSource {
     outputDirectory = file("src/main/java/topomap/grammar")
     arguments += ["-visitor", "-long-messages", "-package", "topomap.grammar"]

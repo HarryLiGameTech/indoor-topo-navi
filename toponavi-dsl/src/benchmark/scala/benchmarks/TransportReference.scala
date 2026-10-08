@@ -80,9 +80,8 @@ class TransportReference(result: CompilationResult, scenario: TransportScenario)
       val optimum = expected.get
       val tolerance = math.max(1e-7, optimum * 1e-9)
       require(route.totalCost >= optimum - tolerance, "Route cost is below reference optimum")
-      if (!isHighRise) require(math.abs(route.totalCost - optimum) <= tolerance,
-        s"Low-rise cost ${route.totalCost} differs from reference optimum $optimum")
-      // High-rise routing is heuristic; report its gap instead of requiring optimality.
+      require(math.abs(route.totalCost - optimum) <= tolerance,
+        s"Route cost ${route.totalCost} differs from reference optimum $optimum (isHighRise=$isHighRise)")
       math.max(0.0, (route.totalCost / optimum - 1.0) * 100.0)
     }
   }
