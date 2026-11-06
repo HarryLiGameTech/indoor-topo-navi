@@ -60,6 +60,34 @@ class TopologyContractTest {
     }
 
     @Test
+    void exposesDeclaredGraphSequenceWithoutTemplatesAcrossFilteringAndCacheLoads() throws Exception {
+        Path project = root.resolve("fixture");
+        Files.writeString(project.resolve("configuration"), """
+                building-includes {
+                  submap Upper
+                  submap Middle using Base
+                  submap Lower
+                  vehicle Moving
+                }
+                """);
+        Files.writeString(project.resolve("Base"), "topo-map Base() {\n let params = {area = 1}\n topo-node landing\n}\n");
+        var expected = mapper.readTree("[\"Upper\",\"Middle\",\"Lower\"]");
+        for (boolean allowed : new boolean[]{true, false}) {
+            var full = query.query("fixture", "nodes", request(allowed));
+            assertEquals(expected, full.path("graphSequence"));
+            assertTrue(full.path("nodes").toString().contains("Base::landing"));
+
+            ObjectNode filtered = request(allowed).put("inDetail", true);
+            filtered.putObject("selection").put("mapId", "Lower");
+            filtered.set("filter", mapper.readTree("{\"field\":\"localNodeId\",\"op\":\"eq\",\"value\":\"absent\"}"));
+            // This second request loads the same compiled result from disk cache.
+            var empty = mapper.readTree(mapper.writeValueAsString(query.query("fixture", "nodes", filtered)));
+            assertTrue(empty.path("nodes").isEmpty());
+            assertEquals(expected, empty.path("graphSequence"));
+        }
+    }
+
+    @Test
     void exposesNativeCustomObjectivesAndTheirScoresInBothRoutingModes() throws Exception {
         var navigation = new NavigationApiService(buildings, mapper);
         for (String mode : java.util.List.of("fullyInformed", "partiallyInformed")) {

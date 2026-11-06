@@ -147,6 +147,15 @@ All five topology endpoints accept `userParams`, optional `selection`, optional 
 
 Each response has `status: "success"`, the effective `inDetail`, and its named result array. Collection queries return all matching records without pagination or an implicit limit. No matches produces an empty array. Neighbors is the exception: it requires a source node and applies its explicit/default limit.
 
+`nodes/query` also returns a top-level `graphSequence: string[]` in both detail
+modes. It is the complete `configuration` submap declaration order, which map
+contributors must write from highest to lowest, including basement levels.
+For `submap Floor7 using Zone1`, the sequence contains the instance `Floor7`;
+the template `Zone1` appears only if it is also explicitly declared as a submap.
+The sequence is independent of `selection` and `filter`, including when `nodes`
+is empty. Node records keep their existing ID sort order and may include template
+graphs; use `graphSequence` to identify and order declared instances.
+
 | Endpoint | Selection fields | Summary record fields | Added with `inDetail: true` |
 |---|---|---|---|
 | `maps/query` | `mapIds: string[]` | `mapId`, `displayName` | `attributes` |
