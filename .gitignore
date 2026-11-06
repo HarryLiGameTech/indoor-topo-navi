@@ -67,3 +67,7 @@ bootrun.log
 *requirements.md
 
 *.txt
+
+### Python ###
+__pycache__/
+*.pyc

@@ -2,10 +2,13 @@ package com.e611.toponavi.web.controller;
 
 import com.e611.toponavi.web.api.ApiException;
 import com.e611.toponavi.web.cache.CompilationCacheService;
+import com.e611.toponavi.web.project.InMemoryProjectStore;
+import com.e611.toponavi.web.project.SourceDirectories;
 import com.e611.toponavi.web.query.FilterParser;
 import com.e611.toponavi.web.query.TopologyQueryService;
 import com.e611.toponavi.web.service.AuthoringApiService;
 import com.e611.toponavi.web.service.BuildingService;
+import com.e611.toponavi.web.service.CompilationParameterResolver;
 import com.e611.toponavi.web.service.NavigationApiService;
 import compiler.DiscoveryProjectionException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,8 +24,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class TopologyContractTest {
     @TempDir Path root;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final InMemoryProjectStore store = new InMemoryProjectStore();
     private BuildingService buildings;
     private TopologyQueryService query;
+
+    /** Stores the fixture directory's current sources, as an explicit import would. */
+    private void publish() {
+        store.put("fixture", SourceDirectories.read(root.resolve("fixture")));
+    }
 
     @BeforeEach
     void setup() throws Exception {
@@ -49,7 +58,8 @@ class TopologyContractTest {
                   ride-from Top to Bottom requires Access
                 }
                 """);
-        buildings = new BuildingService(root.toString(), new CompilationCacheService(root.resolve("cache")), mapper);
+        publish();
+        buildings = new BuildingService(store, new CompilationCacheService(root.resolve("cache")), new CompilationParameterResolver(), mapper);
         query = new TopologyQueryService(buildings, new FilterParser(16, 256, 1024, 16384, 256), mapper);
     }
 
@@ -71,6 +81,7 @@ class TopologyContractTest {
                 }
                 """);
         Files.writeString(project.resolve("Base"), "topo-map Base() {\n let params = {area = 1}\n topo-node landing\n}\n");
+        publish();
         var expected = mapper.readTree("[\"Upper\",\"Middle\",\"Lower\"]");
         for (boolean allowed : new boolean[]{true, false}) {
             var full = query.query("fixture", "nodes", request(allowed));
@@ -119,6 +130,7 @@ class TopologyContractTest {
     void returnsStructuredErrorsForInvalidCustomMapData() throws Exception {
         Path file = root.resolve("fixture/Lower");
         Files.writeString(file, Files.readString(file).replace("effort = 1", "effort = -1"));
+        publish();
         ObjectNode body = request(true).put("startNode", "Lower::landing").put("endNode", "Lower::destination");
         body.putObject("traversalPreference").put("routePlanningPreference", "MinimizeCustomData")
                 .putObject("customObjective").put("kind", "edgeAttribute").put("attribute", "effort");
@@ -167,6 +179,7 @@ class TopologyContractTest {
     void reportsUnserializableCustomParametersWithoutDroppingThem() throws Exception {
         Path file = root.resolve("fixture/Moving");
         Files.writeString(file, Files.readString(file).replace("time = 18,", "time = 18, callback = (fn x: Int => x),"));
+        publish();
         var error = assertThrows(DiscoveryProjectionException.class, () -> query.query("fixture", "transports", request(true)));
         assertEquals("Moving", error.getOwner());
         assertEquals(".params.callback", error.getFieldPath());
@@ -176,7 +189,7 @@ class TopologyContractTest {
     void partialCataloguePreservesScopesAndLocationsWithoutEvaluatingParameters() throws Exception {
         ObjectNode body = mapper.createObjectNode();
         body.set("files", mapper.valueToTree(buildings.files("fixture")));
-        var authoring = new AuthoringApiService(buildings, mapper, 512, 4194304, 2);
+        var authoring = new AuthoringApiService(new CompilationParameterResolver(), mapper, 512, 4194304, 2);
         var missing = authoring.validate(body);
         assertEquals(400, missing.getStatusCode().value());
         var catalogue = mapper.valueToTree(missing.getBody()).path("constraints");

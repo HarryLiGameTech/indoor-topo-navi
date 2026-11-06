@@ -3,6 +3,7 @@ package com.e611.toponavi.web.controller;
 import com.e611.toponavi.web.api.ApiErrors;
 import com.e611.toponavi.web.auth.ApiAccessPolicy;
 import com.e611.toponavi.web.cache.CompilationCacheService;
+import com.e611.toponavi.web.project.SourceDirectories;
 import com.e611.toponavi.web.query.FilterParser;
 import com.e611.toponavi.web.query.TopologyQueryService;
 import com.e611.toponavi.web.service.*;
@@ -31,10 +32,12 @@ class SwfcEndpointTest {
 
     @BeforeAll
     static void setup() {
-        buildings = new BuildingService(Path.of("../examples").toAbsolutePath().normalize().toString(), new CompilationCacheService(cache), MAPPER);
+        var store = SourceDirectories.storeOf(Path.of("../examples").toAbsolutePath().normalize());
+        var parameters = new CompilationParameterResolver();
+        buildings = new BuildingService(store, new CompilationCacheService(cache), parameters, MAPPER);
         var queries = new TopologyQueryService(buildings, new FilterParser(16, 256, 1024, 16384, 256), MAPPER);
         mvc = MockMvcBuilders.standaloneSetup(new TopoController(buildings, queries,
-                new NavigationApiService(buildings, MAPPER), new AuthoringApiService(buildings, MAPPER, 512, 4194304, 2),
+                new NavigationApiService(buildings, MAPPER), new AuthoringApiService(parameters, MAPPER, 512, 4194304, 2),
                 new ApiAccessPolicy("swfc", false))).setControllerAdvice(new ApiErrors()).build();
     }
 

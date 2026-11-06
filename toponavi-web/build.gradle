@@ -8,28 +8,31 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    // PostgreSQL-backed tests. They require Docker (Testcontainers) and fail, rather than skip, without it.
+    integrationTest {
+        java.srcDir 'src/integrationTest/java'
+        resources.srcDir 'src/integrationTest/resources'
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+    }
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Project store schema migrations (version managed by Spring Boot; PostgreSQL support is built into Flyway 9).
+    implementation 'org.flywaydb:flyway-core'
 
     // PostgreSQL driver
     runtimeOnly 'org.postgresql:postgresql'
-
-    // H2 in-memory DB for local dev/testing (activated via application-local.yml)
-    runtimeOnly 'com.h2database:h2'
-
-    // JWT (platform session tokens)
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
-    runtimeOnly  'io.jsonwebtoken:jjwt-impl:0.12.5'
-    runtimeOnly  'io.jsonwebtoken:jjwt-jackson:0.12.5'
-
-    // Bouncy Castle – needed to parse RSA PEM keys for the GitHub App JWT
-    implementation 'org.bouncycastle:bcpkix-jdk18on:1.78.1'
-
-    // HTTP client for GitHub API calls
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 
     // Jackson (already transitively included, but explicit for clarity)
     implementation 'com.fasterxml.jackson.core:jackson-databind'
@@ -44,8 +47,27 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    integrationTestImplementation 'org.testcontainers:postgresql'
+    integrationTestImplementation 'org.testcontainers:junit-jupiter'
 }
 
 test {
     useJUnitPlatform()
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs PostgreSQL integration tests (requires Docker).'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    useJUnitPlatform()
+    shouldRunAfter tasks.named('test')
+    // The Boot-managed Testcontainers (1.19.x) defaults to a Docker API version that Docker Engine 29+ rejects.
+    // 1.44 is supported by Docker Engine 25 and newer; override with -PdockerApiVersion=... if needed.
+    systemProperty 'api.version', project.findProperty('dockerApiVersion') ?: '1.44'
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('integrationTest')
 }

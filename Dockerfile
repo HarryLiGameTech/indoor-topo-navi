@@ -25,8 +25,9 @@ COPY --from=builder --chown=10001:10001 \
     /workspace/toponavi-web/build/libs/toponavi-web.jar \
     /app/toponavi-web.jar
 
+# Project sources live in PostgreSQL (SPRING_DATASOURCE_*); no map directory is mounted or read at runtime.
+# The disposable compilation cache is written under the toponavi user's home directory.
 ENV SERVER_PORT=8080 \
-    PLATFORM_EXAMPLES_PATH=/maps \
     JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
 
 EXPOSE 8080

@@ -1,4 +1,4 @@
 #!/bin/bash
+# Loads SPRING_DATASOURCE_* and TOPONAVI_SERVICE_TOKEN (see .env.example); no GitHub credentials are needed.
 set -a && source /opt/toponavi/.env && set +a
-export GITHUB_APP_PRIVATE_KEY="$(cat /opt/toponavi/github-app.pem)"
 ./gradlew :toponavi-web:bootRun

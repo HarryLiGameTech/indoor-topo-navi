@@ -19,17 +19,17 @@ import java.util.concurrent.Semaphore;
 
 @Service
 public class AuthoringApiService {
-    private final BuildingService buildings;
+    private final CompilationParameterResolver parameters;
     private final ObjectMapper mapper;
     private final int maxFiles, maxSourceBytes;
     private final Semaphore compilations;
 
-    public AuthoringApiService(BuildingService buildings, ObjectMapper mapper,
+    public AuthoringApiService(CompilationParameterResolver parameters, ObjectMapper mapper,
                               @Value("${platform.api.authoring.max-files:512}") int maxFiles,
                               @Value("${platform.api.authoring.max-source-bytes:4194304}") int maxSourceBytes,
                               @Value("${platform.api.authoring.max-concurrent-compilations:2}") int concurrency) {
         if (maxFiles < 1 || maxSourceBytes < 1 || concurrency < 1) throw new IllegalArgumentException("Authoring limits must be positive");
-        this.buildings = buildings;
+        this.parameters = parameters;
         this.mapper = mapper;
         this.maxFiles = maxFiles;
         this.maxSourceBytes = maxSourceBytes;
@@ -58,7 +58,7 @@ public class AuthoringApiService {
             if (!inspection.path("diagnostics").isEmpty()) return failure(inspection,
                     new ApiException(422, "INVALID_TOPOSCRIPT", "Source parsing failed."));
             Map<String, Object> params;
-            try { params = buildings.parameters(inspection, userParams); }
+            try { params = parameters.resolve(inspection, userParams); }
             catch (ApiException error) { return failure(inspection, error); }
             try { TopoNaviService.compile(files, params); }
             catch (RuntimeException error) {

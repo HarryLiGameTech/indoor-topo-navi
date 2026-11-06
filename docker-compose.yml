@@ -1,6 +1,29 @@
 name: indoor-topo-navi
 
+# Required in .env (see .env.example): TOPONAVI_DB_PASSWORD and TOPONAVI_SERVICE_TOKEN.
+# Projects are stored in PostgreSQL; import sources explicitly with tools/import_toposcript_project.py.
+
 services:
+  toponavi-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${TOPONAVI_DB_NAME:-toponavi}
+      POSTGRES_USER: ${TOPONAVI_DB_USER:-toponavi}
+      POSTGRES_PASSWORD: ${TOPONAVI_DB_PASSWORD:?Set TOPONAVI_DB_PASSWORD in .env}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - toponavi-db-data:/var/lib/postgresql/data
+    # No published port: the database is reachable only on the private network below.
+    networks:
+      - toponavi-db-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      start_period: 20s
+      retries: 12
+
   toponavi-web:
     build:
       context: .
@@ -8,20 +31,23 @@ services:
     image: indoor-topo-navi/toponavi-web:${TOPONAVI_IMAGE_TAG:-local}
     container_name: toponavi-web
     restart: unless-stopped
+    depends_on:
+      toponavi-db:
+        condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
       SERVER_PORT: 8080
-      PLATFORM_EXAMPLES_PATH: /maps
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://toponavi-db:5432/toponavi}
+      SPRING_DATASOURCE_USERNAME: ${TOPONAVI_DB_USER:-toponavi}
+      SPRING_DATASOURCE_PASSWORD: ${TOPONAVI_DB_PASSWORD:?Set TOPONAVI_DB_PASSWORD in .env}
+      TOPONAVI_SERVICE_TOKEN: ${TOPONAVI_SERVICE_TOKEN:?Set TOPONAVI_SERVICE_TOKEN in .env}
+      TOPONAVI_ANONYMOUS_BUILDINGS: ${TOPONAVI_ANONYMOUS_BUILDINGS:-}
+      TOPONAVI_ALLOW_GUEST_AUTHORING: ${TOPONAVI_ALLOW_GUEST_AUTHORING:-false}
       JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError}"
-    volumes:
-      - type: bind
-        source: ./examples
-        target: /maps
-        read_only: true
     ports:
       - "127.0.0.1:${TOPONAVI_HOST_PORT:-8080}:8080"
     networks:
       - toponavi-agent-net
+      - toponavi-db-net
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/api/v1/health"]
       interval: 15s
@@ -29,7 +55,13 @@ services:
       start_period: 45s
       retries: 5
 
+volumes:
+  toponavi-db-data:
+    name: ${TOPONAVI_DB_VOLUME:-indoor-topo-navi-db-data}
+
 networks:
   toponavi-agent-net:
     name: ${TOPONAVI_NETWORK:-toponavi-agent-net}
     external: true
+  toponavi-db-net:
+    internal: true
