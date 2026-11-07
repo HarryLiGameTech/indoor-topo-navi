@@ -122,7 +122,7 @@ appears in `/buildings` only when it has a root `configuration` or
 
 ## 6. Verify
 
-The Compose file binds the diagnostic host port only to NAS loopback. From an
+By default the Compose file binds the host port only to NAS loopback. From an
 SSH session on the NAS, run:
 
 ```bash
@@ -187,5 +187,10 @@ importing, adding, or deleting buildings. Do not create an frp proxy for
 - `127.0.0.1:8080` is for NAS-side diagnostics only. Other containers use
   `toponavi-web:8080` over the private Docker network. The database has no
   published port.
+- To accept connections from other machines, set `TOPONAVI_HOST_BIND=0.0.0.0`
+  (and optionally `TOPONAVI_HOST_PORT`) in `.env`, then recreate the project.
+  The API is plain HTTP, so the service token crosses the network
+  unencrypted; prefer a private network or a TLS reverse proxy. Published
+  Docker ports bypass host firewall rules such as `ufw`.
 - Compiled models are cached under the container user's home directory. The
   cache is disposable and is not a source of truth.

@@ -43,8 +43,9 @@ services:
       TOPONAVI_ANONYMOUS_BUILDINGS: ${TOPONAVI_ANONYMOUS_BUILDINGS:-}
       TOPONAVI_ALLOW_GUEST_AUTHORING: ${TOPONAVI_ALLOW_GUEST_AUTHORING:-false}
       JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError}"
+    # Loopback-only by default. TOPONAVI_HOST_BIND=0.0.0.0 accepts connections from other machines.
     ports:
-      - "127.0.0.1:${TOPONAVI_HOST_PORT:-8080}:8080"
+      - "${TOPONAVI_HOST_BIND:-127.0.0.1}:${TOPONAVI_HOST_PORT:-8080}:8080"
     networks:
       - toponavi-agent-net
       - toponavi-db-net
