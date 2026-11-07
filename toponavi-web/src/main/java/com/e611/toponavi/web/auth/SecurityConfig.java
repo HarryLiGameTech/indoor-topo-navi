@@ -1,58 +1,52 @@
 package com.e611.toponavi.web.auth;
 
+import com.e611.toponavi.web.api.ApiException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.authorization.AuthorizationDecision;
-import org.springframework.http.HttpMethod;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.e611.toponavi.web.api.ApiException;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * Spring Security configuration.
+ * Stateless API security with one configured service credential.
  *
- * Security model:
- *  - OAuth2 login is used ONLY as the identity provider; the resulting OAuth token
- *    is immediately discarded — we issue our own platform JWT instead.
- *  - All /api/** endpoints require a valid platform JWT.
- *  - /auth/github is the entry point that triggers the OAuth flow.
- *  - /login/oauth2/code/github is the OAuth callback handled by Spring's built-in filter.
+ * <ul>
+ *   <li>Health and permitted CORS preflights are public; a preflight grants nothing to the actual request.</li>
+ *   <li>Project CRUD and source retrieval always require the service credential.</li>
+ *   <li>The building catalog, building computation, and request-supplied validation keep their explicit anonymous
+ *       allowances from {@link ApiAccessPolicy}.</li>
+ *   <li>No sessions, saved requests, login pages, logout endpoints, or redirects; failures answer JSON 401/403.</li>
+ * </ul>
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
-    private final GitHubOAuthSuccessHandler oAuthSuccessHandler;
-    private final ClientRegistrationRepository clientRegistrationRepository;
-
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
-                          GitHubOAuthSuccessHandler oAuthSuccessHandler,
-                          ClientRegistrationRepository clientRegistrationRepository) {
-        this.jwtAuthFilter = jwtAuthFilter;
-        this.oAuthSuccessHandler = oAuthSuccessHandler;
-        this.clientRegistrationRepository = clientRegistrationRepository;
-    }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, ApiAccessPolicy access,
-                                          UrlBasedCorsConfigurationSource apiCorsSource,
-                                          ObjectMapper mapper) throws Exception {
+                                           UrlBasedCorsConfigurationSource apiCorsSource, ObjectMapper mapper,
+                                           @Value("${platform.security.service-token:}") String serviceToken) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) // Header credential only; no cookies are used.
             .cors(cors -> cors.configurationSource(apiCorsSource))
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .requestCache(cache -> cache.disable())
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable())
+            .logout(logout -> logout.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/github", "/auth/callback", "/error", "/oauth2/authorization/github", "/login/oauth2/code/github").permitAll()
+                .requestMatchers("/error").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/api/v1/**").permitAll()
+                .requestMatchers("/api/v1/projects", "/api/v1/projects/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/buildings").access((authentication, context) ->
                     new AuthorizationDecision(access.catalogue(authentication.get())))
                 .requestMatchers(HttpMethod.POST, "/api/v1/buildings/{buildingId}/**").access((authentication, context) ->
@@ -60,11 +54,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/authoring/validate").access((authentication, context) ->
                     new AuthorizationDecision(access.authoring(authentication.get())))
                 .requestMatchers("/api/v1/**").authenticated()
-                .requestMatchers("/api/me").authenticated()
-                .requestMatchers("/api/maps/**").authenticated()
                 .anyRequest().permitAll()
             )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new ServiceTokenAuthFilter(serviceToken), AnonymousAuthenticationFilter.class)
             .exceptionHandling(errors -> errors
                 .defaultAuthenticationEntryPointFor((request, response, error) -> {
                     response.setStatus(401);
@@ -76,21 +68,6 @@ public class SecurityConfig {
                     response.setContentType("application/json");
                     mapper.writeValue(response.getOutputStream(), new ApiException(403, "ACCESS_DENIED", "Access is denied.").body());
                 }, new AntPathRequestMatcher("/api/v1/**")));
-
-        // Only wire up OAuth2 login if credentials are actually configured
-        if (clientRegistrationRepository.findByRegistrationId("github") != null) {
-            http.oauth2Login(oauth2 -> oauth2
-                .clientRegistrationRepository(clientRegistrationRepository)
-                .successHandler(oAuthSuccessHandler)
-                .failureHandler((request, response, exception) -> {
-                    response.setStatus(400);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\": \"OAuth2 login failed\", \"message\": \"" + exception.getMessage() + "\"}");
-                })
-            );
-        }
-
         return http.build();
     }
 }
-

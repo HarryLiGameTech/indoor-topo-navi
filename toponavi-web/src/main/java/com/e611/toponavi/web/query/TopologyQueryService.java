@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Service;
+import scala.jdk.javaapi.CollectionConverters;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -84,6 +85,10 @@ public class TopologyQueryService {
             default -> records(TopologyData.transports(result));
         };
         ObjectNode response = mapper.createObjectNode().put("status", "success").put("inDetail", inDetail);
+        if (kind.equals("nodes")) {
+            // Complete declared instance order, highest to lowest; independent of node filtering.
+            response.set("graphSequence", mapper.valueToTree(CollectionConverters.asJava(result.graphSequence())));
+        }
         if (kind.equals("neighbors")) {
             String resolved = resolveNode(candidates, source, mapId);
             candidates = neighbors(candidates, records(TopologyData.edges(result)), resolved);

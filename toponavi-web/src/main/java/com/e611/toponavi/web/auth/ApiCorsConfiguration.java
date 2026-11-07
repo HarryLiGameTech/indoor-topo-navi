@@ -16,7 +16,7 @@ public class ApiCorsConfiguration {
     public UrlBasedCorsConfigurationSource apiCorsSource(
             @Value("${platform.api.allow-cors:false}") boolean enabled,
             @Value("${platform.api.cors.allowed-origins:}") String origins,
-            @Value("${platform.api.cors.allowed-methods:GET,POST,OPTIONS}") String methods,
+            @Value("${platform.api.cors.allowed-methods:GET,POST,PUT,DELETE,OPTIONS}") String methods,
             @Value("${platform.api.cors.allowed-headers:Content-Type,Authorization}") String headers,
             @Value("${platform.api.cors.allow-credentials:false}") boolean credentials) {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -35,6 +35,8 @@ public class ApiCorsConfiguration {
         configuration.setAllowedMethods(split(methods));
         configuration.setAllowedHeaders(split(headers));
         configuration.setAllowCredentials(credentials);
+        // Lets browser clients read the URL of a newly created project.
+        configuration.setExposedHeaders(List.of("Location"));
         source.registerCorsConfiguration("/api/v1/**", configuration);
         return source;
     }

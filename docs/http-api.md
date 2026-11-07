@@ -1,16 +1,16 @@
 # HTTP API guide
 
-Use the TopoNavi HTTP API to discover a building's topology, inspect transport services, calculate routes, and validate TopoScript projects. All endpoints in this guide are relative to `/api/v1`.
+Use the TopoNavi HTTP API to discover a building's topology, inspect transport services, calculate routes, validate TopoScript projects, and store native TopoScript project sources. All endpoints in this guide are relative to `/api/v1`.
 
 ## Connect and make a first request
 
-Use the service URL supplied by your deployment and a platform JWT obtained through its sign-in flow. Send the token as `Authorization: Bearer <token>`; an identity provider's access token is not a substitute for the platform token.
+Use the service URL supplied by your deployment and its configured service credential (`TOPONAVI_SERVICE_TOKEN` on the server). Send it as `Authorization: Bearer <token>`. There are no user accounts, sign-in flow, or token issuance; platform JWTs and GitHub sign-in are no longer accepted. An absent or wrong credential authenticates nothing: protected operations return 401, while operations a deployment has made public still run anonymously.
 
 The following shell examples use a local service and the shipped SWFC project. Replace the URL and token before running them.
 
 ```sh
 export TOPONAVI_URL='http://localhost:8080'
-export TOPONAVI_TOKEN='<platform-jwt>'
+export TOPONAVI_TOKEN='<service-token>'
 
 curl -sS "$TOPONAVI_URL/api/v1/buildings" \
   -H "Authorization: Bearer $TOPONAVI_TOKEN"
@@ -22,7 +22,7 @@ The response contains exact, case-sensitive building IDs:
 {"status":"success","buildings":["indigoBJ","nbc4","swfc","trent"]}
 ```
 
-The list depends on the deployment and your access. A listed building is installed; listing does not compile it or guarantee that a route exists.
+The list depends on the deployment and your access. A listed building is a stored project that has a root `configuration` or `configuration.tcfg` file; listing does not compile it or guarantee that a route exists. Stored projects without a configuration file are omitted here and answer `BUILDING_NOT_FOUND`, but remain available through the [project API](#store-and-manage-projects).
 
 To calculate a short SWFC route:
 
@@ -46,7 +46,7 @@ curl -sS "$TOPONAVI_URL/api/v1/buildings/swfc/find-route" \
 
 With the shipped SWFC data, this route has `totalCostSeconds: 5`. Read its ordered `steps` to build navigation instructions. The destination's display name is `Starbucks Coffee`.
 
-Authentication is required by default for building operations and authoring validation. A deployment can allow anonymous access to selected demo buildings and independently allow guest authoring. In that case, omit the authorization header. Only `GET /health` is always public.
+Authentication is required by default for building operations and authoring validation. A deployment can allow anonymous access to selected demo buildings and independently allow guest authoring. In that case, omit the authorization header. Project storage operations always require the service credential, even for an anonymously computable building. Only `GET /health` is always public.
 
 ## Request conventions
 
@@ -72,6 +72,7 @@ SWFC requires the five inputs shown above. Other projects declare their own inpu
 | POST | `/buildings/{buildingId}/nodes/neighbors` | `neighbors` array and count/limit metadata |
 | POST | `/buildings/{buildingId}/transports/query` | `transports` array |
 | POST | `/authoring/validate` | Validation diagnostics, constraints, and parameter declarations |
+| POST, GET, PUT, DELETE | `/projects`, `/projects/{id}`, `/projects/by-building-id/{buildingId}` | Stored project sources; see [Store and manage projects](#store-and-manage-projects) |
 
 ### Route calculation
 
@@ -147,6 +148,15 @@ All five topology endpoints accept `userParams`, optional `selection`, optional 
 
 Each response has `status: "success"`, the effective `inDetail`, and its named result array. Collection queries return all matching records without pagination or an implicit limit. No matches produces an empty array. Neighbors is the exception: it requires a source node and applies its explicit/default limit.
 
+`nodes/query` also returns a top-level `graphSequence: string[]` in both detail
+modes. It is the complete `configuration` submap declaration order, which map
+contributors must write from highest to lowest, including basement levels.
+For `submap Floor7 using Zone1`, the sequence contains the instance `Floor7`;
+the template `Zone1` appears only if it is also explicitly declared as a submap.
+The sequence is independent of `selection` and `filter`, including when `nodes`
+is empty. Node records keep their existing ID sort order and may include template
+graphs; use `graphSequence` to identify and order declared instances.
+
 | Endpoint | Selection fields | Summary record fields | Added with `inDetail: true` |
 |---|---|---|---|
 | `maps/query` | `mapIds: string[]` | `mapId`, `displayName` | `attributes` |
@@ -169,7 +179,7 @@ The following helper uses the standard Fetch API in a browser or a JavaScript ru
 
 ```js
 const baseUrl = "http://localhost:8080/api/v1";
-const token = "<platform-jwt>";
+const token = "<service-token>";
 const buildingId = "swfc";
 const userParams = {
   haveStaffCard: false,
@@ -309,7 +319,85 @@ Constraint scope kinds are `root`, `map`, and `transport`. Locations are one-bas
 
 Successful validation returns HTTP 200 and `status: "success"`. Missing/invalid invocation parameters return 400; parsing or compilation failures return 422. These failures retain the catalogue and diagnostics alongside the error envelope, so read the response body even on failure. Malformed requests and source-size rejection can occur before inspection and lack a catalogue.
 
-Default limits are 512 files, 4 MiB of UTF-8 source, and two concurrent validations. Saturation returns 503 `AUTHORING_BUSY`. This endpoint validates submitted files without publishing them or changing installed buildings. It requires login unless guest validation is explicitly enabled.
+Default limits are 512 files, 4 MiB of UTF-8 source, and two concurrent validations. Saturation returns 503 `AUTHORING_BUSY`. This endpoint validates submitted files without storing them or changing stored projects, and it does not read project storage. It requires the service credential unless guest validation is explicitly enabled. Its limits are separate settings from the project-store limits; if a deployment configures them differently, a stored project can exceed what this endpoint accepts.
+
+## Store and manage projects
+
+A stored project is a set of native TopoScript source files plus metadata. It is the source of every building served by `/buildings`. Saving never compiles: incomplete and non-compiling sources can be created, read, and replaced. Use `/authoring/validate` to check sources, and `/buildings/{buildingId}/...` to compute with stored ones.
+
+All project routes require the service credential. They are additive; the building and computation routes above are unchanged and keep using `buildingId`.
+
+| Method | Path | Success | Behavior |
+|---|---|---|---|
+| POST | `/projects` | 201 | Create metadata and the submitted source set; returns a summary and a `Location` header |
+| GET | `/projects?page=0&size=50` | 200 | Summaries sorted by exact `buildingId`, including projects without a configuration file; no source contents |
+| GET | `/projects/{id}` | 200 | Metadata plus the complete current source set |
+| GET | `/projects/by-building-id/{buildingId}` | 200 | Exact, case-sensitive lookup returning the same detail representation |
+| PUT | `/projects/{id}` | 200 | Atomically replace `name` and the entire `files` object; returns a summary |
+| DELETE | `/projects/{id}` | 204 | Delete metadata and all source files |
+
+Identifiers:
+
+- `id` is a server-generated UUID used by the project routes.
+- `buildingId` is required on creation, never changes, and is the ID used by `/buildings`. It is 1–255 ASCII letters, digits, `.`, `_`, or `-`, starting with a letter or digit. Lookup is exact: `SWFC` does not find `swfc`. IDs that differ only by case cannot coexist; such a create returns 409 `BUILDING_ID_CONFLICT`. Deleting a project frees its ID; reusing it creates a new UUID.
+- `name` is a nonblank display label of at most 255 characters.
+
+Create:
+
+```sh
+curl -sS "$TOPONAVI_URL/api/v1/projects" \
+  -H "Authorization: Bearer $TOPONAVI_TOKEN" \
+  -H 'Content-Type: application/json' \
+  --data-binary '{
+    "buildingId": "LobbyDemo",
+    "name": "Lobby demonstration",
+    "files": {
+      "configuration": "building-includes {\n submap Lobby\n}\n",
+      "Lobby.tmap": "topo-map Lobby() {\n let params = {area = 1}\n topo-node entrance\n}\n"
+    }
+  }'
+```
+
+```json
+{"status":"success","project":{"id":"2c1f…","buildingId":"LobbyDemo","name":"Lobby demonstration","createdAt":"2026-11-06T21:50:48.123456Z","updatedAt":"2026-11-06T21:50:48.123456Z"}}
+```
+
+Detail responses add `files`, an object from relative path to source string. List responses are `{"status":"success","projects":[...],"page":0,"size":50,"total":4}`; `page` is a nonnegative integer, `size` is 1–200 (default 50), and other or repeated query parameters are rejected. A page is not a snapshot across requests.
+
+Replace requires both `name` and `files` and must not contain `buildingId`. Paths omitted from `files` are deleted, and `files: {}` clears the project. There is no PATCH, per-file update, or merge. Concurrent replacements of one project are applied one at a time and the last committed replacement wins; there is no version token or conflict detection. Do not blindly retry a failed create: look up the `buildingId` first, because the first attempt may have committed.
+
+Storage rules, checked before anything is saved:
+
+| Item | Rule |
+|---|---|
+| Envelope | JSON object with exactly the documented fields; no nulls; duplicate object keys are rejected (case-sensitive) |
+| Paths | Relative POSIX paths of 1–512 UTF-8 bytes; no leading/trailing `/`, no backslash (`\`), no empty, `.` or `..` segments, control characters, or drive/URI prefix. Paths are never normalized: `floor/../Lobby.tmap` is rejected, not rewritten |
+| File types | Extensionless, or ending exactly in `.tmap`, `.ttr`, or `.tcfg`. `.json` and other files are not stored |
+| Source text | Stored exactly, including line endings, whitespace, and a byte-order mark. NUL characters and invalid Unicode are rejected |
+| Limits | 512 files, 4 MiB of UTF-8 source, and a 32 MiB request body by default; exceeding one returns 413 `PROJECT_TOO_LARGE` with the setting name in `details.limit`. Compressed request bodies (`Content-Encoding`) are rejected |
+
+Nested paths are stored as submitted, but the compiler's own file lookup rules still decide what a building uses; `configuration.tcfg` takes precedence over `configuration`.
+
+| Status | Code | Meaning |
+|---|---|---|
+| 400 | `INVALID_REQUEST` | Bad envelope, path, text, UUID, or pagination; `details.path` is a JSON Pointer such as `/files/Lobby.tmap` |
+| 401 | `AUTHENTICATION_REQUIRED` | Missing or wrong service credential |
+| 404 | `PROJECT_NOT_FOUND` | No project has this UUID or exact `buildingId` (including a repeated delete) |
+| 409 | `BUILDING_ID_CONFLICT` | The `buildingId` is taken, exactly or differing only by case |
+| 413 | `PROJECT_TOO_LARGE` | A configured body, file-count, or source-size limit was exceeded |
+| 503 | `PROJECT_STORE_UNAVAILABLE` | The database was unreachable or a lock was not obtained in time; the request may be retried |
+
+A building request that obtained its sources before a concurrent replacement or deletion finishes with those sources. A request that starts after the change commits sees the new sources, or `BUILDING_NOT_FOUND` after deletion. Compiled results are cached by exact source content and `userParams`, so a replaced project is never served from an older compilation, and invalid replacement sources report `INVALID_BUILDING` rather than the previous result.
+
+To import a native source directory, use the explicit importer; the service never scans directories:
+
+```sh
+TOPONAVI_SERVICE_TOKEN='<service-token>' python3 tools/import_toposcript_project.py \
+  --base-url "$TOPONAVI_URL" --directory examples/swfc --building-id swfc \
+  --name "Shanghai World Financial Center"
+```
+
+See the [deployment guide](synology-container-manager.md#5-import-map-projects) for options and verification.
 
 ## Handle errors
 
@@ -331,12 +419,14 @@ API errors use this envelope; `details` varies by code:
 | HTTP status | Common codes | Application handling |
 |---|---|---|
 | 400 | `INVALID_REQUEST`, `INVALID_USER_PARAMS`, `INVALID_FILTER`, `FILTER_TOO_COMPLEX`, `CONFLICTING_NODE_SELECTION` | Correct input; parameter errors include `missing` and `invalid`, filter errors include a JSON Pointer `path` |
-| 401 | `AUTHENTICATION_REQUIRED` | Sign in or renew the platform token |
+| 401 | `AUTHENTICATION_REQUIRED` | Send the deployment's service credential |
 | 403 | `ACCESS_DENIED` | Access is not permitted for this caller |
-| 404 | `BUILDING_NOT_FOUND`, `MAP_NOT_FOUND`, `NODE_NOT_FOUND` | Refresh discovery or correct the required resource ID |
+| 404 | `BUILDING_NOT_FOUND`, `MAP_NOT_FOUND`, `NODE_NOT_FOUND`, `PROJECT_NOT_FOUND` | Refresh discovery or correct the required resource ID |
+| 409 | `BUILDING_ID_CONFLICT` | Choose another building ID or replace the existing project |
+| 413 | `PROJECT_TOO_LARGE` | Reduce the project or ask the operator about limits |
 | 422 | `NO_ROUTE_FOUND`, `AMBIGUOUS_NODE_ID`, `UNSUPPORTED_TRAVERSAL_PREFERENCE`, `INVALID_TOPOSCRIPT` | Handle the specific outcome; offer candidate IDs for ambiguity or display authoring diagnostics |
-| 503 | `AUTHORING_BUSY`, `BUILDING_CATALOG_UNAVAILABLE`, `BUILDING_UNAVAILABLE`, `TRAVERSAL_PREFERENCE_SEARCH_LIMIT` | Capacity, resources, or a bounded search prevented completion; repeated identical searches may hit the same bound |
-| 500 | `INVALID_BUILDING`, `UNSERIALIZABLE_TRANSPORT_PARAM`, `UNSERIALIZABLE_METADATA`, `INTERNAL_ERROR` | Report the code to the deployment operator |
+| 503 | `AUTHORING_BUSY`, `BUILDING_CATALOG_UNAVAILABLE`, `BUILDING_UNAVAILABLE`, `PROJECT_STORE_UNAVAILABLE`, `TRAVERSAL_PREFERENCE_SEARCH_LIMIT` | Capacity, storage, or a bounded search prevented completion; repeated identical searches may hit the same bound |
+| 500 | `INVALID_BUILDING`, `UNSERIALIZABLE_TRANSPORT_PARAM`, `UNSERIALIZABLE_METADATA`, `INTERNAL_ERROR` | Report the code to the deployment operator. `INVALID_BUILDING` means the stored sources of a listed building do not currently compile |
 
 `NO_ROUTE_FOUND` does not by itself prove a credential or access-parameter problem. Empty collection results are successful queries; missing required route/neighbor nodes are errors. Network, proxy, or unsupported HTTP method/content-type errors may occur outside this envelope, so applications should also handle non-JSON responses.
 
@@ -346,12 +436,16 @@ Cross-origin browser requests require deployment configuration. CORS is disabled
 
 | Environment setting | Default / meaning |
 |---|---|
+| `TOPONAVI_SERVICE_TOKEN` | Required; the opaque service credential (at least 32 characters). The service does not start without it |
 | `TOPONAVI_ALLOW_CORS` | `false`; enable API CORS with `true` |
 | `TOPONAVI_CORS_ALLOWED_ORIGINS` | Comma-separated explicit HTTP(S) origins; required when CORS is enabled |
 | `TOPONAVI_CORS_ALLOW_CREDENTIALS` | `false`; controls credentialed cross-origin browser requests |
+| `platform.api.cors.allowed-methods` | `GET,POST,PUT,DELETE,OPTIONS`; responses expose `Location` to browser clients |
 | `TOPONAVI_ANONYMOUS_BUILDINGS` | Empty; comma-separated canonical demo building IDs permitted anonymously |
 | `TOPONAVI_ALLOW_GUEST_AUTHORING` | `false`; opt in to anonymous source validation |
 
-Legacy `/quick-demo-*`, `/available-buildings`, `/validate`, and `/test-constraints` handlers are removed. Use the paths and JSON bodies above; there are no compatibility aliases. Coordinate backend and client upgrades. Map storage, map publication, cache administration, and readiness checks are outside this API guide.
+Legacy `/quick-demo-*`, `/available-buildings`, `/validate`, and `/test-constraints` handlers are removed. Use the paths and JSON bodies above; there are no compatibility aliases. Coordinate backend and client upgrades. Map publication, cache administration, and readiness checks are outside this API guide.
+
+**Retired platform endpoints.** GitHub sign-in and the GitHub-backed editor platform were removed. `/auth/github`, `/oauth2/**`, `/login/oauth2/**`, `/api/me`, and every `/api/maps/**` route (map CRUD, collaborators, visibility, checkpoints, and history) now return 404 without redirects, and platform JWTs are no longer accepted. Store native TopoScript sources through `/projects` instead; legacy `map.json` editor state is not accepted.
 
 For detailed selection and predicate semantics, see the [endpoint contract](endpoint-design.md). For map tags and routing behavior, see the [tagging guide](manuals/tagging_guide.md) and [routing reference](topo-script-reference/routing/routing-semantics.html).

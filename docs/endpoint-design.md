@@ -460,8 +460,9 @@ Consumer errors expose stable codes and actionable details. They exclude excepti
 Access policy is explicit per operation:
 
 - `/health` permits anonymous liveness probes.
-- Navigation and discovery require authenticated platform clients. `TOPONAVI_ANONYMOUS_BUILDINGS` optionally supplies a comma-separated, case-sensitive list of demo building IDs. Anonymous catalogue responses expose only those installed buildings. Authenticated clients can query the installed inventory; building ownership/storage authorization remains outside this map-store-independent API.
-- Authoring validation requires login by default. `TOPONAVI_ALLOW_GUEST_AUTHORING=true` explicitly enables guest validation while retaining source-size and concurrent-compilation limits. The editor includes its platform JWT when signed in.
+- Navigation and discovery require the configured service credential (`TOPONAVI_SERVICE_TOKEN`, sent as a Bearer token). `TOPONAVI_ANONYMOUS_BUILDINGS` optionally supplies a comma-separated, case-sensitive list of demo building IDs. Anonymous catalogue responses expose only those stored buildings. Authenticated clients can query the stored inventory.
+- Project source storage (`/api/v1/projects`) always requires the service credential, including for anonymously computable buildings. See the [HTTP API guide](http-api.md#store-and-manage-projects).
+- Authoring validation requires the service credential by default. `TOPONAVI_ALLOW_GUEST_AUTHORING=true` explicitly enables guest validation while retaining source-size and concurrent-compilation limits. There are no user accounts or platform JWTs.
 - Operator cache operations are not included in the consumer API. If retained, they require a separate protected administrative contract.
 
 Do not retain a blanket `/api/v1/**` authorization exception. Authentication authorizes service access; `userParams` describes compilation inputs and is not proof of a user's identity or possession of a credential.
